@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "id": "too-many-chests",
+  "version": "${version}",
+  "name": "Too Many Chests",
+  "description": "A better item storage solution for Minecraft.",
+  "authors": [
+    "Vitória Vedana",
+    "Graham Bartley"
+  ],
+  "contact": {
+    "homepage": "https://modrinth.com/mod/too-many-chests",
+    "sources": "https://github.com/grabartley/minecraft-too-many-chests",
+    "issues": "https://github.com/grabartley/minecraft-too-many-chests/issues"
+  },
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.grahambartley.toomanychests.TooManyChests"
+    ],
+    "client": [
+      "com.grahambartley.toomanychests.TooManyChestsClient"
+    ],
+    "fabric-gametest": []
+  },
+  "mixins": [
+    "too-many-chests.mixins.json",
+    {
+      "config": "too-many-chests.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "accessWidener": "too-many-chests.accesswidener",
+  "depends": {
+    "fabricloader": ">=0.16.5",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": ">=0.107.0+1.21.1",
+    "geckolib": ">=4.7"
+  },
+  "suggests": {
+    "jei": "*",
+    "emi": "*"
+  }
+}

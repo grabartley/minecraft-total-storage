@@ -1,0 +1,274 @@
+import java.nio.charset.StandardCharsets
+
+plugins {
+	id 'fabric-loom' version "${loom_version}"
+	id 'maven-publish'
+	id 'com.diffplug.spotless' version '6.25.0'
+	id 'jacoco'
+	id 'com.modrinth.minotaur' version '2.9.0'
+}
+
+version = gradle.startParameter.projectProperties.getOrDefault("version", project.mod_version)
+group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
+
+repositories {
+	// Add repositories to retrieve artifacts from in here.
+	// You should only use this when depending on other mods because
+	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
+	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
+	// for more information about repositories.
+	maven {
+		name = 'GeckoLib'
+		url 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+	}
+	maven {
+		name = 'Terraformers'
+		url 'https://maven.terraformersmc.com/'
+	}
+	maven {
+		name = 'BlameJared'
+		url 'https://maven.blamejared.com/'
+	}
+}
+
+loom {
+	splitEnvironmentSourceSets()
+
+	accessWidenerPath = file("src/main/resources/too-many-chests.accesswidener")
+
+	mods {
+		"too-many-chests" {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+
+	runs {
+		client {
+			programArgs "--username", "DevPlayer"
+		}
+		gametest {
+			server()
+			name "Game Test"
+			vmArg "-ea"
+			runDir "build/gametest"
+			programArgs "--nogui"
+			property "fabric-api.gametest", "true"
+			property "fabric-api.gametest.report-file", "${project.buildDir}/gametest-results.xml"
+		}
+		gametestServer {
+			inherit gametest
+			name "Game Test Server"
+		}
+	}
+}
+
+sourceSets {
+	clientTest {
+		compileClasspath += sourceSets.client.compileClasspath + sourceSets.client.output + sourceSets.main.output
+		runtimeClasspath += sourceSets.client.runtimeClasspath + sourceSets.client.output + sourceSets.main.output
+	}
+}
+
+dependencies {
+	// To change the versions see the gradle.properties file
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+	modImplementation "software.bernie.geckolib:geckolib-fabric-1.21.1:4.7"
+
+	// Mod Menu is optional at runtime; never bundled. Dev-only dep so devs can launch with it.
+	modCompileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
+	modLocalRuntime "com.terraformersmc:modmenu:${project.modmenu_version}"
+
+	// JEI and EMI are optional recipe viewers; never bundled. The APIs are always on the compile
+	// classpath so the compat plugins build, but their runtimes stay out of the dev client unless
+	// -Precipe_viewers=true, because their overlays cover the screens automated QA captures.
+	modCompileOnly "mezz.jei:jei-1.21.1-fabric-api:${project.jei_version}"
+	modCompileOnly "dev.emi:emi-fabric:${project.emi_version}:api"
+	if (project.recipe_viewers.toBoolean()) {
+		modLocalRuntime "mezz.jei:jei-1.21.1-fabric:${project.jei_version}"
+		modLocalRuntime "dev.emi:emi-fabric:${project.emi_version}"
+	}
+
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testImplementation 'org.mockito:mockito-core:5.10.0'
+	testImplementation 'org.mockito:mockito-junit-jupiter:5.10.0'
+
+	clientTestImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
+	clientTestRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	clientTestImplementation 'org.mockito:mockito-core:5.10.0'
+	clientTestImplementation 'org.mockito:mockito-junit-jupiter:5.10.0'
+}
+
+processResources {
+	def templateVersion = project.version
+	def templateGroup = project.group
+
+	inputs.property "version", templateVersion
+	inputs.property "group", templateGroup
+
+	filesMatching("fabric.mod.json") {
+		expand "version": templateVersion, "group": templateGroup
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 21
+}
+
+java {
+	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+	// if it is present.
+	// If you remove this line, sources will not be generated.
+	withSourcesJar()
+
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}
+
+test {
+	useJUnitPlatform()
+	testLogging {
+		events "passed", "skipped", "failed"
+		exceptionFormat "full"
+	}
+	finalizedBy jacocoTestReport
+}
+
+tasks.register("clientTest", Test) {
+	group = "verification"
+	description = "Runs client-side unit tests."
+	useJUnitPlatform()
+	testClassesDirs = sourceSets.clientTest.output.classesDirs
+	classpath = sourceSets.clientTest.runtimeClasspath
+	testLogging {
+		events "passed", "skipped", "failed"
+		exceptionFormat "full"
+	}
+}
+
+jacoco {
+	toolVersion = "0.8.12"
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required = true
+		html.required = true
+		csv.required = false
+	}
+}
+
+tasks.register("verifyMainSourceSideSafety") {
+	group = "verification"
+	description = "Fails if src/main/java references client-only classes"
+	def mainJavaFiles = fileTree("src/main/java") {
+		include "**/*.java"
+	}
+	inputs.files(mainJavaFiles)
+
+	doLast {
+		def disallowedPatterns = [
+			"net.minecraft.client.",
+			"com.grahambartley.toomanychests.compat.",
+			"com.grahambartley.toomanychests.render.",
+			"com.grahambartley.toomanychests.model.",
+			"com.grahambartley.toomanychests.screen.",
+			"com.grahambartley.toomanychests.mixin.client.",
+			"com.grahambartley.toomanychests.TooManyChestsClient",
+			"com.grahambartley.toomanychests.TooManyChestsDataGenerator",
+			"com.grahambartley.toomanychests.TooManyChestsModMenu",
+			"com.grahambartley.toomanychests.ModKeyBindings",
+			"com.grahambartley.toomanychests.network.ModNetworkingClient"
+		]
+		def violations = []
+
+		inputs.files.files.each { file ->
+			def text = file.getText(StandardCharsets.UTF_8.name())
+			disallowedPatterns.each { pattern ->
+				if (text.contains(pattern)) {
+					violations << "${file}: contains '${pattern}'"
+				}
+			}
+		}
+
+		if (!violations.isEmpty()) {
+			throw new GradleException("Main source set side-safety violations found:\n" + violations.join("\n"))
+		}
+	}
+}
+
+check {
+	dependsOn spotlessCheck
+	dependsOn verifyMainSourceSideSafety
+	dependsOn clientTest
+}
+
+jar {
+	inputs.property "archivesName", project.base.archivesName
+
+	from("LICENSE") {
+		rename { "${it}_${inputs.properties.archivesName}"}
+	}
+}
+
+// configure the maven publication
+publishing {
+	publications {
+		create("mavenJava", MavenPublication) {
+			artifactId = project.archives_base_name
+			from components.java
+		}
+	}
+
+	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+	repositories {
+		// Add repositories to publish to here.
+		// Notice: This block does NOT have the same function as the block in the top level.
+		// The repositories here will be used for publishing your artifact, not for
+		// retrieving dependencies.
+	}
+}
+
+spotless {
+	java {
+		target 'src/**/*.java'
+		targetExclude 'build/**'
+		googleJavaFormat('1.19.2')
+		removeUnusedImports()
+		trimTrailingWhitespace()
+		endWithNewline()
+	}
+	format 'misc', {
+		target '**/*.gradle', '**/*.md', '**/.gitignore'
+		targetExclude '.claude/**', '**/.claude/**', 'build/**', '.gradle/**'
+		trimTrailingWhitespace()
+		indentWithTabs()
+		endWithNewline()
+	}
+}
+
+modrinth {
+	projectId = 'too-many-chests'
+	versionNumber = project.version.toString()
+	versionName = "Too Many Chests v${project.version}"
+	versionType = System.getenv('MOD_RELEASE_TYPE') ?: 'alpha'
+	uploadFile = remapJar
+	gameVersions = ['1.21.1']
+	loaders = ['fabric']
+	changelog = rootProject.file('release-notes.md').exists()
+		? rootProject.file('release-notes.md').text
+		: 'No changelog provided.'
+	dependencies {
+		required.project 'fabric-api'
+		required.project 'geckolib'
+	}
+}
