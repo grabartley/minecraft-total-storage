@@ -15,3 +15,8 @@ Gradle + Fabric Loom toolchain with Spotless formatting, JaCoCo coverage, Fabric
 - `./gradlew check` runs formatting, unit tests, and side-safety verification
 - `./gradlew runClient` launches the dev client
 - `./gradlew runGametest` runs the in-game test suite
+
+## Documentation
+
+- [`docs/standards.md`](docs/standards.md) covers the engineering standards shared across these mods
+- [`docs/adr/`](docs/adr/) records the architecture decisions behind this mod and the reasoning for each
