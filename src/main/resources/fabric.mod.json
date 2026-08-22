@@ -30,7 +30,8 @@
       "com.grahambartley.toomanychests.gametest.PresetTagResolverGameTest",
       "com.grahambartley.toomanychests.gametest.NetworkIndexScanGameTest",
       "com.grahambartley.toomanychests.gametest.SortCandidateFactoryGameTest",
-      "com.grahambartley.toomanychests.gametest.DataComponentKeyGameTest"
+      "com.grahambartley.toomanychests.gametest.DataComponentKeyGameTest",
+      "com.grahambartley.toomanychests.gametest.LockedSlotsAttachmentGameTest"
     ]
   },
   "mixins": [
@@ -45,7 +46,7 @@
     "fabricloader": ">=0.16.5",
     "minecraft": "~1.21.1",
     "java": ">=21",
-    "fabric-api": ">=0.107.0+1.21.1",
+    "fabric-api": ">=0.116.12+1.21.1",
     "geckolib": ">=4.7"
   },
   "suggests": {
