@@ -22,7 +22,9 @@
     "client": [
       "com.grahambartley.toomanychests.TooManyChestsClient"
     ],
-    "fabric-gametest": []
+    "fabric-gametest": [
+      "com.grahambartley.toomanychests.gametest.StorageProviderResolverGameTest"
+    ]
   },
   "mixins": [
     "too-many-chests.mixins.json",
