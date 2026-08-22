@@ -10,7 +10,7 @@ import java.util.function.Function;
  *
  * <p>This is the ordering that makes the terminal grid stable between openings, not the player
  * facing sort. The full ADR 0005 ordering, which groups by preset category and honours the display
- * name option, arrives with the sort comparator and layers on top of this.
+ * name option, lives in {@code SortComparator} and layers on top of this.
  */
 public final class NetworkIndexOrdering {
   private NetworkIndexOrdering() {}
