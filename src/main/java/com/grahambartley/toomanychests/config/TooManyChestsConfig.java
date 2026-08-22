@@ -88,6 +88,22 @@ public record TooManyChestsConfig(
         Map.of());
   }
 
+  /** The same configuration with a different set of operator eligibility overrides. */
+  public TooManyChestsConfig withContainerEligibilityOverrides(Map<String, Boolean> overrides) {
+    return new TooManyChestsConfig(
+        maxTerminalRadius,
+        defaultTerminalAccessMode,
+        sortOrdering,
+        sortButtonEnabled,
+        middleClickSortEnabled,
+        quickStackRadius,
+        depositAllSkipsHotbar,
+        nearCapacityWarningPercent,
+        expensiveOperationCooldownTicks,
+        movesPerTickBudget,
+        overrides);
+  }
+
   /** Whether an operator has forced this block's eligibility either way, if they have. */
   public Optional<Boolean> containerEligibilityOverrideFor(Identifier blockId) {
     return blockId == null

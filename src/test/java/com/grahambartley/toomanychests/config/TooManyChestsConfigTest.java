@@ -145,4 +145,43 @@ class TooManyChestsConfigTest {
   void aNullBlockIdReadsAsAbsent() {
     assertTrue(TooManyChestsConfig.defaults().containerEligibilityOverrideFor(null).isEmpty());
   }
+
+  @Test
+  void replacingTheEligibilityOverridesLeavesEveryOtherSettingAlone() {
+    TooManyChestsConfig original = TestConfigs.everythingNonDefault();
+
+    TooManyChestsConfig updated =
+        original.withContainerEligibilityOverrides(Map.of("minecraft:hopper", true));
+
+    assertEquals(Map.of("minecraft:hopper", true), updated.containerEligibilityOverrides());
+    assertEquals(original.maxTerminalRadius(), updated.maxTerminalRadius());
+    assertEquals(original.defaultTerminalAccessMode(), updated.defaultTerminalAccessMode());
+    assertEquals(original.sortOrdering(), updated.sortOrdering());
+    assertEquals(original.sortButtonEnabled(), updated.sortButtonEnabled());
+    assertEquals(original.middleClickSortEnabled(), updated.middleClickSortEnabled());
+    assertEquals(original.quickStackRadius(), updated.quickStackRadius());
+    assertEquals(original.depositAllSkipsHotbar(), updated.depositAllSkipsHotbar());
+    assertEquals(original.nearCapacityWarningPercent(), updated.nearCapacityWarningPercent());
+    assertEquals(
+        original.expensiveOperationCooldownTicks(), updated.expensiveOperationCooldownTicks());
+    assertEquals(original.movesPerTickBudget(), updated.movesPerTickBudget());
+  }
+
+  @Test
+  void replacingTheEligibilityOverridesStillNormalisesBlockIds() {
+    TooManyChestsConfig updated =
+        TooManyChestsConfig.defaults().withContainerEligibilityOverrides(Map.of("hopper", true));
+
+    assertEquals(Map.of("minecraft:hopper", true), updated.containerEligibilityOverrides());
+  }
+
+  @Test
+  void clearingTheEligibilityOverridesLeavesNoneBehind() {
+    TooManyChestsConfig withOverrides =
+        TestConfigs.withOverrides(Map.of("minecraft:furnace", true));
+
+    assertEquals(
+        Map.of(),
+        withOverrides.withContainerEligibilityOverrides(Map.of()).containerEligibilityOverrides());
+  }
 }
