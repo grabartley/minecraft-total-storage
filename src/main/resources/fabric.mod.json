@@ -27,7 +27,8 @@
       "com.grahambartley.toomanychests.gametest.ServerConfigServiceGameTest",
       "com.grahambartley.toomanychests.gametest.NetworkEligibilityGameTest",
       "com.grahambartley.toomanychests.gametest.ContainerDiscoveryScanGameTest",
-      "com.grahambartley.toomanychests.gametest.PresetTagResolverGameTest"
+      "com.grahambartley.toomanychests.gametest.PresetTagResolverGameTest",
+      "com.grahambartley.toomanychests.gametest.NetworkIndexScanGameTest"
     ]
   },
   "mixins": [

@@ -19,6 +19,7 @@ Shared engineering standards across all the mods in this family live in [`../sta
 | [0009](0009-clients-send-intent.md) | Clients send intent, servers resolve it |
 | [0010](0010-locked-slots.md) | Locked slots are slot-based and survive death |
 | [0011](0011-preset-membership-is-computed.md) | Preset membership is computed, and Miscellaneous is derived |
+| [0012](0012-network-index-is-generic-over-its-variant.md) | The network index is generic over its variant type |
 
 ## Writing A New Record
 
