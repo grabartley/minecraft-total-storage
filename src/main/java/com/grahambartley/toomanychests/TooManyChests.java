@@ -1,6 +1,7 @@
 package com.grahambartley.toomanychests;
 
 import com.grahambartley.toomanychests.config.ServerConfigService;
+import com.grahambartley.toomanychests.lock.LockedSlotsAttachment;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import org.slf4j.Logger;
@@ -12,6 +13,7 @@ public class TooManyChests implements ModInitializer {
 
   @Override
   public void onInitialize() {
+    LockedSlotsAttachment.register();
     ServerLifecycleEvents.SERVER_STARTING.register(ServerConfigService::loadFromWorld);
     LOGGER.info("Too Many Chests initialized");
   }
