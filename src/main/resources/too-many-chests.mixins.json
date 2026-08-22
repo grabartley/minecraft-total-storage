@@ -2,7 +2,9 @@
 	"required": true,
 	"package": "com.grahambartley.toomanychests.mixin",
 	"compatibilityLevel": "JAVA_21",
-	"mixins": [],
+	"mixins": [
+		"LevelStorageMixin"
+	],
 	"injectors": {
 		"defaultRequire": 1
 	},

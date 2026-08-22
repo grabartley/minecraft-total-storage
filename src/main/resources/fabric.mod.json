@@ -23,7 +23,8 @@
       "com.grahambartley.toomanychests.TooManyChestsClient"
     ],
     "fabric-gametest": [
-      "com.grahambartley.toomanychests.gametest.StorageProviderResolverGameTest"
+      "com.grahambartley.toomanychests.gametest.StorageProviderResolverGameTest",
+      "com.grahambartley.toomanychests.gametest.ServerConfigServiceGameTest"
     ]
   },
   "mixins": [
