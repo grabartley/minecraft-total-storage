@@ -1,0 +1,90 @@
+{
+  "values": [
+    "#minecraft:banners",
+    "#minecraft:wool",
+    "#minecraft:wool_carpets",
+    "#minecraft:beds",
+    "#minecraft:candles",
+    "#minecraft:terracotta",
+    "#minecraft:signs",
+    "#minecraft:hanging_signs",
+    "#minecraft:skulls",
+    "#minecraft:decorated_pot_sherds",
+    "#minecraft:flowers",
+    {
+      "id": "#c:glass_blocks",
+      "required": false
+    },
+    {
+      "id": "#c:glass_panes",
+      "required": false
+    },
+    {
+      "id": "#c:concretes",
+      "required": false
+    },
+    {
+      "id": "#c:concrete_powders",
+      "required": false
+    },
+    {
+      "id": "#c:glazed_terracottas",
+      "required": false
+    },
+    {
+      "id": "#c:dyes",
+      "required": false
+    },
+    {
+      "id": "#c:shulker_boxes",
+      "required": false
+    },
+    {
+      "id": "#c:chains",
+      "required": false
+    },
+    {
+      "id": "#c:music_discs",
+      "required": false
+    },
+    "minecraft:item_frame",
+    "minecraft:glow_item_frame",
+    "minecraft:painting",
+    "minecraft:flower_pot",
+    "minecraft:decorated_pot",
+    "minecraft:armor_stand",
+    "minecraft:torch",
+    "minecraft:soul_torch",
+    "minecraft:lantern",
+    "minecraft:soul_lantern",
+    "minecraft:end_rod",
+    "minecraft:sea_lantern",
+    "minecraft:glowstone",
+    "minecraft:shroomlight",
+    "minecraft:redstone_lamp",
+    "minecraft:campfire",
+    "minecraft:soul_campfire",
+    "minecraft:jack_o_lantern",
+    "minecraft:carved_pumpkin",
+    "minecraft:conduit",
+    "minecraft:beacon",
+    "minecraft:iron_bars",
+    "minecraft:chain",
+    "minecraft:snow",
+    "minecraft:cobweb",
+    "minecraft:ender_chest",
+    "minecraft:firework_star",
+    "minecraft:disc_fragment_5",
+    "minecraft:flower_banner_pattern",
+    "minecraft:creeper_banner_pattern",
+    "minecraft:skull_banner_pattern",
+    "minecraft:mojang_banner_pattern",
+    "minecraft:globe_banner_pattern",
+    "minecraft:piglin_banner_pattern",
+    "minecraft:flow_banner_pattern",
+    "minecraft:guster_banner_pattern",
+    "minecraft:ochre_froglight",
+    "minecraft:verdant_froglight",
+    "minecraft:pearlescent_froglight"
+  ]
+}
