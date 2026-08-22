@@ -1,0 +1,101 @@
+{
+  "values": [
+    "#minecraft:coals",
+    "#minecraft:coal_ores",
+    "#minecraft:copper_ores",
+    "#minecraft:diamond_ores",
+    "#minecraft:emerald_ores",
+    "#minecraft:gold_ores",
+    "#minecraft:iron_ores",
+    "#minecraft:lapis_ores",
+    "#minecraft:redstone_ores",
+    "#minecraft:beacon_payment_items",
+    "#minecraft:trim_materials",
+    {
+      "id": "#c:ores",
+      "required": false
+    },
+    {
+      "id": "#c:ingots",
+      "required": false
+    },
+    {
+      "id": "#c:gems",
+      "required": false
+    },
+    {
+      "id": "#c:nuggets",
+      "required": false
+    },
+    {
+      "id": "#c:dusts",
+      "required": false
+    },
+    {
+      "id": "#c:raw_materials",
+      "required": false
+    },
+    {
+      "id": "#c:raw_blocks",
+      "required": false
+    },
+    {
+      "id": "#c:storage_blocks",
+      "required": false
+    },
+    {
+      "id": "#c:budding_blocks",
+      "required": false
+    },
+    {
+      "id": "#c:buds",
+      "required": false
+    },
+    {
+      "id": "#c:clusters",
+      "required": false
+    },
+    "minecraft:ancient_debris",
+    "minecraft:netherite_scrap",
+    "minecraft:copper_block",
+    "minecraft:exposed_copper",
+    "minecraft:weathered_copper",
+    "minecraft:oxidized_copper",
+    "minecraft:cut_copper",
+    "minecraft:exposed_cut_copper",
+    "minecraft:weathered_cut_copper",
+    "minecraft:oxidized_cut_copper",
+    "minecraft:chiseled_copper",
+    "minecraft:exposed_chiseled_copper",
+    "minecraft:weathered_chiseled_copper",
+    "minecraft:oxidized_chiseled_copper",
+    "minecraft:waxed_copper_block",
+    "minecraft:waxed_exposed_copper",
+    "minecraft:waxed_weathered_copper",
+    "minecraft:waxed_oxidized_copper",
+    "minecraft:waxed_cut_copper",
+    "minecraft:waxed_exposed_cut_copper",
+    "minecraft:waxed_weathered_cut_copper",
+    "minecraft:waxed_oxidized_cut_copper",
+    "minecraft:waxed_chiseled_copper",
+    "minecraft:waxed_exposed_chiseled_copper",
+    "minecraft:waxed_weathered_chiseled_copper",
+    "minecraft:waxed_oxidized_chiseled_copper",
+    "minecraft:nether_quartz_ore",
+    "minecraft:nether_gold_ore",
+    "minecraft:amethyst_shard",
+    "minecraft:echo_shard",
+    "minecraft:nether_star",
+    "minecraft:heart_of_the_sea",
+    "minecraft:nautilus_shell",
+    "minecraft:amethyst_block",
+    "minecraft:copper_grate",
+    "minecraft:exposed_copper_grate",
+    "minecraft:weathered_copper_grate",
+    "minecraft:oxidized_copper_grate",
+    "minecraft:waxed_copper_grate",
+    "minecraft:waxed_exposed_copper_grate",
+    "minecraft:waxed_weathered_copper_grate",
+    "minecraft:waxed_oxidized_copper_grate"
+  ]
+}

@@ -1,1 +1,15 @@
-{}
+{
+  "tag.item.too-many-chests.preset.building_blocks": "Building Blocks",
+  "tag.item.too-many-chests.preset.wood": "Wood",
+  "tag.item.too-many-chests.preset.stone": "Stone",
+  "tag.item.too-many-chests.preset.ores_and_minerals": "Ores and Minerals",
+  "tag.item.too-many-chests.preset.tools": "Tools",
+  "tag.item.too-many-chests.preset.weapons_and_armour": "Weapons and Armour",
+  "tag.item.too-many-chests.preset.food": "Food",
+  "tag.item.too-many-chests.preset.redstone": "Redstone",
+  "tag.item.too-many-chests.preset.decoration": "Decoration",
+  "tag.item.too-many-chests.preset.nature": "Nature",
+  "tag.item.too-many-chests.preset.mob_drops": "Mob Drops",
+  "tag.item.too-many-chests.preset.brewing": "Brewing",
+  "tag.item.too-many-chests.preset.miscellaneous": "Miscellaneous"
+}

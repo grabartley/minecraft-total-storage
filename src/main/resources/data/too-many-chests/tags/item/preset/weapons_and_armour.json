@@ -1,0 +1,67 @@
+{
+  "values": [
+    "#minecraft:swords",
+    "#minecraft:arrows",
+    "#minecraft:head_armor",
+    "#minecraft:chest_armor",
+    "#minecraft:leg_armor",
+    "#minecraft:foot_armor",
+    "#minecraft:trimmable_armor",
+    "#minecraft:trim_templates",
+    "#minecraft:freeze_immune_wearables",
+    {
+      "id": "#c:armors",
+      "required": false
+    },
+    {
+      "id": "#c:tools/melee_weapon",
+      "required": false
+    },
+    {
+      "id": "#c:tools/ranged_weapon",
+      "required": false
+    },
+    {
+      "id": "#c:tools/bow",
+      "required": false
+    },
+    {
+      "id": "#c:tools/crossbow",
+      "required": false
+    },
+    {
+      "id": "#c:tools/shield",
+      "required": false
+    },
+    {
+      "id": "#c:tools/spear",
+      "required": false
+    },
+    {
+      "id": "#c:tools/mace",
+      "required": false
+    },
+    "minecraft:bow",
+    "minecraft:crossbow",
+    "minecraft:trident",
+    "minecraft:mace",
+    "minecraft:shield",
+    "minecraft:elytra",
+    "minecraft:turtle_helmet",
+    "minecraft:wolf_armor",
+    "minecraft:tipped_arrow",
+    "minecraft:spectral_arrow",
+    "minecraft:firework_rocket",
+    "minecraft:snowball",
+    "minecraft:egg",
+    "minecraft:ender_pearl",
+    "minecraft:wind_charge",
+    "minecraft:totem_of_undying",
+    "minecraft:iron_horse_armor",
+    "minecraft:golden_horse_armor",
+    "minecraft:diamond_horse_armor",
+    "minecraft:netherite_upgrade_smithing_template",
+    "minecraft:heavy_core",
+    "minecraft:fire_charge"
+  ]
+}

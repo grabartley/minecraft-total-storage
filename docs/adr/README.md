@@ -18,6 +18,7 @@ Shared engineering standards across all the mods in this family live in [`../sta
 | [0008](0008-terminals-owner-locked-by-default.md) | Terminals are owner-locked by default |
 | [0009](0009-clients-send-intent.md) | Clients send intent, servers resolve it |
 | [0010](0010-locked-slots.md) | Locked slots are slot-based and survive death |
+| [0011](0011-preset-membership-is-computed.md) | Preset membership is computed, and Miscellaneous is derived |
 
 ## Writing A New Record
 

@@ -26,7 +26,8 @@
       "com.grahambartley.toomanychests.gametest.StorageProviderResolverGameTest",
       "com.grahambartley.toomanychests.gametest.ServerConfigServiceGameTest",
       "com.grahambartley.toomanychests.gametest.NetworkEligibilityGameTest",
-      "com.grahambartley.toomanychests.gametest.ContainerDiscoveryScanGameTest"
+      "com.grahambartley.toomanychests.gametest.ContainerDiscoveryScanGameTest",
+      "com.grahambartley.toomanychests.gametest.PresetTagResolverGameTest"
     ]
   },
   "mixins": [

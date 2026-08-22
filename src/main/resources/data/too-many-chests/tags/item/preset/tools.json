@@ -1,0 +1,77 @@
+{
+  "values": [
+    "#minecraft:pickaxes",
+    "#minecraft:axes",
+    "#minecraft:shovels",
+    "#minecraft:hoes",
+    "#minecraft:compasses",
+    {
+      "id": "#c:tools",
+      "required": false
+    },
+    {
+      "id": "#c:tools/mining_tool",
+      "required": false
+    },
+    {
+      "id": "#c:tools/shear",
+      "required": false
+    },
+    {
+      "id": "#c:tools/fishing_rod",
+      "required": false
+    },
+    {
+      "id": "#c:tools/brush",
+      "required": false
+    },
+    {
+      "id": "#c:tools/igniter",
+      "required": false
+    },
+    {
+      "id": "#c:buckets",
+      "required": false
+    },
+    "minecraft:shears",
+    "minecraft:flint_and_steel",
+    "minecraft:fishing_rod",
+    "minecraft:brush",
+    "minecraft:spyglass",
+    "minecraft:clock",
+    "minecraft:lead",
+    "minecraft:name_tag",
+    "minecraft:saddle",
+    "minecraft:carrot_on_a_stick",
+    "minecraft:warped_fungus_on_a_stick",
+    "minecraft:recovery_compass",
+    "minecraft:bundle",
+    "minecraft:map",
+    "minecraft:filled_map",
+    "minecraft:writable_book",
+    "minecraft:written_book",
+    "minecraft:book",
+    "minecraft:anvil",
+    "minecraft:chipped_anvil",
+    "minecraft:damaged_anvil",
+    "minecraft:grindstone",
+    "minecraft:smithing_table",
+    "minecraft:stonecutter",
+    "minecraft:crafting_table",
+    "minecraft:furnace",
+    "minecraft:blast_furnace",
+    "minecraft:smoker",
+    "minecraft:cauldron",
+    "minecraft:enchanting_table",
+    "minecraft:paper",
+    "minecraft:enchanted_book",
+    "minecraft:knowledge_book",
+    "minecraft:fire_charge",
+    "minecraft:lodestone",
+    "minecraft:respawn_anchor",
+    "minecraft:end_crystal",
+    "minecraft:bowl",
+    "minecraft:glass_bottle",
+    "minecraft:bucket"
+  ]
+}
