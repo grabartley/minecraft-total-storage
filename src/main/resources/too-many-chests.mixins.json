@@ -3,6 +3,7 @@
 	"package": "com.grahambartley.toomanychests.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
+		"BlockEntityMixin",
 		"LevelStorageMixin"
 	],
 	"injectors": {
