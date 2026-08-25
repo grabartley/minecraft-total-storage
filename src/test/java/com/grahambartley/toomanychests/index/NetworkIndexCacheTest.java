@@ -226,4 +226,116 @@ class NetworkIndexCacheTest {
   void trackingRejectsMissingOrigins() {
     assertThrows(NullPointerException.class, () -> cache.track(null));
   }
+
+  @Test
+  void adoptingAContainerAddsWhatItHoldsOnTheNextRead() {
+    containers.put(FIRST, "cobblestone", 16L);
+    containers.put(SECOND, "diamond", 4L);
+    cache.track(List.of(FIRST));
+    cache.index();
+
+    cache.adopt(SECOND);
+
+    assertEquals(4L, cache.index().countOf("diamond"));
+    assertEquals(2, cache.trackedContainerCount());
+  }
+
+  @Test
+  void adoptingAContainerAlreadyTrackedNeitherReReadsItNorDuplicatesIt() {
+    containers.put(FIRST, "cobblestone", 16L);
+    cache.track(List.of(FIRST));
+    cache.index();
+    int readsBefore = containers.totalReads();
+
+    cache.adopt(FIRST);
+
+    assertFalse(cache.isStale());
+    assertEquals(readsBefore, containers.totalReads());
+    assertEquals(1, cache.trackedContainerCount());
+    assertEquals(16L, cache.index().countOf("cobblestone"));
+  }
+
+  @Test
+  void forgettingAContainerTakesEverythingItContributedWithIt() {
+    containers.put(FIRST, "cobblestone", 16L);
+    containers.put(SECOND, "cobblestone", 32L);
+    cache.track(List.of(FIRST, SECOND));
+    cache.index();
+
+    cache.forget(SECOND);
+
+    assertEquals(16L, cache.index().countOf("cobblestone"));
+    assertFalse(cache.isTracking(SECOND));
+  }
+
+  @Test
+  void forgettingTheLastContainerLeavesAnEmptyIndex() {
+    containers.put(FIRST, "cobblestone", 16L);
+    cache.track(List.of(FIRST));
+    cache.index();
+
+    cache.forget(FIRST);
+
+    assertTrue(cache.index().isEmpty());
+    assertEquals(0, cache.trackedContainerCount());
+  }
+
+  @Test
+  void forgettingAContainerRebuildsWithoutReadingAnything() {
+    containers.put(FIRST, "cobblestone", 16L);
+    containers.put(SECOND, "diamond", 4L);
+    cache.track(List.of(FIRST, SECOND));
+    cache.index();
+    int readsBefore = containers.totalReads();
+
+    cache.forget(SECOND);
+    cache.index();
+
+    assertEquals(readsBefore, containers.totalReads());
+    assertEquals(2, cache.recomputeCount());
+  }
+
+  @Test
+  void forgettingAStaleContainerNeverReadsIt() {
+    containers.put(FIRST, "cobblestone", 16L);
+    containers.put(SECOND, "diamond", 4L);
+    cache.track(List.of(FIRST, SECOND));
+    cache.index();
+
+    cache.invalidate(SECOND);
+    cache.forget(SECOND);
+    cache.index();
+
+    assertEquals(1, containers.readsOf(SECOND));
+    assertFalse(cache.index().contains("diamond"));
+  }
+
+  @Test
+  void forgettingAContainerOutsideTheNetworkChangesNothing() {
+    containers.put(FIRST, "cobblestone", 16L);
+    cache.track(List.of(FIRST));
+    cache.index();
+
+    cache.forget(TestOrigins.at(42));
+
+    assertFalse(cache.isStale());
+    assertEquals(1, cache.recomputeCount());
+    assertEquals(16L, cache.index().countOf("cobblestone"));
+  }
+
+  @Test
+  void trackingAfreshForgetsThatAnythingWasAdopted() {
+    containers.put(FIRST, "cobblestone", 16L);
+    cache.track(List.of(FIRST));
+    cache.adopt(SECOND);
+
+    cache.track(List.of(FIRST));
+
+    assertFalse(cache.isTracking(SECOND));
+  }
+
+  @Test
+  void adoptingNothingIsRejected() {
+    assertThrows(NullPointerException.class, () -> cache.adopt(null));
+  }
 }

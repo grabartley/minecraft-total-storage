@@ -12,6 +12,8 @@ import net.minecraft.world.World;
 final class TestOrigins {
   static final RegistryKey<World> OVERWORLD =
       RegistryKey.of(RegistryKeys.WORLD, Identifier.of("minecraft", "overworld"));
+  static final RegistryKey<World> NETHER =
+      RegistryKey.of(RegistryKeys.WORLD, Identifier.of("minecraft", "the_nether"));
 
   private TestOrigins() {}
 

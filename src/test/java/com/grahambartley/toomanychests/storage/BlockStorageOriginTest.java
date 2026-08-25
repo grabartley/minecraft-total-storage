@@ -1,8 +1,10 @@
 package com.grahambartley.toomanychests.storage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -10,6 +12,7 @@ import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -70,6 +73,43 @@ class BlockStorageOriginTest {
     assertEquals(
         new BlockStorageOrigin(NETHER, new BlockPos(1, 2, 3)),
         BlockStorageOrigin.of(world, new BlockPos(1, 2, 3)));
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "0, 0, 0, 0", // the origin chunk
+    "15, 15, 0, 0", // the far corner of it
+    "16, 0, 1, 0",
+    "-1, -1, -1, -1", // negative coordinates floor rather than truncate
+    "-16, -16, -1, -1",
+    "-17, 0, -2, 0",
+  })
+  void aContainerKnowsWhichChunkColumnHoldsIt(int x, int z, int chunkX, int chunkZ) {
+    BlockStorageOrigin origin = new BlockStorageOrigin(OVERWORLD, new BlockPos(x, 64, z));
+
+    assertTrue(origin.isIn(OVERWORLD, new ChunkPos(chunkX, chunkZ)));
+  }
+
+  @Test
+  void aContainerIsNotInANeighbouringChunk() {
+    BlockStorageOrigin origin = new BlockStorageOrigin(OVERWORLD, new BlockPos(8, 64, 8));
+
+    assertFalse(origin.isIn(OVERWORLD, new ChunkPos(1, 0)));
+    assertFalse(origin.isIn(OVERWORLD, new ChunkPos(0, 1)));
+  }
+
+  @Test
+  void theSameChunkColumnInAnotherWorldIsNotThisContainersChunk() {
+    BlockStorageOrigin origin = new BlockStorageOrigin(OVERWORLD, new BlockPos(8, 64, 8));
+
+    assertFalse(origin.isIn(NETHER, new ChunkPos(0, 0)));
+  }
+
+  @Test
+  void noChunkIsNotThisContainersChunk() {
+    BlockStorageOrigin origin = new BlockStorageOrigin(OVERWORLD, new BlockPos(8, 64, 8));
+
+    assertFalse(origin.isIn(OVERWORLD, null));
   }
 
   @Test

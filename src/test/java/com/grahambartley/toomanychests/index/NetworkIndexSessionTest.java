@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests.index;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.toomanychests.mutation.ContainerMutationRegistry;
@@ -11,6 +12,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -195,6 +197,196 @@ class NetworkIndexSessionTest {
     assertTrue(session.isActive());
     assertTrue(session.index().isEmpty());
     assertTrue(registry.isIdle());
+  }
+
+  @Test
+  void admittingAContainerMidSessionListensToItAndIndexesIt() {
+    containers.put(FIRST, "cobblestone", 64L);
+    containers.put(SECOND, "diamond", 8L);
+    session.begin(List.of(FIRST));
+    session.index();
+
+    session.admit(SECOND);
+
+    assertEquals(8L, session.index().countOf("diamond"));
+    assertTrue(session.isWatching(SECOND));
+    assertTrue(registry.isWatched(SECOND));
+  }
+
+  @Test
+  void admittingAContainerWhileUnpoweredListensToNothing() {
+    containers.put(FIRST, "cobblestone", 64L);
+
+    session.admit(FIRST);
+
+    assertFalse(session.isWatching(FIRST));
+    assertTrue(registry.isIdle());
+    assertTrue(session.index().isEmpty());
+  }
+
+  @Test
+  void admittingAContainerAlreadyWatchedNeitherDuplicatesItNorReReadsIt() {
+    containers.put(FIRST, "cobblestone", 64L);
+    session.begin(List.of(FIRST));
+    session.index();
+
+    session.admit(FIRST);
+    session.index();
+
+    assertEquals(List.of(FIRST), session.watchedContainers());
+    assertEquals(1, session.containerReadCount());
+  }
+
+  @Test
+  void droppingAContainerStopsListeningAndTakesItsItemsOutOfTheListing() {
+    containers.put(FIRST, "cobblestone", 64L);
+    containers.put(SECOND, "diamond", 8L);
+    session.begin(List.of(FIRST, SECOND));
+    session.index();
+
+    session.drop(SECOND);
+
+    assertEquals(0L, session.index().countOf("diamond"));
+    assertEquals(64L, session.index().countOf("cobblestone"));
+    assertFalse(registry.isWatched(SECOND));
+    assertFalse(session.isWatching(SECOND));
+  }
+
+  @Test
+  void droppingAContainerLeavesTheRestOfTheNetworkUnread() {
+    containers.put(FIRST, "cobblestone", 64L);
+    containers.put(SECOND, "diamond", 8L);
+    session.begin(List.of(FIRST, SECOND));
+    session.index();
+
+    session.drop(SECOND);
+    session.index();
+
+    assertEquals(2, session.containerReadCount());
+  }
+
+  @Test
+  void droppingAContainerThisSessionNeverHeldLeavesAnotherWatcherAlone() {
+    NetworkIndexSession<String> other = new NetworkIndexSession<>(registry, containers, BY_NAME);
+    other.begin(List.of(OUTSIDE));
+    session.begin(List.of(FIRST));
+
+    session.drop(OUTSIDE);
+
+    assertTrue(registry.isWatched(OUTSIDE));
+    assertTrue(other.isWatching(OUTSIDE));
+  }
+
+  @Test
+  void unloadingAChunkDropsEveryContainerInItAndNothingElse() {
+    containers.put(FIRST, "cobblestone", 64L);
+    containers.put(SECOND, "diamond", 8L);
+    containers.put(OUTSIDE, "torch", 2L);
+    session.begin(List.of(FIRST, SECOND, OUTSIDE));
+    session.index();
+
+    List<StorageOrigin> dropped = session.dropChunk(TestOrigins.OVERWORLD, new ChunkPos(0, 0));
+
+    assertEquals(List.of(FIRST, SECOND), dropped);
+    assertEquals(List.of(OUTSIDE), session.watchedContainers());
+    assertEquals(2L, session.index().countOf("torch"));
+    assertEquals(0L, session.index().countOf("cobblestone"));
+  }
+
+  @Test
+  void unloadingAChunkHoldingNothingWatchedDropsNothing() {
+    session.begin(List.of(FIRST));
+
+    assertTrue(session.dropChunk(TestOrigins.OVERWORLD, new ChunkPos(9, 9)).isEmpty());
+    assertTrue(session.isWatching(FIRST));
+  }
+
+  @Test
+  void unloadingAChunkInAnotherWorldDropsNothing() {
+    session.begin(List.of(FIRST));
+
+    List<StorageOrigin> dropped = session.dropChunk(TestOrigins.NETHER, new ChunkPos(0, 0));
+
+    assertTrue(dropped.isEmpty());
+    assertTrue(session.isWatching(FIRST));
+  }
+
+  @Test
+  void unloadingAChunkWhileUnpoweredDropsNothing() {
+    assertTrue(session.dropChunk(TestOrigins.OVERWORLD, new ChunkPos(0, 0)).isEmpty());
+  }
+
+  @Test
+  void reconcilingAdmitsWhatIsNewAndDropsWhatIsGone() {
+    containers.put(FIRST, "cobblestone", 64L);
+    containers.put(SECOND, "diamond", 8L);
+    session.begin(List.of(FIRST));
+    session.index();
+
+    session.reconcile(List.of(SECOND));
+
+    assertEquals(List.of(SECOND), session.watchedContainers());
+    assertEquals(8L, session.index().countOf("diamond"));
+    assertEquals(0L, session.index().countOf("cobblestone"));
+    assertFalse(registry.isWatched(FIRST));
+  }
+
+  @Test
+  void reconcilingReReadsOnlyTheContainersItAdmitted() {
+    containers.put(FIRST, "cobblestone", 64L);
+    containers.put(SECOND, "diamond", 8L);
+    session.begin(List.of(FIRST));
+    session.index();
+
+    session.reconcile(List.of(FIRST, SECOND));
+    session.index();
+
+    assertEquals(1, containers.readsOf(FIRST));
+    assertEquals(1, containers.readsOf(SECOND));
+  }
+
+  @Test
+  void reconcilingWithTheSameContainersChangesNothing() {
+    containers.put(FIRST, "cobblestone", 64L);
+    session.begin(List.of(FIRST));
+    session.index();
+
+    session.reconcile(List.of(FIRST));
+    session.index();
+
+    assertEquals(1, session.recomputeCount());
+    assertEquals(1, session.containerReadCount());
+  }
+
+  @Test
+  void reconcilingWithNothingLeavesAPoweredSessionHoldingNothing() {
+    containers.put(FIRST, "cobblestone", 64L);
+    session.begin(List.of(FIRST));
+    session.index();
+
+    session.reconcile(List.of());
+
+    assertTrue(session.isActive());
+    assertTrue(session.index().isEmpty());
+    assertTrue(registry.isIdle());
+  }
+
+  @Test
+  void reconcilingWhileUnpoweredAdoptsNothing() {
+    containers.put(FIRST, "cobblestone", 64L);
+
+    session.reconcile(List.of(FIRST));
+
+    assertFalse(session.isActive());
+    assertTrue(registry.isIdle());
+  }
+
+  @Test
+  void membershipChangesRejectMissingOrigins() {
+    session.begin(List.of(FIRST));
+
+    assertThrows(NullPointerException.class, () -> session.admit(null));
+    assertThrows(NullPointerException.class, () -> session.reconcile((List<StorageOrigin>) null));
   }
 
   private static BlockPos positionOf(StorageOrigin origin) {

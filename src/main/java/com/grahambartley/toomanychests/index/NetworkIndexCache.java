@@ -34,6 +34,7 @@ public final class NetworkIndexCache<V> {
   private final Set<StorageOrigin> stale = new LinkedHashSet<>();
 
   private NetworkIndex<V> index = NetworkIndex.empty();
+  private boolean remerge;
   private int recomputeCount;
   private int containerReadCount;
 
@@ -52,6 +53,7 @@ public final class NetworkIndexCache<V> {
     Objects.requireNonNull(origins, "origins");
     contents.clear();
     stale.clear();
+    remerge = false;
     index = NetworkIndex.empty();
     for (final StorageOrigin origin : origins) {
       Objects.requireNonNull(origin, "origin");
@@ -67,14 +69,44 @@ public final class NetworkIndexCache<V> {
     }
   }
 
+  /**
+   * Adds one container to the tracked set, unread, which is what a chunk load produces. Already
+   * tracked containers keep the snapshot they have rather than being re-read for nothing.
+   */
+  public void adopt(StorageOrigin origin) {
+    Objects.requireNonNull(origin, "origin");
+    if (contents.containsKey(origin)) {
+      return;
+    }
+    contents.put(origin, Map.of());
+    stale.add(origin);
+  }
+
+  /**
+   * Removes one container and everything it contributed. Unlike invalidation this cannot wait for a
+   * re-read to correct it: the container is gone, so the next read must not include it, and the
+   * merge is forced even though nothing is stale.
+   */
+  public void forget(StorageOrigin origin) {
+    stale.remove(origin);
+    if (contents.remove(origin) != null) {
+      remerge = true;
+    }
+  }
+
+  public boolean isTracking(StorageOrigin origin) {
+    return contents.containsKey(origin);
+  }
+
   public NetworkIndex<V> index() {
-    if (stale.isEmpty()) {
+    if (stale.isEmpty() && !remerge) {
       return index;
     }
     // Drained before reading, so a storage that marks itself dirty as it is read is picked up by
     // the next read rather than corrupting this one.
     final List<StorageOrigin> reading = List.copyOf(stale);
     stale.clear();
+    remerge = false;
     for (final StorageOrigin origin : reading) {
       contents.put(origin, readContents(origin));
       containerReadCount++;
@@ -85,7 +117,7 @@ public final class NetworkIndexCache<V> {
   }
 
   public boolean isStale() {
-    return !stale.isEmpty();
+    return !stale.isEmpty() || remerge;
   }
 
   public int trackedContainerCount() {
