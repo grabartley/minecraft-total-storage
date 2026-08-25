@@ -65,6 +65,18 @@ public record ScanRegion(BlockPos center, int radius) {
     return List.copyOf(positions);
   }
 
+  /**
+   * Whether the cuboid reaches into one chunk column, which is how a terminal decides that a chunk
+   * loading or unloading somewhere in the world is any of its business.
+   */
+  public boolean touchesChunk(ChunkPos chunkPos) {
+    return chunkPos != null
+        && chunkPos.x >= (minX() >> 4)
+        && chunkPos.x <= (maxX() >> 4)
+        && chunkPos.z >= (minZ() >> 4)
+        && chunkPos.z <= (maxZ() >> 4);
+  }
+
   /** How many block positions the cuboid holds, which is what walking chunks avoids testing. */
   public long blockVolume() {
     final long side = 2L * radius + 1L;

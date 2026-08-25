@@ -32,7 +32,8 @@
       "com.grahambartley.toomanychests.gametest.SortCandidateFactoryGameTest",
       "com.grahambartley.toomanychests.gametest.DataComponentKeyGameTest",
       "com.grahambartley.toomanychests.gametest.LockedSlotsAttachmentGameTest",
-      "com.grahambartley.toomanychests.gametest.NetworkIndexInvalidationGameTest"
+      "com.grahambartley.toomanychests.gametest.NetworkIndexInvalidationGameTest",
+      "com.grahambartley.toomanychests.gametest.NetworkMembershipGameTest"
     ]
   },
   "mixins": [

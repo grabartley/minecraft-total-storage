@@ -3,17 +3,22 @@ package com.grahambartley.toomanychests.index;
 import com.grahambartley.toomanychests.mutation.ContainerMutationListener;
 import com.grahambartley.toomanychests.mutation.ContainerMutationRegistry;
 import com.grahambartley.toomanychests.mutation.ContainerMutations;
+import com.grahambartley.toomanychests.storage.BlockStorageOrigin;
 import com.grahambartley.toomanychests.storage.ContainerScanResult;
 import com.grahambartley.toomanychests.storage.StorageOrigin;
 import com.grahambartley.toomanychests.storage.StorageProvider;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 
 /**
@@ -73,6 +78,75 @@ public final class NetworkIndexSession<V> implements ContainerMutationListener {
     watched.clear();
     cache.track(List.of());
     active = false;
+  }
+
+  /**
+   * Adopts one container mid-session, which only a chunk load produces. Ignored while unpowered,
+   * because a terminal that is listening to nothing must not start listening to something.
+   */
+  public void admit(StorageOrigin origin) {
+    Objects.requireNonNull(origin, "origin");
+    if (!active || watched.contains(origin)) {
+      return;
+    }
+    watched.add(origin);
+    cache.adopt(origin);
+    registry.watch(origin, this);
+  }
+
+  /**
+   * Forgets one container, which is what breaking it or unloading its chunk amounts to. Containers
+   * this session never held are ignored, so every network can be told about every removal.
+   */
+  public void drop(StorageOrigin origin) {
+    if (origin == null || !watched.remove(origin)) {
+      return;
+    }
+    registry.unwatch(origin, this);
+    cache.forget(origin);
+  }
+
+  /** Forgets every container in one chunk, and reports which those were. */
+  public List<StorageOrigin> dropChunk(RegistryKey<World> worldKey, ChunkPos chunkPos) {
+    if (!active || worldKey == null || chunkPos == null) {
+      return List.of();
+    }
+    final List<StorageOrigin> dropping =
+        watched.stream()
+            .filter(
+                origin ->
+                    origin instanceof BlockStorageOrigin block && block.isIn(worldKey, chunkPos))
+            .toList();
+    dropping.forEach(this::drop);
+    return dropping;
+  }
+
+  public void reconcile(ContainerScanResult scan) {
+    Objects.requireNonNull(scan, "scan");
+    reconcile(scan.providers().stream().map(StorageProvider::origin).toList());
+  }
+
+  /**
+   * Brings membership in line with a fresh scan, keeping the snapshots of everything that survived.
+   * A rebuild would be simpler and would also throw away every container the scan did not change,
+   * turning one chunk loading into a re-read of the whole network.
+   */
+  public void reconcile(Collection<StorageOrigin> current) {
+    Objects.requireNonNull(current, "current");
+    if (!active) {
+      return;
+    }
+    final Set<StorageOrigin> incoming = new LinkedHashSet<>(current);
+    for (final StorageOrigin origin : List.copyOf(watched)) {
+      if (!incoming.contains(origin)) {
+        drop(origin);
+      }
+    }
+    incoming.forEach(this::admit);
+  }
+
+  public boolean isWatching(StorageOrigin origin) {
+    return watched.contains(origin);
   }
 
   /** Empty until the session begins, and empty again the moment it ends. */

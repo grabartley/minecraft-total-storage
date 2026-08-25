@@ -144,6 +144,40 @@ class ScanRegionTest {
     assertTrue(region.contains(CENTER));
   }
 
+  @ParameterizedTest
+  @CsvSource({
+    "6, -13", // the centre's own chunk
+    "5, -13", // the chunks the radius spills into
+    "7, -13", "6, -12", "6, -14",
+  })
+  void aRegionReachesIntoEveryChunkItsRadiusSpillsInto(int chunkX, int chunkZ) {
+    ScanRegion region = new ScanRegion(CENTER, 16);
+
+    assertTrue(region.touchesChunk(new ChunkPos(chunkX, chunkZ)));
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "4, -13", "8, -13", "6, -11", "6, -15", "0, 0",
+  })
+  void aRegionReachesNoFurtherThanItsRadius(int chunkX, int chunkZ) {
+    ScanRegion region = new ScanRegion(CENTER, 16);
+
+    assertFalse(region.touchesChunk(new ChunkPos(chunkX, chunkZ)));
+  }
+
+  @Test
+  void everyChunkTheScanWalksIsAChunkTheRegionSaysItTouches() {
+    ScanRegion region = new ScanRegion(CENTER, 24);
+
+    assertTrue(region.chunkPositions().stream().allMatch(region::touchesChunk));
+  }
+
+  @Test
+  void noChunkIsNotTouched() {
+    assertFalse(new ScanRegion(CENTER, 4).touchesChunk(null));
+  }
+
   @Test
   void aMissingCentreIsRejected() {
     assertThrows(NullPointerException.class, () -> new ScanRegion(null, 4));
