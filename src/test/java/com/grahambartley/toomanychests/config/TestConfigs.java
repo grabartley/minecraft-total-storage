@@ -3,10 +3,10 @@ package com.grahambartley.toomanychests.config;
 import java.util.Map;
 
 /** Config fixtures, so tests vary one thing at a time instead of restating eleven fields. */
-final class TestConfigs {
+public final class TestConfigs {
   private TestConfigs() {}
 
-  static TooManyChestsConfig withInts(
+  public static TooManyChestsConfig withInts(
       int maxTerminalRadius,
       int quickStackRadius,
       int nearCapacityWarningPercent,
@@ -26,7 +26,7 @@ final class TestConfigs {
         Map.of());
   }
 
-  static TooManyChestsConfig withOverrides(Map<String, Boolean> overrides) {
+  public static TooManyChestsConfig withOverrides(Map<String, Boolean> overrides) {
     TooManyChestsConfig defaults = TooManyChestsConfig.defaults();
     return new TooManyChestsConfig(
         defaults.maxTerminalRadius(),
@@ -42,7 +42,8 @@ final class TestConfigs {
         overrides);
   }
 
-  static TooManyChestsConfig withModes(TerminalAccessMode accessMode, SortOrdering ordering) {
+  public static TooManyChestsConfig withModes(
+      TerminalAccessMode accessMode, SortOrdering ordering) {
     TooManyChestsConfig defaults = TooManyChestsConfig.defaults();
     return new TooManyChestsConfig(
         defaults.maxTerminalRadius(),
@@ -59,7 +60,7 @@ final class TestConfigs {
   }
 
   /** Every field set away from its default, so a round trip that drops one is visible. */
-  static TooManyChestsConfig everythingNonDefault() {
+  public static TooManyChestsConfig everythingNonDefault() {
     return new TooManyChestsConfig(
         32,
         TerminalAccessMode.OPEN,
