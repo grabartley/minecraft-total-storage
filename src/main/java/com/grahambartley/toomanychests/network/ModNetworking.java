@@ -16,8 +16,19 @@ public final class ModNetworking {
 
   public static void register() {
     PayloadTypeRegistry.playC2S().register(LockTogglePayload.ID, LockTogglePayload.CODEC);
+    PayloadTypeRegistry.playC2S().register(ConfigEditPayload.ID, ConfigEditPayload.CODEC);
+    PayloadTypeRegistry.playS2C().register(ConfigSyncPayload.ID, ConfigSyncPayload.CODEC);
+
     ServerPlayNetworking.registerGlobalReceiver(
         LockTogglePayload.ID,
         (payload, context) -> LockToggleService.toggle(context.player(), payload.slot()));
+    ServerPlayNetworking.registerGlobalReceiver(
+        ConfigEditPayload.ID,
+        (payload, context) ->
+            context
+                .server()
+                .execute(() -> ConfigSync.handleEdit(context.player(), payload.config())));
+
+    ConfigSync.register();
   }
 }

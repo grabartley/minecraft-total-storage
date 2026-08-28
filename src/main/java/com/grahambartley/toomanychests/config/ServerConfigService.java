@@ -7,7 +7,12 @@ import net.minecraft.world.level.storage.LevelStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Holds the running server's configuration and keeps it tied to the world that owns it. */
+/**
+ * Holds the running server's configuration and keeps it tied to the world that owns it.
+ *
+ * <p>Every accepted change goes out through {@link ServerConfigChanges}, so this stays the single
+ * place a setting can move and nothing downstream can be left reading the previous value.
+ */
 public final class ServerConfigService {
   public static final int OP_PERMISSION_LEVEL = 2;
 
@@ -51,6 +56,7 @@ public final class ServerConfigService {
       return false;
     }
     current = updated;
+    ServerConfigChanges.publish(server, updated);
     return true;
   }
 

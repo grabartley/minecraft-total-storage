@@ -187,7 +187,8 @@ tasks.register("verifyMainSourceSideSafety") {
 			"com.grahambartley.toomanychests.TooManyChestsDataGenerator",
 			"com.grahambartley.toomanychests.TooManyChestsModMenu",
 			"com.grahambartley.toomanychests.ModKeyBindings",
-			"com.grahambartley.toomanychests.network.ModNetworkingClient"
+			"com.grahambartley.toomanychests.network.ModNetworkingClient",
+			"com.grahambartley.toomanychests.config.ClientConfigMirror"
 		]
 		def violations = []
 
