@@ -24,6 +24,7 @@ Shared engineering standards across all the mods in this family live in [`../sta
 | [0014](0014-containers-leave-on-sight-and-return-on-chunk-load.md) | Containers leave the network on sight, and return only on a chunk load |
 | [0015](0015-one-runner-opens-every-transaction.md) | One runner opens every transaction |
 | [0016](0016-locks-are-toggled-by-a-modifier-click.md) | Locks are toggled by a modifier click, not a lock mode |
+| [0017](0017-terminal-gui-art-ships-as-atlas-sprites.md) | Terminal GUI art ships as atlas sprites, not a sprite sheet |
 
 ## Writing A New Record
 

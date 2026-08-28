@@ -20,3 +20,4 @@ Gradle + Fabric Loom toolchain with Spotless formatting, JaCoCo coverage, Fabric
 
 - [`docs/standards.md`](docs/standards.md) covers the engineering standards shared across these mods
 - [`docs/adr/`](docs/adr/) records the architecture decisions behind this mod and the reasoning for each
+- [`docs/terminal-gui-sprites.md`](docs/terminal-gui-sprites.md) is the sprite reference for the terminal screen, and how to edit the art
