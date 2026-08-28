@@ -1,0 +1,35 @@
+# Terminal face, unpowered. The screen is blank; the indicator and the dust run are dull.
+# size = 16x16
+# Terminal block palette. Same chassis family as the terminal screen sprites, with
+# redstone tones for the powered detailing so the block and its GUI read as one machine.
+# W = D8D8E0   bevel highlight
+# L = B4B4C0   chassis light, up and left
+# M = 90909C   chassis base
+# D = 6E6E7A   chassis shadow
+# K = 4C4C56   bevel dark, down and right
+# B = 2A2A32   seam
+# n = 12151B   vent slot, unlit
+# p = 1B1F27   screen, unlit
+# q = 262C37   screen rule
+# x = 7A1C16   redstone, unpowered
+# r = B93227   redstone, powered
+# R = F05A45   redstone, powered highlight
+# Y = FF9A6E   redstone glow, powered only
+# i = C8CDD6   rivet light
+# j = 8A93A3   rivet mid
+LLLLLLLLLLLLLLLL
+LMMMMMMMMMMMMMMK
+LMKKKKKKKKKKKKMK
+LMKppppppppppLMK
+LMKqqqpppppppLMK
+LMKppppppppppLMK
+LMKppppppppppLMK
+LMKppppppppppLMK
+LMKppppppppppLMK
+LMKppppppppppLMK
+LMLLLLLLLLLLLLMK
+LMMMMMMMMMMMMMMK
+LMxxMMMMMMMMMMMK
+LMxxMMxxxxxxxxMK
+LMMMMMMMMMMMMMMK
+KKKKKKKKKKKKKKKK

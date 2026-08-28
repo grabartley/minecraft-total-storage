@@ -11,5 +11,9 @@
   "tag.item.too-many-chests.preset.nature": "Nature",
   "tag.item.too-many-chests.preset.mob_drops": "Mob Drops",
   "tag.item.too-many-chests.preset.brewing": "Brewing",
-  "tag.item.too-many-chests.preset.miscellaneous": "Miscellaneous"
+  "tag.item.too-many-chests.preset.miscellaneous": "Miscellaneous",
+  "subtitles.too-many-chests.terminal.power_on": "Terminal powers up",
+  "subtitles.too-many-chests.terminal.power_off": "Terminal powers down",
+  "subtitles.too-many-chests.terminal.screen_open": "Terminal opens",
+  "subtitles.too-many-chests.terminal.deposit_confirm": "Terminal accepts items"
 }

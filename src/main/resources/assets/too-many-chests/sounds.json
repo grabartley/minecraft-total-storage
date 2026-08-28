@@ -1,0 +1,30 @@
+{
+  "block.terminal.power_on": {
+    "category": "block",
+    "subtitle": "subtitles.too-many-chests.terminal.power_on",
+    "sounds": [
+      "too-many-chests:terminal/power_on"
+    ]
+  },
+  "block.terminal.power_off": {
+    "category": "block",
+    "subtitle": "subtitles.too-many-chests.terminal.power_off",
+    "sounds": [
+      "too-many-chests:terminal/power_off"
+    ]
+  },
+  "block.terminal.screen_open": {
+    "category": "block",
+    "subtitle": "subtitles.too-many-chests.terminal.screen_open",
+    "sounds": [
+      "too-many-chests:terminal/screen_open"
+    ]
+  },
+  "block.terminal.deposit_confirm": {
+    "category": "block",
+    "subtitle": "subtitles.too-many-chests.terminal.deposit_confirm",
+    "sounds": [
+      "too-many-chests:terminal/deposit_confirm"
+    ]
+  }
+}
