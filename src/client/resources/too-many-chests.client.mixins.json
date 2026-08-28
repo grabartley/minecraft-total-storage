@@ -2,7 +2,9 @@
 	"required": true,
 	"package": "com.grahambartley.toomanychests.mixin.client",
 	"compatibilityLevel": "JAVA_21",
-	"client": [],
+	"client": [
+		"HandledScreenMixin"
+	],
 	"injectors": {
 		"defaultRequire": 1
 	}
