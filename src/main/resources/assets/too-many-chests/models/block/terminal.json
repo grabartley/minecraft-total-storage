@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "too-many-chests:block/terminal_front",
+    "north": "too-many-chests:block/terminal_front",
+    "east": "too-many-chests:block/terminal_side",
+    "south": "too-many-chests:block/terminal_side",
+    "west": "too-many-chests:block/terminal_side",
+    "up": "too-many-chests:block/terminal_top",
+    "down": "too-many-chests:block/terminal_bottom"
+  }
+}
