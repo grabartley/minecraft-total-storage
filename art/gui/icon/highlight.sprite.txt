@@ -1,0 +1,35 @@
+# Re-highlight in world. A reticle with ticks on all four sides.
+# size = 12x12
+# Too Many Chests terminal palette. Cool steel chassis, deep screen recess,
+# redstone accent for active state, matching the terminal block's redstone identity.
+# W = F0F0F5   bevel highlight, up and left
+# L = C9C9D4   chassis light
+# M = ACACB8   chassis base
+# D = 8A8A96   chassis shadow
+# K = 5E5E6A   bevel dark, down and right
+# B = 30303A   outer border
+# n = 15181E   screen recess floor
+# p = 1E222B   screen base
+# q = 2A303B   screen rule
+# s = 6B6B77   slot floor
+# t = 474751   slot recess wall
+# x = 8A211A   accent dark
+# r = C43A2E   accent base
+# R = ED6353   accent light
+# i = E4E9F2   glyph light
+# j = 9AA3B3   glyph mid
+# o = 22262E   glyph dark
+# e = 4FD08A   phosphor
+# E = 9CF0C2   phosphor light
+.....oo.....
+....oooo....
+..oo....oo..
+.o........o.
+.o........o.
+oo...oo...oo
+oo...oo...oo
+.o........o.
+.o........o.
+..oo....oo..
+....oooo....
+.....oo.....
