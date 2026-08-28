@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests;
 
 import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.lifecycle.ContainerLifecycle;
+import com.grahambartley.toomanychests.lifecycle.ServerThread;
 import com.grahambartley.toomanychests.lock.LockedSlotsAttachment;
 import com.grahambartley.toomanychests.mutation.ContainerMutations;
 import net.fabricmc.api.ModInitializer;
@@ -16,6 +17,7 @@ public class TooManyChests implements ModInitializer {
   @Override
   public void onInitialize() {
     LockedSlotsAttachment.register();
+    ServerThread.register();
     ContainerLifecycle.register();
     ServerLifecycleEvents.SERVER_STARTING.register(ServerConfigService::loadFromWorld);
     ServerLifecycleEvents.SERVER_STOPPED.register(
