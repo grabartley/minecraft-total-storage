@@ -17,6 +17,10 @@ public class TooManyChests implements ModInitializer {
 
   @Override
   public void onInitialize() {
+    ModSounds.initialize();
+    ModBlocks.initialize();
+    ModItems.initialize();
+    ModBlockEntities.initialize();
     LockedSlotsAttachment.register();
     ModNetworking.register();
     ServerThread.register();
