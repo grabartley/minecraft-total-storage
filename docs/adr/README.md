@@ -26,6 +26,7 @@ Shared engineering standards across all the mods in this family live in [`../sta
 | [0016](0016-locks-are-toggled-by-a-modifier-click.md) | Locks are toggled by a modifier click, not a lock mode |
 | [0017](0017-terminal-gui-art-ships-as-atlas-sprites.md) | Terminal GUI art ships as atlas sprites, not a sprite sheet |
 | [0018](0018-two-gates-decide-what-may-be-sorted.md) | Two gates decide what may be sorted |
+| [0019](0019-settings-are-described-once.md) | Settings are described once, not wired twice |
 
 ## Writing A New Record
 

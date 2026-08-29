@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests;
 
+import com.grahambartley.toomanychests.command.TooManyChestsCommand;
 import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.lifecycle.ContainerLifecycle;
 import com.grahambartley.toomanychests.lifecycle.ServerThread;
@@ -23,6 +24,7 @@ public class TooManyChests implements ModInitializer {
     ModBlockEntities.initialize();
     LockedSlotsAttachment.register();
     ModNetworking.register();
+    TooManyChestsCommand.register();
     ServerThread.register();
     ContainerLifecycle.register();
     ServerLifecycleEvents.SERVER_STARTING.register(ServerConfigService::loadFromWorld);

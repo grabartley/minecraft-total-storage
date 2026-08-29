@@ -4,11 +4,12 @@ import java.util.Locale;
 import java.util.Optional;
 
 /** Who may operate a terminal. See ADR 0008. */
-public enum TerminalAccessMode {
+public enum TerminalAccessMode implements ConfigEnum {
   OWNER,
   TRUSTED,
   OPEN;
 
+  @Override
   public String id() {
     return name().toLowerCase(Locale.ROOT);
   }

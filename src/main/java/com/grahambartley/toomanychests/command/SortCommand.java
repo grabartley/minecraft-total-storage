@@ -1,0 +1,56 @@
+package com.grahambartley.toomanychests.command;
+
+import com.grahambartley.toomanychests.sort.ContainerSortService;
+import com.grahambartley.toomanychests.sort.SortOutcome;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.minecraft.screen.ScreenHandler;
+import net.minecraft.server.command.CommandManager;
+import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.network.ServerPlayerEntity;
+
+/**
+ * The {@code /tmc sort} command, which is not gated because it reaches nothing the player is not
+ * already standing in front of.
+ *
+ * <p>The screen is read from the server's own record of what the player has open, so this command
+ * is the same server-resolved request a sort button sends and cannot be aimed anywhere else.
+ */
+public final class SortCommand {
+  private static final ContainerSortService SORTING = new ContainerSortService();
+
+  private SortCommand() {}
+
+  static LiteralArgumentBuilder<ServerCommandSource> node() {
+    return CommandManager.literal("sort").executes(SortCommand::sort);
+  }
+
+  private static int sort(CommandContext<ServerCommandSource> context)
+      throws CommandSyntaxException {
+    final ServerCommandSource source = context.getSource();
+    final ServerPlayerEntity player = source.getPlayerOrThrow();
+    final ScreenHandler open = player.currentScreenHandler;
+    if (open == null) {
+      source.sendError(CommandMessages.nothingOpenToSort());
+      return 0;
+    }
+    return report(source, SORTING.sort(player, open.syncId));
+  }
+
+  private static int report(ServerCommandSource source, SortOutcome outcome) {
+    switch (outcome) {
+      case SORTED -> {
+        source.sendFeedback(CommandMessages::sorted, false);
+        return 1;
+      }
+      case NOTHING_TO_SORT -> {
+        source.sendFeedback(CommandMessages::nothingToSort, false);
+        return 0;
+      }
+      case FAILED -> source.sendError(CommandMessages.sortFailed());
+      default -> source.sendError(CommandMessages.nothingOpenToSort());
+    }
+    return 0;
+  }
+}
