@@ -63,6 +63,26 @@ public record SortCandidate(
     return PresetTag.FALLBACK;
   }
 
+  /**
+   * The same holding at a different quantity, which is what merging two part stacks of one item
+   * produces. The count is part of the ordering, so it cannot be changed without rebuilding.
+   */
+  public SortCandidate withCount(long newCount) {
+    return newCount == count
+        ? this
+        : new SortCandidate(categories, identifier, componentsKey, displayName, newCount, maxCount);
+  }
+
+  /**
+   * Lowered to whatever a destination will actually hold, so an arrangement fits where it lands.
+   */
+  public SortCandidate cappedAt(int slotCapacity) {
+    final int capped = Math.min(maxCount, slotCapacity);
+    return capped == maxCount
+        ? this
+        : new SortCandidate(categories, identifier, componentsKey, displayName, count, capped);
+  }
+
   public boolean isFullStack() {
     return count >= maxCount;
   }
