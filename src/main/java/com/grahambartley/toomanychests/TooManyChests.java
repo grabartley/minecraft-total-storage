@@ -7,6 +7,8 @@ import com.grahambartley.toomanychests.lifecycle.ServerThread;
 import com.grahambartley.toomanychests.lock.LockedSlotsAttachment;
 import com.grahambartley.toomanychests.mutation.ContainerMutations;
 import com.grahambartley.toomanychests.network.ModNetworking;
+import com.grahambartley.toomanychests.terminal.TerminalLifecycle;
+import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import org.slf4j.Logger;
@@ -27,9 +29,11 @@ public class TooManyChests implements ModInitializer {
     TooManyChestsCommand.register();
     ServerThread.register();
     ContainerLifecycle.register();
+    TerminalLifecycle.register();
     ServerLifecycleEvents.SERVER_STARTING.register(ServerConfigService::loadFromWorld);
     ServerLifecycleEvents.SERVER_STOPPED.register(
         server -> {
+          TerminalNetworks.power().shutDownAll();
           ContainerMutations.registry().clear();
           ContainerLifecycle.registry().clear();
         });

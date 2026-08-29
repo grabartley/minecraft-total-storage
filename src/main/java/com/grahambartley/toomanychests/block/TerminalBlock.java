@@ -3,6 +3,8 @@ package com.grahambartley.toomanychests.block;
 import com.grahambartley.toomanychests.TooManyChests;
 import com.grahambartley.toomanychests.block.entity.TerminalBlockEntity;
 import com.grahambartley.toomanychests.config.ServerConfigService;
+import com.grahambartley.toomanychests.terminal.TerminalNetworks;
+import com.grahambartley.toomanychests.terminal.TerminalPower;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockEntityProvider;
@@ -13,9 +15,11 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.state.property.Properties;
+import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -27,9 +31,9 @@ import net.minecraft.world.World;
  * remembers lives in its block entity, and the only thing the block state carries is what has to be
  * rendered, which is which way the screen points and whether it is lit.
  *
- * <p>The powered property is declared here but not yet driven. The shipped blockstate file covers
- * all eight facing and power combinations, so a terminal that did not expose both properties would
- * resolve to no model at all.
+ * <p>Power is the terminal's on switch, per ADR 0007. The block state carries it so the lit model
+ * resolves and so a client can tell an inert terminal from a working one without being told; what
+ * the signal actually starts and stops lives in {@link TerminalPower}.
  */
 public class TerminalBlock extends HorizontalFacingBlock implements BlockEntityProvider {
   public static final MapCodec<TerminalBlock> CODEC = createCodec(TerminalBlock::new);
@@ -54,12 +58,16 @@ public class TerminalBlock extends HorizontalFacingBlock implements BlockEntityP
     builder.add(FACING, POWERED);
   }
 
-  /** The screen faces whoever placed the terminal, as a furnace's front does. */
+  /**
+   * The screen faces whoever placed the terminal, as a furnace's front does, and a terminal placed
+   * into an already powered position starts powered rather than waiting for a neighbour update that
+   * will never come.
+   */
   @Override
   public BlockState getPlacementState(ItemPlacementContext ctx) {
     return this.getDefaultState()
         .with(FACING, ctx.getHorizontalPlayerFacing().getOpposite())
-        .with(POWERED, Boolean.FALSE);
+        .with(POWERED, ctx.getWorld().isReceivingRedstonePower(ctx.getBlockPos()));
   }
 
   @Override
@@ -89,9 +97,31 @@ public class TerminalBlock extends HorizontalFacingBlock implements BlockEntityP
   }
 
   @Override
+  protected void neighborUpdate(
+      BlockState state,
+      World world,
+      BlockPos pos,
+      Block sourceBlock,
+      BlockPos sourcePos,
+      boolean notify) {
+    super.neighborUpdate(state, world, pos, sourceBlock, sourcePos, notify);
+    if (world instanceof ServerWorld serverWorld) {
+      TerminalNetworks.power().signalChanged(serverWorld, pos, state);
+    }
+  }
+
+  /**
+   * A player who has forgotten the power requirement gets told, because a terminal that does
+   * nothing and says nothing is indistinguishable from a broken mod.
+   */
+  @Override
   protected ActionResult onUse(
       BlockState state, World world, BlockPos pos, PlayerEntity player, BlockHitResult hit) {
     if (world.isClient) {
+      return ActionResult.SUCCESS;
+    }
+    if (!state.get(POWERED)) {
+      player.sendMessage(Text.translatable("block.too-many-chests.terminal.unpowered"), true);
       return ActionResult.SUCCESS;
     }
     TooManyChests.LOGGER.debug(
