@@ -4,12 +4,13 @@ package com.grahambartley.toomanychests.lock;
  * The colour painted into a slot to show it is locked.
  *
  * <p>It goes behind the item rather than over it, so the stack, its count, and its durability bar
- * stay exactly as readable as they were. That costs contrast against pale items, which is why a
- * badge is still owed on top of this.
+ * stay exactly as readable as they were. The badge drawn on top is what carries the meaning, so
+ * this stays a wash rather than a fill: a player who cannot separate the amber from the slot loses
+ * nothing, and a player who can gets the whole locked region at a glance.
  */
 public final class LockedSlotTint {
   public static final int NONE = 0;
-  public static final int LOCKED = 0xA0FFAA00;
+  public static final int LOCKED = 0x60FFAA00;
 
   private LockedSlotTint() {}
 

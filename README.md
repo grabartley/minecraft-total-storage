@@ -42,3 +42,4 @@ Gradle + Fabric Loom toolchain with Spotless formatting, JaCoCo coverage, Fabric
 - [`docs/adr/`](docs/adr/) records the architecture decisions behind this mod and the reasoning for each
 - [`docs/terminal-block-art.md`](docs/terminal-block-art.md) is the reference for the terminal block's textures, models and sounds, and the blockstate it needs
 - [`docs/terminal-gui-sprites.md`](docs/terminal-gui-sprites.md) is the sprite reference for the terminal screen, and how to edit the art
+- [`docs/locked-slot-art.md`](docs/locked-slot-art.md) is the lock badge reference, and how a locked slot signals itself without relying on colour
