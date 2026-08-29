@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests.sort;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -176,5 +177,63 @@ class SortCandidateTest {
         Arrays.stream(PresetTag.values())
             .map(preset -> withCategories(preset).primaryCategory())
             .toList());
+  }
+
+  @Test
+  void changingTheQuantityKeepsEverythingElseAboutTheHolding() {
+    SortCandidate original = TestCandidates.of(PresetTag.STONE, "minecraft:stone", 5L);
+
+    SortCandidate restacked = original.withCount(40L);
+
+    assertEquals(40L, restacked.count());
+    assertEquals(original.categories(), restacked.categories());
+    assertEquals(original.identifier(), restacked.identifier());
+    assertEquals(original.componentsKey(), restacked.componentsKey());
+    assertEquals(original.displayName(), restacked.displayName());
+    assertEquals(original.maxCount(), restacked.maxCount());
+  }
+
+  @Test
+  void changingTheQuantityToWhatItAlreadyIsChangesNothing() {
+    SortCandidate original = TestCandidates.of(PresetTag.STONE, "minecraft:stone", 5L);
+
+    assertSame(original, original.withCount(5L));
+  }
+
+  @Test
+  void aQuantityBelowZeroIsStillRejectedWhenChangingIt() {
+    SortCandidate original = TestCandidates.of(PresetTag.STONE, "minecraft:stone", 5L);
+
+    assertThrows(IllegalArgumentException.class, () -> original.withCount(-1L));
+  }
+
+  @ParameterizedTest
+  @CsvSource({"64,16,16", "64,1,1", "16,64,16", "64,64,64", "16,16,16"})
+  void cappingLowersTheStackLimitButNeverRaisesIt(int maxCount, int capacity, int expected) {
+    SortCandidate candidate =
+        TestCandidates.of(PresetTag.STONE, "minecraft:stone", "", "Stone", 5L, maxCount);
+
+    assertEquals(expected, candidate.cappedAt(capacity).maxCount());
+  }
+
+  @Test
+  void cappingKeepsTheQuantityAndEverythingElse() {
+    SortCandidate original =
+        TestCandidates.of(PresetTag.STONE, "minecraft:stone", "", "Stone", 40L, 64);
+
+    SortCandidate capped = original.cappedAt(16);
+
+    assertEquals(40L, capped.count());
+    assertEquals(original.identifier(), capped.identifier());
+    assertEquals(original.categories(), capped.categories());
+  }
+
+  @Test
+  void cappingAtOrAboveTheStackLimitChangesNothing() {
+    SortCandidate original =
+        TestCandidates.of(PresetTag.STONE, "minecraft:stone", "", "Stone", 5L, 64);
+
+    assertSame(original, original.cappedAt(64));
+    assertSame(original, original.cappedAt(999));
   }
 }

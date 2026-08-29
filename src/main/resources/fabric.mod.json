@@ -36,7 +36,10 @@
       "com.grahambartley.toomanychests.gametest.LockToggleServiceGameTest",
       "com.grahambartley.toomanychests.gametest.NetworkIndexInvalidationGameTest",
       "com.grahambartley.toomanychests.gametest.NetworkMembershipGameTest",
-      "com.grahambartley.toomanychests.gametest.TerminalBlockGameTest"
+      "com.grahambartley.toomanychests.gametest.TerminalBlockGameTest",
+      "com.grahambartley.toomanychests.gametest.SortableSlotsGameTest",
+      "com.grahambartley.toomanychests.gametest.ContainerSortServiceGameTest",
+      "com.grahambartley.toomanychests.gametest.SortViewerSyncGameTest"
     ]
   },
   "mixins": [
