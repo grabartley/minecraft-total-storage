@@ -1,0 +1,26 @@
+# Container sort button, unavailable. The bevel is removed entirely and the button reads flat against the screen.
+# size = 14x14
+# Vanilla container chrome, not the terminal palette. This button is drawn on top of
+# someone else's screen, so it borrows that screen's greys rather than the mod's steel.
+# B = 373737   vanilla slot border, the button outline
+# W = FFFFFF   bevel highlight, up and left
+# K = 555555   bevel shadow, down and right
+# M = C6C6C6   vanilla container face
+# L = DBDBDB   vanilla container face, lit for hover
+# D = 8B8B8B   vanilla chassis shadow, the pressed face and the disabled chrome
+# o = 404040   glyph, vanilla label dark
+# g = 6E6E6E   glyph, muted for disabled
+DDDDDDDDDDDDDD
+DMMMMMMMMMMMMD
+DMMMMMMMMMMMMD
+DMMggggMgMMMMD
+DMMMMMMMgMMMMD
+DMMgggMMgMMMMD
+DMMMMMMMgMMMMD
+DMMggMMMgMMMMD
+DMMMMMgggggMMD
+DMMMMMMgggMMMD
+DMMMMMMMgMMMMD
+DMMMMMMMMMMMMD
+DMMMMMMMMMMMMD
+DDDDDDDDDDDDDD
