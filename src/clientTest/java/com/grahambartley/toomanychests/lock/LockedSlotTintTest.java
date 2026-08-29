@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 class LockedSlotTintTest {
   private static final int ALPHA_MASK = 0xFF000000;
+  private static final int HALF_OPACITY = 128;
 
   @Test
   void aLockedSlotIsPainted() {
@@ -27,9 +28,24 @@ class LockedSlotTintTest {
 
   @Test
   void theTintIsTranslucentSoTheSlotUnderneathStillReads() {
-    int alpha = (LockedSlotTint.LOCKED & ALPHA_MASK) >>> 24;
+    int alpha = alphaOf(LockedSlotTint.LOCKED);
 
     assertTrue(
         alpha > 0 && alpha < 255, "Expected a partly transparent tint but alpha was " + alpha);
+  }
+
+  @Test
+  void theTintStaysAWashSoTheBadgeRemainsTheIndicator() {
+    int alpha = alphaOf(LockedSlotTint.LOCKED);
+
+    assertTrue(
+        alpha < HALF_OPACITY,
+        "The tint reinforces the badge rather than carrying the lock state alone, so it must leave"
+            + " most of the slot showing, but alpha was "
+            + alpha);
+  }
+
+  private static int alphaOf(int colour) {
+    return (colour & ALPHA_MASK) >>> 24;
   }
 }
