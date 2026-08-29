@@ -13,6 +13,7 @@
   "tag.item.too-many-chests.preset.brewing": "Brewing",
   "tag.item.too-many-chests.preset.miscellaneous": "Miscellaneous",
   "block.too-many-chests.terminal": "Storage Terminal",
+  "block.too-many-chests.terminal.unpowered": "This terminal needs a redstone signal before it will open",
   "subtitles.too-many-chests.terminal.power_on": "Terminal powers up",
   "subtitles.too-many-chests.terminal.power_off": "Terminal powers down",
   "subtitles.too-many-chests.terminal.screen_open": "Terminal opens",
