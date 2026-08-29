@@ -26,6 +26,7 @@
       "com.grahambartley.toomanychests.gametest.StorageProviderResolverGameTest",
       "com.grahambartley.toomanychests.gametest.ServerConfigServiceGameTest",
       "com.grahambartley.toomanychests.gametest.ConfigSyncGameTest",
+      "com.grahambartley.toomanychests.gametest.ConfigCommandGameTest",
       "com.grahambartley.toomanychests.gametest.NetworkEligibilityGameTest",
       "com.grahambartley.toomanychests.gametest.ContainerDiscoveryScanGameTest",
       "com.grahambartley.toomanychests.gametest.PresetTagResolverGameTest",

@@ -8,6 +8,26 @@ A better item storage solution for Minecraft.
 
 - Better item storage solution
 
+## Commands
+
+Every server-wide setting is configurable from the console, so a server can be set up without a client mod and without editing files. `/toomanychests` and its alias `/tmc` are the same tree.
+
+| Command | Who | What it does |
+|---|---|---|
+| `/tmc` | anyone | Lists the commands |
+| `/tmc config list` | anyone | Every setting, its value, and its default |
+| `/tmc config get <setting>` | anyone | One setting's value |
+| `/tmc config set <setting> <value>` | operators | Moves a setting, refusing a value outside its range |
+| `/tmc config reset <setting>` | operators | Restores one setting's default |
+| `/tmc config reset all` | operators | Restores every default |
+| `/tmc config eligibility list` | anyone | Blocks forced into or out of every network |
+| `/tmc config eligibility set <block> <true\|false>` | operators | Forces a block eligible or ineligible |
+| `/tmc config eligibility clear <block>` | operators | Stops forcing that block |
+| `/tmc config eligibility clear all` | operators | Stops forcing every block |
+| `/tmc sort` | anyone | Sorts the container you have open |
+
+Setting names and their values tab-complete. Changes are saved to the world immediately and pushed to connected clients. Operators are permission level 2.
+
 ## Development
 
 Gradle + Fabric Loom toolchain with Spotless formatting, JaCoCo coverage, Fabric GameTest, and CI/CD via GitHub Actions, sharing the workflow of [minecraft-dogs-unleashed](https://github.com/grabartley/minecraft-dogs-unleashed).
