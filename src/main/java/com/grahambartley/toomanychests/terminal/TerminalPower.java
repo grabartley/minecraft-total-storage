@@ -3,6 +3,7 @@ package com.grahambartley.toomanychests.terminal;
 import com.grahambartley.toomanychests.ModSounds;
 import com.grahambartley.toomanychests.block.TerminalBlock;
 import com.grahambartley.toomanychests.block.entity.TerminalBlockEntity;
+import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.lifecycle.NetworkMembership;
 import com.grahambartley.toomanychests.storage.ScanRegion;
 import java.util.Objects;
@@ -92,6 +93,24 @@ public final class TerminalPower {
     deactivate(world, pos);
   }
 
+  /**
+   * Brings a running terminal's network in line with the region it should be walking now, which is
+   * one scan when that region has really moved and nothing at all when it has not. A terminal that
+   * is not running is left alone, because powering it on scans the new region anyway.
+   */
+  public boolean rescan(ServerWorld world, BlockPos pos) {
+    if (world == null || pos == null) {
+      return false;
+    }
+    final NetworkMembership running = registry.find(TerminalAddress.of(world, pos)).orElse(null);
+    if (running == null || running.region().equals(scanRegion(world, pos))) {
+      return false;
+    }
+    deactivate(world, pos);
+    activate(world, pos);
+    return true;
+  }
+
   /** Shuts down every network at once, which only a server stopping asks for. */
   public void shutDownAll() {
     registry.clear().forEach(NetworkMembership::powerOff);
@@ -102,8 +121,7 @@ public final class TerminalPower {
     if (registry.isActive(address)) {
       return;
     }
-    final NetworkMembership network =
-        NetworkMembership.around(world, new ScanRegion(pos, radiusOf(world, pos)));
+    final NetworkMembership network = NetworkMembership.around(world, scanRegion(world, pos));
     network.powerOn();
     registry.activate(address, network).ifPresent(NetworkMembership::powerOff);
   }
@@ -115,9 +133,18 @@ public final class TerminalPower {
     registry.deactivate(TerminalAddress.of(world, pos)).ifPresent(NetworkMembership::powerOff);
   }
 
-  private static int radiusOf(ServerWorld world, BlockPos pos) {
-    return world.getBlockEntity(pos) instanceof TerminalBlockEntity terminal
-        ? terminal.settings().radius()
-        : TerminalSettings.DEFAULT_RADIUS;
+  /**
+   * A terminal keeps the radius it was configured with whatever the server maximum does, and the
+   * clamp is applied here, where a scan is about to walk it. Rewriting the terminal instead would
+   * turn a maximum an operator lowers and thinks better of into a permanent loss of reach.
+   */
+  private static ScanRegion scanRegion(ServerWorld world, BlockPos pos) {
+    final int configured =
+        world.getBlockEntity(pos) instanceof TerminalBlockEntity terminal
+            ? terminal.settings().radius()
+            : TerminalSettings.DEFAULT_RADIUS;
+    return new ScanRegion(
+        pos,
+        TerminalRadius.effective(configured, ServerConfigService.current().maxTerminalRadius()));
   }
 }

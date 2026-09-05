@@ -2,7 +2,9 @@ package com.grahambartley.toomanychests.command;
 
 import com.grahambartley.toomanychests.config.ConfigSetting;
 import com.grahambartley.toomanychests.config.TooManyChestsConfig;
+import com.grahambartley.toomanychests.terminal.TerminalRadius;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.BlockPos;
 
 /**
  * Everything the command tree says, in one place.
@@ -30,6 +32,11 @@ public final class CommandMessages {
     return line(
         "help.eligibility",
         "/tmc config eligibility list | set <block> <true|false> | clear <block> | clear all");
+  }
+
+  public static Text helpTerminal() {
+    return line(
+        "help.terminal", "/tmc terminal <pos> radius [blocks] reads or sets one terminal's reach");
   }
 
   public static Text helpSort() {
@@ -117,6 +124,41 @@ public final class CommandMessages {
     return line("eligibility.cleared.all", "Cleared every container eligibility override");
   }
 
+  public static Text noTerminalAt(BlockPos pos) {
+    return line("terminal.missing", "There is no storage terminal at %s", at(pos));
+  }
+
+  public static Text terminalRadius(BlockPos pos, TerminalRadius radius) {
+    return line(
+        "terminal.radius", "The terminal at %s has a radius of %s", at(pos), radius.blocks());
+  }
+
+  public static Text terminalRadiusHeldDown(BlockPos pos, TerminalRadius radius) {
+    return line(
+        "terminal.radius.held",
+        "The terminal at %s is set to a radius of %s and reaches %s, the server maximum",
+        at(pos),
+        radius.requested(),
+        radius.blocks());
+  }
+
+  public static Text terminalRadiusSet(BlockPos pos, TerminalRadius radius) {
+    return line(
+        "terminal.radius.set",
+        "Set the terminal at %s to a radius of %s",
+        at(pos),
+        radius.blocks());
+  }
+
+  public static Text terminalRadiusClamped(BlockPos pos, TerminalRadius radius) {
+    return line(
+        "terminal.radius.clamped",
+        "A radius of %s is above the server maximum, so the terminal at %s was set to %s",
+        radius.requested(),
+        at(pos),
+        radius.blocks());
+  }
+
   public static Text sorted() {
     return line("sort.sorted", "Sorted");
   }
@@ -131,6 +173,10 @@ public final class CommandMessages {
 
   public static Text sortFailed() {
     return line("sort.failed", "The sort was rolled back and nothing moved");
+  }
+
+  private static String at(BlockPos pos) {
+    return pos.getX() + ", " + pos.getY() + ", " + pos.getZ();
   }
 
   private static Text line(String key, String english, Object... arguments) {
