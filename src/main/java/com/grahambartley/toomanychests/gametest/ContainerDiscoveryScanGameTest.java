@@ -15,6 +15,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Direction;
 
 /**
@@ -36,6 +37,16 @@ public final class ContainerDiscoveryScanGameTest implements FabricGameTest {
   private static final BlockPos OUTSIDE_FAR = new BlockPos(6, 1, 6);
 
   private final ContainerDiscoveryScan scan = new ContainerDiscoveryScan();
+
+  private static int loadedChunksIn(ServerWorld world, ScanRegion region) {
+    int loaded = 0;
+    for (ChunkPos chunkPos : region.chunkPositions()) {
+      if (world.getChunkManager().isChunkLoaded(chunkPos.x, chunkPos.z)) {
+        loaded++;
+      }
+    }
+    return loaded;
+  }
 
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void onlyContainersInsideTheRadiusAreDiscovered(TestContext context) {
@@ -110,21 +121,29 @@ public final class ContainerDiscoveryScanGameTest implements FabricGameTest {
     context.complete();
   }
 
+  /**
+   * The count is taken over the scanned region rather than the world, because sibling batches tick
+   * in this same world and load chunks of their own while the scan runs. Their structures are
+   * millions of blocks from this one, so a region-scoped count moves only if the scan moved it.
+   */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void aScanReachingBeyondLoadedChunksLoadsNoneOfThem(TestContext context) {
     ServerWorld world = context.getWorld();
     ScanRegion wide = new ScanRegion(context.getAbsolutePos(CENTRE), 512);
 
-    int loadedBefore = world.getChunkManager().getLoadedChunkCount();
+    int loadedBefore = loadedChunksIn(world, wide);
     ContainerScanResult result = scan.scan(world, wide);
-    int loadedAfter = world.getChunkManager().getLoadedChunkCount();
+    int loadedAfter = loadedChunksIn(world, wide);
 
     context.assertTrue(
         result.skippedUnloadedChunks(),
         "A 512 block radius should reach unloaded chunks, skipped " + result.chunksSkipped());
     context.assertTrue(
         loadedAfter == loadedBefore,
-        "Scanning must not load chunks, went from " + loadedBefore + " to " + loadedAfter);
+        "Scanning must not load chunks in the region it scanned, went from "
+            + loadedBefore
+            + " to "
+            + loadedAfter);
     context.complete();
   }
 

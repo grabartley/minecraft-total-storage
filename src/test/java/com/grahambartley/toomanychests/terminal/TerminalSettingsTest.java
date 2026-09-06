@@ -9,6 +9,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.storage.ContainerRole;
+import com.grahambartley.toomanychests.tag.NetworkTag;
+import com.grahambartley.toomanychests.tag.NetworkTagSet;
+import com.grahambartley.toomanychests.tag.PresetTag;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,7 +46,7 @@ class TerminalSettingsTest {
     assertEquals(Optional.empty(), defaults.owner());
     assertTrue(defaults.trusted().isEmpty());
     assertTrue(defaults.containerRoles().isEmpty());
-    assertTrue(defaults.tags().isEmpty());
+    assertTrue(defaults.tags().custom().isEmpty());
   }
 
   @Test
@@ -178,11 +181,11 @@ class TerminalSettingsTest {
 
   @Test
   void aTagIsTrimmedSoTheSameNameIsNeverStoredTwice() {
-    TerminalSettings tagged = TerminalSettings.defaults().withTag("  ores  ");
+    TerminalSettings tagged = TerminalSettings.defaults().withTag("  Ores  ");
 
-    assertEquals(Set.of("ores"), tagged.tags());
+    assertEquals(List.of(NetworkTag.custom("ores", "Ores")), tagged.tags().custom());
     assertSame(tagged, tagged.withTag("ores"));
-    assertTrue(tagged.hasTag(" ores "));
+    assertTrue(tagged.hasTag(" ORES "));
   }
 
   @Test
@@ -199,20 +202,23 @@ class TerminalSettingsTest {
     roles.put(BARREL, null);
     roles.put(null, ContainerRole.EXCLUDED);
     roles.put(CHEST, ContainerRole.FILTERED);
-    Set<String> tags = new HashSet<>(Arrays.asList("ores", null, "  "));
+    NetworkTagSet tags =
+        new NetworkTagSet(
+            Arrays.asList(NetworkTag.custom("ores"), null, NetworkTag.preset(PresetTag.WOOD)));
 
     TerminalSettings settings =
         new TerminalSettings(8, TerminalAccessMode.OPEN, Optional.empty(), trusted, roles, tags);
 
     assertEquals(Set.of(ALICE), settings.trusted());
     assertEquals(Map.of(CHEST, ContainerRole.FILTERED), settings.containerRoles());
-    assertEquals(Set.of("ores"), settings.tags());
+    assertEquals(List.of(NetworkTag.custom("ores")), settings.tags().custom());
   }
 
   @Test
   void aNullOwnerOptionalIsReadAsNoOwner() {
     TerminalSettings settings =
-        new TerminalSettings(8, TerminalAccessMode.OPEN, null, Set.of(), Map.of(), Set.of());
+        new TerminalSettings(
+            8, TerminalAccessMode.OPEN, null, Set.of(), Map.of(), NetworkTagSet.defaults());
 
     assertEquals(Optional.empty(), settings.owner());
   }
@@ -229,7 +235,9 @@ class TerminalSettingsTest {
     assertThrows(
         UnsupportedOperationException.class,
         () -> settings.containerRoles().put(CHEST, ContainerRole.FILTERED));
-    assertThrows(UnsupportedOperationException.class, () -> settings.tags().add("wood"));
+    assertThrows(
+        UnsupportedOperationException.class,
+        () -> settings.tags().all().add(NetworkTag.custom("wood")));
   }
 
   @Test
