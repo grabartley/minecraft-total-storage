@@ -32,6 +32,7 @@ Shared engineering standards across all the mods in this family live in [`../sta
 | [0022](0022-the-terminal-costs-an-ender-pearl.md) | The terminal costs an ender pearl, and nothing rarer |
 | [0023](0023-presets-are-seeded-not-stored.md) | Presets are seeded into a tag set, not stored in it |
 | [0024](0024-a-role-dies-with-the-container-it-was-given-to.md) | A role dies with the container it was given to |
+| [0025](0025-the-network-is-not-an-inventory.md) | The terminal's screen handler holds no network slots |
 
 ## Writing A New Record
 

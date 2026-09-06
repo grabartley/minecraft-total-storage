@@ -16,6 +16,14 @@ Cutting power is an off switch rather than a factory reset. A terminal's radius,
 
 Each terminal reaches as far as its own radius, a cube centred on the block, and a fresh terminal starts at 16 blocks. The server sets a maximum no terminal may exceed, and the maximum wins: a radius set above it is clamped as it is written and the clamp is reported, and lowering the maximum pulls in every terminal already running. What a terminal asked for is kept whatever the maximum does, so raising the maximum again hands its reach straight back. See [ADR 0021](docs/adr/0021-a-lowered-maximum-clamps-without-rewriting.md).
 
+## Opening a terminal
+
+Right-click a powered terminal you are allowed to open and its screen comes up, showing the terminal's own window above your inventory. Two players can have the same terminal open at once, each with their own screen, and a change either of them commits refreshes both.
+
+The screen is not a container. What the network holds is far more than a container screen can address, so the listing is paged and every operation is resolved by the server against the containers as they stand, rather than against a slot the client picked. See [ADR 0025](docs/adr/0025-the-network-is-not-an-inventory.md) and [ADR 0009](docs/adr/0009-clients-send-intent.md).
+
+Power, permission and distance are re-checked every tick the screen is up, not just when it opened. Cutting the terminal's power, breaking it, losing access to it, walking away from it, or dying all close the screen straight away.
+
 ## Container roles
 
 Every container a terminal can see carries a role, which is what decides how far the network is allowed to go with it.
