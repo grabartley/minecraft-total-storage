@@ -48,7 +48,8 @@
       "com.grahambartley.toomanychests.gametest.ContainerSortServiceGameTest",
       "com.grahambartley.toomanychests.gametest.SortViewerSyncGameTest",
       "com.grahambartley.toomanychests.gametest.TerminalAccessGameTest",
-      "com.grahambartley.toomanychests.gametest.TerminalRecipeGameTest"
+      "com.grahambartley.toomanychests.gametest.TerminalRecipeGameTest",
+      "com.grahambartley.toomanychests.gametest.TerminalScreenGameTest"
     ]
   },
   "mixins": [

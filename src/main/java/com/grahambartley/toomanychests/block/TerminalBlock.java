@@ -1,10 +1,8 @@
 package com.grahambartley.toomanychests.block;
 
-import com.grahambartley.toomanychests.TooManyChests;
-import com.grahambartley.toomanychests.access.TerminalAccessControl;
 import com.grahambartley.toomanychests.block.entity.TerminalBlockEntity;
 import com.grahambartley.toomanychests.config.ServerConfigService;
-import com.grahambartley.toomanychests.terminal.TerminalMessages;
+import com.grahambartley.toomanychests.screenhandler.TerminalOpener;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import com.grahambartley.toomanychests.terminal.TerminalPower;
 import com.mojang.serialization.MapCodec;
@@ -17,6 +15,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
@@ -116,8 +115,9 @@ public class TerminalBlock extends HorizontalFacingBlock implements BlockEntityP
    * terminal that does nothing and says nothing is indistinguishable from a broken mod, and a
    * silently failing right-click is the worst way to learn a base is not yours.
    *
-   * <p>The access check runs against the terminal's settings as they stand right now rather than
-   * anything remembered from a previous interaction, per ADR 0008.
+   * <p>Both gates are re-checked server-side by {@link TerminalOpener}, against the terminal's
+   * settings as they stand right now rather than anything remembered from a previous interaction,
+   * per ADR 0008.
    */
   @Override
   protected ActionResult onUse(
@@ -125,18 +125,9 @@ public class TerminalBlock extends HorizontalFacingBlock implements BlockEntityP
     if (world.isClient || !(world instanceof ServerWorld serverWorld)) {
       return ActionResult.SUCCESS;
     }
-    if (!state.get(POWERED)) {
-      player.sendMessage(TerminalMessages.unpowered(), true);
-      return ActionResult.SUCCESS;
+    if (player instanceof ServerPlayerEntity serverPlayer) {
+      TerminalOpener.open(serverWorld, pos, serverPlayer);
     }
-    if (!TerminalAccessControl.access().open(serverWorld, pos, player).allowed()) {
-      player.sendMessage(TerminalMessages.accessDenied(), true);
-      return ActionResult.SUCCESS;
-    }
-    TooManyChests.LOGGER.debug(
-        "{} opened the terminal at {}, which has no interface yet",
-        player.getName().getString(),
-        pos);
     return ActionResult.SUCCESS;
   }
 }
