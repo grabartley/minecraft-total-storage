@@ -14,6 +14,8 @@ The storage terminal runs on redstone. A terminal reached by a signal is active:
 
 Cutting power is an off switch rather than a factory reset. A terminal's radius, roles, tags and access settings live on the block and survive a power cut, a chunk unload, and a world reload.
 
+Each terminal reaches as far as its own radius, a cube centred on the block, and a fresh terminal starts at 16 blocks. The server sets a maximum no terminal may exceed, and the maximum wins: a radius set above it is clamped as it is written and the clamp is reported, and lowering the maximum pulls in every terminal already running. What a terminal asked for is kept whatever the maximum does, so raising the maximum again hands its reach straight back. See [ADR 0021](docs/adr/0021-a-lowered-maximum-clamps-without-rewriting.md).
+
 ## Commands
 
 Every server-wide setting is configurable from the console, so a server can be set up without a client mod and without editing files. `/toomanychests` and its alias `/tmc` are the same tree.
@@ -30,6 +32,8 @@ Every server-wide setting is configurable from the console, so a server can be s
 | `/tmc config eligibility set <block> <true\|false>` | operators | Forces a block eligible or ineligible |
 | `/tmc config eligibility clear <block>` | operators | Stops forcing that block |
 | `/tmc config eligibility clear all` | operators | Stops forcing every block |
+| `/tmc terminal <pos> radius` | anyone | One terminal's radius, and what it actually reaches |
+| `/tmc terminal <pos> radius <blocks>` | operators | Sets one terminal's radius, clamped to the server maximum |
 | `/tmc sort` | anyone | Sorts the container you have open |
 
 Setting names and their values tab-complete. Changes are saved to the world immediately and pushed to connected clients. Operators are permission level 2.

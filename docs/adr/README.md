@@ -28,6 +28,7 @@ Shared engineering standards across all the mods in this family live in [`../sta
 | [0018](0018-two-gates-decide-what-may-be-sorted.md) | Two gates decide what may be sorted |
 | [0019](0019-settings-are-described-once.md) | Settings are described once, not wired twice |
 | [0020](0020-the-sort-button-wears-vanilla-chrome.md) | The sort button wears vanilla chrome and bakes in its glyph |
+| [0021](0021-a-lowered-maximum-clamps-without-rewriting.md) | A lowered maximum clamps a terminal without rewriting it |
 
 ## Writing A New Record
 

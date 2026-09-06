@@ -9,6 +9,7 @@ import com.grahambartley.toomanychests.mutation.ContainerMutations;
 import com.grahambartley.toomanychests.network.ModNetworking;
 import com.grahambartley.toomanychests.terminal.TerminalLifecycle;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
+import com.grahambartley.toomanychests.terminal.TerminalRadiusClamp;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ public class TooManyChests implements ModInitializer {
     ServerThread.register();
     ContainerLifecycle.register();
     TerminalLifecycle.register();
+    TerminalRadiusClamp.register();
     ServerLifecycleEvents.SERVER_STARTING.register(ServerConfigService::loadFromWorld);
     ServerLifecycleEvents.SERVER_STOPPED.register(
         server -> {

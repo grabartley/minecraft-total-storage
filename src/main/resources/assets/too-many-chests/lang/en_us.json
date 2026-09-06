@@ -21,6 +21,7 @@
   "command.too-many-chests.help.header": "Too Many Chests commands:",
   "command.too-many-chests.help.config": "/tmc config list | get <setting> | set <setting> <value> | reset <setting> | reset all",
   "command.too-many-chests.help.eligibility": "/tmc config eligibility list | set <block> <true|false> | clear <block> | clear all",
+  "command.too-many-chests.help.terminal": "/tmc terminal <pos> radius [blocks] reads or sets one terminal's reach",
   "command.too-many-chests.help.sort": "/tmc sort sorts the container you have open",
   "command.too-many-chests.config.header": "Too Many Chests settings:",
   "command.too-many-chests.config.entry": "%s = %s (default %s)",
@@ -42,5 +43,10 @@
   "command.too-many-chests.sort.sorted": "Sorted",
   "command.too-many-chests.sort.empty": "There is nothing in there to sort",
   "command.too-many-chests.sort.refused": "That is not something this mod will sort",
-  "command.too-many-chests.sort.failed": "The sort was rolled back and nothing moved"
+  "command.too-many-chests.sort.failed": "The sort was rolled back and nothing moved",
+  "command.too-many-chests.terminal.missing": "There is no storage terminal at %s",
+  "command.too-many-chests.terminal.radius": "The terminal at %s has a radius of %s",
+  "command.too-many-chests.terminal.radius.held": "The terminal at %s is set to a radius of %s and reaches %s, the server maximum",
+  "command.too-many-chests.terminal.radius.set": "Set the terminal at %s to a radius of %s",
+  "command.too-many-chests.terminal.radius.clamped": "A radius of %s is above the server maximum, so the terminal at %s was set to %s"
 }
