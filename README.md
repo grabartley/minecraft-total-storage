@@ -16,6 +16,22 @@ Cutting power is an off switch rather than a factory reset. A terminal's radius,
 
 Each terminal reaches as far as its own radius, a cube centred on the block, and a fresh terminal starts at 16 blocks. The server sets a maximum no terminal may exceed, and the maximum wins: a radius set above it is clamped as it is written and the clamp is reported, and lowering the maximum pulls in every terminal already running. What a terminal asked for is kept whatever the maximum does, so raising the maximum again hands its reach straight back. See [ADR 0021](docs/adr/0021-a-lowered-maximum-clamps-without-rewriting.md).
 
+## Container roles
+
+Every container a terminal can see carries a role, which is what decides how far the network is allowed to go with it.
+
+| Role | Receives deposits | Reordered by sorting | Listed in the terminal | Withdrawable |
+|---|---|---|---|---|
+| **General** (default) | Yes | Yes | Yes | Yes |
+| **Filtered** | Matching items only, preferred first | Yes | Yes | Yes |
+| **Excluded** | Never | Never | Yes | Yes |
+
+`Excluded` is the one that makes the rest safe to turn on. A curated potion chest stays exactly as you arranged it while staying searchable from the terminal. A `Filtered` container additionally records the tags and items it accepts, and that record is stored with its role.
+
+Roles live on the terminal, not on the container, so a chest reached by two overlapping terminals may hold a different role in each. See [ADR 0004](docs/adr/0004-container-roles.md).
+
+Break a container and its role goes with it: whatever you put back on that spot starts as a general container rather than inheriting a decision made about a different one. A container that only leaves because its chunk unloaded keeps everything, and gets it back when the chunk returns. A container broken while its terminal has no power is the exception, since an unpowered terminal is not running and hears nothing. See [ADR 0024](docs/adr/0024-a-role-dies-with-the-container-it-was-given-to.md).
+
 ## Crafting the terminal
 
 The terminal is a mid-game goal rather than a starting block or an endgame reward. It costs a chest, four iron ingots, three redstone dust, and one ender pearl, and nothing that requires a trip to the End. See [ADR 0022](docs/adr/0022-the-terminal-costs-an-ender-pearl.md).

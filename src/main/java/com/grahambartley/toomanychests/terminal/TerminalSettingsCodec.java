@@ -2,19 +2,17 @@ package com.grahambartley.toomanychests.terminal;
 
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.config.TooManyChestsConfig;
-import com.grahambartley.toomanychests.storage.ContainerRole;
+import com.grahambartley.toomanychests.storage.ContainerAssignmentCodec;
+import com.grahambartley.toomanychests.storage.ContainerAssignments;
 import com.grahambartley.toomanychests.tag.NetworkTagCodec;
 import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.util.Uuids;
-import net.minecraft.util.math.BlockPos;
 
 /**
  * Persists a terminal's settings.
@@ -30,21 +28,6 @@ public final class TerminalSettingsCodec {
               TerminalAccessMode.fromId(id)
                   .orElse(TooManyChestsConfig.DEFAULT_TERMINAL_ACCESS_MODE),
           TerminalAccessMode::id);
-
-  private static final Codec<ContainerRole> ROLE =
-      Codec.STRING.xmap(
-          id -> ContainerRole.fromId(id).orElse(ContainerRole.DEFAULT), ContainerRole::id);
-
-  private record RoleEntry(BlockPos container, ContainerRole role) {
-    static final Codec<RoleEntry> CODEC =
-        RecordCodecBuilder.create(
-            instance ->
-                instance
-                    .group(
-                        BlockPos.CODEC.fieldOf("pos").forGetter(RoleEntry::container),
-                        ROLE.fieldOf("role").forGetter(RoleEntry::role))
-                    .apply(instance, RoleEntry::new));
-  }
 
   public static final Codec<TerminalSettings> CODEC =
       RecordCodecBuilder.create(
@@ -65,10 +48,9 @@ public final class TerminalSettingsCodec {
                           .listOf()
                           .optionalFieldOf("trusted", List.of())
                           .forGetter(settings -> List.copyOf(settings.trusted())),
-                      RoleEntry.CODEC
-                          .listOf()
-                          .optionalFieldOf("containerRoles", List.of())
-                          .forGetter(TerminalSettingsCodec::roleEntries),
+                      ContainerAssignmentCodec.CODEC
+                          .optionalFieldOf("containerRoles", ContainerAssignments.empty())
+                          .forGetter(TerminalSettings::containers),
                       NetworkTagCodec.CODEC
                           .optionalFieldOf("tags", NetworkTagSet.defaults())
                           .forGetter(TerminalSettings::tags))
@@ -81,19 +63,9 @@ public final class TerminalSettingsCodec {
       TerminalAccessMode accessMode,
       Optional<UUID> owner,
       List<UUID> trusted,
-      List<RoleEntry> containerRoles,
+      ContainerAssignments containers,
       NetworkTagSet tags) {
-    final Map<BlockPos, ContainerRole> roles = new LinkedHashMap<>();
-    for (final RoleEntry entry : containerRoles) {
-      roles.put(entry.container(), entry.role());
-    }
     return new TerminalSettings(
-        radius, accessMode, owner, new LinkedHashSet<>(trusted), roles, tags);
-  }
-
-  private static List<RoleEntry> roleEntries(TerminalSettings settings) {
-    return settings.containerRoles().entrySet().stream()
-        .map(entry -> new RoleEntry(entry.getKey(), entry.getValue()))
-        .toList();
+        radius, accessMode, owner, new LinkedHashSet<>(trusted), containers, tags);
   }
 }

@@ -5,6 +5,7 @@ import com.grahambartley.toomanychests.index.NetworkIndexSession;
 import com.grahambartley.toomanychests.storage.ContainerDiscoveryScan;
 import com.grahambartley.toomanychests.storage.ScanRegion;
 import com.grahambartley.toomanychests.storage.StorageOrigin;
+import com.grahambartley.toomanychests.terminal.ContainerRoleEviction;
 import java.util.List;
 import java.util.Objects;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
@@ -31,6 +32,7 @@ public final class NetworkMembership implements ContainerLifecycleListener {
   private final NetworkIndexSession<ItemVariant> session;
   private final ContainerDiscoveryScan discovery;
   private final ContainerLifecycleRegistry lifecycle;
+  private final ContainerRoleEviction roles;
 
   public NetworkMembership(
       ServerWorld world,
@@ -43,6 +45,7 @@ public final class NetworkMembership implements ContainerLifecycleListener {
     this.session = Objects.requireNonNull(session, "session");
     this.discovery = Objects.requireNonNull(discovery, "discovery");
     this.lifecycle = Objects.requireNonNull(lifecycle, "lifecycle");
+    this.roles = new ContainerRoleEviction(this.world, this.region.center());
   }
 
   public static NetworkMembership around(ServerWorld world, ScanRegion region) {
@@ -81,9 +84,14 @@ public final class NetworkMembership implements ContainerLifecycleListener {
     return session.watchedContainers();
   }
 
+  /**
+   * A container that has gone leaves the network and takes the role it was given with it, so the
+   * next container placed there starts as a container nobody has vouched for.
+   */
   @Override
   public void containerRemoved(StorageOrigin origin) {
     session.drop(origin);
+    roles.containerRemoved(origin);
   }
 
   @Override
