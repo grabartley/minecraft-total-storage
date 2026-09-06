@@ -44,6 +44,7 @@ public final class TerminalBlockGameTest implements FabricGameTest {
   private static final BlockPos FLOOR = new BlockPos(3, 0, 3);
   private static final BlockPos TERMINAL = new BlockPos(3, 1, 3);
   private static final BlockPos BARREL = new BlockPos(4, 1, 3);
+  private static final UUID OWNING_PLAYER = UUID.fromString("00000000-0000-0000-0000-0000000000a1");
   private static final UUID TRUSTED_PLAYER =
       UUID.fromString("00000000-0000-0000-0000-0000000000b2");
 
@@ -162,6 +163,7 @@ public final class TerminalBlockGameTest implements FabricGameTest {
             settings
                 .withRadius(7)
                 .withAccessMode(TerminalAccessMode.TRUSTED)
+                .withOwner(OWNING_PLAYER)
                 .withTrusted(TRUSTED_PLAYER)
                 .withContainerRole(context.getAbsolutePos(BARREL), ContainerRole.EXCLUDED)
                 .withTag("ores"));

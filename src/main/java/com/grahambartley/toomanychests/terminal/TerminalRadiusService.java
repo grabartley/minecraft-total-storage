@@ -23,12 +23,12 @@ public final class TerminalRadiusService {
 
   /** Empty when there is no terminal there at all. */
   public Optional<TerminalRadius> current(ServerWorld world, BlockPos pos) {
-    return terminalAt(world, pos)
+    return TerminalLookup.at(world, pos)
         .map(terminal -> TerminalRadius.of(terminal.settings().radius(), serverMaximum()));
   }
 
   public Optional<TerminalRadius> apply(ServerWorld world, BlockPos pos, int requested) {
-    final Optional<TerminalBlockEntity> terminal = terminalAt(world, pos);
+    final Optional<TerminalBlockEntity> terminal = TerminalLookup.at(world, pos);
     if (terminal.isEmpty()) {
       return Optional.empty();
     }
@@ -36,15 +36,6 @@ public final class TerminalRadiusService {
     terminal.get().updateSettings(settings -> settings.withRadius(radius.blocks()));
     power.rescan(world, pos);
     return Optional.of(radius);
-  }
-
-  private static Optional<TerminalBlockEntity> terminalAt(ServerWorld world, BlockPos pos) {
-    if (world == null || pos == null) {
-      return Optional.empty();
-    }
-    return world.getBlockEntity(pos) instanceof TerminalBlockEntity terminal
-        ? Optional.of(terminal)
-        : Optional.empty();
   }
 
   private static int serverMaximum() {

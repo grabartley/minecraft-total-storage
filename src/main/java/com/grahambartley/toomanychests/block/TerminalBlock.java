@@ -1,8 +1,10 @@
 package com.grahambartley.toomanychests.block;
 
 import com.grahambartley.toomanychests.TooManyChests;
+import com.grahambartley.toomanychests.access.TerminalAccessControl;
 import com.grahambartley.toomanychests.block.entity.TerminalBlockEntity;
 import com.grahambartley.toomanychests.config.ServerConfigService;
+import com.grahambartley.toomanychests.terminal.TerminalMessages;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import com.grahambartley.toomanychests.terminal.TerminalPower;
 import com.mojang.serialization.MapCodec;
@@ -19,7 +21,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.state.property.Properties;
-import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -111,17 +112,25 @@ public class TerminalBlock extends HorizontalFacingBlock implements BlockEntityP
   }
 
   /**
-   * A player who has forgotten the power requirement gets told, because a terminal that does
-   * nothing and says nothing is indistinguishable from a broken mod.
+   * A player who has forgotten the power requirement, or who is not allowed in, gets told. A
+   * terminal that does nothing and says nothing is indistinguishable from a broken mod, and a
+   * silently failing right-click is the worst way to learn a base is not yours.
+   *
+   * <p>The access check runs against the terminal's settings as they stand right now rather than
+   * anything remembered from a previous interaction, per ADR 0008.
    */
   @Override
   protected ActionResult onUse(
       BlockState state, World world, BlockPos pos, PlayerEntity player, BlockHitResult hit) {
-    if (world.isClient) {
+    if (world.isClient || !(world instanceof ServerWorld serverWorld)) {
       return ActionResult.SUCCESS;
     }
     if (!state.get(POWERED)) {
-      player.sendMessage(Text.translatable("block.too-many-chests.terminal.unpowered"), true);
+      player.sendMessage(TerminalMessages.unpowered(), true);
+      return ActionResult.SUCCESS;
+    }
+    if (!TerminalAccessControl.access().open(serverWorld, pos, player).allowed()) {
+      player.sendMessage(TerminalMessages.accessDenied(), true);
       return ActionResult.SUCCESS;
     }
     TooManyChests.LOGGER.debug(
