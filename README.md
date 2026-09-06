@@ -16,6 +16,23 @@ Cutting power is an off switch rather than a factory reset. A terminal's radius,
 
 Each terminal reaches as far as its own radius, a cube centred on the block, and a fresh terminal starts at 16 blocks. The server sets a maximum no terminal may exceed, and the maximum wins: a radius set above it is clamped as it is written and the clamp is reported, and lowering the maximum pulls in every terminal already running. What a terminal asked for is kept whatever the maximum does, so raising the maximum again hands its reach straight back. See [ADR 0021](docs/adr/0021-a-lowered-maximum-clamps-without-rewriting.md).
 
+## Who can open a terminal
+
+A terminal reaches every container around it through one screen, so on a shared server it is a key to a whole base. Each terminal therefore has an access mode, and it is owner-locked to begin with. See [ADR 0008](docs/adr/0008-terminals-owner-locked-by-default.md).
+
+| Mode | Who can open it |
+|---|---|
+| `owner` (default) | Only the player who placed it |
+| `trusted` | The owner, plus the players on that terminal's trust list |
+| `open` | Anyone |
+
+- The owner is recorded by UUID when the terminal is placed, so ownership survives a name change and outlives the owner logging out.
+- Only the owner and operators can change the mode or edit the trust list, whatever mode the terminal is in. Being let into an open terminal is not a way to lock it again.
+- Operators can open any terminal, for moderation. That bypass is written to the server log, naming the player and the terminal.
+- Permission is checked server-side on every operation rather than only when the screen opens, and an edit binds the very next check. A player whose access is taken away while they have the screen open has it closed for them.
+- A refused right-click says so instead of doing nothing.
+- `defaultTerminalAccessMode` sets what newly placed terminals start as, so a friendly server can switch to `open` once rather than every player changing every terminal. Changing it never touches a terminal already placed.
+
 ## Commands
 
 Every server-wide setting is configurable from the console, so a server can be set up without a client mod and without editing files. `/toomanychests` and its alias `/tmc` are the same tree.
@@ -34,6 +51,11 @@ Every server-wide setting is configurable from the console, so a server can be s
 | `/tmc config eligibility clear all` | operators | Stops forcing every block |
 | `/tmc terminal <pos> radius` | anyone | One terminal's radius, and what it actually reaches |
 | `/tmc terminal <pos> radius <blocks>` | operators | Sets one terminal's radius, clamped to the server maximum |
+| `/tmc terminal <pos> access` | anyone | Which access mode one terminal is in |
+| `/tmc terminal <pos> access <owner\|trusted\|open>` | owner or operators | Sets who may open that terminal |
+| `/tmc terminal <pos> trust` | owner or operators | The players that terminal trusts |
+| `/tmc terminal <pos> trust <players>` | owner or operators | Adds players to its trust list, online or not |
+| `/tmc terminal <pos> untrust <players>` | owner or operators | Removes players from its trust list |
 | `/tmc sort` | anyone | Sorts the container you have open |
 
 Setting names and their values tab-complete. Changes are saved to the world immediately and pushed to connected clients. Operators are permission level 2.

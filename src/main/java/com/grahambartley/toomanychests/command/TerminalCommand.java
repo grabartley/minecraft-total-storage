@@ -45,7 +45,18 @@ public final class TerminalCommand {
                                     IntegerArgumentType.integer(
                                         TerminalSettings.MIN_RADIUS, TerminalSettings.MAX_RADIUS))
                                 .requires(TooManyChestsCommand::isOperator)
-                                .executes(TerminalCommand::setRadius))));
+                                .executes(TerminalCommand::setRadius)))
+                .then(TerminalAccessCommand.accessNode())
+                .then(TerminalAccessCommand.trustNode())
+                .then(TerminalAccessCommand.untrustNode()));
+  }
+
+  /**
+   * The terminal every branch of this subtree is aimed at, refused when its chunk is not loaded.
+   */
+  static BlockPos terminalPos(CommandContext<ServerCommandSource> context)
+      throws CommandSyntaxException {
+    return BlockPosArgumentType.getLoadedBlockPos(context, POS);
   }
 
   private static int getRadius(CommandContext<ServerCommandSource> context)

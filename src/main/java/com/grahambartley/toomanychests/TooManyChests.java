@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests;
 
+import com.grahambartley.toomanychests.access.TerminalAccessControl;
 import com.grahambartley.toomanychests.command.TooManyChestsCommand;
 import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.lifecycle.ContainerLifecycle;
@@ -31,11 +32,13 @@ public class TooManyChests implements ModInitializer {
     ServerThread.register();
     ContainerLifecycle.register();
     TerminalLifecycle.register();
+    TerminalAccessControl.register();
     TerminalRadiusClamp.register();
     ServerLifecycleEvents.SERVER_STARTING.register(ServerConfigService::loadFromWorld);
     ServerLifecycleEvents.SERVER_STOPPED.register(
         server -> {
           TerminalNetworks.power().shutDownAll();
+          TerminalAccessControl.viewers().clear();
           ContainerMutations.registry().clear();
           ContainerLifecycle.registry().clear();
         });

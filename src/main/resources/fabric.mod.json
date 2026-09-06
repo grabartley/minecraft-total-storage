@@ -5,7 +5,7 @@
   "name": "Too Many Chests",
   "description": "A better item storage solution for Minecraft.",
   "authors": [
-    "Vitória Vedana",
+    "Vit\u00f3ria Vedana",
     "Graham Bartley"
   ],
   "contact": {
@@ -45,7 +45,8 @@
       "com.grahambartley.toomanychests.gametest.TerminalRadiusGameTest",
       "com.grahambartley.toomanychests.gametest.SortableSlotsGameTest",
       "com.grahambartley.toomanychests.gametest.ContainerSortServiceGameTest",
-      "com.grahambartley.toomanychests.gametest.SortViewerSyncGameTest"
+      "com.grahambartley.toomanychests.gametest.SortViewerSyncGameTest",
+      "com.grahambartley.toomanychests.gametest.TerminalAccessGameTest"
     ]
   },
   "mixins": [

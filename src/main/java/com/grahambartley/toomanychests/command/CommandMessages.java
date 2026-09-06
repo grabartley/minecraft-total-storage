@@ -1,6 +1,7 @@
 package com.grahambartley.toomanychests.command;
 
 import com.grahambartley.toomanychests.config.ConfigSetting;
+import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.config.TooManyChestsConfig;
 import com.grahambartley.toomanychests.terminal.TerminalRadius;
 import net.minecraft.text.Text;
@@ -37,6 +38,18 @@ public final class CommandMessages {
   public static Text helpTerminal() {
     return line(
         "help.terminal", "/tmc terminal <pos> radius [blocks] reads or sets one terminal's reach");
+  }
+
+  public static Text helpTerminalAccess() {
+    return line(
+        "help.terminal.access",
+        "/tmc terminal <pos> access [owner|trusted|open] reads or sets who may use it");
+  }
+
+  public static Text helpTerminalTrust() {
+    return line(
+        "help.terminal.trust",
+        "/tmc terminal <pos> trust | trust <players> | untrust <players> edits its trust list");
   }
 
   public static Text helpSort() {
@@ -157,6 +170,64 @@ public final class CommandMessages {
         radius.requested(),
         at(pos),
         radius.blocks());
+  }
+
+  public static Text terminalAccessMode(BlockPos pos, TerminalAccessMode mode) {
+    return line("terminal.access", "The terminal at %s is set to %s access", at(pos), mode.id());
+  }
+
+  public static Text terminalAccessModeSet(BlockPos pos, TerminalAccessMode mode) {
+    return line("terminal.access.set", "Set the terminal at %s to %s access", at(pos), mode.id());
+  }
+
+  public static Text terminalAccessModeUnchanged(BlockPos pos, TerminalAccessMode mode) {
+    return line(
+        "terminal.access.unchanged",
+        "The terminal at %s was already set to %s access",
+        at(pos),
+        mode.id());
+  }
+
+  public static Text unknownAccessMode(String value, String known) {
+    return line(
+        "terminal.access.unknown", "'%s' is not an access mode. Modes are: %s", value, known);
+  }
+
+  public static Text terminalNotYours(BlockPos pos) {
+    return line("terminal.denied", "The terminal at %s is not yours to configure", at(pos));
+  }
+
+  public static Text terminalTrustHeader(BlockPos pos) {
+    return line("terminal.trust.header", "The terminal at %s trusts:", at(pos));
+  }
+
+  public static Text terminalTrustEmpty(BlockPos pos) {
+    return line("terminal.trust.empty", "The terminal at %s trusts nobody but its owner", at(pos));
+  }
+
+  public static Text terminalTrustEntry(String player) {
+    return line("terminal.trust.entry", "- %s", player);
+  }
+
+  public static Text terminalTrusted(String player, BlockPos pos) {
+    return line("terminal.trust.added", "%s can now use the terminal at %s", player, at(pos));
+  }
+
+  public static Text terminalAlreadyTrusted(String player, BlockPos pos) {
+    return line("terminal.trust.kept", "%s could already use the terminal at %s", player, at(pos));
+  }
+
+  public static Text terminalUntrusted(String player, BlockPos pos) {
+    return line(
+        "terminal.trust.removed", "%s can no longer use the terminal at %s", player, at(pos));
+  }
+
+  public static Text terminalNotTrusted(String player, BlockPos pos) {
+    return line(
+        "terminal.trust.missing",
+        "%s was not on the trust list for the terminal at %s",
+        player,
+        at(pos));
   }
 
   public static Text sorted() {
