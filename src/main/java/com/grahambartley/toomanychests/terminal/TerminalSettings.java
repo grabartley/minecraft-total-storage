@@ -3,6 +3,7 @@ package com.grahambartley.toomanychests.terminal;
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.config.TooManyChestsConfig;
 import com.grahambartley.toomanychests.storage.ContainerRole;
+import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -22,7 +23,8 @@ import net.minecraft.util.math.BlockPos;
  * cutting a terminal's power an off switch rather than a factory reset.
  *
  * <p>Every value is sanitized on construction rather than at each reader, so a hand-edited save
- * cannot put a radius, a role or a blank tag in front of code that assumes none of them can happen.
+ * cannot put a radius or a role in front of code that assumes neither can happen. The tag set
+ * sanitizes itself, presets included.
  */
 public record TerminalSettings(
     int radius,
@@ -30,7 +32,7 @@ public record TerminalSettings(
     Optional<UUID> owner,
     Set<UUID> trusted,
     Map<BlockPos, ContainerRole> containerRoles,
-    Set<String> tags) {
+    NetworkTagSet tags) {
 
   public static final int MIN_RADIUS = TooManyChestsConfig.MAX_TERMINAL_RADIUS_MIN;
   public static final int MAX_RADIUS = TooManyChestsConfig.MAX_TERMINAL_RADIUS_MAX;
@@ -48,7 +50,7 @@ public record TerminalSettings(
           Optional.empty(),
           Set.of(),
           Map.of(),
-          Set.of());
+          NetworkTagSet.defaults());
 
   public TerminalSettings {
     radius = Math.max(MIN_RADIUS, Math.min(MAX_RADIUS, radius));
@@ -56,7 +58,7 @@ public record TerminalSettings(
     owner = owner == null ? Optional.empty() : owner;
     trusted = sanitizeTrusted(trusted);
     containerRoles = sanitizeRoles(containerRoles);
-    tags = sanitizeTags(tags);
+    tags = tags == null ? NetworkTagSet.defaults() : tags;
   }
 
   public static TerminalSettings defaults() {
@@ -133,25 +135,22 @@ public record TerminalSettings(
   }
 
   public boolean hasTag(String tag) {
-    return tag != null && tags.contains(tag.trim());
+    return tags.contains(tag);
+  }
+
+  public TerminalSettings withTags(NetworkTagSet updated) {
+    if (updated == null || updated.equals(tags)) {
+      return this;
+    }
+    return new TerminalSettings(radius, accessMode, owner, trusted, containerRoles, updated);
   }
 
   public TerminalSettings withTag(String tag) {
-    if (tag == null || tag.isBlank() || hasTag(tag)) {
-      return this;
-    }
-    final Set<String> next = new TreeSet<>(tags);
-    next.add(tag.trim());
-    return new TerminalSettings(radius, accessMode, owner, trusted, containerRoles, next);
+    return withTags(tags.withCustomTag(tag));
   }
 
   public TerminalSettings withoutTag(String tag) {
-    if (!hasTag(tag)) {
-      return this;
-    }
-    final Set<String> next = new TreeSet<>(tags);
-    next.remove(tag.trim());
-    return new TerminalSettings(radius, accessMode, owner, trusted, containerRoles, next);
+    return withTags(tags.withoutTag(tag));
   }
 
   private static Set<UUID> newTrustedSet() {
@@ -182,18 +181,5 @@ public record TerminalSettings(
         .sorted(Comparator.comparingLong(entry -> entry.getKey().asLong()))
         .forEach(entry -> kept.put(entry.getKey().toImmutable(), entry.getValue()));
     return Collections.unmodifiableMap(kept);
-  }
-
-  private static Set<String> sanitizeTags(Collection<String> raw) {
-    if (raw == null || raw.isEmpty()) {
-      return Set.of();
-    }
-    final Set<String> kept = new TreeSet<>();
-    for (final String tag : raw) {
-      if (tag != null && !tag.isBlank()) {
-        kept.add(tag.trim());
-      }
-    }
-    return Collections.unmodifiableSet(kept);
   }
 }

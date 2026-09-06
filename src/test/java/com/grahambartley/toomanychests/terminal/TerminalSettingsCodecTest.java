@@ -1,12 +1,15 @@
 package com.grahambartley.toomanychests.terminal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.storage.ContainerRole;
+import com.grahambartley.toomanychests.tag.NetworkTag;
+import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import com.mojang.serialization.JsonOps;
 import java.util.List;
 import java.util.UUID;
@@ -107,9 +110,32 @@ class TerminalSettingsCodecTest {
   @Test
   void aBlankSavedTagIsDroppedOnRead() {
     JsonObject tampered = encode(TerminalSettings.defaults().withTag("ores")).getAsJsonObject();
-    tampered.getAsJsonArray("tags").add("   ");
+    JsonObject blank = new JsonObject();
+    blank.addProperty("id", "   ");
+    tampered.getAsJsonArray("tags").add(blank);
 
-    assertEquals(java.util.Set.of("ores"), decode(tampered).tags());
+    assertEquals(List.of(NetworkTag.custom("ores")), decode(tampered).tags().custom());
+  }
+
+  @Test
+  void aSavedTagKeepsTheItemsItWasAssigned() {
+    TerminalSettings settings =
+        TerminalSettings.defaults()
+            .withTags(
+                NetworkTagSet.defaults()
+                    .withCustomTag("ores", "Ores")
+                    .withItem("ores", "minecraft:raw_iron")
+                    .withItem("ores", "minecraft:coal"));
+
+    assertEquals(settings.tags(), decode(encode(settings)).tags());
+  }
+
+  @Test
+  void presetsAreRebuiltOnReadRatherThanReadBackFromTheSave() {
+    JsonObject encoded = encode(TerminalSettings.defaults()).getAsJsonObject();
+
+    assertFalse(encoded.has("tags"));
+    assertEquals(NetworkTagSet.defaults().all(), decode(encoded).tags().all());
   }
 
   private static JsonElement encode(TerminalSettings settings) {

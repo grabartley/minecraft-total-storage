@@ -6,6 +6,7 @@ import com.grahambartley.toomanychests.block.TerminalBlock;
 import com.grahambartley.toomanychests.block.entity.TerminalBlockEntity;
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.storage.ContainerRole;
+import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import com.grahambartley.toomanychests.terminal.TerminalSettings;
 import java.util.List;
 import java.util.UUID;
@@ -166,7 +167,11 @@ public final class TerminalBlockGameTest implements FabricGameTest {
                 .withOwner(OWNING_PLAYER)
                 .withTrusted(TRUSTED_PLAYER)
                 .withContainerRole(context.getAbsolutePos(BARREL), ContainerRole.EXCLUDED)
-                .withTag("ores"));
+                .withTags(
+                    NetworkTagSet.defaults()
+                        .withCustomTag("ores", "Ores")
+                        .withItem("ores", "minecraft:raw_iron")
+                        .withItem("ores", "minecraft:coal")));
     TerminalSettings configured = terminal.settings();
 
     RegistryWrapper.WrapperLookup lookup = context.getWorld().getRegistryManager();

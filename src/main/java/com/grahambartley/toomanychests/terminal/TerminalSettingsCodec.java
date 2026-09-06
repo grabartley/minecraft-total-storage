@@ -3,6 +3,8 @@ package com.grahambartley.toomanychests.terminal;
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.config.TooManyChestsConfig;
 import com.grahambartley.toomanychests.storage.ContainerRole;
+import com.grahambartley.toomanychests.tag.NetworkTagCodec;
+import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.LinkedHashMap;
@@ -67,10 +69,9 @@ public final class TerminalSettingsCodec {
                           .listOf()
                           .optionalFieldOf("containerRoles", List.of())
                           .forGetter(TerminalSettingsCodec::roleEntries),
-                      Codec.STRING
-                          .listOf()
-                          .optionalFieldOf("tags", List.of())
-                          .forGetter(settings -> List.copyOf(settings.tags())))
+                      NetworkTagCodec.CODEC
+                          .optionalFieldOf("tags", NetworkTagSet.defaults())
+                          .forGetter(TerminalSettings::tags))
                   .apply(instance, TerminalSettingsCodec::assemble));
 
   private TerminalSettingsCodec() {}
@@ -81,13 +82,13 @@ public final class TerminalSettingsCodec {
       Optional<UUID> owner,
       List<UUID> trusted,
       List<RoleEntry> containerRoles,
-      List<String> tags) {
+      NetworkTagSet tags) {
     final Map<BlockPos, ContainerRole> roles = new LinkedHashMap<>();
     for (final RoleEntry entry : containerRoles) {
       roles.put(entry.container(), entry.role());
     }
     return new TerminalSettings(
-        radius, accessMode, owner, new LinkedHashSet<>(trusted), roles, new LinkedHashSet<>(tags));
+        radius, accessMode, owner, new LinkedHashSet<>(trusted), roles, tags);
   }
 
   private static List<RoleEntry> roleEntries(TerminalSettings settings) {
