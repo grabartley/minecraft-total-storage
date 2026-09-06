@@ -16,6 +16,18 @@ Cutting power is an off switch rather than a factory reset. A terminal's radius,
 
 Each terminal reaches as far as its own radius, a cube centred on the block, and a fresh terminal starts at 16 blocks. The server sets a maximum no terminal may exceed, and the maximum wins: a radius set above it is clamped as it is written and the clamp is reported, and lowering the maximum pulls in every terminal already running. What a terminal asked for is kept whatever the maximum does, so raising the maximum again hands its reach straight back. See [ADR 0021](docs/adr/0021-a-lowered-maximum-clamps-without-rewriting.md).
 
+## Crafting the terminal
+
+The terminal is a mid-game goal rather than a starting block or an endgame reward. It costs a chest, four iron ingots, three redstone dust, and one ender pearl, and nothing that requires a trip to the End. See [ADR 0022](docs/adr/0022-the-terminal-costs-an-ender-pearl.md).
+
+|   |   |   |
+|---|---|---|
+| Iron ingot | Ender pearl | Iron ingot |
+| Redstone dust | Chest | Redstone dust |
+| Iron ingot | Redstone dust | Iron ingot |
+
+The recipe appears in the recipe book the first time you pick up an ender pearl, which is the moment it becomes craftable. The terminal is also in the Functional Blocks creative tab.
+
 ## Who can open a terminal
 
 A terminal reaches every container around it through one screen, so on a shared server it is a key to a whole base. Each terminal therefore has an access mode, and it is owner-locked to begin with. See [ADR 0008](docs/adr/0008-terminals-owner-locked-by-default.md).
