@@ -2,13 +2,14 @@ package com.grahambartley.toomanychests.terminal;
 
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.config.TooManyChestsConfig;
+import com.grahambartley.toomanychests.storage.ContainerAssignment;
+import com.grahambartley.toomanychests.storage.ContainerAssignments;
+import com.grahambartley.toomanychests.storage.ContainerFilter;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
@@ -23,15 +24,15 @@ import net.minecraft.util.math.BlockPos;
  * cutting a terminal's power an off switch rather than a factory reset.
  *
  * <p>Every value is sanitized on construction rather than at each reader, so a hand-edited save
- * cannot put a radius or a role in front of code that assumes neither can happen. The tag set
- * sanitizes itself, presets included.
+ * cannot put a radius or a role in front of code that assumes neither can happen. The tag set and
+ * the container assignments sanitize themselves, presets included.
  */
 public record TerminalSettings(
     int radius,
     TerminalAccessMode accessMode,
     Optional<UUID> owner,
     Set<UUID> trusted,
-    Map<BlockPos, ContainerRole> containerRoles,
+    ContainerAssignments containers,
     NetworkTagSet tags) {
 
   public static final int MIN_RADIUS = TooManyChestsConfig.MAX_TERMINAL_RADIUS_MIN;
@@ -49,7 +50,7 @@ public record TerminalSettings(
           TooManyChestsConfig.DEFAULT_TERMINAL_ACCESS_MODE,
           Optional.empty(),
           Set.of(),
-          Map.of(),
+          ContainerAssignments.empty(),
           NetworkTagSet.defaults());
 
   public TerminalSettings {
@@ -57,7 +58,7 @@ public record TerminalSettings(
     accessMode = accessMode == null ? TooManyChestsConfig.DEFAULT_TERMINAL_ACCESS_MODE : accessMode;
     owner = owner == null ? Optional.empty() : owner;
     trusted = sanitizeTrusted(trusted);
-    containerRoles = sanitizeRoles(containerRoles);
+    containers = containers == null ? ContainerAssignments.empty() : containers;
     tags = tags == null ? NetworkTagSet.defaults() : tags;
   }
 
@@ -66,16 +67,16 @@ public record TerminalSettings(
   }
 
   public TerminalSettings withRadius(int newRadius) {
-    return new TerminalSettings(newRadius, accessMode, owner, trusted, containerRoles, tags);
+    return new TerminalSettings(newRadius, accessMode, owner, trusted, containers, tags);
   }
 
   public TerminalSettings withAccessMode(TerminalAccessMode newAccessMode) {
-    return new TerminalSettings(radius, newAccessMode, owner, trusted, containerRoles, tags);
+    return new TerminalSettings(radius, newAccessMode, owner, trusted, containers, tags);
   }
 
   public TerminalSettings withOwner(UUID newOwner) {
     return new TerminalSettings(
-        radius, accessMode, Optional.ofNullable(newOwner), trusted, containerRoles, tags);
+        radius, accessMode, Optional.ofNullable(newOwner), trusted, containers, tags);
   }
 
   public boolean isOwnedBy(UUID candidate) {
@@ -93,7 +94,7 @@ public record TerminalSettings(
     final Set<UUID> next = newTrustedSet();
     next.addAll(trusted);
     next.add(player);
-    return new TerminalSettings(radius, accessMode, owner, next, containerRoles, tags);
+    return new TerminalSettings(radius, accessMode, owner, next, containers, tags);
   }
 
   public TerminalSettings withoutTrusted(UUID player) {
@@ -103,35 +104,39 @@ public record TerminalSettings(
     final Set<UUID> next = newTrustedSet();
     next.addAll(trusted);
     next.remove(player);
-    return new TerminalSettings(radius, accessMode, owner, next, containerRoles, tags);
+    return new TerminalSettings(radius, accessMode, owner, next, containers, tags);
+  }
+
+  public ContainerAssignment assignmentFor(BlockPos container) {
+    return containers.forContainer(container);
   }
 
   public ContainerRole roleFor(BlockPos container) {
-    return container == null
-        ? ContainerRole.DEFAULT
-        : containerRoles.getOrDefault(container.toImmutable(), ContainerRole.DEFAULT);
+    return containers.roleFor(container);
   }
 
-  /**
-   * Assigning the default role forgets the container rather than recording it, so a network that
-   * has never been configured costs nothing to store and two equally configured networks compare
-   * equal whatever order got them there.
-   */
+  public ContainerFilter filterFor(BlockPos container) {
+    return containers.filterFor(container);
+  }
+
+  public TerminalSettings withContainers(ContainerAssignments updated) {
+    if (updated == null || updated.equals(containers)) {
+      return this;
+    }
+    return new TerminalSettings(radius, accessMode, owner, trusted, updated, tags);
+  }
+
   public TerminalSettings withContainerRole(BlockPos container, ContainerRole role) {
-    if (container == null) {
-      return this;
-    }
-    final ContainerRole assigned = role == null ? ContainerRole.DEFAULT : role;
-    if (roleFor(container) == assigned) {
-      return this;
-    }
-    final Map<BlockPos, ContainerRole> next = new LinkedHashMap<>(containerRoles);
-    if (assigned == ContainerRole.DEFAULT) {
-      next.remove(container.toImmutable());
-    } else {
-      next.put(container.toImmutable(), assigned);
-    }
-    return new TerminalSettings(radius, accessMode, owner, trusted, next, tags);
+    return withContainers(containers.withRole(container, role));
+  }
+
+  public TerminalSettings withContainerFilter(BlockPos container, ContainerFilter filter) {
+    return withContainers(containers.withFilter(container, filter));
+  }
+
+  /** What a container leaving the world for good costs it: every decision made about it. */
+  public TerminalSettings forgetContainer(BlockPos container) {
+    return withContainers(containers.without(container));
   }
 
   public boolean hasTag(String tag) {
@@ -142,7 +147,7 @@ public record TerminalSettings(
     if (updated == null || updated.equals(tags)) {
       return this;
     }
-    return new TerminalSettings(radius, accessMode, owner, trusted, containerRoles, updated);
+    return new TerminalSettings(radius, accessMode, owner, trusted, containers, updated);
   }
 
   public TerminalSettings withTag(String tag) {
@@ -168,18 +173,5 @@ public record TerminalSettings(
       }
     }
     return Collections.unmodifiableSet(kept);
-  }
-
-  private static Map<BlockPos, ContainerRole> sanitizeRoles(Map<BlockPos, ContainerRole> raw) {
-    if (raw == null || raw.isEmpty()) {
-      return Map.of();
-    }
-    final Map<BlockPos, ContainerRole> kept = new LinkedHashMap<>();
-    raw.entrySet().stream()
-        .filter(entry -> entry.getKey() != null)
-        .filter(entry -> entry.getValue() != null && entry.getValue() != ContainerRole.DEFAULT)
-        .sorted(Comparator.comparingLong(entry -> entry.getKey().asLong()))
-        .forEach(entry -> kept.put(entry.getKey().toImmutable(), entry.getValue()));
-    return Collections.unmodifiableMap(kept);
   }
 }

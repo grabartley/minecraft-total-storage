@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
+import com.grahambartley.toomanychests.storage.ContainerFilter;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.tag.NetworkTag;
 import com.grahambartley.toomanychests.tag.NetworkTagSet;
@@ -35,6 +36,10 @@ class TerminalSettingsCodecTest {
         TerminalSettings.defaults()
             .withContainerRole(BARREL, ContainerRole.EXCLUDED)
             .withContainerRole(CHEST, ContainerRole.FILTERED),
+        TerminalSettings.defaults()
+            .withContainerRole(CHEST, ContainerRole.FILTERED)
+            .withContainerFilter(
+                CHEST, ContainerFilter.of(List.of("ores"), List.of("minecraft:coal"))),
         TerminalSettings.defaults().withTag("ores").withTag("wood"),
         TerminalSettings.defaults()
             .withRadius(12)
@@ -104,7 +109,7 @@ class TerminalSettingsCodecTest {
         .getAsJsonObject()
         .addProperty("role", "readonly");
 
-    assertTrue(decode(tampered).containerRoles().isEmpty());
+    assertTrue(decode(tampered).containers().isEmpty());
   }
 
   @Test
@@ -144,5 +149,21 @@ class TerminalSettingsCodecTest {
 
   private static TerminalSettings decode(JsonElement encoded) {
     return TerminalSettingsCodec.CODEC.parse(JsonOps.INSTANCE, encoded).getOrThrow();
+  }
+
+  @Test
+  void aFilteredContainerKeepsWhatItAcceptsAcrossASave() {
+    TerminalSettings settings =
+        TerminalSettings.defaults()
+            .withContainerRole(BARREL, ContainerRole.FILTERED)
+            .withContainerFilter(
+                BARREL, ContainerFilter.of(List.of("ores", "wood"), List.of("minecraft:coal")));
+
+    assertEquals(settings.filterFor(BARREL), decode(encode(settings)).filterFor(BARREL));
+  }
+
+  @Test
+  void aContainerNobodyConfiguredIsNotWrittenAtAll() {
+    assertFalse(encode(TerminalSettings.defaults()).getAsJsonObject().has("containerRoles"));
   }
 }

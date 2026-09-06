@@ -8,6 +8,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
+import com.grahambartley.toomanychests.storage.ContainerAssignment;
+import com.grahambartley.toomanychests.storage.ContainerAssignments;
+import com.grahambartley.toomanychests.storage.ContainerFilter;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.tag.NetworkTag;
 import com.grahambartley.toomanychests.tag.NetworkTagSet;
@@ -45,7 +48,7 @@ class TerminalSettingsTest {
     assertEquals(TerminalAccessMode.OWNER, defaults.accessMode());
     assertEquals(Optional.empty(), defaults.owner());
     assertTrue(defaults.trusted().isEmpty());
-    assertTrue(defaults.containerRoles().isEmpty());
+    assertTrue(defaults.containers().isEmpty());
     assertTrue(defaults.tags().custom().isEmpty());
   }
 
@@ -121,7 +124,7 @@ class TerminalSettingsTest {
             .withContainerRole(BARREL, ContainerRole.EXCLUDED)
             .withContainerRole(BARREL, ContainerRole.GENERAL);
 
-    assertTrue(settings.containerRoles().isEmpty());
+    assertTrue(settings.containers().isEmpty());
     assertEquals(TerminalSettings.defaults(), settings);
   }
 
@@ -142,7 +145,7 @@ class TerminalSettingsTest {
             .withContainerRole(BARREL, null);
 
     assertEquals(ContainerRole.DEFAULT, settings.roleFor(BARREL));
-    assertTrue(settings.containerRoles().isEmpty());
+    assertTrue(settings.containers().isEmpty());
   }
 
   @Test
@@ -152,14 +155,16 @@ class TerminalSettingsTest {
             TerminalSettings.defaults()
                 .withContainerRole(BARREL, ContainerRole.EXCLUDED)
                 .withContainerRole(CHEST, ContainerRole.FILTERED)
-                .containerRoles()
+                .containers()
+                .byPosition()
                 .keySet());
     List<BlockPos> backwards =
         List.copyOf(
             TerminalSettings.defaults()
                 .withContainerRole(CHEST, ContainerRole.FILTERED)
                 .withContainerRole(BARREL, ContainerRole.EXCLUDED)
-                .containerRoles()
+                .containers()
+                .byPosition()
                 .keySet());
 
     assertEquals(forwards, backwards);
@@ -198,19 +203,27 @@ class TerminalSettingsTest {
   @Test
   void nullsInsideACollectionAreDroppedRatherThanStored() {
     Set<UUID> trusted = new HashSet<>(Arrays.asList(ALICE, null));
-    Map<BlockPos, ContainerRole> roles = new HashMap<>();
+    Map<BlockPos, ContainerAssignment> roles = new HashMap<>();
     roles.put(BARREL, null);
-    roles.put(null, ContainerRole.EXCLUDED);
-    roles.put(CHEST, ContainerRole.FILTERED);
+    roles.put(null, ContainerAssignment.of(ContainerRole.EXCLUDED));
+    roles.put(CHEST, ContainerAssignment.of(ContainerRole.FILTERED));
     NetworkTagSet tags =
         new NetworkTagSet(
             Arrays.asList(NetworkTag.custom("ores"), null, NetworkTag.preset(PresetTag.WOOD)));
 
     TerminalSettings settings =
-        new TerminalSettings(8, TerminalAccessMode.OPEN, Optional.empty(), trusted, roles, tags);
+        new TerminalSettings(
+            8,
+            TerminalAccessMode.OPEN,
+            Optional.empty(),
+            trusted,
+            new ContainerAssignments(roles),
+            tags);
 
     assertEquals(Set.of(ALICE), settings.trusted());
-    assertEquals(Map.of(CHEST, ContainerRole.FILTERED), settings.containerRoles());
+    assertEquals(
+        Map.of(CHEST, ContainerAssignment.of(ContainerRole.FILTERED)),
+        settings.containers().byPosition());
     assertEquals(List.of(NetworkTag.custom("ores")), settings.tags().custom());
   }
 
@@ -218,7 +231,12 @@ class TerminalSettingsTest {
   void aNullOwnerOptionalIsReadAsNoOwner() {
     TerminalSettings settings =
         new TerminalSettings(
-            8, TerminalAccessMode.OPEN, null, Set.of(), Map.of(), NetworkTagSet.defaults());
+            8,
+            TerminalAccessMode.OPEN,
+            null,
+            Set.of(),
+            ContainerAssignments.empty(),
+            NetworkTagSet.defaults());
 
     assertEquals(Optional.empty(), settings.owner());
   }
@@ -234,7 +252,7 @@ class TerminalSettingsTest {
     assertThrows(UnsupportedOperationException.class, () -> settings.trusted().add(BOB));
     assertThrows(
         UnsupportedOperationException.class,
-        () -> settings.containerRoles().put(CHEST, ContainerRole.FILTERED));
+        () -> settings.containers().byPosition().put(CHEST, ContainerAssignment.DEFAULT));
     assertThrows(
         UnsupportedOperationException.class,
         () -> settings.tags().all().add(NetworkTag.custom("wood")));
@@ -262,5 +280,48 @@ class TerminalSettingsTest {
     assertEquals(first, second);
     assertEquals(first.hashCode(), second.hashCode());
     assertNotEquals(first, second.withRadius(11));
+  }
+
+  @Test
+  void aFilteredContainerRemembersWhatItAccepts() {
+    TerminalSettings settings =
+        TerminalSettings.defaults()
+            .withContainerRole(CHEST, ContainerRole.FILTERED)
+            .withContainerFilter(CHEST, ContainerFilter.ofTags("ores"));
+
+    assertEquals(ContainerFilter.ofTags("ores"), settings.filterFor(CHEST));
+    assertEquals(
+        ContainerAssignment.filtered(ContainerFilter.ofTags("ores")),
+        settings.assignmentFor(CHEST));
+  }
+
+  @Test
+  void aContainerNobodyConfiguredAcceptsNothingInParticular() {
+    assertEquals(ContainerFilter.NONE, TerminalSettings.defaults().filterFor(CHEST));
+    assertEquals(ContainerAssignment.DEFAULT, TerminalSettings.defaults().assignmentFor(CHEST));
+  }
+
+  @Test
+  void forgettingAContainerDropsItsRoleAndItsFilter() {
+    TerminalSettings settings =
+        TerminalSettings.defaults()
+            .withContainerRole(BARREL, ContainerRole.FILTERED)
+            .withContainerFilter(BARREL, ContainerFilter.ofTags("ores"))
+            .withContainerRole(CHEST, ContainerRole.EXCLUDED);
+
+    TerminalSettings forgotten = settings.forgetContainer(BARREL);
+
+    assertEquals(ContainerRole.DEFAULT, forgotten.roleFor(BARREL));
+    assertEquals(ContainerFilter.NONE, forgotten.filterFor(BARREL));
+    assertEquals(ContainerRole.EXCLUDED, forgotten.roleFor(CHEST));
+  }
+
+  @Test
+  void forgettingAContainerNobodyConfiguredChangesNothing() {
+    TerminalSettings settings =
+        TerminalSettings.defaults().withContainerRole(CHEST, ContainerRole.EXCLUDED);
+
+    assertSame(settings, settings.forgetContainer(BARREL));
+    assertSame(settings, settings.forgetContainer(null));
   }
 }
