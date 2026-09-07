@@ -132,7 +132,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
             this::depositEverything);
     addDrawableChild(depositAll);
     setInitialFocus(search.widget());
-    updateToolbar();
+    updateToolbar(TerminalListingMirror.page().status());
     if (TerminalListingMirror.isShowing(handler.syncId)) {
       return;
     }
@@ -162,7 +162,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     if (requested.needsRequest(scroll.window(), search.text())) {
       requestVisibleRows();
     }
-    updateToolbar();
+    updateToolbar(pageThisFrame.status());
     hovered = prompt.isOpen() ? TerminalScreenLayout.NO_CELL : hoveredCell(mouseX, mouseY);
     super.render(context, mouseX, mouseY, delta);
     if (prompt.isOpen()) {
@@ -291,8 +291,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
    * The button says what the terminal can currently do. It steps aside entirely for the amount
    * prompt, because a widget drawn over a modal panel would take its tooltip with it.
    */
-  private void updateToolbar() {
-    depositAll.active = TerminalListingMirror.page().status() != ListingStatus.OFFLINE;
+  private void updateToolbar(ListingStatus status) {
+    depositAll.active = status != ListingStatus.OFFLINE;
     depositAll.visible = !prompt.isOpen();
   }
 

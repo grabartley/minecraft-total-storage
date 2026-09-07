@@ -44,17 +44,21 @@ public final class AmountEntry {
     return switch (keyCode) {
       case GLFW.GLFW_KEY_ESCAPE -> PromptKey.CANCEL;
       case GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER ->
-          isReady() ? PromptKey.CONFIRM : PromptKey.IGNORED;
-      case GLFW.GLFW_KEY_BACKSPACE -> backspace() ? PromptKey.EDITED : PromptKey.IGNORED;
-      default -> PromptKey.IGNORED;
+          isReady() ? PromptKey.CONFIRM : PromptKey.HANDLED;
+      case GLFW.GLFW_KEY_BACKSPACE -> {
+        backspace();
+        yield PromptKey.HANDLED;
+      }
+      default -> PromptKey.HANDLED;
     };
   }
 
   public PromptKey charTyped(char typedCharacter) {
-    return append(typedCharacter) ? PromptKey.EDITED : PromptKey.IGNORED;
+    append(typedCharacter);
+    return PromptKey.HANDLED;
   }
 
-  /** Returns whether the character was taken, so a caller knows the number changed. */
+  /** Returns whether the number really changed, so a leading zero is not mistaken for an edit. */
   public boolean append(char typedCharacter) {
     if (typedCharacter < '0' || typedCharacter > '9' || ceiling == 0) {
       return false;
@@ -67,7 +71,11 @@ public final class AmountEntry {
     if (value > ceiling) {
       return false;
     }
-    typed = value == 0 ? "" : next;
+    final String kept = value == 0 ? "" : next;
+    if (kept.equals(typed)) {
+      return false;
+    }
+    typed = kept;
     return true;
   }
 

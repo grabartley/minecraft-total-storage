@@ -187,6 +187,21 @@ class StorageTransfersTest {
   }
 
   @ParameterizedTest
+  @ValueSource(longs = {-1L, Long.MIN_VALUE})
+  void spreadingANegativeAmountIsRefusedBeforeAnythingMoves(long amount) {
+    FakeContainer from = FakeContainer.withSlots(1, 64).holding(DIAMOND, 10);
+    FakeContainer to = FakeContainer.withSlots(1, 64);
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            commit(
+                transaction ->
+                    StorageTransfers.distribute(from, List.of(to), DIAMOND, amount, transaction)));
+    assertEquals(10L, from.amountOf(DIAMOND));
+  }
+
+  @ParameterizedTest
   @ValueSource(longs = {0L, -1L})
   void anExactMoveOfNothingIsRejected(long amount) {
     FakeContainer from = FakeContainer.withSlots(1, 64).holding(DIAMOND, 10);

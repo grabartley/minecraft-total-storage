@@ -24,7 +24,9 @@ The grid follows the rule every vanilla container already follows: **a full curs
 
 Depositing over the grid ignores which cell the pointer is over, because a network has no slot to drop into.
 
-Shift-click is the one vanilla gesture reassigned. Everything else about the player's own inventory behaves exactly as vanilla: picking up, splitting, dragging, and swapping to the hotbar with a number key. Moving a stack between the hotbar and the backpack is done by picking it up and putting it down, since shift-click now hands it to the network instead. Deposit all is a button, not a gesture.
+Shift-click is the one mouse gesture reassigned. Every other mouse gesture on the player's own inventory behaves exactly as vanilla: picking up, splitting, and dragging. Moving a stack between the hotbar and the backpack is done by picking it up and putting it down, since shift-click now hands it to the network instead. Deposit all is a button, not a gesture.
+
+The keyboard belongs to the search box, which takes focus as the terminal opens so that typing narrows the grid without a click first. A number key therefore writes a digit rather than swapping a hotbar slot, which is the trade the search box was given focus for.
 
 ## Consequences
 

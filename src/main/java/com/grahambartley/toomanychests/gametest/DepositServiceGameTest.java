@@ -92,7 +92,8 @@ public final class DepositServiceGameTest implements FabricGameTest {
       batchId = BATCH,
       tickLimit = TICK_LIMIT)
   public void oneFromThePointerLeavesTheRestOfTheStackInHand(TestContext context) {
-    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    BarrelBlockEntity barrel =
+        NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
     ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
     player.currentScreenHandler.setCursorStack(new ItemStack(Items.DIAMOND, STACK));
 
@@ -103,6 +104,16 @@ public final class DepositServiceGameTest implements FabricGameTest {
     context.assertTrue(
         player.currentScreenHandler.getCursorStack().getCount() == STACK - 1,
         "The pointer holds " + player.currentScreenHandler.getCursorStack().getCount());
+    context.assertTrue(
+        NetworkOperationFixture.countIn(barrel, Items.DIAMOND) == 1L,
+        "The barrel holds "
+            + NetworkOperationFixture.countIn(barrel, Items.DIAMOND)
+            + " rather than the one that left the pointer");
+    long now =
+        NetworkOperationFixture.countIn(barrel, Items.DIAMOND)
+            + NetworkOperationFixture.countCarried(player, Items.DIAMOND);
+    context.assertTrue(
+        now == STACK, "The world started with " + STACK + " diamonds and now holds " + now);
     NetworkOperationFixture.finish(context, player);
   }
 

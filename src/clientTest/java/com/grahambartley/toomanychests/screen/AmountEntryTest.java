@@ -93,22 +93,30 @@ class AmountEntryTest {
   @ParameterizedTest
   @ValueSource(ints = {GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER})
   void confirmingNeedsANumberToConfirm(int enterKey) {
-    assertEquals(PromptKey.IGNORED, new AmountEntry(500).keyPressed(enterKey));
+    assertEquals(PromptKey.HANDLED, new AmountEntry(500).keyPressed(enterKey));
     assertEquals(PromptKey.CONFIRM, typing(500, "12").keyPressed(enterKey));
   }
 
-  @Test
-  void aKeyThatChangesTheNumberSaysSoSoThePromptRedraws() {
-    assertEquals(PromptKey.EDITED, new AmountEntry(500).charTyped('4'));
-    assertEquals(PromptKey.EDITED, typing(500, "4").keyPressed(GLFW.GLFW_KEY_BACKSPACE));
-    assertEquals(PromptKey.IGNORED, new AmountEntry(500).keyPressed(GLFW.GLFW_KEY_BACKSPACE));
-    assertEquals(PromptKey.IGNORED, new AmountEntry(500).charTyped('x'));
+  /** The prompt is modal, so nothing behind it hears a key whatever the key turned out to mean. */
+  @ParameterizedTest
+  @ValueSource(
+      ints = {GLFW.GLFW_KEY_TAB, GLFW.GLFW_KEY_LEFT, GLFW.GLFW_KEY_F3, GLFW.GLFW_KEY_BACKSPACE})
+  void everyKeyThatIsNotAnEndingIsKeptRatherThanPassedOn(int keyCode) {
+    assertEquals(PromptKey.HANDLED, typing(500, "12").keyPressed(keyCode));
+    assertEquals(PromptKey.HANDLED, new AmountEntry(500).keyPressed(keyCode));
   }
 
-  @ParameterizedTest
-  @ValueSource(ints = {GLFW.GLFW_KEY_TAB, GLFW.GLFW_KEY_LEFT, GLFW.GLFW_KEY_F3})
-  void aKeyWithNoMeaningHereIsIgnoredRatherThanPassedOn(int keyCode) {
-    assertEquals(PromptKey.IGNORED, typing(500, "12").keyPressed(keyCode));
+  @Test
+  void everyTypedCharacterIsKeptWhetherOrNotItWasADigit() {
+    assertEquals(PromptKey.HANDLED, new AmountEntry(500).charTyped('4'));
+    assertEquals(PromptKey.HANDLED, new AmountEntry(500).charTyped('x'));
+  }
+
+  /** A leading zero leaves the number where it was, so it is not an edit. */
+  @Test
+  void aDigitThatLeavesTheNumberUnchangedIsNotAnEdit() {
+    assertFalse(new AmountEntry(500).append('0'));
+    assertTrue(new AmountEntry(500).append('7'));
   }
 
   @ParameterizedTest

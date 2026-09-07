@@ -62,11 +62,11 @@ public final class WithdrawAmountPrompt {
   }
 
   public PromptKey keyPressed(int keyCode) {
-    return isOpen() ? entry.keyPressed(keyCode) : PromptKey.IGNORED;
+    return isOpen() ? entry.keyPressed(keyCode) : PromptKey.HANDLED;
   }
 
   public PromptKey charTyped(char typed) {
-    return isOpen() ? entry.charTyped(typed) : PromptKey.IGNORED;
+    return isOpen() ? entry.charTyped(typed) : PromptKey.HANDLED;
   }
 
   public void draw(DrawContext context, TextRenderer textRenderer, int originX, int originY) {
