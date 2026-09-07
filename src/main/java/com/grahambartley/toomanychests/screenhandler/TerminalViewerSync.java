@@ -27,21 +27,35 @@ public final class TerminalViewerSync {
 
   public static List<TerminalScreenHandler> openOn(
       MinecraftServer server, TerminalAddress terminal) {
+    final List<TerminalScreenHandler> open = new ArrayList<>();
+    for (final ServerPlayerEntity player : playersOn(server, terminal)) {
+      open.add((TerminalScreenHandler) player.currentScreenHandler);
+    }
+    return List.copyOf(open);
+  }
+
+  /**
+   * The players really looking at this terminal right now. Anything that has to send a packet needs
+   * the player rather than the handler, and both answers come from the same walk so neither can
+   * disagree with the other about who is watching.
+   */
+  public static List<ServerPlayerEntity> playersOn(
+      MinecraftServer server, TerminalAddress terminal) {
     if (server == null || terminal == null) {
       return List.of();
     }
-    final List<TerminalScreenHandler> open = new ArrayList<>();
+    final List<ServerPlayerEntity> watching = new ArrayList<>();
     for (final UUID viewer : TerminalAccessControl.viewers().viewing(terminal)) {
       final ServerPlayerEntity player = server.getPlayerManager().getPlayer(viewer);
       if (player != null
           && player.currentScreenHandler instanceof TerminalScreenHandler handler
           && handler.terminal().equals(terminal.pos())) {
-        open.add(handler);
+        watching.add(player);
       } else {
         TerminalAccessControl.viewers().closed(terminal, viewer);
       }
     }
-    return List.copyOf(open);
+    return List.copyOf(watching);
   }
 
   /** Returns how many screens were resent, which is what a caller logs or asserts on. */

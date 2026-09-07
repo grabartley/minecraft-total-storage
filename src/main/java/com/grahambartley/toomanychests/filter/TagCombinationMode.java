@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests.filter;
 
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -30,6 +31,22 @@ public enum TagCombinationMode {
   };
 
   public static final TagCombinationMode DEFAULT = AND;
+
+  /**
+   * The mode of that name, or none. Modes travel by name rather than by position, so reordering the
+   * constants cannot quietly turn one mode into the other for a build on the far side of a wire.
+   */
+  public static Optional<TagCombinationMode> fromName(String name) {
+    if (name == null) {
+      return Optional.empty();
+    }
+    for (final TagCombinationMode candidate : values()) {
+      if (candidate.name().equalsIgnoreCase(name.trim())) {
+        return Optional.of(candidate);
+      }
+    }
+    return Optional.empty();
+  }
 
   abstract boolean combine(Set<String> itemTags, Set<String> activeTags);
 

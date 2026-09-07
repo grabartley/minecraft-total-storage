@@ -50,7 +50,11 @@
       "com.grahambartley.toomanychests.gametest.SortViewerSyncGameTest",
       "com.grahambartley.toomanychests.gametest.TerminalAccessGameTest",
       "com.grahambartley.toomanychests.gametest.TerminalRecipeGameTest",
-      "com.grahambartley.toomanychests.gametest.TerminalScreenGameTest"
+      "com.grahambartley.toomanychests.gametest.TerminalScreenGameTest",
+      "com.grahambartley.toomanychests.gametest.FilterCandidateFactoryGameTest",
+      "com.grahambartley.toomanychests.gametest.TerminalListingServiceGameTest",
+      "com.grahambartley.toomanychests.gametest.TerminalListingBroadcastGameTest",
+      "com.grahambartley.toomanychests.gametest.ListingPayloadGameTest"
     ]
   },
   "mixins": [
