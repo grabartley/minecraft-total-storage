@@ -11,6 +11,7 @@ import com.grahambartley.toomanychests.screenhandler.TerminalScreenHandler;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.client.gui.DrawContext;
@@ -19,6 +20,7 @@ import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.Slot;
+import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
@@ -50,16 +52,13 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   private static final int ITEM_SIZE = 16;
   private static final int LINE_HEIGHT = 9;
 
-  /** Counts are drawn at half size so five characters still clear the side of a cell. */
-  private static final float COUNT_SCALE = 0.5F;
-
-  private static final int COUNT_HEIGHT = Math.round(LINE_HEIGHT * COUNT_SCALE);
-
   /** Far enough forward to clear the item model the count is written across. */
   private static final float COUNT_ELEVATION = 200.0F;
 
   private static final int COUNT_COLOUR = 0xFFFFFF;
-  private static final int PLACEHOLDER_COLOUR = 0xACACB8;
+
+  /** The palette's mid glyph, which is what reads on the recess floor behind an empty grid. */
+  private static final int PLACEHOLDER_COLOUR = 0x9AA3B3;
 
   private static final int LEFT_BUTTON = 0;
 
@@ -75,6 +74,9 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
    * on screen.
    */
   private ListingPage<ItemVariant> pageThisFrame = ListingPage.pending(0L);
+
+  /** What the grid is showing instead of rows, taken with the page so the two cannot disagree. */
+  private Optional<ListingPlaceholder> placeholder = Optional.empty();
 
   private int hovered = TerminalScreenLayout.NO_CELL;
   private ListingWindow requested = ListingWindow.EMPTY;
@@ -121,6 +123,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   @Override
   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
     pageThisFrame = TerminalListingMirror.page();
+    placeholder = ListingPlaceholder.forStatus(pageThisFrame.status());
     scroll.fit(pageThisFrame.totalMatching());
     if (!scroll.window().equals(requested)) {
       requestVisibleRows();
@@ -155,8 +158,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   @Override
   protected void drawForeground(DrawContext context, int mouseX, int mouseY) {
     super.drawForeground(context, mouseX, mouseY);
-    ListingPlaceholder.forStatus(pageThisFrame.status())
-        .ifPresent(placeholder -> drawPlaceholder(context, placeholder));
+    placeholder.ifPresent(shown -> drawPlaceholder(context, shown));
     drawRows(context);
   }
 
@@ -207,7 +209,15 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
         handler.syncId, requested, "", TagCombinationMode.DEFAULT, Set.of());
   }
 
+  /**
+   * A grid explaining why it has no rows draws no cells. The empty-state art was drawn against the
+   * recess floor, and forty-five cells behind it leave the illustration showing through the gutters
+   * between them rather than reading as a picture.
+   */
   private void drawCells(DrawContext context) {
+    if (placeholder.isPresent()) {
+      return;
+    }
     for (int cell = 0; cell < TerminalScreenLayout.LISTING_PAGE_SIZE; cell++) {
       context.drawGuiTexture(
           cell == hovered ? CELL_HOVER : CELL,
@@ -250,41 +260,58 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   }
 
   /**
-   * The count sits in the item's bottom right corner as a stack size does, but scaled down, because
-   * a network total is several times wider than the two digits vanilla ever has to fit there.
+   * The count sits in the item's bottom right corner as a stack size does, shrunk only as far as
+   * the cell demands. A network total can be several times wider than the two digits vanilla ever
+   * has to fit there, but most cells hold a count that fits at full size, and shrinking those too
+   * turns the common case to mush at the smallest GUI scale for the sake of the rare one.
    */
   private void drawCount(DrawContext context, String label, int itemX, int itemY) {
+    final int width = textRenderer.getWidth(label);
+    final float scale = Math.min(1.0F, (float) ITEM_SIZE / width);
     context.getMatrices().push();
     context.getMatrices().translate(0.0F, 0.0F, COUNT_ELEVATION);
-    context.getMatrices().scale(COUNT_SCALE, COUNT_SCALE, 1.0F);
+    context.getMatrices().scale(scale, scale, 1.0F);
     context.drawText(
         textRenderer,
         label,
-        Math.round((itemX + ITEM_SIZE) / COUNT_SCALE) - textRenderer.getWidth(label),
-        Math.round((itemY + ITEM_SIZE - COUNT_HEIGHT) / COUNT_SCALE),
+        Math.round((itemX + ITEM_SIZE) / scale) - width,
+        Math.round((itemY + ITEM_SIZE - LINE_HEIGHT * scale) / scale),
         COUNT_COLOUR,
         true);
     context.getMatrices().pop();
   }
 
-  private void drawPlaceholder(DrawContext context, ListingPlaceholder placeholder) {
+  /**
+   * The message is wrapped to the grid rather than trusted to fit it. English happens to be short
+   * enough, but a translation is not, and one long line runs off both sides of the chassis and off
+   * the screen with it.
+   */
+  private void drawPlaceholder(DrawContext context, ListingPlaceholder shown) {
     final int centreX = TerminalScreenLayout.GRID_X + TerminalScreenLayout.GRID_WIDTH / 2;
-    final int block = ListingPlaceholder.SPRITE_SIZE + ListingPlaceholder.MESSAGE_GAP + LINE_HEIGHT;
+    final List<OrderedText> lines =
+        textRenderer.wrapLines(shown.message(), TerminalScreenLayout.GRID_WIDTH);
+    final int block =
+        ListingPlaceholder.SPRITE_SIZE
+            + ListingPlaceholder.MESSAGE_GAP
+            + lines.size() * LINE_HEIGHT;
     final int top = TerminalScreenLayout.GRID_Y + (TerminalScreenLayout.GRID_HEIGHT - block) / 2;
     context.drawGuiTexture(
-        placeholder.sprite(),
+        shown.sprite(),
         centreX - ListingPlaceholder.SPRITE_SIZE / 2,
         top,
         ListingPlaceholder.SPRITE_SIZE,
         ListingPlaceholder.SPRITE_SIZE);
-    final Text message = placeholder.message();
-    context.drawText(
-        textRenderer,
-        message,
-        centreX - textRenderer.getWidth(message) / 2,
-        top + ListingPlaceholder.SPRITE_SIZE + ListingPlaceholder.MESSAGE_GAP,
-        PLACEHOLDER_COLOUR,
-        false);
+    int lineY = top + ListingPlaceholder.SPRITE_SIZE + ListingPlaceholder.MESSAGE_GAP;
+    for (final OrderedText line : lines) {
+      context.drawText(
+          textRenderer,
+          line,
+          centreX - textRenderer.getWidth(line) / 2,
+          lineY,
+          PLACEHOLDER_COLOUR,
+          false);
+      lineY += LINE_HEIGHT;
+    }
   }
 
   private void drawCellTooltip(DrawContext context, int mouseX, int mouseY) {
