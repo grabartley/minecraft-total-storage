@@ -16,6 +16,7 @@ import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BarrelBlockEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -175,6 +176,30 @@ public final class TerminalListingServiceGameTest implements FabricGameTest {
     finish(context, player);
   }
 
+  /**
+   * Ranking has to survive the display names the registry actually hands out, which is the half
+   * JUnit cannot see. The index orders by identifier, so a chest boat is listed before a chest;
+   * ranking is what puts the thing the player named at the top of the grid instead.
+   */
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void theClosestMatchIsListedFirstHoweverTheIndexOrderedIt(TestContext context) {
+    ServerPlayerEntity player =
+        openTerminalStockedWith(
+            context, Items.CHERRY_CHEST_BOAT, Items.CHEST, Items.CHEST_MINECART, Items.ENDER_CHEST);
+    TerminalScreenHandler handler = handlerOf(player);
+
+    request(player, handler, 0, 10, "chest");
+
+    ListingPage<ItemVariant> page = listings.pageFor(player, handler);
+    List<Item> listed = itemsOf(page);
+    context.assertTrue(
+        listed.equals(
+            List.of(Items.CHEST, Items.CHEST_MINECART, Items.CHERRY_CHEST_BOAT, Items.ENDER_CHEST)),
+        "The exact match should lead, then the prefix, then the rest in index order, got "
+            + listed);
+    finish(context, player);
+  }
+
   private void request(
       ServerPlayerEntity player,
       TerminalScreenHandler handler,
@@ -187,7 +212,11 @@ public final class TerminalListingServiceGameTest implements FabricGameTest {
             handler.syncId, offset, length, search, TagCombinationMode.DEFAULT, Set.of()));
   }
 
-  private static long countOf(ListingPage<ItemVariant> page, net.minecraft.item.Item item) {
+  private static List<Item> itemsOf(ListingPage<ItemVariant> page) {
+    return page.rows().stream().map(row -> row.variant().getItem()).toList();
+  }
+
+  private static long countOf(ListingPage<ItemVariant> page, Item item) {
     final List<ListingRow<ItemVariant>> rows = page.rows();
     for (final ListingRow<ItemVariant> row : rows) {
       if (row.variant().getItem() == item) {
@@ -198,6 +227,11 @@ public final class TerminalListingServiceGameTest implements FabricGameTest {
   }
 
   private static ServerPlayerEntity openTerminalWithAStockedBarrel(TestContext context) {
+    return openTerminalStockedWith(
+        context, Items.DIAMOND, Items.EMERALD, Items.GOLD_INGOT, Items.IRON_INGOT);
+  }
+
+  private static ServerPlayerEntity openTerminalStockedWith(TestContext context, Item... items) {
     ServerPlayerEntity player = context.createMockCreativeServerPlayerInWorld();
     BlockPos standing = context.getAbsolutePos(STANDING);
     player.refreshPositionAndAngles(
@@ -205,10 +239,9 @@ public final class TerminalListingServiceGameTest implements FabricGameTest {
 
     context.setBlockState(BARREL, Blocks.BARREL.getDefaultState());
     BarrelBlockEntity barrel = context.getBlockEntity(BARREL);
-    barrel.setStack(0, new ItemStack(Items.DIAMOND, 64));
-    barrel.setStack(1, new ItemStack(Items.EMERALD, 64));
-    barrel.setStack(2, new ItemStack(Items.GOLD_INGOT, 64));
-    barrel.setStack(3, new ItemStack(Items.IRON_INGOT, 64));
+    for (int slot = 0; slot < items.length; slot++) {
+      barrel.setStack(slot, new ItemStack(items[slot], items[slot].getMaxCount()));
+    }
     barrel.markDirty();
 
     context.setBlockState(TERMINAL, ModBlocks.TERMINAL.getDefaultState());

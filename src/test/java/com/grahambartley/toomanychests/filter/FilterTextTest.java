@@ -79,4 +79,21 @@ class FilterTextTest {
 
     assertThrows(UnsupportedOperationException.class, () -> normalised.add("tools"));
   }
+
+  @ParameterizedTest
+  @CsvSource({
+    "minecraft:cobblestone,true",
+    "create:,true",
+    ":cobblestone,true",
+    "cobblestone,false",
+    "'',false"
+  })
+  void aTermNamesANamespaceOnlyWhenItCarriesTheSeparator(String value, boolean expected) {
+    assertEquals(expected, FilterText.hasNamespace(value));
+  }
+
+  @Test
+  void nothingNamesNoNamespace() {
+    assertFalse(FilterText.hasNamespace(null));
+  }
 }

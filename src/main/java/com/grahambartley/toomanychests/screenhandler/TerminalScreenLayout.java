@@ -60,10 +60,31 @@ public final class TerminalScreenLayout {
   public static final int TITLE_X = 8;
   public static final int TITLE_Y = PANEL_BORDER + 2;
 
+  /** The search box spans the recess under it, since it narrows everything the recess shows. */
+  public static final int SEARCH_HEIGHT = 12;
+
+  /** How far the search box's own nine-sliced border reaches, which its text has to clear. */
+  public static final int SEARCH_BORDER = 4;
+
+  /** Air between the search box and the recess, so the two read as separate panels. */
+  public static final int SEARCH_GAP = 2;
+
+  /**
+   * The air above and below the line of text inside the box, which centres it there.
+   *
+   * <p>A line of text is eight pixels tall and the box is twelve, so two pixels centres it. That is
+   * thinner than the sprite's nine-slice border, which is deliberate: the border a player can see
+   * is the outer two pixels of it, and clearing the whole slice would leave no room for the line.
+   */
+  public static final int SEARCH_TEXT_MARGIN = 2;
+
   /** The recessed area the item grid, its scrollbar, and later the filter column are drawn into. */
   public static final int INSET_X = PANEL_BORDER + 1;
 
-  public static final int INSET_Y = TITLE_Y + 10;
+  public static final int SEARCH_X = INSET_X;
+  public static final int SEARCH_Y = TITLE_Y + 10;
+
+  public static final int INSET_Y = SEARCH_Y + SEARCH_HEIGHT + SEARCH_GAP;
 
   public static final int INSET_WIDTH =
       2 * INSET_BORDER + GRID_WIDTH + SCROLLBAR_GAP + SCROLLBAR_WIDTH;
@@ -71,6 +92,16 @@ public final class TerminalScreenLayout {
   public static final int INSET_HEIGHT = 2 * INSET_BORDER + GRID_HEIGHT;
 
   public static final int WINDOW_WIDTH = INSET_WIDTH + 2 * INSET_X;
+
+  public static final int SEARCH_WIDTH = INSET_WIDTH;
+
+  public static final int SEARCH_TEXT_X = SEARCH_X + SEARCH_BORDER;
+
+  public static final int SEARCH_TEXT_HEIGHT = SEARCH_HEIGHT - 2 * SEARCH_TEXT_MARGIN;
+
+  public static final int SEARCH_TEXT_Y = SEARCH_Y + SEARCH_TEXT_MARGIN;
+
+  public static final int SEARCH_TEXT_WIDTH = SEARCH_WIDTH - 2 * SEARCH_BORDER;
 
   public static final int GRID_X = INSET_X + INSET_BORDER;
   public static final int GRID_Y = INSET_Y + INSET_BORDER;
@@ -147,6 +178,19 @@ public final class TerminalScreenLayout {
       return NO_CELL;
     }
     return row * LISTING_COLUMNS + column;
+  }
+
+  /**
+   * Whether a point in the window is over the search box, border and all.
+   *
+   * <p>The whole box rather than the text inside it, because the field covers only the text and a
+   * click on the border of something that looks like one control should reach it.
+   */
+  public static boolean isOverSearch(int windowX, int windowY) {
+    return windowX >= SEARCH_X
+        && windowX < SEARCH_X + SEARCH_WIDTH
+        && windowY >= SEARCH_Y
+        && windowY < SEARCH_Y + SEARCH_HEIGHT;
   }
 
   /** Whether a point in the window is over the scrollbar track. */

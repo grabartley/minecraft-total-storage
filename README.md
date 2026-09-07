@@ -24,6 +24,10 @@ The screen is not a container. What the network holds is far more than a contain
 
 Searching and filtering narrow the whole network rather than the page you are looking at, because the server does the narrowing before it sends anything back. The listing also keeps itself current: a chest filling up behind you changes the numbers on screen without you touching anything. See [ADR 0027](docs/adr/0027-the-listing-is-narrowed-on-the-server.md).
 
+The search box takes the keyboard the moment the terminal opens, so you type rather than click first. Matching is fuzzy against an item's name and its identifier, so `dch` finds a Dark Oak Chest, and the closest answers come first: the whole name, then what starts with what you typed, then what merely contains it. Escape empties the box before it closes the screen, so a query typed by accident costs one key rather than a reopened terminal. See [ADR 0028](docs/adr/0028-results-are-ranked-before-they-are-paged.md).
+
+Two prefixes make a query precise. `#tag` searches the network's tags and `@modid` narrows to one mod, and both combine with plain text, so `@create gear` finds the gears Create adds. Several tags or names each narrow the results while several mods widen them, because an item comes from exactly one mod and asking for two of them could only ever return nothing. See [ADR 0013](docs/adr/0013-search-terms-combine-by-kind.md).
+
 The network is drawn as a grid of cells, each one an item and how much of that exact item the whole network holds. Items that differ only by their data components are separate cells with separate counts, so a damaged pickaxe and a fresh one never add up into one number. Counts are written out in full while they fit and compacted once they stop, always downwards: a cell reading `12.3k` is never promising more than is there, and the tooltip carries the real figure alongside how many containers it is spread across.
 
 Scroll the grid with the wheel or by dragging the scrollbar. Each scroll asks the server for the rows the grid is now showing, so what a terminal costs to page through is set by the size of the grid rather than by the size of the network.

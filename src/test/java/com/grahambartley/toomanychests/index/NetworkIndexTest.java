@@ -90,32 +90,6 @@ class NetworkIndexTest {
   }
 
   @Test
-  void matchingKeepsIndexOrder() {
-    List<NetworkIndexEntry<String>> matches = index().matching(entry -> entry.totalCount() >= 12L);
-
-    assertEquals(
-        List.of("cobblestone", "diamond"),
-        matches.stream().map(NetworkIndexEntry::variant).toList());
-  }
-
-  @Test
-  void aPredicateMatchingNothingReturnsEmptyRatherThanEverything() {
-    assertTrue(index().matching(entry -> false).isEmpty());
-  }
-
-  @Test
-  void aPredicateMatchingEverythingReturnsEveryEntry() {
-    assertEquals(index().entries(), index().matching(entry -> true));
-  }
-
-  @Test
-  void matchingRejectsANullPredicate() {
-    NetworkIndex<String> index = index();
-
-    assertThrows(NullPointerException.class, () -> index.matching(null));
-  }
-
-  @Test
   void entriesAreUnmodifiable() {
     NetworkIndex<String> index = index();
     NetworkIndexEntry<String> extra = new NetworkIndexEntry<>("gravel", 1L, List.of(FIRST));
@@ -131,7 +105,6 @@ class NetworkIndexTest {
     assertEquals(0, empty.variantCount());
     assertEquals(0L, empty.totalCount());
     assertEquals(List.of(), empty.entries());
-    assertTrue(empty.matching(entry -> true).isEmpty());
   }
 
   @Test

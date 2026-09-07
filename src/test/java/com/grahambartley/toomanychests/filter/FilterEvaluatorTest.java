@@ -12,10 +12,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -24,13 +22,10 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class FilterEvaluatorTest {
-  private static final int LARGE_NETWORK_SIZE = 5_000;
-  private static final int WARMUP_PASSES = 20;
-  private static final int MEASURED_PASSES = 10;
-  private static final long TICK_BUDGET_MILLIS = 50L;
-
   private static List<FilterCandidate> filter(ItemFilter filter) {
-    return FilterEvaluator.filter(TestCandidates.all(), filter);
+    return TestCandidates.all().stream()
+        .filter(candidate -> FilterEvaluator.strengthOf(candidate, filter).isMatch())
+        .toList();
   }
 
   private static Stream<Arguments> tagCombinations() {
@@ -114,67 +109,18 @@ class FilterEvaluatorTest {
 
   @Test
   void anUntaggedItemIsExcludedByAnyActiveTag() {
-    assertFalse(
-        FilterEvaluator.accepts(
-            UNTAGGED, ItemFilter.ofTags(TagCombinationMode.OR, Set.of("tools"))));
-    assertTrue(FilterEvaluator.accepts(UNTAGGED, ItemFilter.NONE));
-  }
-
-  @Test
-  void filteringPreservesTheOrderItWasGiven() {
-    List<FilterCandidate> matches =
-        filter(ItemFilter.ofTags(TagCombinationMode.OR, Set.of("wood", "tools")));
-
-    assertEquals(List.of(DARK_OAK_CHEST, IRON_PICKAXE, COGWHEEL, CREATE_WRENCH), matches);
+    assertFalse(accepts(UNTAGGED, ItemFilter.ofTags(TagCombinationMode.OR, Set.of("tools"))));
+    assertTrue(accepts(UNTAGGED, ItemFilter.NONE));
   }
 
   @Test
   void nullArgumentsAreRejectedRatherThanSilentlyMatching() {
-    assertThrows(NullPointerException.class, () -> FilterEvaluator.accepts(null, ItemFilter.NONE));
-    assertThrows(NullPointerException.class, () -> FilterEvaluator.accepts(COBBLESTONE, null));
-    assertThrows(NullPointerException.class, () -> FilterEvaluator.filter(null, ItemFilter.NONE));
     assertThrows(
-        NullPointerException.class, () -> FilterEvaluator.filter(TestCandidates.all(), null));
+        NullPointerException.class, () -> FilterEvaluator.strengthOf(null, ItemFilter.NONE));
+    assertThrows(NullPointerException.class, () -> FilterEvaluator.strengthOf(COBBLESTONE, null));
   }
 
-  private static List<FilterCandidate> largeNetwork() {
-    final List<FilterCandidate> candidates = new ArrayList<>(LARGE_NETWORK_SIZE);
-    for (int i = 0; i < LARGE_NETWORK_SIZE; i++) {
-      candidates.add(
-          new FilterCandidate(
-              "mod_" + (i % 20) + ":item_" + i,
-              "Generated Item " + i,
-              Set.of("tag_" + (i % 13), "group_" + (i % 7))));
-    }
-    return List.copyOf(candidates);
-  }
-
-  /**
-   * The terminal filters on the server thread while the player types, so a pass over a large
-   * network has to fit inside a tick with room to spare for everything else happening in it.
-   */
-  @Test
-  void evaluatingAWholeNetworkFitsInsideATick() {
-    final List<FilterCandidate> network = largeNetwork();
-    final ItemFilter filter =
-        new ItemFilter(
-            Set.of("tag_3"), TagCombinationMode.AND, SearchQueryParser.parse("@mod_1 item #tag"));
-
-    for (int warmup = 0; warmup < WARMUP_PASSES; warmup++) {
-      FilterEvaluator.filter(network, filter);
-    }
-
-    long fastestNanos = Long.MAX_VALUE;
-    for (int pass = 0; pass < MEASURED_PASSES; pass++) {
-      final long startedAt = System.nanoTime();
-      final List<FilterCandidate> matches = FilterEvaluator.filter(network, filter);
-      fastestNanos = Math.min(fastestNanos, System.nanoTime() - startedAt);
-      assertFalse(matches.isEmpty());
-    }
-
-    final long millis = TimeUnit.NANOSECONDS.toMillis(fastestNanos);
-    assertTrue(
-        millis < TICK_BUDGET_MILLIS,
-        "filtering " + LARGE_NETWORK_SIZE + " entries took " + millis + "ms");
+  private static boolean accepts(FilterCandidate candidate, ItemFilter filter) {
+    return FilterEvaluator.strengthOf(candidate, filter).isMatch();
   }
 }

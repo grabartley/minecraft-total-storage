@@ -1,74 +1,57 @@
 package com.grahambartley.toomanychests.filter;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 /**
- * Answers whether an item belongs in the player's current view, as a pure decision over plain data.
+ * Answers how well an item belongs in the player's current view, as a pure decision over plain
+ * data.
  *
  * <p>Per ADR 0009 this runs on the server against the live index, because filtering on the client
  * would mean sending every client the whole network, which pagination exists to avoid. ADR 0013
- * covers how the terms of a query combine and why acceptance stops short of ranking.
+ * covers how the terms of a query combine, and ADR 0028 why one answer serves both whether a row
+ * belongs and where it is shown.
+ *
+ * <p>There is one question rather than two, because whether a row belongs is whether its strength
+ * is anything other than none. Asking separately would evaluate the same query twice per row and
+ * leave room for the answers to disagree.
  */
 public final class FilterEvaluator {
-  private static final char NAMESPACE_SEPARATOR = ':';
-
   private FilterEvaluator() {}
 
-  public static boolean accepts(FilterCandidate candidate, ItemFilter filter) {
+  /**
+   * How well an item answers the whole view, {@link MatchStrength#NONE} when it does not belong in
+   * it at all.
+   *
+   * <p>The tags and the mod are gates rather than grades: an item either carries them or does not,
+   * so passing them leaves the typed text deciding how close the row is. A view narrowed to nothing
+   * grades every row alike, since there is no question for one to answer better than another.
+   */
+  public static MatchStrength strengthOf(FilterCandidate candidate, ItemFilter filter) {
     Objects.requireNonNull(candidate, "candidate");
     Objects.requireNonNull(filter, "filter");
     if (filter.isEmpty()) {
-      return true;
+      return MatchStrength.EXACT;
     }
-    return filter.combinationMode().matches(candidate.tags(), filter.activeTags())
-        && matchesSearch(candidate, filter.query());
-  }
-
-  /** The accepted candidates, in the order they were given. */
-  public static List<FilterCandidate> filter(List<FilterCandidate> candidates, ItemFilter filter) {
-    Objects.requireNonNull(candidates, "candidates");
-    Objects.requireNonNull(filter, "filter");
-    if (filter.isEmpty()) {
-      return List.copyOf(candidates);
+    if (!filter.combinationMode().matches(candidate.tags(), filter.activeTags())) {
+      return MatchStrength.NONE;
     }
-    final List<FilterCandidate> accepted = new ArrayList<>(candidates.size());
-    for (final FilterCandidate candidate : candidates) {
-      if (accepts(candidate, filter)) {
-        accepted.add(candidate);
-      }
-    }
-    return List.copyOf(accepted);
-  }
-
-  private static boolean matchesSearch(FilterCandidate candidate, SearchQuery query) {
-    for (final String term : query.nameTerms()) {
-      if (!matchesName(candidate, term)) {
-        return false;
-      }
-    }
+    final SearchQuery query = filter.query();
     for (final String term : query.tagTerms()) {
       if (!matchesAnyTag(candidate.tags(), term)) {
-        return false;
+        return MatchStrength.NONE;
       }
     }
-    return matchesAnyModId(candidate.modId(), query.modIdTerms());
-  }
-
-  /** Namespaced terms match literally, bare terms match fuzzily. See ADR 0013. */
-  private static boolean matchesName(FilterCandidate candidate, String term) {
-    if (term.indexOf(NAMESPACE_SEPARATOR) >= 0) {
-      return candidate.identifier().contains(term);
+    if (!matchesAnyModId(candidate.modId(), query.modIdTerms())) {
+      return MatchStrength.NONE;
     }
-    return FuzzyNameMatcher.matches(candidate.displayName(), term)
-        || FuzzyNameMatcher.matches(candidate.path(), term);
+    return SearchRanking.of(candidate, query);
   }
 
   private static boolean matchesAnyTag(Set<String> tags, String term) {
     for (final String tag : tags) {
-      if (FuzzyNameMatcher.matches(tag, term)) {
+      if (MatchStrength.of(tag, term).isMatch()) {
         return true;
       }
     }
@@ -80,7 +63,7 @@ public final class FilterEvaluator {
       return true;
     }
     for (final String term : terms) {
-      if (FuzzyNameMatcher.matches(modId, term)) {
+      if (MatchStrength.of(modId, term).isMatch()) {
         return true;
       }
     }
