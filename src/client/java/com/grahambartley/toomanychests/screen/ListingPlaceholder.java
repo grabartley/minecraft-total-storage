@@ -9,9 +9,13 @@ import net.minecraft.util.Identifier;
 /**
  * What a grid with no rows shows instead of them.
  *
- * <p>Each case gets its own silhouette as well as its own words, per the sprite reference: a crate
- * for a network with nothing in it and a magnifier for a search that found nothing. A player who
- * cannot read the line still learns which of the two they are looking at.
+ * <p>An empty network and an empty search get their own silhouette as well as their own words, per
+ * the sprite reference: a crate against a magnifier. A player who cannot read the line still learns
+ * which of the two they are looking at.
+ *
+ * <p>A terminal with no network borrows the crate. The two are separated by the line rather than by
+ * the picture, because what has gone wrong is that the view is out of date rather than that the
+ * network is empty, and no silhouette says "out of date" on its own.
  *
  * <p>{@link ListingStatus#PENDING} draws nothing. It lasts until the first page lands, and a
  * message that flashes up for a tick every time a terminal opens is noise rather than feedback.
@@ -27,9 +31,6 @@ public record ListingPlaceholder(Identifier sprite, Text message) {
   public static final int MESSAGE_GAP = 6;
 
   public static Optional<ListingPlaceholder> forStatus(ListingStatus status) {
-    if (status == null) {
-      return Optional.empty();
-    }
     return switch (status) {
       case EMPTY_NETWORK -> Optional.of(of("empty/network", "empty.network"));
       case NO_RESULTS -> Optional.of(of("empty/no_results", "empty.no_results"));
@@ -40,7 +41,6 @@ public record ListingPlaceholder(Identifier sprite, Text message) {
 
   private static ListingPlaceholder of(String sprite, String messageKey) {
     return new ListingPlaceholder(
-        Identifier.of(TooManyChests.MOD_ID, sprite),
-        Text.translatable("screen." + TooManyChests.MOD_ID + ".terminal." + messageKey));
+        Identifier.of(TooManyChests.MOD_ID, sprite), TerminalScreenText.of(messageKey));
   }
 }

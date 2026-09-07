@@ -36,10 +36,6 @@ public final class ListingScroll {
     topRow = Math.min(topRow, maxTopRow());
   }
 
-  public int columns() {
-    return columns;
-  }
-
   public int visibleRows() {
     return visibleRows;
   }

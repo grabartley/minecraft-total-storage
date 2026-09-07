@@ -26,7 +26,7 @@ Searching and filtering narrow the whole network rather than the page you are lo
 
 The network is drawn as a grid of cells, each one an item and how much of that exact item the whole network holds. Items that differ only by their data components are separate cells with separate counts, so a damaged pickaxe and a fresh one never add up into one number. Counts are written out in full while they fit and compacted once they stop, always downwards: a cell reading `12.3k` is never promising more than is there, and the tooltip carries the real figure alongside how many containers it is spread across.
 
-Scroll the grid with the wheel or by dragging the scrollbar. Each scroll asks the server for the rows it moved onto, so what a terminal costs to page through is set by the size of the grid rather than by the size of the network.
+Scroll the grid with the wheel or by dragging the scrollbar. Each scroll asks the server for the rows the grid is now showing, so what a terminal costs to page through is set by the size of the grid rather than by the size of the network.
 
 A grid with nothing in it says which nothing it means, because the empty cases are not the same problem. An empty network, a search that matched none of what is there, and a terminal whose network has gone are three different pictures and three different lines. The last one is how a screen tells you it has gone stale, which is what you see if the terminal loses power or is broken while you are looking at it.
 

@@ -61,12 +61,23 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   private static final int COUNT_COLOUR = 0xFFFFFF;
   private static final int PLACEHOLDER_COLOUR = 0xACACB8;
 
+  private static final int LEFT_BUTTON = 0;
+
   private final ListingScroll scroll =
       new ListingScroll(TerminalScreenLayout.LISTING_COLUMNS, TerminalScreenLayout.LISTING_ROWS);
 
+  private final TerminalScrollbar scrollbar =
+      new TerminalScrollbar(scroll, TerminalScreenLayout.SCROLLBAR_HEIGHT);
+
+  /**
+   * The page every part of one frame draws from, taken once at the top of it. Reading the mirror
+   * again partway through would let the chassis, the cells and the tooltip disagree about what is
+   * on screen.
+   */
+  private ListingPage<ItemVariant> frame = ListingPage.pending(0L);
+
+  private int hovered = TerminalScreenLayout.NO_CELL;
   private ListingWindow requested = ListingWindow.EMPTY;
-  private boolean draggingThumb;
-  private int thumbGrabOffset;
 
   public TerminalScreen(TerminalScreenHandler handler, PlayerInventory inventory, Text title) {
     super(handler, inventory, title);
@@ -103,21 +114,21 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   }
 
   /**
-   * Scrolling asks the server for the rows it moved onto, once a frame rather than once a notch. A
-   * wheel spun hard is several notches in one frame and one window at the end of them, so the
-   * requests a player generates are bounded by their frame rate rather than by their wrist.
+   * Scrolling asks the server for the rows the grid is now showing, once a frame rather than once a
+   * notch. A wheel spun hard is several notches in one frame and one window at the end of them, so
+   * the requests a player generates are bounded by their frame rate rather than by their wrist.
    */
   @Override
   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-    final ListingPage<ItemVariant> page = TerminalListingMirror.page();
-    scroll.fit(page.totalMatching());
+    frame = TerminalListingMirror.page();
+    scroll.fit(frame.totalMatching());
     if (!scroll.window().equals(requested)) {
       requestVisibleRows();
     }
-    renderBackground(context, mouseX, mouseY, delta);
+    hovered = hoveredCell(mouseX, mouseY);
     super.render(context, mouseX, mouseY, delta);
     drawMouseoverTooltip(context, mouseX, mouseY);
-    drawCellTooltip(context, page, mouseX, mouseY);
+    drawCellTooltip(context, mouseX, mouseY);
   }
 
   @Override
@@ -129,7 +140,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
         y + TerminalScreenLayout.INSET_Y,
         TerminalScreenLayout.INSET_WIDTH,
         TerminalScreenLayout.INSET_HEIGHT);
-    drawCells(context, TerminalListingMirror.page(), mouseX, mouseY);
+    drawCells(context);
     drawScrollbar(context);
     for (final Slot slot : handler.slots) {
       context.drawGuiTexture(
@@ -144,16 +155,17 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   @Override
   protected void drawForeground(DrawContext context, int mouseX, int mouseY) {
     super.drawForeground(context, mouseX, mouseY);
-    final ListingPage<ItemVariant> page = TerminalListingMirror.page();
-    ListingPlaceholder.forStatus(page.status())
+    ListingPlaceholder.forStatus(frame.status())
         .ifPresent(placeholder -> drawPlaceholder(context, placeholder));
-    drawRows(context, page);
+    drawRows(context);
   }
 
   @Override
   public boolean mouseScrolled(
       double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-    if (verticalAmount != 0.0 && scroll.overflows() && isOverListing(mouseX, mouseY)) {
+    if (verticalAmount != 0.0
+        && scroll.overflows()
+        && TerminalScreenLayout.isOverListing(windowX(mouseX), windowY(mouseY))) {
       scroll.scrollBy(verticalAmount > 0.0 ? -1 : 1);
       return true;
     }
@@ -162,10 +174,9 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   @Override
   public boolean mouseClicked(double mouseX, double mouseY, int button) {
-    if (button == 0
-        && scroll.overflows()
-        && TerminalScreenLayout.isOverScrollbar(windowX(mouseX), windowY(mouseY))) {
-      grabThumb(windowY(mouseY));
+    if (button == LEFT_BUTTON
+        && TerminalScreenLayout.isOverScrollbar(windowX(mouseX), windowY(mouseY))
+        && scrollbar.grab(windowY(mouseY) - TerminalScreenLayout.SCROLLBAR_Y)) {
       return true;
     }
     return super.mouseClicked(mouseX, mouseY, button);
@@ -174,8 +185,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   @Override
   public boolean mouseDragged(
       double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-    if (draggingThumb) {
-      dragThumbTo(windowY(mouseY));
+    if (button == LEFT_BUTTON && scrollbar.isDragging()) {
+      scrollbar.dragTo(windowY(mouseY) - TerminalScreenLayout.SCROLLBAR_Y);
       return true;
     }
     return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
@@ -183,8 +194,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   @Override
   public boolean mouseReleased(double mouseX, double mouseY, int button) {
-    if (draggingThumb) {
-      draggingThumb = false;
+    if (button == LEFT_BUTTON && scrollbar.isDragging()) {
+      scrollbar.release();
       return true;
     }
     return super.mouseReleased(mouseX, mouseY, button);
@@ -196,9 +207,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
         handler.syncId, requested, "", TagCombinationMode.DEFAULT, Set.of());
   }
 
-  private void drawCells(
-      DrawContext context, ListingPage<ItemVariant> page, int mouseX, int mouseY) {
-    final int hovered = hoveredCell(page, mouseX, mouseY);
+  private void drawCells(DrawContext context) {
     for (int cell = 0; cell < TerminalScreenLayout.LISTING_PAGE_SIZE; cell++) {
       context.drawGuiTexture(
           cell == hovered ? CELL_HOVER : CELL,
@@ -216,21 +225,20 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
         y + TerminalScreenLayout.SCROLLBAR_Y,
         TerminalScreenLayout.SCROLLBAR_WIDTH,
         TerminalScreenLayout.SCROLLBAR_HEIGHT);
-    final int height = thumbHeight();
     context.drawGuiTexture(
-        scroll.overflows() ? SCROLL_THUMB : SCROLL_THUMB_DISABLED,
+        scrollbar.isEnabled() ? SCROLL_THUMB : SCROLL_THUMB_DISABLED,
         x + TerminalScreenLayout.SCROLLBAR_X,
-        y + TerminalScreenLayout.SCROLLBAR_Y + thumbTop(height),
+        y + TerminalScreenLayout.SCROLLBAR_Y + scrollbar.thumbTop(),
         TerminalScreenLayout.SCROLLBAR_WIDTH,
-        height);
+        scrollbar.thumbHeight());
   }
 
-  private void drawRows(DrawContext context, ListingPage<ItemVariant> page) {
-    if (!page.status().hasRows()) {
+  private void drawRows(DrawContext context) {
+    if (!frame.status().hasRows()) {
       return;
     }
     for (int cell = 0; cell < TerminalScreenLayout.LISTING_PAGE_SIZE; cell++) {
-      final ListingRow<ItemVariant> row = rowAt(page, cell);
+      final ListingRow<ItemVariant> row = rowAt(cell);
       if (row == null) {
         continue;
       }
@@ -279,13 +287,11 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
         false);
   }
 
-  private void drawCellTooltip(
-      DrawContext context, ListingPage<ItemVariant> page, int mouseX, int mouseY) {
-    final int cell = hoveredCell(page, mouseX, mouseY);
-    if (cell == TerminalScreenLayout.NO_CELL) {
+  private void drawCellTooltip(DrawContext context, int mouseX, int mouseY) {
+    if (hovered == TerminalScreenLayout.NO_CELL) {
       return;
     }
-    final ListingRow<ItemVariant> row = rowAt(page, cell);
+    final ListingRow<ItemVariant> row = rowAt(hovered);
     final ItemStack stack = row.variant().toStack();
     final List<Text> lines = new ArrayList<>(Screen.getTooltipFromItem(client, stack));
     lines.addAll(ListingTooltip.extraLines(row));
@@ -293,63 +299,19 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   }
 
   /** The cell under the pointer, or {@link TerminalScreenLayout#NO_CELL} when it holds no row. */
-  private int hoveredCell(ListingPage<ItemVariant> page, int mouseX, int mouseY) {
-    if (!page.status().hasRows()) {
+  private int hoveredCell(int mouseX, int mouseY) {
+    if (!frame.status().hasRows()) {
       return TerminalScreenLayout.NO_CELL;
     }
-    final int cell = TerminalScreenLayout.cellAt(mouseX - x, mouseY - y);
-    if (cell == TerminalScreenLayout.NO_CELL || rowAt(page, cell) == null) {
+    final int cell = TerminalScreenLayout.cellAt(windowX(mouseX), windowY(mouseY));
+    if (cell == TerminalScreenLayout.NO_CELL || rowAt(cell) == null) {
       return TerminalScreenLayout.NO_CELL;
     }
     return cell;
   }
 
-  private ListingRow<ItemVariant> rowAt(ListingPage<ItemVariant> page, int cell) {
-    return page.at(scroll.firstIndex() + cell);
-  }
-
-  private boolean isOverListing(double mouseX, double mouseY) {
-    final int windowX = windowX(mouseX);
-    final int windowY = windowY(mouseY);
-    return TerminalScreenLayout.cellAt(windowX, windowY) != TerminalScreenLayout.NO_CELL
-        || TerminalScreenLayout.isOverScrollbar(windowX, windowY);
-  }
-
-  /**
-   * Grabs the thumb where it was clicked, or jumps it under the pointer when the track was clicked
-   * beside it. Grabbing by the offset is what stops the thumb snapping its own centre to the
-   * pointer the instant a player touches it.
-   */
-  private void grabThumb(int windowY) {
-    final int height = thumbHeight();
-    final int top = TerminalScreenLayout.SCROLLBAR_Y + thumbTop(height);
-    draggingThumb = true;
-    if (windowY >= top && windowY < top + height) {
-      thumbGrabOffset = windowY - top;
-      return;
-    }
-    thumbGrabOffset = height / 2;
-    dragThumbTo(windowY);
-  }
-
-  private void dragThumbTo(int windowY) {
-    final int height = thumbHeight();
-    scroll.scrollTo(
-        ScrollbarMetrics.rowAt(
-            TerminalScreenLayout.SCROLLBAR_HEIGHT,
-            height,
-            windowY - thumbGrabOffset - TerminalScreenLayout.SCROLLBAR_Y,
-            scroll.maxTopRow()));
-  }
-
-  private int thumbHeight() {
-    return ScrollbarMetrics.thumbHeight(
-        TerminalScreenLayout.SCROLLBAR_HEIGHT, scroll.visibleRows(), scroll.totalRows());
-  }
-
-  private int thumbTop(int height) {
-    return ScrollbarMetrics.thumbTop(
-        TerminalScreenLayout.SCROLLBAR_HEIGHT, height, scroll.topRow(), scroll.maxTopRow());
+  private ListingRow<ItemVariant> rowAt(int cell) {
+    return frame.at(scroll.firstIndex() + cell);
   }
 
   private int windowX(double mouseX) {

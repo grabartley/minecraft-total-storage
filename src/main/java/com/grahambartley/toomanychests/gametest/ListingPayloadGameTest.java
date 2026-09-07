@@ -59,11 +59,14 @@ public final class ListingPayloadGameTest implements FabricGameTest {
   }
 
   @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = 20)
-  public void anEmptyPageIsStillAWholePage(TestContext context) {
+  public void aPageFromATerminalRunningNoNetworkIsStillAWholePage(TestContext context) {
     ListingPage<ItemVariant> received = roundTrip(context, ListingPage.offline(3L)).page();
 
     context.assertTrue(received.isEmpty(), "An empty page should arrive empty");
     context.assertTrue(received.revision() == 3L, "An empty page still carries its stamp");
+    context.assertTrue(
+        received.status() == ListingStatus.OFFLINE,
+        "A terminal running no network should say so, got " + received.status());
     context.complete();
   }
 

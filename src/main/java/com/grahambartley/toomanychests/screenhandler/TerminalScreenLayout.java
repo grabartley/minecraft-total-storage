@@ -80,14 +80,21 @@ public final class TerminalScreenLayout {
   public static final int SCROLLBAR_HEIGHT = GRID_HEIGHT;
 
   public static final int INVENTORY_X = (WINDOW_WIDTH - COLUMNS * SLOT_SIZE) / 2;
-  public static final int MAIN_INVENTORY_Y = INSET_Y + INSET_HEIGHT + 14;
+
+  /** Room under the recess for the inventory's own label, plus air on either side of it. */
+  public static final int INVENTORY_GAP = 14;
+
+  public static final int MAIN_INVENTORY_Y = INSET_Y + INSET_HEIGHT + INVENTORY_GAP;
 
   /** The four pixel gap between the main inventory and the hotbar, as vanilla draws it. */
   public static final int HOTBAR_GAP = 4;
 
   public static final int HOTBAR_Y = MAIN_INVENTORY_Y + MAIN_ROWS * SLOT_SIZE + HOTBAR_GAP;
 
-  public static final int WINDOW_HEIGHT = HOTBAR_Y + SLOT_SIZE + PANEL_BORDER + HOTBAR_GAP;
+  /** Air under the hotbar, so its stack counts do not sit against the chassis frame. */
+  public static final int BOTTOM_MARGIN = 4;
+
+  public static final int WINDOW_HEIGHT = HOTBAR_Y + SLOT_SIZE + BOTTOM_MARGIN + PANEL_BORDER;
 
   public static final int INVENTORY_LABEL_X = INVENTORY_X;
   public static final int INVENTORY_LABEL_Y = MAIN_INVENTORY_Y - 11;
@@ -148,6 +155,21 @@ public final class TerminalScreenLayout {
         && windowX < SCROLLBAR_X + SCROLLBAR_WIDTH
         && windowY >= SCROLLBAR_Y
         && windowY < SCROLLBAR_Y + SCROLLBAR_HEIGHT;
+  }
+
+  /**
+   * Whether a point in the window is over the listing, meaning the grid, the scrollbar, or the gap
+   * between them.
+   *
+   * <p>One rectangle rather than the union of the two, so the gap does not become a strip the wheel
+   * is ignored over. A player aiming at a scrollbar two pixels away from a grid is aiming at the
+   * listing either way.
+   */
+  public static boolean isOverListing(int windowX, int windowY) {
+    return windowX >= GRID_X
+        && windowX < SCROLLBAR_X + SCROLLBAR_WIDTH
+        && windowY >= GRID_Y
+        && windowY < GRID_Y + GRID_HEIGHT;
   }
 
   private static int column(int handlerIndex) {

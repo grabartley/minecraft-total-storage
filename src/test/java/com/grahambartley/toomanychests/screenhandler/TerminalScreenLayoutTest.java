@@ -376,6 +376,55 @@ class TerminalScreenLayoutTest {
     assertThrows(IndexOutOfBoundsException.class, () -> TerminalScreenLayout.cellY(cell));
   }
 
+  /**
+   * The gap between the grid and the track is two pixels of nothing, and a wheel ignored over it
+   * would be a strip of the listing that does not scroll.
+   */
+  @Test
+  void theGapBetweenTheGridAndItsScrollbarIsStillTheListing() {
+    int gap = TerminalScreenLayout.GRID_X + TerminalScreenLayout.GRID_WIDTH;
+
+    assertEquals(
+        TerminalScreenLayout.NO_CELL,
+        TerminalScreenLayout.cellAt(gap, TerminalScreenLayout.GRID_Y));
+    assertFalse(TerminalScreenLayout.isOverScrollbar(gap, TerminalScreenLayout.GRID_Y));
+    assertTrue(TerminalScreenLayout.isOverListing(gap, TerminalScreenLayout.GRID_Y));
+  }
+
+  @Test
+  void theListingCoversTheGridAndItsScrollbarAndNothingElse() {
+    assertTrue(
+        TerminalScreenLayout.isOverListing(
+            TerminalScreenLayout.GRID_X, TerminalScreenLayout.GRID_Y));
+    assertTrue(
+        TerminalScreenLayout.isOverListing(
+            TerminalScreenLayout.SCROLLBAR_X + TerminalScreenLayout.SCROLLBAR_WIDTH - 1,
+            TerminalScreenLayout.GRID_Y + TerminalScreenLayout.GRID_HEIGHT - 1));
+    assertFalse(
+        TerminalScreenLayout.isOverListing(
+            TerminalScreenLayout.GRID_X - 1, TerminalScreenLayout.GRID_Y));
+    assertFalse(
+        TerminalScreenLayout.isOverListing(
+            TerminalScreenLayout.GRID_X, TerminalScreenLayout.GRID_Y - 1));
+    assertFalse(
+        TerminalScreenLayout.isOverListing(
+            TerminalScreenLayout.SCROLLBAR_X + TerminalScreenLayout.SCROLLBAR_WIDTH,
+            TerminalScreenLayout.GRID_Y));
+    assertFalse(
+        TerminalScreenLayout.isOverListing(
+            TerminalScreenLayout.GRID_X,
+            TerminalScreenLayout.GRID_Y + TerminalScreenLayout.GRID_HEIGHT));
+  }
+
+  /** Every cell of the grid is part of the listing the wheel scrolls. */
+  @ParameterizedTest
+  @MethodSource("everyCell")
+  void everyCellIsPartOfTheListing(int cell) {
+    assertTrue(
+        TerminalScreenLayout.isOverListing(
+            TerminalScreenLayout.cellX(cell), TerminalScreenLayout.cellY(cell)));
+  }
+
   /** A 16x16 item plus its two pixel bevel and gutter is exactly what a cell was sized for. */
   @Test
   void anItemDrawnAtTheCellOffsetSitsInsideItsCell() {

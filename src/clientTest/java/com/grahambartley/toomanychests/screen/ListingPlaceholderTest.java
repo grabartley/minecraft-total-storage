@@ -10,7 +10,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.NullSource;
 
 class ListingPlaceholderTest {
   @DisplayName("a grid with rows to draw shows them rather than a message")
@@ -51,11 +50,5 @@ class ListingPlaceholderTest {
     assertNotEquals(
         ListingPlaceholder.forStatus(ListingStatus.EMPTY_NETWORK).orElseThrow().message(),
         ListingPlaceholder.forStatus(ListingStatus.OFFLINE).orElseThrow().message());
-  }
-
-  @ParameterizedTest
-  @NullSource
-  void aStatusThatIsNotThereShowsNothingRatherThanThrowing(ListingStatus status) {
-    assertEquals(Optional.empty(), ListingPlaceholder.forStatus(status));
   }
 }
