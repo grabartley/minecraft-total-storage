@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests.screenhandler;
 
 import com.grahambartley.toomanychests.ModScreenHandlers;
 import com.grahambartley.toomanychests.access.TerminalAccessControl;
+import com.grahambartley.toomanychests.listing.TerminalListingState;
 import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import com.grahambartley.toomanychests.terminal.TerminalAddress;
 import java.util.Objects;
@@ -31,6 +32,7 @@ public class TerminalScreenHandler extends ScreenHandler {
   private static final double REACH = 4.0;
 
   private final TerminalOpenData data;
+  private final TerminalListingState listing = new TerminalListingState();
 
   public TerminalScreenHandler(int syncId, PlayerInventory playerInventory, TerminalOpenData data) {
     super(ModScreenHandlers.TERMINAL, syncId);
@@ -47,6 +49,15 @@ public class TerminalScreenHandler extends ScreenHandler {
 
   public BlockPos terminal() {
     return data.terminal();
+  }
+
+  /**
+   * What this screen is currently showing of the network, which the network itself knows nothing
+   * about. Two players at one terminal scroll and search independently, so the view belongs to the
+   * screen rather than to the terminal.
+   */
+  public TerminalListingState listing() {
+    return listing;
   }
 
   public int radius() {

@@ -159,6 +159,11 @@ public final class NetworkIndexSession<V> implements ContainerMutationListener {
     cache.invalidate(origin);
   }
 
+  /** Whether the network has changed since its index was last read. Never true while inactive. */
+  public boolean isStale() {
+    return active && cache.isStale();
+  }
+
   public boolean isActive() {
     return active;
   }

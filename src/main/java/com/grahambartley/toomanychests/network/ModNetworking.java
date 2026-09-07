@@ -1,6 +1,8 @@
 package com.grahambartley.toomanychests.network;
 
 import com.grahambartley.toomanychests.lock.LockToggleService;
+import com.grahambartley.toomanychests.screenhandler.TerminalListingBroadcast;
+import com.grahambartley.toomanychests.screenhandler.TerminalListingService;
 import com.grahambartley.toomanychests.sort.ContainerSortService;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -14,6 +16,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
  */
 public final class ModNetworking {
   private static final ContainerSortService SORTING = new ContainerSortService();
+  private static final TerminalListingService LISTINGS = new TerminalListingService();
 
   private ModNetworking() {}
 
@@ -21,7 +24,9 @@ public final class ModNetworking {
     PayloadTypeRegistry.playC2S().register(LockTogglePayload.ID, LockTogglePayload.CODEC);
     PayloadTypeRegistry.playC2S().register(ConfigEditPayload.ID, ConfigEditPayload.CODEC);
     PayloadTypeRegistry.playC2S().register(SortRequestPayload.ID, SortRequestPayload.CODEC);
+    PayloadTypeRegistry.playC2S().register(ListingRequestPayload.ID, ListingRequestPayload.CODEC);
     PayloadTypeRegistry.playS2C().register(ConfigSyncPayload.ID, ConfigSyncPayload.CODEC);
+    PayloadTypeRegistry.playS2C().register(ListingPayload.ID, ListingPayload.CODEC);
 
     ServerPlayNetworking.registerGlobalReceiver(
         LockTogglePayload.ID,
@@ -37,6 +42,12 @@ public final class ModNetworking {
                 .server()
                 .execute(() -> ConfigSync.handleEdit(context.player(), payload.config())));
 
+    ServerPlayNetworking.registerGlobalReceiver(
+        ListingRequestPayload.ID,
+        (payload, context) ->
+            context.server().execute(() -> LISTINGS.request(context.player(), payload)));
+
     ConfigSync.register();
+    new TerminalListingBroadcast(LISTINGS).register();
   }
 }

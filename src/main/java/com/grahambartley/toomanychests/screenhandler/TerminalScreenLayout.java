@@ -51,6 +51,16 @@ public final class TerminalScreenLayout {
   public static final int INSET_WIDTH = WINDOW_WIDTH - 2 * INSET_X;
   public static final int INSET_HEIGHT = 108;
 
+  /**
+   * How many cells the listing recess holds. A page is asked for one recess at a time, so what the
+   * client requests is set by the space it has to draw into rather than by how much the network
+   * holds.
+   */
+  public static final int LISTING_COLUMNS = INSET_WIDTH / SLOT_SIZE;
+
+  public static final int LISTING_ROWS = INSET_HEIGHT / SLOT_SIZE;
+  public static final int LISTING_PAGE_SIZE = LISTING_COLUMNS * LISTING_ROWS;
+
   public static final int INVENTORY_LABEL_X = INVENTORY_X;
   public static final int INVENTORY_LABEL_Y = MAIN_INVENTORY_Y - 11;
 

@@ -1,8 +1,13 @@
 package com.grahambartley.toomanychests.screen;
 
 import com.grahambartley.toomanychests.TooManyChests;
+import com.grahambartley.toomanychests.filter.TagCombinationMode;
+import com.grahambartley.toomanychests.listing.ListingWindow;
+import com.grahambartley.toomanychests.listing.TerminalListingMirror;
+import com.grahambartley.toomanychests.network.ModNetworkingClient;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenHandler;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
+import java.util.Set;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.entity.player.PlayerInventory;
@@ -33,6 +38,28 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     this.titleY = TerminalScreenLayout.TITLE_Y;
     this.playerInventoryTitleX = TerminalScreenLayout.INVENTORY_LABEL_X;
     this.playerInventoryTitleY = TerminalScreenLayout.INVENTORY_LABEL_Y;
+  }
+
+  /**
+   * Opening the screen asks for the first page. Nothing arrives unprompted: the server answers the
+   * window a screen has told it about, so a screen that never asks is never sent anything.
+   */
+  @Override
+  protected void init() {
+    super.init();
+    TerminalListingMirror.opened(handler.syncId);
+    ModNetworkingClient.sendListingRequest(
+        handler.syncId,
+        ListingWindow.of(0, TerminalScreenLayout.LISTING_PAGE_SIZE),
+        "",
+        TagCombinationMode.DEFAULT,
+        Set.of());
+  }
+
+  @Override
+  public void removed() {
+    super.removed();
+    TerminalListingMirror.closed();
   }
 
   @Override
