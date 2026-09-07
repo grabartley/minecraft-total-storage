@@ -54,7 +54,10 @@
       "com.grahambartley.toomanychests.gametest.FilterCandidateFactoryGameTest",
       "com.grahambartley.toomanychests.gametest.TerminalListingServiceGameTest",
       "com.grahambartley.toomanychests.gametest.TerminalListingBroadcastGameTest",
-      "com.grahambartley.toomanychests.gametest.ListingPayloadGameTest"
+      "com.grahambartley.toomanychests.gametest.ListingPayloadGameTest",
+      "com.grahambartley.toomanychests.gametest.TerminalOperationGateGameTest",
+      "com.grahambartley.toomanychests.gametest.WithdrawServiceGameTest",
+      "com.grahambartley.toomanychests.gametest.DepositServiceGameTest"
     ]
   },
   "mixins": [

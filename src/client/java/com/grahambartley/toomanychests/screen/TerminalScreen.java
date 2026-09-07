@@ -5,7 +5,9 @@ import com.grahambartley.toomanychests.filter.TagCombinationMode;
 import com.grahambartley.toomanychests.listing.ListingPage;
 import com.grahambartley.toomanychests.listing.ListingRow;
 import com.grahambartley.toomanychests.listing.TerminalListingMirror;
+import com.grahambartley.toomanychests.network.DepositRequestPayload;
 import com.grahambartley.toomanychests.network.ModNetworkingClient;
+import com.grahambartley.toomanychests.operation.WithdrawDestination;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenHandler;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
 import java.util.ArrayList;
@@ -19,6 +21,7 @@ import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.Slot;
+import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -64,7 +67,9 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   /** The palette's mid glyph, which is what reads on the recess floor behind an empty grid. */
   private static final int PLACEHOLDER_COLOUR = 0x9AA3B3;
 
-  private static final int LEFT_BUTTON = 0;
+  private static final int LEFT_BUTTON = GridClick.LEFT_BUTTON;
+
+  private static final Identifier DEPOSIT_ALL_ICON = sprite("icon/deposit_all");
 
   private final ListingScroll scroll =
       new ListingScroll(TerminalScreenLayout.LISTING_COLUMNS, TerminalScreenLayout.LISTING_ROWS);
@@ -83,6 +88,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   private Optional<ListingPlaceholder> placeholder = Optional.empty();
 
   private TerminalSearchBox search;
+
+  private final WithdrawAmountPrompt prompt = new WithdrawAmountPrompt();
 
   /** What the server was last told this screen wants, so a scroll or a keystroke is noticed. */
   private final ListingCriteria requested = new ListingCriteria();
@@ -114,7 +121,15 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     super.init();
     search = new TerminalSearchBox(textRenderer, x, y, search == null ? "" : search.text());
     addDrawableChild(search.widget());
+    addDrawableChild(
+        new TerminalIconButton(
+            x + TerminalScreenLayout.DEPOSIT_ALL_X,
+            y + TerminalScreenLayout.DEPOSIT_ALL_Y,
+            DEPOSIT_ALL_ICON,
+            TerminalScreenText.of("deposit_all"),
+            this::depositEverything));
     setInitialFocus(search.widget());
+    prompt.close();
     if (TerminalListingMirror.isShowing(handler.syncId)) {
       return;
     }
@@ -144,8 +159,12 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     if (requested.needsRequest(scroll.window(), search.text())) {
       requestVisibleRows();
     }
-    hovered = hoveredCell(mouseX, mouseY);
+    hovered = prompt.isOpen() ? TerminalScreenLayout.NO_CELL : hoveredCell(mouseX, mouseY);
     super.render(context, mouseX, mouseY, delta);
+    if (prompt.isOpen()) {
+      prompt.draw(context, textRenderer, x, y);
+      return;
+    }
     drawMouseoverTooltip(context, mouseX, mouseY);
     drawCellTooltip(context, mouseX, mouseY);
   }
@@ -198,6 +217,10 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
    */
   @Override
   public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    if (prompt.isOpen()) {
+      prompt.close();
+      return true;
+    }
     if (button == LEFT_BUTTON
         && TerminalScreenLayout.isOverSearch(windowX(mouseX), windowY(mouseY))) {
       setFocused(search.widget());
@@ -209,7 +232,56 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
         && scrollbar.grab(windowY(mouseY) - TerminalScreenLayout.SCROLLBAR_Y)) {
       return true;
     }
+    if (handleGridClick(mouseX, mouseY, button)) {
+      return true;
+    }
     return super.mouseClicked(mouseX, mouseY, button);
+  }
+
+  /**
+   * A click over the grid, decided by {@link GridClick} rather than by vanilla's slot handling. The
+   * grid holds no slots per ADR 0025, so every button and modifier over it means what this screen
+   * says it means and nothing is moved until the server answers.
+   */
+  private boolean handleGridClick(double mouseX, double mouseY, int button) {
+    final int cell = TerminalScreenLayout.cellAt(windowX(mouseX), windowY(mouseY));
+    if (cell == TerminalScreenLayout.NO_CELL) {
+      return false;
+    }
+    final ListingRow<ItemVariant> row = pageThisFrame.status().hasRows() ? rowAt(cell) : null;
+    final GridAction action =
+        GridClick.of(button, hasShiftDown(), !handler.getCursorStack().isEmpty(), row != null);
+    if (action == GridAction.NONE) {
+      return false;
+    }
+    if (action == GridAction.PROMPT_FOR_AMOUNT) {
+      prompt.open(row.variant(), (int) Math.min(Integer.MAX_VALUE, row.count()));
+      return true;
+    }
+    TerminalGridRequests.send(action, handler.syncId, row == null ? null : row.variant());
+    return true;
+  }
+
+  /**
+   * Shift-clicking a stack out of the player's own inventory hands it to the network, which is what
+   * a player expects the gesture to do in front of a container. It becomes a request rather than a
+   * vanilla quick move, because there is no slot on this screen for the stack to move into.
+   */
+  @Override
+  protected void onMouseClick(Slot slot, int slotId, int button, SlotActionType actionType) {
+    if (actionType == SlotActionType.QUICK_MOVE
+        && slot != null
+        && slot.inventory instanceof PlayerInventory
+        && slot.hasStack()) {
+      ModNetworkingClient.sendDepositRequest(
+          DepositRequestPayload.wholeSlot(handler.syncId, slot.getIndex()));
+      return;
+    }
+    super.onMouseClick(slot, slotId, button, actionType);
+  }
+
+  private void depositEverything() {
+    ModNetworkingClient.sendDepositAllRequest(handler.syncId);
   }
 
   @Override
@@ -229,6 +301,9 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
    */
   @Override
   public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    if (prompt.isOpen()) {
+      return handlePromptKey(prompt.keyPressed(keyCode));
+    }
     return switch (SearchKeyOutcome.of(
         keyCode == GLFW.GLFW_KEY_ESCAPE, search.isFocused(), search.isSearching())) {
       case CLEAR_SEARCH -> {
@@ -241,6 +316,26 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
       }
       case CLOSE_SCREEN, PASS_THROUGH -> super.keyPressed(keyCode, scanCode, modifiers);
     };
+  }
+
+  @Override
+  public boolean charTyped(char typed, int modifiers) {
+    if (prompt.isOpen()) {
+      return handlePromptKey(prompt.charTyped(typed));
+    }
+    return super.charTyped(typed, modifiers);
+  }
+
+  /** The prompt swallows every key while it is up, so nothing behind it hears the number. */
+  private boolean handlePromptKey(PromptKey outcome) {
+    if (outcome == PromptKey.CONFIRM) {
+      ModNetworkingClient.sendWithdrawRequest(
+          handler.syncId, prompt.variant(), prompt.amount(), WithdrawDestination.INVENTORY);
+    }
+    if (outcome == PromptKey.CONFIRM || outcome == PromptKey.CANCEL) {
+      prompt.close();
+    }
+    return true;
   }
 
   @Override

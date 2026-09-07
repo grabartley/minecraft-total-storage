@@ -60,8 +60,19 @@ public final class TerminalScreenLayout {
   public static final int TITLE_X = 8;
   public static final int TITLE_Y = PANEL_BORDER + 2;
 
-  /** The search box spans the recess under it, since it narrows everything the recess shows. */
   public static final int SEARCH_HEIGHT = 12;
+
+  /** A toolbar button, sized so a 12x12 icon centres inside it with a border to spare. */
+  public static final int BUTTON_SIZE = 20;
+
+  /** Every toolbar icon is this size, per {@code docs/terminal-gui-sprites.md}. */
+  public static final int ICON_SIZE = 12;
+
+  /** Where an icon sits inside its button, which is what centres it. */
+  public static final int ICON_INSET = (BUTTON_SIZE - ICON_SIZE) / 2;
+
+  /** Air between the recess and the button column beside it, so the two read as separate panels. */
+  public static final int TOOLBAR_GAP = 2;
 
   /** How far the search box's own nine-sliced border reaches, which its text has to clear. */
   public static final int SEARCH_BORDER = 4;
@@ -91,8 +102,23 @@ public final class TerminalScreenLayout {
 
   public static final int INSET_HEIGHT = 2 * INSET_BORDER + GRID_HEIGHT;
 
-  public static final int WINDOW_WIDTH = INSET_WIDTH + 2 * INSET_X;
+  /**
+   * The column of actions that operate on the whole network, beside the recess rather than above
+   * it. The window is already as tall as vanilla will draw one at the smallest screen size, so a
+   * row would have cost the grid a line of cells; per {@code docs/terminal-gui-sprites.md} a
+   * control is given room by widening the window instead.
+   */
+  public static final int TOOLBAR_X = INSET_X + INSET_WIDTH + TOOLBAR_GAP;
 
+  public static final int TOOLBAR_Y = INSET_Y;
+
+  public static final int DEPOSIT_ALL_X = TOOLBAR_X;
+
+  public static final int DEPOSIT_ALL_Y = TOOLBAR_Y;
+
+  public static final int WINDOW_WIDTH = TOOLBAR_X + BUTTON_SIZE + INSET_X;
+
+  /** The search box spans the recess under it, since it narrows everything the recess shows. */
   public static final int SEARCH_WIDTH = INSET_WIDTH;
 
   public static final int SEARCH_TEXT_X = SEARCH_X + SEARCH_BORDER;
@@ -191,6 +217,14 @@ public final class TerminalScreenLayout {
         && windowX < SEARCH_X + SEARCH_WIDTH
         && windowY >= SEARCH_Y
         && windowY < SEARCH_Y + SEARCH_HEIGHT;
+  }
+
+  /** Whether a point in the window is over the deposit all button. */
+  public static boolean isOverDepositAll(int windowX, int windowY) {
+    return windowX >= DEPOSIT_ALL_X
+        && windowX < DEPOSIT_ALL_X + BUTTON_SIZE
+        && windowY >= DEPOSIT_ALL_Y
+        && windowY < DEPOSIT_ALL_Y + BUTTON_SIZE;
   }
 
   /** Whether a point in the window is over the scrollbar track. */

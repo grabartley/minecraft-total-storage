@@ -207,6 +207,83 @@ class StorageTransfersTest {
                         List.<Storage<String>>of(from), to, DIAMOND, amount, transaction)));
   }
 
+  @Test
+  void aDistributeFillsEachDestinationInTurnUntilTheSourceIsEmpty() {
+    FakeContainer from = FakeContainer.withSlots(1, 64).holding(DIAMOND, 64);
+    FakeContainer first = FakeContainer.withSlots(1, 64).holding(DIAMOND, 44);
+    FakeContainer second = FakeContainer.withSlots(1, 64);
+
+    long moved =
+        commit(
+            transaction ->
+                StorageTransfers.distribute(
+                    from, List.of(first, second), DIAMOND, 64, transaction));
+
+    assertEquals(64L, moved);
+    assertEquals(0L, from.amountOf(DIAMOND));
+    assertEquals(64L, first.amountOf(DIAMOND));
+    assertEquals(44L, second.amountOf(DIAMOND));
+  }
+
+  /** The order given is the routing decision, so a later destination must never be preferred. */
+  @Test
+  void aDistributeRespectsTheOrderItWasGiven() {
+    FakeContainer from = FakeContainer.withSlots(1, 64).holding(DIAMOND, 10);
+    FakeContainer preferred = FakeContainer.withSlots(1, 64);
+    FakeContainer fallback = FakeContainer.withSlots(1, 64);
+
+    commit(
+        transaction ->
+            StorageTransfers.distribute(
+                from, List.of(preferred, fallback), DIAMOND, 10, transaction));
+
+    assertEquals(10L, preferred.amountOf(DIAMOND));
+    assertEquals(0L, fallback.amountOf(DIAMOND));
+  }
+
+  @Test
+  void aDistributeWithNowhereToPutAnythingLeavesTheSourceExactlyAsItWas() {
+    FakeContainer from = FakeContainer.withSlots(1, 64).holding(DIAMOND, 64);
+    FakeContainer full = FakeContainer.withSlots(1, 64).holding(COAL, 64);
+    Map<Integer, FakeContainer.ResourceEntry> before = from.contents();
+
+    long moved =
+        commit(
+            transaction ->
+                StorageTransfers.distribute(from, List.of(full), DIAMOND, 64, transaction));
+
+    assertEquals(0L, moved);
+    assertEquals(before, from.contents());
+  }
+
+  @Test
+  void aDistributeStopsAtTheAmountItWasAskedFor() {
+    FakeContainer from = FakeContainer.withSlots(1, 64).holding(DIAMOND, 64);
+    FakeContainer to = FakeContainer.withSlots(2, 64);
+
+    long moved =
+        commit(
+            transaction ->
+                StorageTransfers.distribute(from, List.of(to), DIAMOND, 20, transaction));
+
+    assertEquals(20L, moved);
+    assertEquals(44L, from.amountOf(DIAMOND));
+  }
+
+  @Test
+  void aDistributeToNowhereAtAllMovesNothing() {
+    FakeContainer from = FakeContainer.withSlots(1, 64).holding(DIAMOND, 64);
+
+    long moved =
+        commit(
+            transaction ->
+                StorageTransfers.distribute(
+                    from, List.<Storage<String>>of(), DIAMOND, 64, transaction));
+
+    assertEquals(0L, moved);
+    assertEquals(64L, from.amountOf(DIAMOND));
+  }
+
   private static <T> T commit(java.util.function.Function<Transaction, T> work) {
     try (Transaction outer = Transaction.openOuter()) {
       T result = work.apply(outer);

@@ -1,6 +1,8 @@
 package com.grahambartley.toomanychests.network;
 
 import com.grahambartley.toomanychests.lock.LockToggleService;
+import com.grahambartley.toomanychests.operation.DepositService;
+import com.grahambartley.toomanychests.operation.WithdrawService;
 import com.grahambartley.toomanychests.screenhandler.TerminalListingService;
 import com.grahambartley.toomanychests.sort.ContainerSortService;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
@@ -16,6 +18,8 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 public final class ModNetworking {
   private static final ContainerSortService SORTING = new ContainerSortService();
   private static final TerminalListingService LISTINGS = new TerminalListingService();
+  private static final WithdrawService WITHDRAWALS = new WithdrawService();
+  private static final DepositService DEPOSITS = new DepositService();
 
   /**
    * The one listing service, so whatever pushes pages answers with the same one that resolves
@@ -32,6 +36,10 @@ public final class ModNetworking {
     PayloadTypeRegistry.playC2S().register(ConfigEditPayload.ID, ConfigEditPayload.CODEC);
     PayloadTypeRegistry.playC2S().register(SortRequestPayload.ID, SortRequestPayload.CODEC);
     PayloadTypeRegistry.playC2S().register(ListingRequestPayload.ID, ListingRequestPayload.CODEC);
+    PayloadTypeRegistry.playC2S().register(WithdrawRequestPayload.ID, WithdrawRequestPayload.CODEC);
+    PayloadTypeRegistry.playC2S().register(DepositRequestPayload.ID, DepositRequestPayload.CODEC);
+    PayloadTypeRegistry.playC2S()
+        .register(DepositAllRequestPayload.ID, DepositAllRequestPayload.CODEC);
     PayloadTypeRegistry.playS2C().register(ConfigSyncPayload.ID, ConfigSyncPayload.CODEC);
     PayloadTypeRegistry.playS2C().register(ListingPayload.ID, ListingPayload.CODEC);
 
@@ -53,6 +61,20 @@ public final class ModNetworking {
         ListingRequestPayload.ID,
         (payload, context) ->
             context.server().execute(() -> LISTINGS.request(context.player(), payload)));
+    ServerPlayNetworking.registerGlobalReceiver(
+        WithdrawRequestPayload.ID,
+        (payload, context) ->
+            context.server().execute(() -> WITHDRAWALS.withdraw(context.player(), payload)));
+    ServerPlayNetworking.registerGlobalReceiver(
+        DepositRequestPayload.ID,
+        (payload, context) ->
+            context.server().execute(() -> DEPOSITS.deposit(context.player(), payload)));
+    ServerPlayNetworking.registerGlobalReceiver(
+        DepositAllRequestPayload.ID,
+        (payload, context) ->
+            context
+                .server()
+                .execute(() -> DEPOSITS.depositAll(context.player(), payload.syncId())));
 
     ConfigSync.register();
   }

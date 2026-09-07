@@ -36,6 +36,7 @@ Shared engineering standards across all the mods in this family live in [`../sta
 | [0026](0026-world-callbacks-defer-their-scans.md) | A world callback defers its scan to the next tick |
 | [0027](0027-the-listing-is-narrowed-on-the-server.md) | The listing is narrowed on the server and answered by revision |
 | [0028](0028-results-are-ranked-before-they-are-paged.md) | Results are ranked before they are paged |
+| [0029](0029-the-grid-takes-clicks-like-a-container-does.md) | The grid takes clicks the way a container does, and the cursor decides which way they go |
 
 ## Writing A New Record
 

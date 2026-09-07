@@ -235,6 +235,74 @@ class TerminalScreenLayoutTest {
         "the search box runs under the chassis frame");
   }
 
+  @Test
+  void theToolbarSitsBesideTheRecessRatherThanOverIt() {
+    assertTrue(
+        TerminalScreenLayout.TOOLBAR_X
+            >= TerminalScreenLayout.INSET_X + TerminalScreenLayout.INSET_WIDTH,
+        "the toolbar overlaps the recess");
+    assertEquals(TerminalScreenLayout.INSET_Y, TerminalScreenLayout.TOOLBAR_Y);
+  }
+
+  @Test
+  void theDepositAllButtonSitsInTheToolbarInsideTheChassisFrame() {
+    assertEquals(TerminalScreenLayout.TOOLBAR_X, TerminalScreenLayout.DEPOSIT_ALL_X);
+    assertEquals(TerminalScreenLayout.TOOLBAR_Y, TerminalScreenLayout.DEPOSIT_ALL_Y);
+    assertTrue(
+        TerminalScreenLayout.DEPOSIT_ALL_X + TerminalScreenLayout.BUTTON_SIZE
+            <= TerminalScreenLayout.WINDOW_WIDTH - TerminalScreenLayout.PANEL_BORDER,
+        "the button runs under the chassis frame");
+    assertTrue(
+        TerminalScreenLayout.DEPOSIT_ALL_Y >= TerminalScreenLayout.PANEL_BORDER,
+        "the button runs under the chassis frame");
+  }
+
+  /** A column added by widening the window keeps the margins either side of it equal. */
+  @Test
+  void theToolbarIsGivenRoomWithoutUnbalancingTheWindow() {
+    assertEquals(
+        TerminalScreenLayout.INSET_X,
+        TerminalScreenLayout.WINDOW_WIDTH
+            - (TerminalScreenLayout.TOOLBAR_X + TerminalScreenLayout.BUTTON_SIZE));
+  }
+
+  /** An icon that merely fits its button reads as pinned to a corner rather than centred in it. */
+  @Test
+  void anIconCentresInTheButtonAroundIt() {
+    assertEquals(
+        TerminalScreenLayout.BUTTON_SIZE,
+        2 * TerminalScreenLayout.ICON_INSET + TerminalScreenLayout.ICON_SIZE);
+  }
+
+  static Stream<Arguments> pointsOutsideTheDepositAllButton() {
+    final int right = TerminalScreenLayout.DEPOSIT_ALL_X + TerminalScreenLayout.BUTTON_SIZE;
+    final int bottom = TerminalScreenLayout.DEPOSIT_ALL_Y + TerminalScreenLayout.BUTTON_SIZE;
+    return Stream.of(
+        Arguments.of(TerminalScreenLayout.DEPOSIT_ALL_X - 1, TerminalScreenLayout.DEPOSIT_ALL_Y),
+        Arguments.of(TerminalScreenLayout.DEPOSIT_ALL_X, TerminalScreenLayout.DEPOSIT_ALL_Y - 1),
+        Arguments.of(right, TerminalScreenLayout.DEPOSIT_ALL_Y),
+        Arguments.of(TerminalScreenLayout.DEPOSIT_ALL_X, bottom),
+        Arguments.of(TerminalScreenLayout.SEARCH_X, TerminalScreenLayout.SEARCH_Y),
+        Arguments.of(TerminalScreenLayout.GRID_X, TerminalScreenLayout.GRID_Y));
+  }
+
+  @ParameterizedTest
+  @MethodSource("pointsOutsideTheDepositAllButton")
+  void aClickBesideTheDepositAllButtonIsNotOverIt(int windowX, int windowY) {
+    assertFalse(TerminalScreenLayout.isOverDepositAll(windowX, windowY));
+  }
+
+  @Test
+  void aClickAnywhereOnTheDepositAllButtonIsOverIt() {
+    assertTrue(
+        TerminalScreenLayout.isOverDepositAll(
+            TerminalScreenLayout.DEPOSIT_ALL_X, TerminalScreenLayout.DEPOSIT_ALL_Y));
+    assertTrue(
+        TerminalScreenLayout.isOverDepositAll(
+            TerminalScreenLayout.DEPOSIT_ALL_X + TerminalScreenLayout.BUTTON_SIZE - 1,
+            TerminalScreenLayout.DEPOSIT_ALL_Y + TerminalScreenLayout.BUTTON_SIZE - 1));
+  }
+
   /**
    * The text is a widget of its own, so what it covers has to stay inside the box drawn behind it.
    */

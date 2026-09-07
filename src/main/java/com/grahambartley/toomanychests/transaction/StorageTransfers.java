@@ -92,6 +92,37 @@ public final class StorageTransfers {
     }
   }
 
+  /**
+   * Spreads a resource out of one storage into several, which is what a deposit into a network is.
+   * Destinations are visited in the order they are given, so the routing that ordered them is what
+   * decides where an item lands rather than whichever container happens to be nearest in memory.
+   */
+  public static <V> long distribute(
+      Storage<V> from,
+      List<? extends Storage<V>> destinations,
+      V resource,
+      long maxAmount,
+      TransactionContext transaction) {
+    Objects.requireNonNull(from, "from");
+    Objects.requireNonNull(destinations, "destinations");
+    Objects.requireNonNull(transaction, "transaction");
+    requireNotNegative(maxAmount);
+    long moved = 0L;
+    try (Transaction spreading = transaction.openNested()) {
+      for (final Storage<V> destination : destinations) {
+        if (moved >= maxAmount) {
+          break;
+        }
+        moved += move(from, destination, resource, maxAmount - moved, spreading);
+      }
+      if (moved <= 0L) {
+        return 0L;
+      }
+      spreading.commit();
+      return moved;
+    }
+  }
+
   /** Collects the whole amount across containers, or leaves every one of them untouched. */
   public static <V> boolean gatherExactly(
       List<? extends Storage<V>> sources,
