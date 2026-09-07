@@ -14,8 +14,8 @@ package com.grahambartley.toomanychests.screenhandler;
  * narrowing the grid, so the grid keeps its width when that column arrives.
  *
  * <p>The inventory is centred rather than left-aligned, since a vanilla screen's eight pixel margin
- * only reads as centred at vanilla's width. It is centred under the recess rather than under the
- * window, because the toolbar column widens one without widening the other.
+ * only reads as centred at vanilla's width. It is centred under the grid rather than under the
+ * recess or the window, both of which are wider than the grid by chrome rather than by content.
  */
 public final class TerminalScreenLayout {
   /**
@@ -134,11 +134,14 @@ public final class TerminalScreenLayout {
   public static final int SCROLLBAR_HEIGHT = GRID_HEIGHT;
 
   /**
-   * The inventory is centred under the recess rather than under the whole window. The toolbar
-   * column widens the window without widening what the player is reading, so centring on the window
-   * would leave the inventory sitting off to one side of the grid it is being compared against.
+   * The inventory is centred under the grid, rather than under the recess or the window.
+   *
+   * <p>Both of those are wider than the grid by things the eye does not read as content: the recess
+   * carries the scrollbar and the window carries the toolbar column. Centring on either leaves the
+   * inventory visibly off to one side of the nine columns directly above it, which are the nine
+   * columns a player is comparing it against.
    */
-  public static final int INVENTORY_X = INSET_X + (INSET_WIDTH - COLUMNS * SLOT_SIZE) / 2;
+  public static final int INVENTORY_X = GRID_X + (GRID_WIDTH - COLUMNS * SLOT_SIZE) / 2;
 
   /** Room under the recess for the inventory's own label, plus air on either side of it. */
   public static final int INVENTORY_GAP = 14;

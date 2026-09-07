@@ -120,16 +120,17 @@ class TerminalScreenLayoutTest {
   }
 
   /**
-   * Under the recess rather than under the window: the toolbar column widens the window without
-   * widening the grid, and the grid is what the eye compares the inventory against.
+   * Under the grid rather than under the recess or the window. Both of those are wider than the
+   * grid by chrome, so centring on either leaves the inventory off to one side of the nine columns
+   * directly above it.
    */
   @Test
-  void theInventoryIsCentredUnderTheRecess() {
+  void theInventoryIsCentredUnderTheGrid() {
     int inventoryWidth = TerminalScreenLayout.COLUMNS * TerminalScreenLayout.SLOT_SIZE;
-    int leftMargin = TerminalScreenLayout.x(0) - TerminalScreenLayout.INSET_X;
+    int leftMargin = TerminalScreenLayout.x(0) - TerminalScreenLayout.GRID_X;
     int rightMargin =
-        TerminalScreenLayout.INSET_X
-            + TerminalScreenLayout.INSET_WIDTH
+        TerminalScreenLayout.GRID_X
+            + TerminalScreenLayout.GRID_WIDTH
             - (TerminalScreenLayout.x(0) + inventoryWidth);
 
     assertEquals(leftMargin, rightMargin);

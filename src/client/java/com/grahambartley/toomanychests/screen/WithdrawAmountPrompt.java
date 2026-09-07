@@ -1,6 +1,8 @@
 package com.grahambartley.toomanychests.screen;
 
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
+import java.util.ArrayList;
+import java.util.List;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -16,19 +18,28 @@ import net.minecraft.util.Identifier;
  * scale would lose what they had typed. Nothing here is focusable, so the search box keeps its
  * focus and gets it back untouched when the prompt closes.
  *
+ * <p>The panel wears the recess sprite rather than the chassis, because its words are drawn in the
+ * palette's glyph colours and those are meant to be read against the dark screen. On the chassis
+ * they are pale grey on pale grey.
+ *
+ * <p>Every line is wrapped and the panel is sized around the result rather than the other way
+ * round. English happens to fit a fixed panel; a translation does not, and an unwrapped line runs
+ * out past both edges of the panel it is supposed to be inside.
+ *
  * <p>The number itself lives in {@link AmountEntry}, which is where the rule about what may be
  * typed is decided and tested. This class draws it and nothing else.
  */
 public final class WithdrawAmountPrompt {
-  private static final Identifier PANEL = TerminalSprites.of("panel/background");
+  private static final Identifier PANEL = TerminalSprites.of("panel/inset");
   private static final Identifier FIELD = TerminalSprites.of("search/box_focused");
 
-  private static final int WIDTH = 132;
   private static final int PADDING = 8;
   private static final int LINE_HEIGHT = 9;
   private static final int FIELD_HEIGHT = 12;
   private static final int GAP = 4;
-  private static final int HEIGHT = 2 * PADDING + 3 * LINE_HEIGHT + FIELD_HEIGHT + 3 * GAP;
+
+  /** Narrow enough to leave the grid readable around it, wide enough not to wrap "Up to 64". */
+  private static final int MIN_WIDTH = 120;
 
   private static final int LABEL_COLOUR = 0xE4E9F2;
   private static final int HINT_COLOUR = 0x9AA3B3;
@@ -73,54 +84,65 @@ public final class WithdrawAmountPrompt {
     if (!isOpen()) {
       return;
     }
+    final int width = Math.min(TerminalScreenLayout.GRID_WIDTH, MIN_WIDTH);
+    final int inner = width - 2 * PADDING;
+    final List<OrderedText> heading =
+        textRenderer.wrapLines(
+            TerminalScreenText.of("amount.title", variant.toStack().getName()), inner);
+    final List<OrderedText> available =
+        textRenderer.wrapLines(TerminalScreenText.of("amount.available", entry.ceiling()), inner);
+    final List<OrderedText> hint =
+        textRenderer.wrapLines(TerminalScreenText.of("amount.hint"), inner);
+    final int height =
+        2 * PADDING
+            + 3 * GAP
+            + FIELD_HEIGHT
+            + LINE_HEIGHT * (heading.size() + available.size() + hint.size());
+
     final int left =
-        originX + TerminalScreenLayout.GRID_X + (TerminalScreenLayout.GRID_WIDTH - WIDTH) / 2;
+        originX + TerminalScreenLayout.GRID_X + (TerminalScreenLayout.GRID_WIDTH - width) / 2;
     final int top =
-        originY + TerminalScreenLayout.GRID_Y + (TerminalScreenLayout.GRID_HEIGHT - HEIGHT) / 2;
+        originY + TerminalScreenLayout.GRID_Y + (TerminalScreenLayout.GRID_HEIGHT - height) / 2;
+
     context.getMatrices().push();
     context.getMatrices().translate(0.0F, 0.0F, ELEVATION);
-    context.drawGuiTexture(PANEL, left, top, WIDTH, HEIGHT);
-    drawCentred(
+    context.drawGuiTexture(PANEL, left, top, width, height);
+    int lineY = top + PADDING;
+    lineY = drawLines(context, textRenderer, heading, left, lineY, width, LABEL_COLOUR) + GAP;
+    lineY = drawLines(context, textRenderer, available, left, lineY, width, HINT_COLOUR) + GAP;
+    context.drawGuiTexture(FIELD, left + PADDING, lineY, inner, FIELD_HEIGHT);
+    drawLines(
         context,
         textRenderer,
-        TerminalScreenText.of("amount.title", variant.toStack().getName()).asOrderedText(),
+        List.of(Text.literal(entry.text()).asOrderedText()),
         left,
-        top + PADDING,
+        lineY + 2,
+        width,
         LABEL_COLOUR);
-    drawCentred(
-        context,
-        textRenderer,
-        TerminalScreenText.of("amount.available", entry.ceiling()).asOrderedText(),
-        left,
-        top + PADDING + LINE_HEIGHT + GAP,
-        HINT_COLOUR);
-    final int fieldTop = top + PADDING + 2 * LINE_HEIGHT + 2 * GAP;
-    context.drawGuiTexture(FIELD, left + PADDING, fieldTop, WIDTH - 2 * PADDING, FIELD_HEIGHT);
-    drawCentred(
-        context,
-        textRenderer,
-        Text.literal(entry.text()).asOrderedText(),
-        left,
-        fieldTop + 2,
-        LABEL_COLOUR);
-    drawCentred(
-        context,
-        textRenderer,
-        TerminalScreenText.of("amount.hint").asOrderedText(),
-        left,
-        fieldTop + FIELD_HEIGHT + GAP,
-        HINT_COLOUR);
+    drawLines(context, textRenderer, hint, left, lineY + FIELD_HEIGHT + GAP, width, HINT_COLOUR);
     context.getMatrices().pop();
   }
 
-  private static void drawCentred(
+  /** Draws a wrapped block centred in the panel, and answers where the next one starts. */
+  private static int drawLines(
       DrawContext context,
       TextRenderer textRenderer,
-      OrderedText line,
+      List<OrderedText> lines,
       int left,
-      int y,
+      int top,
+      int width,
       int colour) {
-    context.drawText(
-        textRenderer, line, left + (WIDTH - textRenderer.getWidth(line)) / 2, y, colour, false);
+    int lineY = top;
+    for (final OrderedText line : new ArrayList<>(lines)) {
+      context.drawText(
+          textRenderer,
+          line,
+          left + (width - textRenderer.getWidth(line)) / 2,
+          lineY,
+          colour,
+          false);
+      lineY += LINE_HEIGHT;
+    }
+    return lineY;
   }
 }
