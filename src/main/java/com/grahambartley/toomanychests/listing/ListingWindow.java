@@ -46,10 +46,6 @@ public record ListingWindow(int offset, int length) {
     return length == 0;
   }
 
-  public boolean contains(int index) {
-    return index >= offset && index < end();
-  }
-
   /** The rows this window covers, which is empty rather than out of bounds past the end. */
   public <T> List<T> sliceOf(List<T> all) {
     Objects.requireNonNull(all, "all");

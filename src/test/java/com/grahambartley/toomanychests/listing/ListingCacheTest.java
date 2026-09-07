@@ -20,18 +20,18 @@ class ListingCacheTest {
 
   @Test
   void aCacheNobodyHasSentAPageToIsShowingNothing() {
-    assertTrue(cache.isEmpty());
-    assertEquals(ListingRevision.NONE, cache.revision());
-    assertEquals(List.of(), cache.rows());
-    assertEquals(0, cache.totalMatching());
+    assertTrue(cache.page().isEmpty());
+    assertEquals(ListingRevision.NONE, cache.page().revision());
+    assertEquals(List.of(), cache.page().rows());
+    assertEquals(0, cache.page().totalMatching());
   }
 
   @Test
   void theFirstPageToArriveIsTaken() {
     assertTrue(cache.accept(page(1L, "cobblestone")));
 
-    assertEquals(1L, cache.revision());
-    assertEquals("cobblestone", cache.rows().get(0).variant());
+    assertEquals(1L, cache.page().revision());
+    assertEquals("cobblestone", cache.page().rows().get(0).variant());
   }
 
   @Test
@@ -39,7 +39,7 @@ class ListingCacheTest {
     cache.accept(page(1L, "cobblestone"));
 
     assertTrue(cache.accept(page(2L, "oak_log")));
-    assertEquals("oak_log", cache.rows().get(0).variant());
+    assertEquals("oak_log", cache.page().rows().get(0).variant());
   }
 
   /**
@@ -54,16 +54,16 @@ class ListingCacheTest {
     cache.accept(page(5L, "cobblestone"));
 
     assertFalse(cache.accept(page(arriving, "oak_log")));
-    assertEquals(5L, cache.revision());
-    assertEquals("cobblestone", cache.rows().get(0).variant());
+    assertEquals(5L, cache.page().revision());
+    assertEquals("cobblestone", cache.page().rows().get(0).variant());
   }
 
   @Test
   void aPageCarriesWhereItSitsAndHowMuchThereIsToScrollThrough() {
     cache.accept(new ListingPage<>(1L, 40, 500, List.of(new ListingRow<>("cobblestone", 8L))));
 
-    assertEquals(40, cache.offset());
-    assertEquals(500, cache.totalMatching());
+    assertEquals(40, cache.page().offset());
+    assertEquals(500, cache.page().totalMatching());
   }
 
   /**
@@ -76,8 +76,8 @@ class ListingCacheTest {
 
     cache.clear();
 
-    assertTrue(cache.isEmpty());
-    assertEquals(ListingRevision.NONE, cache.revision());
+    assertTrue(cache.page().isEmpty());
+    assertEquals(ListingRevision.NONE, cache.page().revision());
     assertTrue(cache.accept(page(1L, "oak_log")));
   }
 

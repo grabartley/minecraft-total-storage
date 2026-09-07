@@ -1,6 +1,5 @@
 package com.grahambartley.toomanychests.listing;
 
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -19,7 +18,7 @@ import java.util.Objects;
 public final class ListingCache<V> {
   private ListingPage<V> page = ListingPage.empty(ListingRevision.NONE);
 
-  /** Returns whether the page was taken, which is what a caller redraws on. */
+  /** Returns whether the page was taken, so a caller drawing it knows there is news. */
   public boolean accept(ListingPage<V> arriving) {
     Objects.requireNonNull(arriving, "arriving");
     if (!ListingRevision.supersedes(arriving.revision(), page.revision())) {
@@ -31,26 +30,6 @@ public final class ListingCache<V> {
 
   public ListingPage<V> page() {
     return page;
-  }
-
-  public List<ListingRow<V>> rows() {
-    return page.rows();
-  }
-
-  public int offset() {
-    return page.offset();
-  }
-
-  public int totalMatching() {
-    return page.totalMatching();
-  }
-
-  public long revision() {
-    return page.revision();
-  }
-
-  public boolean isEmpty() {
-    return page.isEmpty();
   }
 
   /**

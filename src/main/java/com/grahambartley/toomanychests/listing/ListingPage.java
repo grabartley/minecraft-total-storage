@@ -20,8 +20,13 @@ public record ListingPage<V>(
     long revision, int offset, int totalMatching, List<ListingRow<V>> rows) {
   public ListingPage {
     Objects.requireNonNull(rows, "rows");
-    if (revision < ListingRevision.NONE) {
+    if (revision < 0L) {
       throw new IllegalArgumentException("revision must not be negative: " + revision);
+    }
+    // The cap belongs to the page rather than to the window that usually produces one, so a page
+    // built any other way cannot become a packet no client will accept.
+    if (rows.size() > ListingWindow.MAX_LENGTH) {
+      throw new IllegalArgumentException("a page may not carry " + rows.size() + " rows");
     }
     offset = Math.max(0, offset);
     totalMatching = Math.max(0, totalMatching);

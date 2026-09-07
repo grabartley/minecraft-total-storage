@@ -30,7 +30,7 @@ public final class TerminalListingMirror {
     CACHE.clear();
   }
 
-  /** Returns whether the page was taken, which is what the screen redraws on. */
+  /** Returns whether the page was taken, so a caller drawing it knows there is news. */
   public static boolean accept(int syncId, ListingPage<ItemVariant> page) {
     if (page == null || openSyncId == NO_SCREEN || syncId != openSyncId) {
       return false;

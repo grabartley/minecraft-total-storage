@@ -43,10 +43,17 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   /**
    * Opening the screen asks for the first page. Nothing arrives unprompted: the server answers the
    * window a screen has told it about, so a screen that never asks is never sent anything.
+   *
+   * <p>Laying the window out again is not opening it. Minecraft runs this on every resize and every
+   * change of GUI scale, and treating those as a fresh screen would throw away the page being shown
+   * and ask for the first one again, wherever the player had scrolled to.
    */
   @Override
   protected void init() {
     super.init();
+    if (TerminalListingMirror.isShowing(handler.syncId)) {
+      return;
+    }
     TerminalListingMirror.opened(handler.syncId);
     ModNetworkingClient.sendListingRequest(
         handler.syncId,

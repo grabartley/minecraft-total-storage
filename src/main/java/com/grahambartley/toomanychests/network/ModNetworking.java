@@ -1,7 +1,6 @@
 package com.grahambartley.toomanychests.network;
 
 import com.grahambartley.toomanychests.lock.LockToggleService;
-import com.grahambartley.toomanychests.screenhandler.TerminalListingBroadcast;
 import com.grahambartley.toomanychests.screenhandler.TerminalListingService;
 import com.grahambartley.toomanychests.sort.ContainerSortService;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
@@ -17,6 +16,14 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 public final class ModNetworking {
   private static final ContainerSortService SORTING = new ContainerSortService();
   private static final TerminalListingService LISTINGS = new TerminalListingService();
+
+  /**
+   * The one listing service, so whatever pushes pages answers with the same one that resolves
+   * requests.
+   */
+  public static TerminalListingService listings() {
+    return LISTINGS;
+  }
 
   private ModNetworking() {}
 
@@ -48,6 +55,5 @@ public final class ModNetworking {
             context.server().execute(() -> LISTINGS.request(context.player(), payload)));
 
     ConfigSync.register();
-    new TerminalListingBroadcast(LISTINGS).register();
   }
 }

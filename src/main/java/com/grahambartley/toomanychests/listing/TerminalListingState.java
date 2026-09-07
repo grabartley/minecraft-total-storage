@@ -1,7 +1,6 @@
 package com.grahambartley.toomanychests.listing;
 
 import com.grahambartley.toomanychests.filter.ItemFilter;
-import java.util.Objects;
 
 /**
  * What one open screen is asking the listing for: the rows it is showing, and what it narrowed to.
@@ -49,21 +48,11 @@ public final class TerminalListingState {
   }
 
   @Override
-  public boolean equals(Object other) {
-    return this == other;
-  }
-
-  @Override
-  public int hashCode() {
-    return System.identityHashCode(this);
-  }
-
-  @Override
   public String toString() {
     return "TerminalListingState[window="
         + window
         + ", filter="
-        + Objects.toString(filter)
+        + filter
         + ", revision="
         + revision.current()
         + "]";

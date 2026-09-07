@@ -1,7 +1,6 @@
 package com.grahambartley.toomanychests.listing;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -51,15 +50,7 @@ class ListingWindowTest {
     ListingWindow window = ListingWindow.of(5, 0);
 
     assertTrue(window.isEmpty());
-    assertFalse(window.contains(5));
     assertEquals(List.of(), window.sliceOf(TEN));
-  }
-
-  @DisplayName("a window covers the rows from its offset up to but not past its end")
-  @ParameterizedTest(name = "index {0} covered by offset 3 length 4: {1}")
-  @CsvSource({"2, false", "3, true", "6, true", "7, false"})
-  void coversTheRowsBetweenItsBounds(int index, boolean covered) {
-    assertEquals(covered, ListingWindow.of(3, 4).contains(index));
   }
 
   @Test

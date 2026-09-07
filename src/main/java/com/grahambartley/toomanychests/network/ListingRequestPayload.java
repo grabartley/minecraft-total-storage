@@ -35,6 +35,7 @@ public record ListingRequestPayload(
 
   public static final int MAX_SEARCH_LENGTH = 256;
   public static final int MAX_TAG_LENGTH = 64;
+  public static final int MAX_MODE_LENGTH = 32;
 
   public static final CustomPayload.Id<ListingRequestPayload> ID =
       new CustomPayload.Id<>(Identifier.of(TooManyChests.MOD_ID, "listing_request"));
@@ -64,7 +65,7 @@ public record ListingRequestPayload(
     buf.writeVarInt(payload.offset());
     buf.writeVarInt(payload.length());
     buf.writeString(payload.search(), MAX_SEARCH_LENGTH);
-    buf.writeString(payload.mode().name());
+    buf.writeString(payload.mode().name(), MAX_MODE_LENGTH);
     buf.writeVarInt(payload.tags().size());
     for (final String tag : payload.tags()) {
       buf.writeString(tag, MAX_TAG_LENGTH);
@@ -76,7 +77,7 @@ public record ListingRequestPayload(
     final int offset = buf.readVarInt();
     final int length = buf.readVarInt();
     final String search = buf.readString(MAX_SEARCH_LENGTH);
-    final TagCombinationMode mode = modeNamed(buf.readString(MAX_TAG_LENGTH));
+    final TagCombinationMode mode = modeNamed(buf.readString(MAX_MODE_LENGTH));
     final int tagCount = buf.readVarInt();
     if (tagCount < 0 || tagCount > MAX_TAGS) {
       throw new IllegalArgumentException("listing request named " + tagCount + " tags");
