@@ -6,6 +6,7 @@ import com.grahambartley.toomanychests.block.TerminalBlock;
 import com.grahambartley.toomanychests.block.entity.TerminalBlockEntity;
 import com.grahambartley.toomanychests.lifecycle.ContainerLifecycle;
 import com.grahambartley.toomanychests.lifecycle.NetworkMembership;
+import com.grahambartley.toomanychests.terminal.TerminalLifecycle;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import com.grahambartley.toomanychests.terminal.TerminalPower;
 import java.util.ArrayList;
@@ -30,8 +31,9 @@ import net.minecraft.util.math.Direction;
  * is negative: that nothing is listening, nothing is indexed, and nothing rescans.
  *
  * <p>Each terminal is given a radius of one before it is powered, so a scan cannot wander into a
- * neighbouring test's structure. Chunk loading is driven through {@link TerminalPower} rather than
- * by unloading a chunk for real, because a gametest cannot unload the chunk it is standing in.
+ * neighbouring test's structure. Chunk loading is driven through {@link TerminalPower} directly
+ * here, which is what makes these power tests readable; that a real chunk load reaches the same
+ * place is proven by {@code TerminalLifecycleGameTest}, out in a chunk it is allowed to unload.
  */
 public final class TerminalPowerGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
@@ -207,11 +209,17 @@ public final class TerminalPowerGameTest implements FabricGameTest {
     context.assertTrue(
         context.getBlockState(TERMINAL).get(TerminalBlock.POWERED),
         "A terminal placed where redstone already reaches should place powered");
-    context.assertTrue(
-        network(context) != null,
-        "A terminal placed into a powered position should not wait for a neighbour update");
-    tearDown(context);
-    context.complete();
+    // Placement reaches the terminal as a block entity load, which per ADR 0026 is owed a start
+    // on the next tick rather than given one where it is announced.
+    context.runAtTick(
+        2L,
+        () -> {
+          context.assertTrue(
+              network(context) != null,
+              "A terminal placed into a powered position should be running on the next tick");
+          tearDown(context);
+          context.complete();
+        });
   }
 
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = 40)
@@ -306,9 +314,13 @@ public final class TerminalPowerGameTest implements FabricGameTest {
         .orElse(null);
   }
 
-  /** Tests that end with a terminal still powered hand the registry back the way they found it. */
+  /**
+   * Tests that end with a terminal still powered hand the registry back the way they found it,
+   * through the lifecycle rather than through {@link TerminalPower}, so a start still owed for the
+   * terminal is withdrawn as well as the network torn down.
+   */
   private void tearDown(TestContext context) {
-    TerminalNetworks.power().unloaded(context.getWorld(), context.getAbsolutePos(TERMINAL));
+    TerminalLifecycle.unloaded(context.getWorld(), context.getAbsolutePos(TERMINAL));
   }
 
   private static void stockBarrel(TestContext context, ItemStack... stacks) {

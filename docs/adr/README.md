@@ -33,6 +33,7 @@ Shared engineering standards across all the mods in this family live in [`../sta
 | [0023](0023-presets-are-seeded-not-stored.md) | Presets are seeded into a tag set, not stored in it |
 | [0024](0024-a-role-dies-with-the-container-it-was-given-to.md) | A role dies with the container it was given to |
 | [0025](0025-the-network-is-not-an-inventory.md) | The terminal's screen handler holds no network slots |
+| [0026](0026-world-callbacks-defer-their-scans.md) | A world callback defers its scan to the next tick |
 
 ## Writing A New Record
 

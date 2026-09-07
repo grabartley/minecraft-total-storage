@@ -41,7 +41,19 @@ public final class ContainerRoleEviction {
     return forget(block.pos());
   }
 
+  /**
+   * A terminal whose chunk has gone is left alone rather than read. Reading it would ask the world
+   * for a block entity, and asking is what loads a chunk back: a removal announced while chunks are
+   * unloading would pull the terminal's chunk in again, which unloads again, which is a world that
+   * never finishes unloading anything. Per ADR 0002 nothing here may force a chunk.
+   *
+   * <p>Nothing is lost by declining. A terminal in an unloaded chunk is running no network, so the
+   * container being removed was not one it was holding a role for.
+   */
   private boolean forget(BlockPos container) {
+    if (!world.getChunkManager().isChunkLoaded(terminal.getX() >> 4, terminal.getZ() >> 4)) {
+      return false;
+    }
     final TerminalBlockEntity blockEntity = TerminalLookup.at(world, terminal).orElse(null);
     if (blockEntity == null) {
       return false;

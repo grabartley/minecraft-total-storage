@@ -5,10 +5,12 @@ import com.grahambartley.toomanychests.block.entity.TerminalBlockEntity;
 import com.grahambartley.toomanychests.index.NetworkIndexSession;
 import com.grahambartley.toomanychests.lifecycle.ContainerLifecycleRegistry;
 import com.grahambartley.toomanychests.lifecycle.NetworkMembership;
+import com.grahambartley.toomanychests.storage.BlockStorageOrigin;
 import com.grahambartley.toomanychests.storage.ContainerDiscoveryScan;
 import com.grahambartley.toomanychests.storage.ContainerFilter;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.storage.ScanRegion;
+import com.grahambartley.toomanychests.terminal.ContainerRoleEviction;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.block.Blocks;
@@ -188,6 +190,35 @@ public final class ContainerRoleEvictionGameTest implements FabricGameTest {
 
   private static TerminalBlockEntity terminal(TestContext context) {
     return context.getBlockEntity(TERMINAL);
+  }
+
+  /**
+   * Removals arrive while chunks are unloading, and reading a terminal is what loads its chunk back
+   * in. A terminal a thousand blocks away in a chunk nobody has asked for is the only way to prove
+   * that reading never happens: if the removal had gone looking, the chunk would be loaded by the
+   * time it returned.
+   */
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void aRemovalNeverLoadsTheChunkTheTerminalIsIn(TestContext context) {
+    final BlockPos away = farFromHere(context);
+    final ChunkPos awayChunk = new ChunkPos(away);
+    context.assertFalse(
+        context.getWorld().getChunkManager().isChunkLoaded(awayChunk.x, awayChunk.z),
+        "The chunk this test relies on being absent is already loaded");
+    final ContainerRoleEviction eviction = new ContainerRoleEviction(context.getWorld(), away);
+
+    eviction.containerRemoved(
+        new BlockStorageOrigin(context.getWorld().getRegistryKey(), absolute(context, BARREL)));
+
+    context.assertFalse(
+        context.getWorld().getChunkManager().isChunkLoaded(awayChunk.x, awayChunk.z),
+        "Forgetting a role must not pull the terminal's chunk back into the world");
+    context.complete();
+  }
+
+  private static BlockPos farFromHere(TestContext context) {
+    final BlockPos here = context.getAbsolutePos(BlockPos.ORIGIN);
+    return new BlockPos(here.getX() + 2048, here.getY(), here.getZ() + 2048);
   }
 
   private static BlockPos absolute(TestContext context, BlockPos pos) {
