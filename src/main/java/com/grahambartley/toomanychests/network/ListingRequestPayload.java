@@ -3,7 +3,7 @@ package com.grahambartley.toomanychests.network;
 import com.grahambartley.toomanychests.TooManyChests;
 import com.grahambartley.toomanychests.filter.TagCombinationMode;
 import com.grahambartley.toomanychests.listing.ListingWindow;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.Set;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
@@ -77,28 +77,17 @@ public record ListingRequestPayload(
     final int offset = buf.readVarInt();
     final int length = buf.readVarInt();
     final String search = buf.readString(MAX_SEARCH_LENGTH);
-    final TagCombinationMode mode = modeNamed(buf.readString(MAX_MODE_LENGTH));
+    final TagCombinationMode mode =
+        TagCombinationMode.fromName(buf.readString(MAX_MODE_LENGTH))
+            .orElse(TagCombinationMode.DEFAULT);
     final int tagCount = buf.readVarInt();
     if (tagCount < 0 || tagCount > MAX_TAGS) {
       throw new IllegalArgumentException("listing request named " + tagCount + " tags");
     }
-    final Set<String> tags = new LinkedHashSet<>();
+    final Set<String> tags = new HashSet<>();
     for (int tag = 0; tag < tagCount; tag++) {
       tags.add(buf.readString(MAX_TAG_LENGTH));
     }
     return new ListingRequestPayload(syncId, offset, length, search, mode, tags);
-  }
-
-  /**
-   * Modes travel by name rather than by ordinal, as the config codec does, so reordering the enum
-   * cannot quietly turn one mode into the other for a client on a different build.
-   */
-  private static TagCombinationMode modeNamed(String name) {
-    for (final TagCombinationMode candidate : TagCombinationMode.values()) {
-      if (candidate.name().equalsIgnoreCase(name)) {
-        return candidate;
-      }
-    }
-    return TagCombinationMode.DEFAULT;
   }
 }

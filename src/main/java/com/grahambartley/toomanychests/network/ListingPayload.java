@@ -6,6 +6,7 @@ import com.grahambartley.toomanychests.listing.ListingRow;
 import com.grahambartley.toomanychests.listing.ListingWindow;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
@@ -29,6 +30,10 @@ public record ListingPayload(int syncId, ListingPage<ItemVariant> page) implemen
 
   public static final PacketCodec<RegistryByteBuf, ListingPayload> CODEC =
       PacketCodec.of(ListingPayload::write, ListingPayload::read);
+
+  public ListingPayload {
+    Objects.requireNonNull(page, "page");
+  }
 
   @Override
   public CustomPayload.Id<ListingPayload> getId() {

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.grahambartley.toomanychests.listing.ListingWindow;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.IntStream;
@@ -192,5 +193,35 @@ class TerminalScreenLayoutTest {
   @Test
   void theTitleSitsAboveTheRecessedArea() {
     assertTrue(TerminalScreenLayout.TITLE_Y + 9 <= TerminalScreenLayout.INSET_Y);
+  }
+
+  /**
+   * A page is asked for one recess at a time, and a request for more rows than a page may carry is
+   * clamped rather than refused. A recess grown past the cap would therefore ask for cells it is
+   * never sent, and draw the difference as blanks.
+   */
+  @Test
+  void aRecessNeverAsksForMoreRowsThanAPageMayCarry() {
+    assertTrue(
+        TerminalScreenLayout.LISTING_PAGE_SIZE <= ListingWindow.MAX_LENGTH,
+        "A recess of "
+            + TerminalScreenLayout.LISTING_PAGE_SIZE
+            + " cells cannot be filled by a page capped at "
+            + ListingWindow.MAX_LENGTH);
+  }
+
+  @Test
+  void theRecessHoldsAWholeNumberOfCellsInBothDirections() {
+    assertEquals(
+        TerminalScreenLayout.LISTING_PAGE_SIZE,
+        TerminalScreenLayout.LISTING_COLUMNS * TerminalScreenLayout.LISTING_ROWS);
+    assertTrue(
+        TerminalScreenLayout.LISTING_COLUMNS * TerminalScreenLayout.SLOT_SIZE
+            <= TerminalScreenLayout.INSET_WIDTH,
+        "The cells across should fit inside the recess");
+    assertTrue(
+        TerminalScreenLayout.LISTING_ROWS * TerminalScreenLayout.SLOT_SIZE
+            <= TerminalScreenLayout.INSET_HEIGHT,
+        "The cells down should fit inside the recess");
   }
 }

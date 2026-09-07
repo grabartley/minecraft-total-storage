@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.grahambartley.toomanychests.filter.TagCombinationMode;
 import com.grahambartley.toomanychests.listing.ListingWindow;
 import io.netty.buffer.Unpooled;
-import java.util.LinkedHashSet;
 import java.util.Set;
 import net.minecraft.network.RegistryByteBuf;
 import org.junit.jupiter.api.DisplayName;
@@ -154,8 +153,8 @@ class ListingRequestPayloadTest {
   }
 
   @Test
-  void theTagsNamedSurviveTheWireWhateverOrderTheyWereGivenIn() {
-    Set<String> tags = new LinkedHashSet<>(Set.of("wood", "storage", "tools"));
+  void theTagsNamedSurviveTheWire() {
+    Set<String> tags = Set.of("wood", "storage", "tools");
 
     ListingRequestPayload received =
         roundTrip(new ListingRequestPayload(1, 0, 8, "", TagCombinationMode.AND, tags));

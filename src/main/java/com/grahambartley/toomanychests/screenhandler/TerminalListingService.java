@@ -17,7 +17,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 
 /**
- * Answers a screen's request for a page, and pushes a fresh one when the network moves under it.
+ * Answers a screen's request for a page, and builds the same page again on demand.
  *
  * <p>Every answer is built from the live index rather than from anything the client sent back, so a
  * page reflects the network as it stands at the moment it is written. Nothing here trusts the sync
@@ -27,6 +27,9 @@ import net.minecraft.server.world.ServerWorld;
  * <p>A terminal running no network answers with an empty page rather than with silence. A screen
  * that heard nothing could not tell an unpowered terminal from a lost packet, and would sit waiting
  * on a reply that was never coming.
+ *
+ * <p>Deciding when a page is owed unprompted is not this class's job; that belongs to {@link
+ * TerminalListingBroadcast}, which calls {@link #refresh} once a network has moved.
  */
 public final class TerminalListingService {
   private final FilterCandidateFactory candidates;

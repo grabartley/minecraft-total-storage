@@ -6,7 +6,7 @@ import com.grahambartley.toomanychests.block.entity.TerminalBlockEntity;
 import com.grahambartley.toomanychests.filter.TagCombinationMode;
 import com.grahambartley.toomanychests.lifecycle.NetworkMembership;
 import com.grahambartley.toomanychests.network.ListingRequestPayload;
-import com.grahambartley.toomanychests.screenhandler.TerminalListingService;
+import com.grahambartley.toomanychests.network.ModNetworking;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenHandler;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import java.util.Set;
@@ -39,8 +39,6 @@ public final class TerminalListingBroadcastGameTest implements FabricGameTest {
   private static final BlockPos POWER = new BlockPos(3, 1, 2);
   private static final BlockPos BARREL = new BlockPos(4, 1, 3);
   private static final BlockPos STANDING = new BlockPos(3, 1, 4);
-
-  private final TerminalListingService listings = new TerminalListingService();
 
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void aContainerChangingSendsTheViewerAFreshPage(TestContext context) {
@@ -125,12 +123,14 @@ public final class TerminalListingBroadcastGameTest implements FabricGameTest {
         });
   }
 
-  private ServerPlayerEntity watchingTerminal(TestContext context) {
+  private static ServerPlayerEntity watchingTerminal(TestContext context) {
     ServerPlayerEntity player = openTerminal(context);
     TerminalScreenHandler handler = handlerOf(player);
-    listings.request(
-        player,
-        new ListingRequestPayload(handler.syncId, 0, 10, "", TagCombinationMode.DEFAULT, Set.of()));
+    ModNetworking.listings()
+        .request(
+            player,
+            new ListingRequestPayload(
+                handler.syncId, 0, 10, "", TagCombinationMode.DEFAULT, Set.of()));
     return player;
   }
 
