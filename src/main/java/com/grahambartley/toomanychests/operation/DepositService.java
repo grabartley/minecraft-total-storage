@@ -8,7 +8,6 @@ import com.grahambartley.toomanychests.transaction.NetworkTransactions;
 import com.grahambartley.toomanychests.transaction.OperationResult;
 import com.grahambartley.toomanychests.transaction.StorageTransfers;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -59,7 +58,7 @@ public final class DepositService {
         player,
         sourceFor(context, payload)
             .map(source -> give(context, List.of(source), payload.amount()))
-            .orElseGet(DepositOutcome::nothingToDeposit));
+            .orElseGet(DepositOutcome::slotLocked));
   }
 
   /** The player's whole inventory, minus everything a lock or a role puts out of reach. */
@@ -95,17 +94,21 @@ public final class DepositService {
     return DepositOutcome.stored(offered, result.orElse(0L));
   }
 
+  /**
+   * Routing is worked out for every variant at once, before anything moves, so emptying a full
+   * inventory reads the terminal and its containers once rather than once per kind of item.
+   */
   private OperationResult<Long> store(
       TerminalOperationContext context, List<Offer> offers, TransactionContext transaction) {
-    final Map<ItemVariant, List<Storage<ItemVariant>>> routed = new HashMap<>();
+    final Map<ItemVariant, List<Storage<ItemVariant>>> routed =
+        destinations.forVariants(
+            context.world(),
+            context.terminal(),
+            context.network(),
+            offers.stream().map(Offer::variant).distinct().toList());
     long moved = 0L;
     for (final Offer offer : offers) {
-      final List<Storage<ItemVariant>> targets =
-          routed.computeIfAbsent(
-              offer.variant(),
-              variant ->
-                  destinations.forVariant(
-                      context.world(), context.terminal(), context.network(), variant));
+      final List<Storage<ItemVariant>> targets = routed.getOrDefault(offer.variant(), List.of());
       if (targets.isEmpty()) {
         continue;
       }

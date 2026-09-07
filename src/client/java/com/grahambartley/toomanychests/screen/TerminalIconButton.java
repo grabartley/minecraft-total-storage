@@ -1,6 +1,5 @@
 package com.grahambartley.toomanychests.screen;
 
-import com.grahambartley.toomanychests.TooManyChests;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
 import java.util.Objects;
 import net.minecraft.client.gui.DrawContext;
@@ -18,10 +17,10 @@ import net.minecraft.util.Identifier;
  * sprite set rather than from a tint, so the resting, hovered and unavailable buttons differ by
  * shape and stay apart for players who cannot separate the accent from the chassis.
  */
-public class TerminalIconButton extends ClickableWidget {
-  private static final Identifier NORMAL = sprite("button/normal");
-  private static final Identifier HOVER = sprite("button/hover");
-  private static final Identifier DISABLED = sprite("button/disabled");
+public final class TerminalIconButton extends ClickableWidget {
+  private static final Identifier NORMAL = TerminalSprites.of("button/normal");
+  private static final Identifier HOVER = TerminalSprites.of("button/hover");
+  private static final Identifier DISABLED = TerminalSprites.of("button/disabled");
 
   private final Identifier icon;
   private final Runnable onPress;
@@ -59,9 +58,5 @@ public class TerminalIconButton extends ClickableWidget {
   @Override
   protected void appendClickableNarrations(NarrationMessageBuilder builder) {
     appendDefaultNarrations(builder);
-  }
-
-  private static Identifier sprite(String path) {
-    return Identifier.of(TooManyChests.MOD_ID, path);
   }
 }

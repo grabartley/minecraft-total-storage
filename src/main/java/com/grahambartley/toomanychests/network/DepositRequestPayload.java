@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests.network;
 
 import com.grahambartley.toomanychests.TooManyChests;
 import com.grahambartley.toomanychests.operation.DepositSource;
+import com.grahambartley.toomanychests.operation.ItemStackLimits;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
@@ -23,7 +24,7 @@ public record DepositRequestPayload(int syncId, DepositSource source, int slot, 
     implements CustomPayload {
 
   /** Both sources hold at most one stack, so no honest request asks for more than one. */
-  public static final int MAX_AMOUNT = WithdrawRequestPayload.MAX_STACK_SIZE;
+  public static final int MAX_AMOUNT = ItemStackLimits.MAX_STACK_SIZE;
 
   public static final CustomPayload.Id<DepositRequestPayload> ID =
       new CustomPayload.Id<>(Identifier.of(TooManyChests.MOD_ID, "deposit_request"));

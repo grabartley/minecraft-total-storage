@@ -1,12 +1,12 @@
 package com.grahambartley.toomanychests.screen;
 
-import com.grahambartley.toomanychests.TooManyChests;
 import com.grahambartley.toomanychests.filter.TagCombinationMode;
 import com.grahambartley.toomanychests.listing.ListingPage;
 import com.grahambartley.toomanychests.listing.ListingRow;
 import com.grahambartley.toomanychests.listing.TerminalListingMirror;
 import com.grahambartley.toomanychests.network.DepositRequestPayload;
 import com.grahambartley.toomanychests.network.ModNetworkingClient;
+import com.grahambartley.toomanychests.operation.WithdrawAmount;
 import com.grahambartley.toomanychests.operation.WithdrawDestination;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenHandler;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
@@ -48,13 +48,14 @@ import org.lwjgl.glfw.GLFW;
  * leaving it to its parent: see {@link SearchKeyOutcome}.
  */
 public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
-  private static final Identifier PANEL = sprite("panel/background");
-  private static final Identifier INSET = sprite("panel/inset");
-  private static final Identifier CELL = sprite("slot/cell");
-  private static final Identifier CELL_HOVER = sprite("slot/cell_hover");
-  private static final Identifier SCROLL_TRACK = sprite("scroll/track");
-  private static final Identifier SCROLL_THUMB = sprite("scroll/thumb");
-  private static final Identifier SCROLL_THUMB_DISABLED = sprite("scroll/thumb_disabled");
+  private static final Identifier PANEL = TerminalSprites.of("panel/background");
+  private static final Identifier INSET = TerminalSprites.of("panel/inset");
+  private static final Identifier CELL = TerminalSprites.of("slot/cell");
+  private static final Identifier CELL_HOVER = TerminalSprites.of("slot/cell_hover");
+  private static final Identifier SCROLL_TRACK = TerminalSprites.of("scroll/track");
+  private static final Identifier SCROLL_THUMB = TerminalSprites.of("scroll/thumb");
+  private static final Identifier SCROLL_THUMB_DISABLED =
+      TerminalSprites.of("scroll/thumb_disabled");
 
   private static final int ITEM_SIZE = 16;
   private static final int LINE_HEIGHT = 9;
@@ -69,7 +70,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   private static final int LEFT_BUTTON = GridClick.LEFT_BUTTON;
 
-  private static final Identifier DEPOSIT_ALL_ICON = sprite("icon/deposit_all");
+  private static final Identifier DEPOSIT_ALL_ICON = TerminalSprites.of("icon/deposit_all");
 
   private final ListingScroll scroll =
       new ListingScroll(TerminalScreenLayout.LISTING_COLUMNS, TerminalScreenLayout.LISTING_ROWS);
@@ -123,13 +124,12 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     addDrawableChild(search.widget());
     addDrawableChild(
         new TerminalIconButton(
-            x + TerminalScreenLayout.DEPOSIT_ALL_X,
-            y + TerminalScreenLayout.DEPOSIT_ALL_Y,
+            x + TerminalScreenLayout.TOOLBAR_X,
+            y + TerminalScreenLayout.TOOLBAR_Y,
             DEPOSIT_ALL_ICON,
             TerminalScreenText.of("deposit_all"),
             this::depositEverything));
     setInitialFocus(search.widget());
-    prompt.close();
     if (TerminalListingMirror.isShowing(handler.syncId)) {
       return;
     }
@@ -255,7 +255,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
       return false;
     }
     if (action == GridAction.PROMPT_FOR_AMOUNT) {
-      prompt.open(row.variant(), (int) Math.min(Integer.MAX_VALUE, row.count()));
+      prompt.open(row.variant(), promptCeiling(row));
       return true;
     }
     TerminalGridRequests.send(action, handler.syncId, row == null ? null : row.variant());
@@ -282,6 +282,19 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   private void depositEverything() {
     ModNetworkingClient.sendDepositAllRequest(handler.syncId);
+  }
+
+  /**
+   * The most a custom amount could really deliver, which is the smaller of what the network holds
+   * and what the player's own slots could carry. Offering the network's total instead would print a
+   * number the server is about to clamp, which is the one thing the prompt promises not to do.
+   */
+  private static int promptCeiling(ListingRow<ItemVariant> row) {
+    return (int)
+        Math.min(
+            row.count(),
+            WithdrawAmount.ceilingFor(
+                row.variant().toStack().getMaxCount(), WithdrawDestination.INVENTORY));
   }
 
   @Override
@@ -498,9 +511,5 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   private int windowY(double mouseY) {
     return (int) Math.floor(mouseY) - y;
-  }
-
-  private static Identifier sprite(String path) {
-    return Identifier.of(TooManyChests.MOD_ID, path);
   }
 }

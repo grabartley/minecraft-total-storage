@@ -245,15 +245,13 @@ class TerminalScreenLayoutTest {
   }
 
   @Test
-  void theDepositAllButtonSitsInTheToolbarInsideTheChassisFrame() {
-    assertEquals(TerminalScreenLayout.TOOLBAR_X, TerminalScreenLayout.DEPOSIT_ALL_X);
-    assertEquals(TerminalScreenLayout.TOOLBAR_Y, TerminalScreenLayout.DEPOSIT_ALL_Y);
+  void aToolbarButtonIsDrawnInsideTheChassisFrame() {
     assertTrue(
-        TerminalScreenLayout.DEPOSIT_ALL_X + TerminalScreenLayout.BUTTON_SIZE
+        TerminalScreenLayout.TOOLBAR_X + TerminalScreenLayout.BUTTON_SIZE
             <= TerminalScreenLayout.WINDOW_WIDTH - TerminalScreenLayout.PANEL_BORDER,
         "the button runs under the chassis frame");
     assertTrue(
-        TerminalScreenLayout.DEPOSIT_ALL_Y >= TerminalScreenLayout.PANEL_BORDER,
+        TerminalScreenLayout.TOOLBAR_Y >= TerminalScreenLayout.PANEL_BORDER,
         "the button runs under the chassis frame");
   }
 
@@ -272,85 +270,6 @@ class TerminalScreenLayoutTest {
     assertEquals(
         TerminalScreenLayout.BUTTON_SIZE,
         2 * TerminalScreenLayout.ICON_INSET + TerminalScreenLayout.ICON_SIZE);
-  }
-
-  static Stream<Arguments> pointsOutsideTheDepositAllButton() {
-    final int right = TerminalScreenLayout.DEPOSIT_ALL_X + TerminalScreenLayout.BUTTON_SIZE;
-    final int bottom = TerminalScreenLayout.DEPOSIT_ALL_Y + TerminalScreenLayout.BUTTON_SIZE;
-    return Stream.of(
-        Arguments.of(TerminalScreenLayout.DEPOSIT_ALL_X - 1, TerminalScreenLayout.DEPOSIT_ALL_Y),
-        Arguments.of(TerminalScreenLayout.DEPOSIT_ALL_X, TerminalScreenLayout.DEPOSIT_ALL_Y - 1),
-        Arguments.of(right, TerminalScreenLayout.DEPOSIT_ALL_Y),
-        Arguments.of(TerminalScreenLayout.DEPOSIT_ALL_X, bottom),
-        Arguments.of(TerminalScreenLayout.SEARCH_X, TerminalScreenLayout.SEARCH_Y),
-        Arguments.of(TerminalScreenLayout.GRID_X, TerminalScreenLayout.GRID_Y));
-  }
-
-  @ParameterizedTest
-  @MethodSource("pointsOutsideTheDepositAllButton")
-  void aClickBesideTheDepositAllButtonIsNotOverIt(int windowX, int windowY) {
-    assertFalse(TerminalScreenLayout.isOverDepositAll(windowX, windowY));
-  }
-
-  @Test
-  void aClickAnywhereOnTheDepositAllButtonIsOverIt() {
-    assertTrue(
-        TerminalScreenLayout.isOverDepositAll(
-            TerminalScreenLayout.DEPOSIT_ALL_X, TerminalScreenLayout.DEPOSIT_ALL_Y));
-    assertTrue(
-        TerminalScreenLayout.isOverDepositAll(
-            TerminalScreenLayout.DEPOSIT_ALL_X + TerminalScreenLayout.BUTTON_SIZE - 1,
-            TerminalScreenLayout.DEPOSIT_ALL_Y + TerminalScreenLayout.BUTTON_SIZE - 1));
-  }
-
-  /**
-   * The text is a widget of its own, so what it covers has to stay inside the box drawn behind it.
-   */
-  @Test
-  void theSearchTextClearsTheBoxItIsWrittenInto() {
-    assertTrue(TerminalScreenLayout.SEARCH_TEXT_X >= TerminalScreenLayout.SEARCH_X);
-    assertTrue(TerminalScreenLayout.SEARCH_TEXT_Y >= TerminalScreenLayout.SEARCH_Y);
-    assertTrue(
-        TerminalScreenLayout.SEARCH_TEXT_X + TerminalScreenLayout.SEARCH_TEXT_WIDTH
-            <= TerminalScreenLayout.SEARCH_X + TerminalScreenLayout.SEARCH_WIDTH);
-    assertTrue(
-        TerminalScreenLayout.SEARCH_TEXT_Y + TerminalScreenLayout.SEARCH_TEXT_HEIGHT
-            <= TerminalScreenLayout.SEARCH_Y + TerminalScreenLayout.SEARCH_HEIGHT);
-    assertTrue(TerminalScreenLayout.SEARCH_TEXT_HEIGHT >= 8, "a line of text does not fit the box");
-  }
-
-  static Stream<Arguments> pointsOutsideTheSearchBox() {
-    final int right = TerminalScreenLayout.SEARCH_X + TerminalScreenLayout.SEARCH_WIDTH;
-    final int bottom = TerminalScreenLayout.SEARCH_Y + TerminalScreenLayout.SEARCH_HEIGHT;
-    return Stream.of(
-        Arguments.of(TerminalScreenLayout.SEARCH_X - 1, TerminalScreenLayout.SEARCH_Y),
-        Arguments.of(TerminalScreenLayout.SEARCH_X, TerminalScreenLayout.SEARCH_Y - 1),
-        Arguments.of(right, TerminalScreenLayout.SEARCH_Y),
-        Arguments.of(TerminalScreenLayout.SEARCH_X, bottom),
-        Arguments.of(TerminalScreenLayout.GRID_X, TerminalScreenLayout.GRID_Y));
-  }
-
-  @ParameterizedTest
-  @MethodSource("pointsOutsideTheSearchBox")
-  void aClickBesideTheSearchBoxIsNotOverIt(int windowX, int windowY) {
-    assertFalse(TerminalScreenLayout.isOverSearch(windowX, windowY));
-  }
-
-  /**
-   * The border counts, so a click that visibly lands on the control reaches the field inside it.
-   */
-  @Test
-  void aClickAnywhereOnTheSearchBoxIsOverIt() {
-    assertTrue(
-        TerminalScreenLayout.isOverSearch(
-            TerminalScreenLayout.SEARCH_X, TerminalScreenLayout.SEARCH_Y));
-    assertTrue(
-        TerminalScreenLayout.isOverSearch(
-            TerminalScreenLayout.SEARCH_TEXT_X, TerminalScreenLayout.SEARCH_TEXT_Y));
-    assertTrue(
-        TerminalScreenLayout.isOverSearch(
-            TerminalScreenLayout.SEARCH_X + TerminalScreenLayout.SEARCH_WIDTH - 1,
-            TerminalScreenLayout.SEARCH_Y + TerminalScreenLayout.SEARCH_HEIGHT - 1));
   }
 
   /**

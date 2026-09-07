@@ -112,10 +112,6 @@ public final class TerminalScreenLayout {
 
   public static final int TOOLBAR_Y = INSET_Y;
 
-  public static final int DEPOSIT_ALL_X = TOOLBAR_X;
-
-  public static final int DEPOSIT_ALL_Y = TOOLBAR_Y;
-
   public static final int WINDOW_WIDTH = TOOLBAR_X + BUTTON_SIZE + INSET_X;
 
   /** The search box spans the recess under it, since it narrows everything the recess shows. */
@@ -217,14 +213,6 @@ public final class TerminalScreenLayout {
         && windowX < SEARCH_X + SEARCH_WIDTH
         && windowY >= SEARCH_Y
         && windowY < SEARCH_Y + SEARCH_HEIGHT;
-  }
-
-  /** Whether a point in the window is over the deposit all button. */
-  public static boolean isOverDepositAll(int windowX, int windowY) {
-    return windowX >= DEPOSIT_ALL_X
-        && windowX < DEPOSIT_ALL_X + BUTTON_SIZE
-        && windowY >= DEPOSIT_ALL_Y
-        && windowY < DEPOSIT_ALL_Y + BUTTON_SIZE;
   }
 
   /** Whether a point in the window is over the scrollbar track. */

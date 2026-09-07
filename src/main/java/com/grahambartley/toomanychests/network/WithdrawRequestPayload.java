@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests.network;
 
 import com.grahambartley.toomanychests.TooManyChests;
 import com.grahambartley.toomanychests.lock.LockedSlots;
+import com.grahambartley.toomanychests.operation.ItemStackLimits;
 import com.grahambartley.toomanychests.operation.WithdrawDestination;
 import java.util.Objects;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
@@ -29,11 +30,8 @@ public record WithdrawRequestPayload(
     int syncId, ItemVariant variant, int amount, WithdrawDestination destination)
     implements CustomPayload {
 
-  /** The largest stack size any item can be given, which is vanilla's own ceiling. */
-  public static final int MAX_STACK_SIZE = 99;
-
   /** More than the player's own slots could hold of anything, so no honest request is refused. */
-  public static final int MAX_AMOUNT = LockedSlots.SLOT_COUNT * MAX_STACK_SIZE;
+  public static final int MAX_AMOUNT = LockedSlots.SLOT_COUNT * ItemStackLimits.MAX_STACK_SIZE;
 
   public static final CustomPayload.Id<WithdrawRequestPayload> ID =
       new CustomPayload.Id<>(Identifier.of(TooManyChests.MOD_ID, "withdraw_request"));

@@ -37,6 +37,10 @@ public record DepositOutcome(DepositResult result, long offered, long moved) {
     return new DepositOutcome(DepositResult.NOTHING_TO_DEPOSIT, 0L, 0L);
   }
 
+  public static DepositOutcome slotLocked() {
+    return new DepositOutcome(DepositResult.SLOT_LOCKED, 0L, 0L);
+  }
+
   public static DepositOutcome noSpace(long offered) {
     return new DepositOutcome(DepositResult.NO_SPACE, offered, 0L);
   }

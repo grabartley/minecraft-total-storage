@@ -160,7 +160,7 @@ public final class DepositServiceGameTest implements FabricGameTest {
             DepositRequestPayload.wholeSlot(NetworkOperationFixture.handlerOf(player).syncId, 5));
 
     context.assertTrue(
-        outcome.result() == DepositResult.NOTHING_TO_DEPOSIT,
+        outcome.result() == DepositResult.SLOT_LOCKED,
         "A locked slot was reachable, got " + outcome.result());
     context.assertTrue(
         player.getInventory().getStack(5).getCount() == STACK,

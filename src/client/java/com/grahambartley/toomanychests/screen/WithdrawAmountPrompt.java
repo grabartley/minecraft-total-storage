@@ -1,6 +1,5 @@
 package com.grahambartley.toomanychests.screen;
 
-import com.grahambartley.toomanychests.TooManyChests;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.client.font.TextRenderer;
@@ -21,8 +20,8 @@ import net.minecraft.util.Identifier;
  * typed is decided and tested. This class draws it and nothing else.
  */
 public final class WithdrawAmountPrompt {
-  private static final Identifier PANEL = Identifier.of(TooManyChests.MOD_ID, "panel/background");
-  private static final Identifier FIELD = Identifier.of(TooManyChests.MOD_ID, "search/box_focused");
+  private static final Identifier PANEL = TerminalSprites.of("panel/background");
+  private static final Identifier FIELD = TerminalSprites.of("search/box_focused");
 
   private static final int WIDTH = 132;
   private static final int PADDING = 8;

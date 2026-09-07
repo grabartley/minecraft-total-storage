@@ -3,6 +3,7 @@ package com.grahambartley.toomanychests.network;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.grahambartley.toomanychests.lock.LockedSlots;
+import com.grahambartley.toomanychests.operation.ItemStackLimits;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -36,7 +37,6 @@ class WithdrawRequestPayloadTest {
   @Test
   void theCeilingIsWhatThePlayersOwnSlotsCouldEverHold() {
     assertEquals(
-        LockedSlots.SLOT_COUNT * WithdrawRequestPayload.MAX_STACK_SIZE,
-        WithdrawRequestPayload.MAX_AMOUNT);
+        LockedSlots.SLOT_COUNT * ItemStackLimits.MAX_STACK_SIZE, WithdrawRequestPayload.MAX_AMOUNT);
   }
 }

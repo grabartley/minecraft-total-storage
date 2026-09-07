@@ -32,6 +32,7 @@
   "operation.too-many-chests.withdraw.full": "You have nowhere to put that",
   "operation.too-many-chests.deposit.partial": "Stored %s, with no room for the other %s",
   "operation.too-many-chests.deposit.empty": "There is nothing to store",
+  "operation.too-many-chests.deposit.locked": "That slot is locked, so nothing left it",
   "operation.too-many-chests.deposit.full": "This network has no room left",
   "operation.too-many-chests.refused": "That terminal is not yours to use right now",
   "subtitles.too-many-chests.terminal.power_on": "Terminal powers up",
