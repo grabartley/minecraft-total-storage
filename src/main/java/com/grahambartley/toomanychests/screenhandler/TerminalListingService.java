@@ -24,9 +24,10 @@ import net.minecraft.server.world.ServerWorld;
  * id it was handed: the handler is the one the server already holds for that player, and the
  * request is dropped if it names a different screen.
  *
- * <p>A terminal running no network answers with an empty page rather than with silence. A screen
+ * <p>A terminal running no network answers with an offline page rather than with silence. A screen
  * that heard nothing could not tell an unpowered terminal from a lost packet, and would sit waiting
- * on a reply that was never coming.
+ * on a reply that was never coming. Saying so explicitly is also what lets the screen show that its
+ * view has gone stale rather than quietly showing an empty network.
  *
  * <p>Deciding when a page is owed unprompted is not this class's job; that belongs to {@link
  * TerminalListingBroadcast}, which calls {@link #refresh} once a network has moved.
@@ -83,12 +84,12 @@ public final class TerminalListingService {
     final TerminalListingState state = handler.listing();
     final long revision = state.nextRevision();
     if (!(player.getWorld() instanceof ServerWorld world)) {
-      return ListingPage.empty(revision);
+      return ListingPage.offline(revision);
     }
     final NetworkMembership network =
         TerminalNetworks.power().network(world, handler.terminal()).orElse(null);
     if (network == null) {
-      return ListingPage.empty(revision);
+      return ListingPage.offline(revision);
     }
     return NetworkListing.page(
         network.index(), candidates::of, state.filter(), state.window(), revision);

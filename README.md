@@ -24,6 +24,12 @@ The screen is not a container. What the network holds is far more than a contain
 
 Searching and filtering narrow the whole network rather than the page you are looking at, because the server does the narrowing before it sends anything back. The listing also keeps itself current: a chest filling up behind you changes the numbers on screen without you touching anything. See [ADR 0027](docs/adr/0027-the-listing-is-narrowed-on-the-server.md).
 
+The network is drawn as a grid of cells, each one an item and how much of that exact item the whole network holds. Items that differ only by their data components are separate cells with separate counts, so a damaged pickaxe and a fresh one never add up into one number. Counts are written out in full while they fit and compacted once they stop, always downwards: a cell reading `12.3k` is never promising more than is there, and the tooltip carries the real figure alongside how many containers it is spread across.
+
+Scroll the grid with the wheel or by dragging the scrollbar. Each scroll asks the server for the rows it moved onto, so what a terminal costs to page through is set by the size of the grid rather than by the size of the network.
+
+A grid with nothing in it says which nothing it means, because the empty cases are not the same problem. An empty network, a search that matched none of what is there, and a terminal whose network has gone are three different pictures and three different lines. The last one is how a screen tells you it has gone stale, which is what you see if the terminal loses power or is broken while you are looking at it.
+
 Power, permission and distance are re-checked every tick the screen is up, not just when it opened. Cutting the terminal's power, breaking it, losing access to it, walking away from it, or dying all close the screen straight away.
 
 ## Container roles

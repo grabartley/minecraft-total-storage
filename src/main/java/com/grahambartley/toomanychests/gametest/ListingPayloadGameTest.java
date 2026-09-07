@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests.gametest;
 
 import com.grahambartley.toomanychests.listing.ListingPage;
 import com.grahambartley.toomanychests.listing.ListingRow;
+import com.grahambartley.toomanychests.listing.ListingStatus;
 import com.grahambartley.toomanychests.listing.ListingWindow;
 import com.grahambartley.toomanychests.network.ListingPayload;
 import io.netty.buffer.Unpooled;
@@ -29,11 +30,12 @@ public final class ListingPayloadGameTest implements FabricGameTest {
     ListingPage<ItemVariant> sent =
         new ListingPage<>(
             9L,
+            ListingStatus.LIVE,
             72,
             5000,
             List.of(
-                new ListingRow<>(ItemVariant.of(Items.DIAMOND), 4096L),
-                new ListingRow<>(ItemVariant.of(Items.OAK_LOG), 1L)));
+                new ListingRow<>(ItemVariant.of(Items.DIAMOND), 4096L, 7),
+                new ListingRow<>(ItemVariant.of(Items.OAK_LOG), 1L, 1)));
 
     ListingPage<ItemVariant> received = roundTrip(context, sent).page();
 
@@ -49,15 +51,38 @@ public final class ListingPayloadGameTest implements FabricGameTest {
         received.rows().get(0).variant().getItem() == Items.DIAMOND
             && received.rows().get(0).count() == 4096L,
         "The diamonds and their count should survive");
+    context.assertTrue(
+        received.rows().get(0).providerCount() == 7,
+        "How many containers hold them should survive, got "
+            + received.rows().get(0).providerCount());
     context.complete();
   }
 
   @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = 20)
   public void anEmptyPageIsStillAWholePage(TestContext context) {
-    ListingPage<ItemVariant> received = roundTrip(context, ListingPage.empty(3L)).page();
+    ListingPage<ItemVariant> received = roundTrip(context, ListingPage.offline(3L)).page();
 
     context.assertTrue(received.isEmpty(), "An empty page should arrive empty");
     context.assertTrue(received.revision() == 3L, "An empty page still carries its stamp");
+    context.complete();
+  }
+
+  /**
+   * The status is the only thing separating the several ways a grid comes up empty, and every one
+   * of them travels as a page carrying no rows at all. Losing it on the wire would leave a screen
+   * unable to say which of them it is showing.
+   */
+  @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = 20)
+  public void aRowlessPageStillSaysWhyItHasNoRows(TestContext context) {
+    ListingPage<ItemVariant> received =
+        roundTrip(
+                context,
+                new ListingPage<ItemVariant>(2L, ListingStatus.NO_RESULTS, 0, 0, List.of()))
+            .page();
+
+    context.assertTrue(
+        received.status() == ListingStatus.NO_RESULTS,
+        "The reason the page is empty should survive, got " + received.status());
     context.complete();
   }
 
@@ -70,7 +95,11 @@ public final class ListingPayloadGameTest implements FabricGameTest {
         new ListingPayload(
             SYNC_ID,
             new ListingPage<>(
-                1L, 0, 1, List.of(new ListingRow<>(ItemVariant.of(Items.DIAMOND), 1L)))));
+                1L,
+                ListingStatus.LIVE,
+                0,
+                1,
+                List.of(new ListingRow<>(ItemVariant.of(Items.DIAMOND), 1L, 1)))));
     ListingPayload.CODEC.decode(buffer);
 
     context.assertTrue(
@@ -88,6 +117,7 @@ public final class ListingPayloadGameTest implements FabricGameTest {
     RegistryByteBuf buffer = buffer(context);
     buffer.writeVarInt(SYNC_ID);
     buffer.writeVarLong(1L);
+    buffer.writeEnumConstant(ListingStatus.LIVE);
     buffer.writeVarInt(0);
     buffer.writeVarInt(0);
     buffer.writeVarInt(ListingWindow.MAX_LENGTH + 1);
@@ -102,6 +132,7 @@ public final class ListingPayloadGameTest implements FabricGameTest {
     RegistryByteBuf buffer = buffer(context);
     buffer.writeVarInt(SYNC_ID);
     buffer.writeVarLong(1L);
+    buffer.writeEnumConstant(ListingStatus.LIVE);
     buffer.writeVarInt(0);
     buffer.writeVarInt(0);
     buffer.writeVarInt(-1);
@@ -115,12 +146,12 @@ public final class ListingPayloadGameTest implements FabricGameTest {
   public void aPageOverTheCapCannotBeBuiltInTheFirstPlace(TestContext context) {
     final List<ListingRow<ItemVariant>> tooMany = new ArrayList<>();
     for (int row = 0; row <= ListingWindow.MAX_LENGTH; row++) {
-      tooMany.add(new ListingRow<>(ItemVariant.of(Items.DIAMOND), 1L));
+      tooMany.add(new ListingRow<>(ItemVariant.of(Items.DIAMOND), 1L, 1));
     }
 
     boolean refused;
     try {
-      new ListingPage<>(1L, 0, tooMany.size(), tooMany);
+      new ListingPage<>(1L, ListingStatus.LIVE, 0, tooMany.size(), tooMany);
       refused = false;
     } catch (IllegalArgumentException expected) {
       refused = true;

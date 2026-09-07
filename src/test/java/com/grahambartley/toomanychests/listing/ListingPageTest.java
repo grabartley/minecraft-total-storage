@@ -1,6 +1,7 @@
 package com.grahambartley.toomanychests.listing;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -13,13 +14,14 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 class ListingPageTest {
   private static final List<ListingRow<String>> ROWS =
-      List.of(new ListingRow<>("a", 1L), new ListingRow<>("b", 2L));
+      List.of(new ListingRow<>("a", 1L, 1), new ListingRow<>("b", 2L, 3));
 
   @Test
   void aPageCarriesTheRowsAndWhereTheySitInTheWholeResult() {
-    ListingPage<String> page = new ListingPage<>(7L, 20, 500, ROWS);
+    ListingPage<String> page = new ListingPage<>(7L, ListingStatus.LIVE, 20, 500, ROWS);
 
     assertEquals(7L, page.revision());
+    assertEquals(ListingStatus.LIVE, page.status());
     assertEquals(20, page.offset());
     assertEquals(500, page.totalMatching());
     assertEquals(ROWS, page.rows());
@@ -31,7 +33,7 @@ class ListingPageTest {
   @CsvSource({"-1, -1, 0, 0", "-500, 4, 0, 4", "3, -8, 3, 0"})
   void clampsAnOffsetOrTotalBelowZero(
       int offset, int total, int expectedOffset, int expectedTotal) {
-    ListingPage<String> page = new ListingPage<>(1L, offset, total, ROWS);
+    ListingPage<String> page = new ListingPage<>(1L, ListingStatus.LIVE, offset, total, ROWS);
 
     assertEquals(expectedOffset, page.offset());
     assertEquals(expectedTotal, page.totalMatching());
@@ -39,31 +41,72 @@ class ListingPageTest {
 
   @Test
   void aPageRefusesARevisionThatWasNeverIssued() {
-    assertThrows(IllegalArgumentException.class, () -> new ListingPage<>(-1L, 0, 0, ROWS));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ListingPage<>(-1L, ListingStatus.LIVE, 0, 0, ROWS));
   }
 
   @Test
   void aPageRefusesToBeBuiltWithoutRows() {
-    assertThrows(NullPointerException.class, () -> new ListingPage<String>(1L, 0, 0, null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new ListingPage<String>(1L, ListingStatus.LIVE, 0, 0, null));
+  }
+
+  /** A page with no reason on it could not tell a screen which kind of empty it was showing. */
+  @Test
+  void aPageRefusesToBeBuiltWithoutSayingWhyItHoldsWhatItHolds() {
+    assertThrows(NullPointerException.class, () -> new ListingPage<>(1L, null, 0, 0, ROWS));
   }
 
   @Test
-  void anEmptyPageIsWhatATerminalRunningNoNetworkAnswersWith() {
-    ListingPage<String> page = ListingPage.empty(4L);
+  void aPendingPageIsWhatAScreenHoldsBeforeAnythingHasAnsweredIt() {
+    ListingPage<String> page = ListingPage.pending(4L);
 
     assertEquals(4L, page.revision());
+    assertEquals(ListingStatus.PENDING, page.status());
     assertEquals(0, page.offset());
     assertEquals(0, page.totalMatching());
     assertTrue(page.isEmpty());
   }
 
   @Test
+  void anOfflinePageIsWhatATerminalRunningNoNetworkAnswersWith() {
+    ListingPage<String> page = ListingPage.offline(4L);
+
+    assertEquals(4L, page.revision());
+    assertEquals(ListingStatus.OFFLINE, page.status());
+    assertTrue(page.isEmpty());
+  }
+
+  @Test
   void theRowsAPageWasBuiltFromCannotBeChangedUnderIt() {
     List<ListingRow<String>> mutable = new ArrayList<>(ROWS);
-    ListingPage<String> page = new ListingPage<>(1L, 0, 2, mutable);
+    ListingPage<String> page = new ListingPage<>(1L, ListingStatus.LIVE, 0, 2, mutable);
 
     mutable.clear();
 
     assertEquals(2, page.size());
+  }
+
+  /**
+   * A grid draws from where the player scrolled to, which is a position in the whole result rather
+   * than a position in whichever page happens to be in hand.
+   */
+  @Test
+  void aRowIsFoundByWhereItSitsInTheWholeResultRatherThanInThePage() {
+    ListingPage<String> page = new ListingPage<>(1L, ListingStatus.LIVE, 20, 500, ROWS);
+
+    assertEquals("a", page.at(20).variant());
+    assertEquals("b", page.at(21).variant());
+  }
+
+  @DisplayName("a position this page does not cover is a blank cell rather than a wrong one")
+  @ParameterizedTest(name = "position {0}")
+  @CsvSource({"0", "19", "22", "500", "-1"})
+  void aPositionOutsideThePageIsAnsweredWithNothing(int index) {
+    ListingPage<String> page = new ListingPage<>(1L, ListingStatus.LIVE, 20, 500, ROWS);
+
+    assertNull(page.at(index));
   }
 }

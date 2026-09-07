@@ -40,8 +40,9 @@ public final class NetworkListing {
     final List<NetworkIndexEntry<V>> visible = window.sliceOf(matching);
     final List<ListingRow<V>> rows = new ArrayList<>(visible.size());
     for (final NetworkIndexEntry<V> entry : visible) {
-      rows.add(new ListingRow<>(entry.variant(), entry.totalCount()));
+      rows.add(new ListingRow<>(entry.variant(), entry.totalCount(), entry.providerCount()));
     }
-    return new ListingPage<>(revision, window.offset(), matching.size(), rows);
+    final ListingStatus status = ListingStatus.of(index.entries().isEmpty(), !matching.isEmpty());
+    return new ListingPage<>(revision, status, window.offset(), matching.size(), rows);
   }
 }
