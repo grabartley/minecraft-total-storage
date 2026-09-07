@@ -15,7 +15,7 @@ There is also a question of what strength means for a query of several terms. Ev
 
 Search results are ranked on the server, between filtering and paging. Rows are ordered by how strongly they answered the query: the whole string, then a prefix, then a substring, then a subsequence.
 
-Acceptance and ranking read the same strength. Whether a row matches is whether its strength is anything other than none, so a row cannot be accepted under one rule and ordered under another that disagrees.
+Acceptance and ranking read the same strength. Whether a row matches is whether its strength is anything other than none, so a row cannot be accepted under one rule and ordered under another that disagrees, and one pass over the index answers both.
 
 A query of several name terms is ranked by its weakest term. Rows of equal strength keep the index's own order, which is by registry identifier.
 
@@ -27,8 +27,8 @@ Typing the start of a name puts that name first, whatever page it would otherwis
 
 Ties keeping index order is what makes the grid stable while somebody types. A character that narrows nothing leaves the rows where they were rather than reshuffling equals, so the item a player is reaching for does not move out from under the cursor.
 
-Accepted drawback: this refines ADR 0013, which said the grid would do the ordering. It does not change how a query is accepted, only where the order of what it accepted is decided.
+Narrowing and ordering are one pass over the index rather than two. Reading an item as plain data means reaching for the registry, and a search that decided membership and then decided position would pay that twice for every row on every keystroke.
 
-Accepted drawback: an item's flattened form is read twice per search, once to filter and once to rank. Ranking only reads the rows that survived the filter, which is the small set, and only when the query carries text to rank by.
+Accepted drawback: this refines ADR 0013, which said the grid would do the ordering. It does not change how a query is accepted, only where the order of what it accepted is decided, and that record carries a pointer here.
 
 Accepted drawback: ranking is by match strength alone. How much of a thing the network holds does not lift it, so a stack of one exact match still outranks a thousand of a fuzzy one. That is the right answer for a search box and the wrong one for a player who wanted the big pile, and the sort control is where that preference will live.

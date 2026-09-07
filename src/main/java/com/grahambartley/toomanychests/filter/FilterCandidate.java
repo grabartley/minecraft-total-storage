@@ -14,7 +14,6 @@ import java.util.Set;
  * @param tags the tags the item is filed under, preset and custom alike
  */
 public record FilterCandidate(String identifier, String displayName, Set<String> tags) {
-  private static final char NAMESPACE_SEPARATOR = ':';
   private static final String DEFAULT_NAMESPACE = "minecraft";
 
   public FilterCandidate {
@@ -29,13 +28,13 @@ public record FilterCandidate(String identifier, String displayName, Set<String>
 
   /** The mod the item came from, which is what the {@code @} search prefix filters on. */
   public String modId() {
-    final int separator = identifier.indexOf(NAMESPACE_SEPARATOR);
+    final int separator = identifier.indexOf(FilterText.NAMESPACE_SEPARATOR);
     return separator < 0 ? DEFAULT_NAMESPACE : identifier.substring(0, separator);
   }
 
   /** The identifier without its namespace, so a bare name search still finds vanilla items. */
   public String path() {
-    final int separator = identifier.indexOf(NAMESPACE_SEPARATOR);
+    final int separator = identifier.indexOf(FilterText.NAMESPACE_SEPARATOR);
     return separator < 0 ? identifier : identifier.substring(separator + 1);
   }
 

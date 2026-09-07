@@ -6,11 +6,17 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Answers whether an item belongs in the player's current view, as a pure decision over plain data.
+ * Answers how well an item belongs in the player's current view, as a pure decision over plain
+ * data.
  *
  * <p>Per ADR 0009 this runs on the server against the live index, because filtering on the client
  * would mean sending every client the whole network, which pagination exists to avoid. ADR 0013
- * covers how the terms of a query combine and why acceptance stops short of ranking.
+ * covers how the terms of a query combine, and ADR 0028 why one answer serves both whether a row
+ * belongs and where it is shown.
+ *
+ * <p>Whether a row belongs is whether its strength is anything other than none. Asking the two
+ * questions separately would mean evaluating the same query twice per row and leaving room for the
+ * answers to disagree.
  */
 public final class FilterEvaluator {
   private FilterEvaluator() {}
@@ -21,8 +27,32 @@ public final class FilterEvaluator {
     if (filter.isEmpty()) {
       return true;
     }
-    return filter.combinationMode().matches(candidate.tags(), filter.activeTags())
-        && matchesSearch(candidate, filter.query());
+    return strengthOf(candidate, filter).isMatch();
+  }
+
+  /**
+   * How well an item answers the whole view, {@link MatchStrength#NONE} when it does not belong in
+   * it at all.
+   *
+   * <p>The tags and the mod are gates rather than grades: an item either carries them or does not,
+   * so passing them leaves the typed text deciding how close the row is.
+   */
+  public static MatchStrength strengthOf(FilterCandidate candidate, ItemFilter filter) {
+    Objects.requireNonNull(candidate, "candidate");
+    Objects.requireNonNull(filter, "filter");
+    if (!filter.combinationMode().matches(candidate.tags(), filter.activeTags())) {
+      return MatchStrength.NONE;
+    }
+    final SearchQuery query = filter.query();
+    for (final String term : query.tagTerms()) {
+      if (!matchesAnyTag(candidate.tags(), term)) {
+        return MatchStrength.NONE;
+      }
+    }
+    if (!matchesAnyModId(candidate.modId(), query.modIdTerms())) {
+      return MatchStrength.NONE;
+    }
+    return SearchRanking.of(candidate, query);
   }
 
   /** The accepted candidates, in the order they were given. */
@@ -41,32 +71,9 @@ public final class FilterEvaluator {
     return List.copyOf(accepted);
   }
 
-  private static boolean matchesSearch(FilterCandidate candidate, SearchQuery query) {
-    for (final String term : query.nameTerms()) {
-      if (!matchesName(candidate, term)) {
-        return false;
-      }
-    }
-    for (final String term : query.tagTerms()) {
-      if (!matchesAnyTag(candidate.tags(), term)) {
-        return false;
-      }
-    }
-    return matchesAnyModId(candidate.modId(), query.modIdTerms());
-  }
-
-  /**
-   * Namespaced terms match literally, bare terms match fuzzily. See ADR 0013. Read from the same
-   * strength the results are ranked by, so a row cannot be accepted under one rule and ordered
-   * under another.
-   */
-  private static boolean matchesName(FilterCandidate candidate, String term) {
-    return SearchRanking.ofTerm(candidate, term).isMatch();
-  }
-
   private static boolean matchesAnyTag(Set<String> tags, String term) {
     for (final String tag : tags) {
-      if (FuzzyNameMatcher.matches(tag, term)) {
+      if (MatchStrength.of(tag, term).isMatch()) {
         return true;
       }
     }
@@ -78,7 +85,7 @@ public final class FilterEvaluator {
       return true;
     }
     for (final String term : terms) {
-      if (FuzzyNameMatcher.matches(modId, term)) {
+      if (MatchStrength.of(modId, term).isMatch()) {
         return true;
       }
     }

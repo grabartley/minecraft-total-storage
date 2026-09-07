@@ -13,8 +13,6 @@ import java.util.Objects;
  * really is, and averaging it away would rank a row above one that answered both terms outright.
  */
 public final class SearchRanking {
-  private static final char NAMESPACE_SEPARATOR = ':';
-
   private SearchRanking() {}
 
   /**
@@ -41,7 +39,7 @@ public final class SearchRanking {
    */
   public static MatchStrength ofTerm(FilterCandidate candidate, String term) {
     Objects.requireNonNull(candidate, "candidate");
-    if (term != null && term.indexOf(NAMESPACE_SEPARATOR) >= 0) {
+    if (FilterText.hasNamespace(term)) {
       return MatchStrength.literal(candidate.identifier(), term);
     }
     return MatchStrength.best(

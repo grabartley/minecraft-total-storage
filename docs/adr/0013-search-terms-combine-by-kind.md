@@ -1,7 +1,14 @@
 # ADR 0013: Search terms combine by kind
 
-- **Status:** Accepted
+- **Status:** Accepted, refined in part by [ADR 0028](0028-results-are-ranked-before-they-are-paged.md)
 - **Date:** 2026-08-22
+
+> ADR 0028 keeps the rules below for what a query accepts and changes only who orders what it
+> accepted: the server, between narrowing and paging, rather than the terminal grid. Acceptance is
+> now read from the same match strength the ordering uses, so this record's "the evaluator answers
+> only whether a row belongs" holds as behaviour while the sentences below about the grid ordering
+> the results, and about the evaluator being reusable without a notion of relevance, are answered
+> there instead.
 
 ## Context
 

@@ -90,10 +90,12 @@ public final class TerminalScreenLayout {
   public static final int SEARCH_WIDTH = INSET_WIDTH;
 
   /**
-   * Where the text inside the search box lives, which is also the area that takes a click.
+   * Where the text inside the search box lives.
    *
-   * <p>A line of text is eight pixels tall, so it is centred in the box by the two pixels the
-   * border does not claim rather than by halving the box and rounding.
+   * <p>A line of text is eight pixels tall and the box is twelve, so a two pixel margin centres it.
+   * That is thinner than the sprite's nine-slice border, which is deliberate: the border a player
+   * can see is the outer two pixels of it, and clearing the whole slice instead would leave no room
+   * for the line at all.
    */
   public static final int SEARCH_TEXT_X = SEARCH_X + SEARCH_BORDER;
 

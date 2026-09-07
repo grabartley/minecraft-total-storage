@@ -21,7 +21,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import org.junit.jupiter.api.Test;
 
-class NetworkIndexFilterTest {
+class NetworkIndexSearchTest {
   private static final StorageOrigin ORIGIN =
       new BlockStorageOrigin(
           RegistryKey.of(RegistryKeys.WORLD, Identifier.of("minecraft", "overworld")),
@@ -36,6 +36,16 @@ class NetworkIndexFilterTest {
 
   private static final Function<String, FilterCandidate> TO_CANDIDATE = CANDIDATES::get;
 
+  private static final Map<String, FilterCandidate> CHEST_CANDIDATES =
+      Map.of(
+          "cherry_chest_boat",
+              new FilterCandidate(
+                  "minecraft:cherry_chest_boat", "Cherry Boat with Chest", Set.of("wood")),
+          "chest", new FilterCandidate("minecraft:chest", "Chest", Set.of("wood")),
+          "chest_minecart",
+              new FilterCandidate("minecraft:chest_minecart", "Minecart with Chest", Set.of()),
+          "ender_chest", new FilterCandidate("minecraft:ender_chest", "Ender Chest", Set.of()));
+
   private static NetworkIndex<String> index() {
     return new NetworkIndexBuilder<String>()
         .add("cobblestone", 300L, ORIGIN)
@@ -45,14 +55,50 @@ class NetworkIndexFilterTest {
         .build(NetworkIndexOrdering.byKey(Function.identity()));
   }
 
-  private static List<String> variantsMatching(ItemFilter filter) {
-    return NetworkIndexFilter.apply(index(), TO_CANDIDATE, filter).stream()
+  /** Named so what ranking rearranged is visible against the order the index built. */
+  private static NetworkIndex<String> chests() {
+    return new NetworkIndexBuilder<String>()
+        .add("cherry_chest_boat", 1L, ORIGIN)
+        .add("chest", 12L, ORIGIN)
+        .add("chest_minecart", 1L, ORIGIN)
+        .add("ender_chest", 2L, ORIGIN)
+        .build(NetworkIndexOrdering.byKey(Function.identity()));
+  }
+
+  private static List<String> chestsMatching(String search) {
+    return NetworkIndexSearch.matching(chests(), CHEST_CANDIDATES::get, ItemFilter.ofSearch(search))
+        .stream()
         .map(NetworkIndexEntry::variant)
         .toList();
   }
 
+  private static List<String> variantsMatching(ItemFilter filter) {
+    return NetworkIndexSearch.matching(index(), TO_CANDIDATE, filter).stream()
+        .map(NetworkIndexEntry::variant)
+        .toList();
+  }
+
+  /** Exact, then prefix, then the two substring matches in the order the index gave them. */
   @Test
-  void filteringKeepsIndexOrderRatherThanMatchOrder() {
+  void theClosestAnswersComeFirstAndEqualOnesKeepIndexOrder() {
+    assertEquals(
+        List.of("chest", "chest_minecart", "cherry_chest_boat", "ender_chest"),
+        chestsMatching("chest"));
+  }
+
+  /** A tag or a mod says whether a row belongs, not how well it fits, so nothing is reordered. */
+  @Test
+  void aQueryWithNoTextToRankLeavesTheIndexOrderAlone() {
+    assertEquals(List.of("cherry_chest_boat", "chest"), chestsMatching("#wood @minecraft"));
+  }
+
+  @Test
+  void aPrefixOfTheIdentifierOutranksASubstringOfTheDisplayName() {
+    assertEquals(List.of("chest_minecart", "cherry_chest_boat"), chestsMatching("chest_"));
+  }
+
+  @Test
+  void narrowingByTagKeepsIndexOrderRatherThanMatchOrder() {
     assertEquals(
         List.of("cogwheel", "dark_oak_chest"),
         variantsMatching(ItemFilter.ofTags(TagCombinationMode.OR, Set.of("wood"))));
@@ -67,7 +113,7 @@ class NetworkIndexFilterTest {
   void anEmptyFilterReturnsTheIndexUntouched() {
     NetworkIndex<String> index = index();
 
-    assertSame(index.entries(), NetworkIndexFilter.apply(index, TO_CANDIDATE, ItemFilter.NONE));
+    assertSame(index.entries(), NetworkIndexSearch.matching(index, TO_CANDIDATE, ItemFilter.NONE));
   }
 
   @Test
@@ -78,7 +124,7 @@ class NetworkIndexFilterTest {
   @Test
   void aggregatedCountsSurviveFiltering() {
     List<NetworkIndexEntry<String>> matches =
-        NetworkIndexFilter.apply(
+        NetworkIndexSearch.matching(
             index(), TO_CANDIDATE, ItemFilter.ofTags(TagCombinationMode.AND, Set.of("stone")));
 
     assertEquals(1, matches.size());
@@ -89,7 +135,7 @@ class NetworkIndexFilterTest {
   @Test
   void anEmptyIndexFiltersToNothing() {
     assertTrue(
-        NetworkIndexFilter.apply(
+        NetworkIndexSearch.matching(
                 NetworkIndex.<String>empty(), TO_CANDIDATE, ItemFilter.ofSearch("iron"))
             .isEmpty());
   }
@@ -98,10 +144,11 @@ class NetworkIndexFilterTest {
   void nullArgumentsAreRejectedRatherThanSilentlyMatching() {
     assertThrows(
         NullPointerException.class,
-        () -> NetworkIndexFilter.apply(null, TO_CANDIDATE, ItemFilter.NONE));
+        () -> NetworkIndexSearch.matching(null, TO_CANDIDATE, ItemFilter.NONE));
     assertThrows(
-        NullPointerException.class, () -> NetworkIndexFilter.apply(index(), null, ItemFilter.NONE));
+        NullPointerException.class,
+        () -> NetworkIndexSearch.matching(index(), null, ItemFilter.NONE));
     assertThrows(
-        NullPointerException.class, () -> NetworkIndexFilter.apply(index(), TO_CANDIDATE, null));
+        NullPointerException.class, () -> NetworkIndexSearch.matching(index(), TO_CANDIDATE, null));
   }
 }

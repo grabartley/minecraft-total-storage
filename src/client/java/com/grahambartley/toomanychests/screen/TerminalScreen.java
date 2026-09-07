@@ -4,7 +4,6 @@ import com.grahambartley.toomanychests.TooManyChests;
 import com.grahambartley.toomanychests.filter.TagCombinationMode;
 import com.grahambartley.toomanychests.listing.ListingPage;
 import com.grahambartley.toomanychests.listing.ListingRow;
-import com.grahambartley.toomanychests.listing.ListingWindow;
 import com.grahambartley.toomanychests.listing.TerminalListingMirror;
 import com.grahambartley.toomanychests.network.ModNetworkingClient;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenHandler;
@@ -85,11 +84,10 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   private TerminalSearchBox search;
 
-  private int hovered = TerminalScreenLayout.NO_CELL;
-  private ListingWindow requested = ListingWindow.EMPTY;
+  /** What the server was last told this screen wants, so a scroll or a keystroke is noticed. */
+  private final ListingCriteria requested = new ListingCriteria();
 
-  /** The query the server was last told about, so a keystroke is noticed the frame it lands. */
-  private String requestedSearch = "";
+  private int hovered = TerminalScreenLayout.NO_CELL;
 
   public TerminalScreen(TerminalScreenHandler handler, PlayerInventory inventory, Text title) {
     super(handler, inventory, title);
@@ -139,12 +137,11 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
     pageThisFrame = TerminalListingMirror.page();
     placeholder = ListingPlaceholder.forStatus(pageThisFrame.status());
-    final boolean searchChanged = !search.text().equals(requestedSearch);
-    if (searchChanged) {
+    if (requested.isNewQuery(search.text())) {
       scroll.scrollTo(0);
     }
     scroll.fit(pageThisFrame.totalMatching());
-    if (searchChanged || !scroll.window().equals(requested)) {
+    if (requested.needsRequest(scroll.window(), search.text())) {
       requestVisibleRows();
     }
     hovered = hoveredCell(mouseX, mouseY);
@@ -256,10 +253,13 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   }
 
   private void requestVisibleRows() {
-    requested = scroll.window();
-    requestedSearch = search.text();
+    requested.requested(scroll.window(), search.text());
     ModNetworkingClient.sendListingRequest(
-        handler.syncId, requested, requestedSearch, TagCombinationMode.DEFAULT, Set.of());
+        handler.syncId,
+        requested.window(),
+        requested.search(),
+        TagCombinationMode.DEFAULT,
+        Set.of());
   }
 
   /**
