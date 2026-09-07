@@ -28,7 +28,7 @@ The network is drawn as a grid of cells, each one an item and how much of that e
 
 Scroll the grid with the wheel or by dragging the scrollbar. Each scroll asks the server for the rows the grid is now showing, so what a terminal costs to page through is set by the size of the grid rather than by the size of the network.
 
-A grid with nothing in it says which nothing it means, because the empty cases are not the same problem. An empty network, a search that matched none of what is there, and a terminal whose network has gone are three different pictures and three different lines. The last one is how a screen tells you it has gone stale, which is what you see if the terminal loses power or is broken while you are looking at it.
+A grid with nothing in it says which nothing it means, because the empty cases are not the same problem. An empty network, a search that matched none of what is there, and a terminal whose network has gone each get their own line. A search that found nothing gets its own picture as well, a magnifier rather than a crate, so having nothing and finding nothing are told apart without reading a word. The last case is how a screen tells you it has gone stale, which is what you see if the terminal loses power or is broken while you are looking at it.
 
 Power, permission and distance are re-checked every tick the screen is up, not just when it opened. Cutting the terminal's power, breaking it, losing access to it, walking away from it, or dying all close the screen straight away.
 

@@ -110,7 +110,7 @@ class TerminalScrollbarTest {
   }
 
   @Test
-  void aScrollbarWithNoTrackIsRefusedRatherThanDividedBy() {
+  void aScrollbarWithNothingToScrollIsRefused() {
     assertThrows(NullPointerException.class, () -> new TerminalScrollbar(null, TRACK));
   }
 

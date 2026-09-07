@@ -74,7 +74,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
    * again partway through would let the chassis, the cells and the tooltip disagree about what is
    * on screen.
    */
-  private ListingPage<ItemVariant> frame = ListingPage.pending(0L);
+  private ListingPage<ItemVariant> pageThisFrame = ListingPage.pending(0L);
 
   private int hovered = TerminalScreenLayout.NO_CELL;
   private ListingWindow requested = ListingWindow.EMPTY;
@@ -120,8 +120,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
    */
   @Override
   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-    frame = TerminalListingMirror.page();
-    scroll.fit(frame.totalMatching());
+    pageThisFrame = TerminalListingMirror.page();
+    scroll.fit(pageThisFrame.totalMatching());
     if (!scroll.window().equals(requested)) {
       requestVisibleRows();
     }
@@ -155,7 +155,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   @Override
   protected void drawForeground(DrawContext context, int mouseX, int mouseY) {
     super.drawForeground(context, mouseX, mouseY);
-    ListingPlaceholder.forStatus(frame.status())
+    ListingPlaceholder.forStatus(pageThisFrame.status())
         .ifPresent(placeholder -> drawPlaceholder(context, placeholder));
     drawRows(context);
   }
@@ -185,7 +185,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   @Override
   public boolean mouseDragged(
       double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-    if (button == LEFT_BUTTON && scrollbar.isDragging()) {
+    if (scrollbar.isDragging()) {
       scrollbar.dragTo(windowY(mouseY) - TerminalScreenLayout.SCROLLBAR_Y);
       return true;
     }
@@ -234,7 +234,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   }
 
   private void drawRows(DrawContext context) {
-    if (!frame.status().hasRows()) {
+    if (!pageThisFrame.status().hasRows()) {
       return;
     }
     for (int cell = 0; cell < TerminalScreenLayout.LISTING_PAGE_SIZE; cell++) {
@@ -300,7 +300,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   /** The cell under the pointer, or {@link TerminalScreenLayout#NO_CELL} when it holds no row. */
   private int hoveredCell(int mouseX, int mouseY) {
-    if (!frame.status().hasRows()) {
+    if (!pageThisFrame.status().hasRows()) {
       return TerminalScreenLayout.NO_CELL;
     }
     final int cell = TerminalScreenLayout.cellAt(windowX(mouseX), windowY(mouseY));
@@ -311,7 +311,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   }
 
   private ListingRow<ItemVariant> rowAt(int cell) {
-    return frame.at(scroll.firstIndex() + cell);
+    return pageThisFrame.at(scroll.firstIndex() + cell);
   }
 
   private int windowX(double mouseX) {
