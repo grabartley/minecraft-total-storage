@@ -51,13 +51,10 @@ public final class DepositDestinations {
     this.candidates = Objects.requireNonNull(candidates, "candidates");
   }
 
-  /** Every container that will take this variant, in the order routing wants them tried. */
-  public List<Storage<ItemVariant>> forVariant(
-      ServerWorld world, BlockPos terminal, NetworkMembership network, ItemVariant variant) {
-    return forVariants(world, terminal, network, List.of(variant)).getOrDefault(variant, List.of());
-  }
-
-  /** The same answer for several variants, reading the terminal and its containers once. */
+  /**
+   * Every container that will take each variant, in the order routing wants them tried, reading the
+   * terminal and its containers once for all of them.
+   */
   public Map<ItemVariant, List<Storage<ItemVariant>>> forVariants(
       ServerWorld world,
       BlockPos terminal,

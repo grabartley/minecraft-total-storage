@@ -74,22 +74,12 @@ public final class StorageTransfers {
       long maxAmount,
       TransactionContext transaction) {
     Objects.requireNonNull(sources, "sources");
-    Objects.requireNonNull(transaction, "transaction");
-    requireNotNegative(maxAmount);
-    long moved = 0L;
-    try (Transaction gathering = transaction.openNested()) {
-      for (final Storage<V> source : sources) {
-        if (moved >= maxAmount) {
-          break;
-        }
-        moved += move(source, to, resource, maxAmount - moved, gathering);
-      }
-      if (moved <= 0L) {
-        return 0L;
-      }
-      gathering.commit();
-      return moved;
-    }
+    Objects.requireNonNull(to, "to");
+    return across(
+        sources,
+        maxAmount,
+        transaction,
+        (source, remaining, nested) -> move(source, to, resource, remaining, nested));
   }
 
   /**
@@ -105,22 +95,11 @@ public final class StorageTransfers {
       TransactionContext transaction) {
     Objects.requireNonNull(from, "from");
     Objects.requireNonNull(destinations, "destinations");
-    Objects.requireNonNull(transaction, "transaction");
-    requireNotNegative(maxAmount);
-    long moved = 0L;
-    try (Transaction spreading = transaction.openNested()) {
-      for (final Storage<V> destination : destinations) {
-        if (moved >= maxAmount) {
-          break;
-        }
-        moved += move(from, destination, resource, maxAmount - moved, spreading);
-      }
-      if (moved <= 0L) {
-        return 0L;
-      }
-      spreading.commit();
-      return moved;
-    }
+    return across(
+        destinations,
+        maxAmount,
+        transaction,
+        (destination, remaining, nested) -> move(from, destination, resource, remaining, nested));
   }
 
   /** Collects the whole amount across containers, or leaves every one of them untouched. */
@@ -139,6 +118,37 @@ public final class StorageTransfers {
       gathering.commit();
       return true;
     }
+  }
+
+  /**
+   * Visits containers in the order given until the request is met, and commits the whole visit or
+   * none of it. Gathering and distributing differ only in which end of each hop is fixed, so they
+   * share this: a partial run committing on its own is the failure both of them exist to prevent.
+   */
+  private static <V> long across(
+      List<? extends Storage<V>> hops, long maxAmount, TransactionContext transaction, Hop<V> hop) {
+    Objects.requireNonNull(transaction, "transaction");
+    requireNotNegative(maxAmount);
+    long moved = 0L;
+    try (Transaction spanning = transaction.openNested()) {
+      for (final Storage<V> next : hops) {
+        if (moved >= maxAmount) {
+          break;
+        }
+        moved += hop.move(next, maxAmount - moved, spanning);
+      }
+      if (moved <= 0L) {
+        return 0L;
+      }
+      spanning.commit();
+      return moved;
+    }
+  }
+
+  /** One hop of a multi-container move, with whichever end the caller holds fixed already bound. */
+  @FunctionalInterface
+  private interface Hop<V> {
+    long move(Storage<V> other, long remaining, TransactionContext transaction);
   }
 
   private static void requireNotNegative(long amount) {

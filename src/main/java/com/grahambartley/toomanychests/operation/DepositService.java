@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
@@ -54,11 +53,7 @@ public final class DepositService {
     if (context == null) {
       return report(player, DepositOutcome.refused());
     }
-    return report(
-        player,
-        sourceFor(context, payload)
-            .map(source -> give(context, List.of(source), payload.amount()))
-            .orElseGet(DepositOutcome::slotLocked));
+    return report(player, take(context, payload));
   }
 
   /** The player's whole inventory, minus everything a lock or a role puts out of reach. */
@@ -69,7 +64,7 @@ public final class DepositService {
       return report(player, DepositOutcome.refused());
     }
     return report(
-        player, give(context, PlayerSlots.unlocked(player), DepositRequestPayload.MAX_AMOUNT));
+        player, give(context, PlayerSlots.unlocked(player), ItemStackLimits.MAX_STACK_SIZE));
   }
 
   /**
@@ -133,13 +128,26 @@ public final class DepositService {
     return List.copyOf(offers);
   }
 
-  private static Optional<SingleSlotStorage<ItemVariant>> sourceFor(
-      TerminalOperationContext context, DepositRequestPayload payload) {
+  /**
+   * A slot that is locked and a slot that does not exist are answered differently. The first is a
+   * lock doing its job and the player is told so; the second could only have come from a forged
+   * request, and telling its sender that a slot they invented is locked would be asserting
+   * something untrue about the player's inventory.
+   */
+  private DepositOutcome take(TerminalOperationContext context, DepositRequestPayload payload) {
+    if (payload.source() == DepositSource.CURSOR) {
+      return give(context, List.of(new CursorStorage(context.handler())), payload.amount());
+    }
+    if (!LockedSlots.isValidSlot(payload.slot())) {
+      return DepositOutcome.refused();
+    }
     final LockedSlots locks = LockedSlotsAttachment.get(context.player());
-    return switch (payload.source()) {
-      case CURSOR -> Optional.of(new CursorStorage(context.handler()));
-      case SLOT -> PlayerSlots.unlockedSlot(context.player(), locks, payload.slot());
-    };
+    if (locks.isLocked(payload.slot())) {
+      return DepositOutcome.slotLocked();
+    }
+    return PlayerSlots.unlockedSlot(context.player(), locks, payload.slot())
+        .map(source -> give(context, List.of(source), payload.amount()))
+        .orElseGet(DepositOutcome::refused);
   }
 
   /**

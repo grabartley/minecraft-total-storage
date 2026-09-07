@@ -32,6 +32,7 @@ public final class WithdrawSources {
 
   public List<Storage<ItemVariant>> holding(
       ServerWorld world, NetworkMembership network, ItemVariant variant) {
+    Objects.requireNonNull(world, "world");
     Objects.requireNonNull(network, "network");
     if (variant == null || variant.isBlank()) {
       return List.of();

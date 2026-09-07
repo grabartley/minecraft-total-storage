@@ -273,6 +273,56 @@ class TerminalScreenLayoutTest {
   }
 
   /**
+   * The text is a widget of its own, so what it covers has to stay inside the box drawn behind it.
+   */
+  @Test
+  void theSearchTextClearsTheBoxItIsWrittenInto() {
+    assertTrue(TerminalScreenLayout.SEARCH_TEXT_X >= TerminalScreenLayout.SEARCH_X);
+    assertTrue(TerminalScreenLayout.SEARCH_TEXT_Y >= TerminalScreenLayout.SEARCH_Y);
+    assertTrue(
+        TerminalScreenLayout.SEARCH_TEXT_X + TerminalScreenLayout.SEARCH_TEXT_WIDTH
+            <= TerminalScreenLayout.SEARCH_X + TerminalScreenLayout.SEARCH_WIDTH);
+    assertTrue(
+        TerminalScreenLayout.SEARCH_TEXT_Y + TerminalScreenLayout.SEARCH_TEXT_HEIGHT
+            <= TerminalScreenLayout.SEARCH_Y + TerminalScreenLayout.SEARCH_HEIGHT);
+    assertTrue(TerminalScreenLayout.SEARCH_TEXT_HEIGHT >= 8, "a line of text does not fit the box");
+  }
+
+  static Stream<Arguments> pointsOutsideTheSearchBox() {
+    final int right = TerminalScreenLayout.SEARCH_X + TerminalScreenLayout.SEARCH_WIDTH;
+    final int bottom = TerminalScreenLayout.SEARCH_Y + TerminalScreenLayout.SEARCH_HEIGHT;
+    return Stream.of(
+        Arguments.of(TerminalScreenLayout.SEARCH_X - 1, TerminalScreenLayout.SEARCH_Y),
+        Arguments.of(TerminalScreenLayout.SEARCH_X, TerminalScreenLayout.SEARCH_Y - 1),
+        Arguments.of(right, TerminalScreenLayout.SEARCH_Y),
+        Arguments.of(TerminalScreenLayout.SEARCH_X, bottom),
+        Arguments.of(TerminalScreenLayout.GRID_X, TerminalScreenLayout.GRID_Y));
+  }
+
+  @ParameterizedTest
+  @MethodSource("pointsOutsideTheSearchBox")
+  void aClickBesideTheSearchBoxIsNotOverIt(int windowX, int windowY) {
+    assertFalse(TerminalScreenLayout.isOverSearch(windowX, windowY));
+  }
+
+  /**
+   * The border counts, so a click that visibly lands on the control reaches the field inside it.
+   */
+  @Test
+  void aClickAnywhereOnTheSearchBoxIsOverIt() {
+    assertTrue(
+        TerminalScreenLayout.isOverSearch(
+            TerminalScreenLayout.SEARCH_X, TerminalScreenLayout.SEARCH_Y));
+    assertTrue(
+        TerminalScreenLayout.isOverSearch(
+            TerminalScreenLayout.SEARCH_TEXT_X, TerminalScreenLayout.SEARCH_TEXT_Y));
+    assertTrue(
+        TerminalScreenLayout.isOverSearch(
+            TerminalScreenLayout.SEARCH_X + TerminalScreenLayout.SEARCH_WIDTH - 1,
+            TerminalScreenLayout.SEARCH_Y + TerminalScreenLayout.SEARCH_HEIGHT - 1));
+  }
+
+  /**
    * A page is asked for one recess at a time, and a request for more rows than a page may carry is
    * clamped rather than refused. A recess grown past the cap would therefore ask for cells it is
    * never sent, and draw the difference as blanks.
