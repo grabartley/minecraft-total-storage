@@ -1,12 +1,10 @@
 package com.grahambartley.toomanychests.index;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Predicate;
 
 /**
  * The aggregated view of everything a terminal can reach: one row per variant, already ordered.
@@ -45,18 +43,6 @@ public final class NetworkIndex<V> {
   /** Every row, in the order the index was built with. */
   public List<NetworkIndexEntry<V>> entries() {
     return entries;
-  }
-
-  /** The rows a filter accepts, keeping index order. */
-  public List<NetworkIndexEntry<V>> matching(Predicate<NetworkIndexEntry<V>> predicate) {
-    Objects.requireNonNull(predicate, "predicate");
-    final List<NetworkIndexEntry<V>> matches = new ArrayList<>();
-    for (final NetworkIndexEntry<V> entry : entries) {
-      if (predicate.test(entry)) {
-        matches.add(entry);
-      }
-    }
-    return List.copyOf(matches);
   }
 
   public Optional<NetworkIndexEntry<V>> entry(V variant) {

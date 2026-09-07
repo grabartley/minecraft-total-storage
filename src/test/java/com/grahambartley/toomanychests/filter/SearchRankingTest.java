@@ -74,16 +74,17 @@ class SearchRankingTest {
     assertThrows(NullPointerException.class, () -> SearchRanking.ofTerm(null, "chest"));
   }
 
+  /**
+   * A gate the row fails answers {@link MatchStrength#NONE} rather than the grade its text earned,
+   * so a row kept out by a tag or a mod cannot be ordered as though it were in.
+   */
   @Test
-  void everyAcceptedRowCanBeRanked() {
-    final SearchQuery query = SearchQueryParser.parse("ch");
-    final ItemFilter filter = ItemFilter.ofSearch("ch");
-    for (final FilterCandidate candidate : TestCandidates.all()) {
-      final boolean accepted = FilterEvaluator.accepts(candidate, filter);
-      assertEquals(
-          accepted,
-          SearchRanking.of(candidate, query).isMatch(),
-          candidate.identifier() + " must be ranked exactly when it is accepted");
-    }
+  void aRowKeptOutByAGateIsNotGradedByItsText() {
+    final ItemFilter gated = ItemFilter.ofSearch("#storage @create ch");
+    assertEquals(MatchStrength.PREFIX, rankOf(CHEST, "ch"));
+    assertEquals(MatchStrength.NONE, FilterEvaluator.strengthOf(CHEST, gated));
+    assertEquals(
+        MatchStrength.PREFIX,
+        FilterEvaluator.strengthOf(CHEST, ItemFilter.ofSearch("#storage @minecraft ch")));
   }
 }

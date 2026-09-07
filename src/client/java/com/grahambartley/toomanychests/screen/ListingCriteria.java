@@ -33,16 +33,16 @@ public final class ListingCriteria {
 
   /** Whether what the screen wants differs from what it last asked for. */
   public boolean needsRequest(ListingWindow wantedWindow, String wantedSearch) {
-    return isNewQuery(wantedSearch) || !window.equals(wantedWindow(wantedWindow));
+    return isNewQuery(wantedSearch) || !window.equals(orEmpty(wantedWindow));
   }
 
   /** Records what has just been asked for, so the next frame compares against it. */
   public void requested(ListingWindow requestedWindow, String requestedSearch) {
-    window = wantedWindow(requestedWindow);
+    window = orEmpty(requestedWindow);
     search = normalised(requestedSearch);
   }
 
-  private static ListingWindow wantedWindow(ListingWindow wanted) {
+  private static ListingWindow orEmpty(ListingWindow wanted) {
     return wanted == null ? ListingWindow.EMPTY : wanted;
   }
 

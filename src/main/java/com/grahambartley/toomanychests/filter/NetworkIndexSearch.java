@@ -49,7 +49,7 @@ public final class NetworkIndexSearch {
     for (final Ranked<V> match : ranked) {
       ordered.add(match.entry());
     }
-    return ordered;
+    return List.copyOf(ordered);
   }
 
   private record Ranked<V>(NetworkIndexEntry<V> entry, MatchStrength strength) {}

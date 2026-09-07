@@ -37,7 +37,7 @@ public final class SearchRanking {
    * of its identifier. Per ADR 0013 the namespace is not searched, so a term carrying one is read
    * as naming an item outright and matched literally against the whole identifier.
    */
-  public static MatchStrength ofTerm(FilterCandidate candidate, String term) {
+  static MatchStrength ofTerm(FilterCandidate candidate, String term) {
     Objects.requireNonNull(candidate, "candidate");
     if (FilterText.hasNamespace(term)) {
       return MatchStrength.literal(candidate.identifier(), term);
