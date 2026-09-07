@@ -6,6 +6,7 @@ import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 /**
@@ -17,11 +18,17 @@ import net.minecraft.util.Identifier;
  *
  * <p>The text is not held here. The widget is the only copy of it, so the box a player is looking
  * at and the query a request carries cannot drift apart.
+ *
+ * <p>The hint is a suggestion rather than a placeholder, because vanilla draws a placeholder only
+ * while the field has no focus and this one takes focus the moment the terminal opens. A player
+ * would never see it, and an unlabelled box is just a rectangle.
  */
 public final class TerminalSearchBox {
   private static final Identifier BOX = Identifier.of(TooManyChests.MOD_ID, "search/box");
   private static final Identifier BOX_FOCUSED =
       Identifier.of(TooManyChests.MOD_ID, "search/box_focused");
+
+  private static final Text HINT = TerminalScreenText.of("search.hint");
 
   private final TextFieldWidget field;
 
@@ -41,8 +48,12 @@ public final class TerminalSearchBox {
             TerminalScreenText.of("search"));
     field.setDrawsBackground(false);
     field.setMaxLength(ListingRequestPayload.MAX_SEARCH_LENGTH);
-    field.setPlaceholder(TerminalScreenText.of("search.hint"));
+    field.setChangedListener(this::showHintWhileEmpty);
     field.setText(previous);
+  }
+
+  private void showHintWhileEmpty(String text) {
+    field.setSuggestion(text.isEmpty() ? HINT.getString() : null);
   }
 
   public TextFieldWidget widget() {
