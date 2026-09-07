@@ -3,6 +3,7 @@ package com.grahambartley.toomanychests.screen;
 import com.grahambartley.toomanychests.filter.TagCombinationMode;
 import com.grahambartley.toomanychests.listing.ListingPage;
 import com.grahambartley.toomanychests.listing.ListingRow;
+import com.grahambartley.toomanychests.listing.ListingStatus;
 import com.grahambartley.toomanychests.listing.TerminalListingMirror;
 import com.grahambartley.toomanychests.network.DepositRequestPayload;
 import com.grahambartley.toomanychests.network.ModNetworkingClient;
@@ -68,8 +69,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   /** The palette's mid glyph, which is what reads on the recess floor behind an empty grid. */
   private static final int PLACEHOLDER_COLOUR = 0x9AA3B3;
 
-  private static final int LEFT_BUTTON = GridClick.LEFT_BUTTON;
-
   private static final Identifier DEPOSIT_ALL_ICON = TerminalSprites.of("icon/deposit_all");
 
   private final ListingScroll scroll =
@@ -89,6 +88,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   private Optional<ListingPlaceholder> placeholder = Optional.empty();
 
   private TerminalSearchBox search;
+
+  private TerminalIconButton depositAll;
 
   private final WithdrawAmountPrompt prompt = new WithdrawAmountPrompt();
 
@@ -122,13 +123,14 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     super.init();
     search = new TerminalSearchBox(textRenderer, x, y, search == null ? "" : search.text());
     addDrawableChild(search.widget());
-    addDrawableChild(
+    depositAll =
         new TerminalIconButton(
             x + TerminalScreenLayout.TOOLBAR_X,
             y + TerminalScreenLayout.TOOLBAR_Y,
             DEPOSIT_ALL_ICON,
             TerminalScreenText.of("deposit_all"),
-            this::depositEverything));
+            this::depositEverything);
+    addDrawableChild(depositAll);
     setInitialFocus(search.widget());
     if (TerminalListingMirror.isShowing(handler.syncId)) {
       return;
@@ -159,6 +161,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     if (requested.needsRequest(scroll.window(), search.text())) {
       requestVisibleRows();
     }
+    depositAll.active = pageThisFrame.status() != ListingStatus.OFFLINE;
+    depositAll.visible = !prompt.isOpen();
     hovered = prompt.isOpen() ? TerminalScreenLayout.NO_CELL : hoveredCell(mouseX, mouseY);
     super.render(context, mouseX, mouseY, delta);
     if (prompt.isOpen()) {
@@ -221,13 +225,13 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
       prompt.close();
       return true;
     }
-    if (button == LEFT_BUTTON
+    if (button == GridClick.LEFT_BUTTON
         && TerminalScreenLayout.isOverSearch(windowX(mouseX), windowY(mouseY))) {
       setFocused(search.widget());
       search.widget().mouseClicked(mouseX, mouseY, button);
       return true;
     }
-    if (button == LEFT_BUTTON
+    if (button == GridClick.LEFT_BUTTON
         && TerminalScreenLayout.isOverScrollbar(windowX(mouseX), windowY(mouseY))
         && scrollbar.grab(windowY(mouseY) - TerminalScreenLayout.SCROLLBAR_Y)) {
       return true;
@@ -353,7 +357,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   @Override
   public boolean mouseReleased(double mouseX, double mouseY, int button) {
-    if (button == LEFT_BUTTON && scrollbar.isDragging()) {
+    if (button == GridClick.LEFT_BUTTON && scrollbar.isDragging()) {
       scrollbar.release();
       return true;
     }

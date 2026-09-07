@@ -16,6 +16,10 @@ import net.minecraft.util.Identifier;
  * cursor holds dirt. The slot index names the player's own inventory rather than the network, so
  * ADR 0009 still holds; it is validated against the lockable range before anything is read from it.
  *
+ * <p>An index outside that range is carried through as it arrived rather than clamped into it. A
+ * clamp would turn a request that should be refused into one acting on the first hotbar slot, which
+ * is a forged packet quietly reaching a real slot instead of reaching none.
+ *
  * <p>The amount is what the gesture asked for and is clamped to what the source really holds. A
  * whole-stack deposit sends the ceiling rather than a count read from a client-side stack, so a
  * stack that grew between the click and the packet is deposited whole.
@@ -34,7 +38,6 @@ public record DepositRequestPayload(int syncId, DepositSource source, int slot, 
 
   public DepositRequestPayload {
     source = source == null ? DepositSource.CURSOR : source;
-    slot = Math.max(0, slot);
     amount = Math.max(0, Math.min(MAX_AMOUNT, amount));
   }
 

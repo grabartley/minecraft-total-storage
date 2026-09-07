@@ -166,9 +166,9 @@ public final class WithdrawServiceGameTest implements FabricGameTest {
 
     WithdrawOutcome outcome = take(player, STACK, WithdrawDestination.CURSOR);
 
-    context.assertFalse(
-        outcome.result().movedAnything(),
-        "A broken container granted " + outcome.moved() + " diamonds");
+    context.assertTrue(
+        outcome.result() == WithdrawResult.NOTHING_AVAILABLE,
+        "A container that has gone leaves the network holding none of it, got " + outcome.result());
     context.assertTrue(
         NetworkOperationFixture.countCarried(player, Items.DIAMOND) == 0L,
         "The player was handed items from a container that no longer exists");
@@ -189,8 +189,9 @@ public final class WithdrawServiceGameTest implements FabricGameTest {
     WithdrawOutcome lost = take(second, STACK, WithdrawDestination.CURSOR);
 
     context.assertTrue(won.moved() == STACK, "The first player should have taken the stack");
-    context.assertFalse(
-        lost.result().movedAnything(), "The second player took " + lost.moved() + " as well");
+    context.assertTrue(
+        lost.result() == WithdrawResult.NOTHING_AVAILABLE,
+        "The loser of the race should find the network empty, got " + lost.result());
     context.assertTrue(
         NetworkOperationFixture.countIn(barrel, Items.DIAMOND) == 0L,
         "The barrel should be empty rather than owing items");

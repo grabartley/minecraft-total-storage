@@ -5,7 +5,6 @@ import com.grahambartley.toomanychests.lock.LockedSlotsAttachment;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.CombinedStorage;
@@ -56,16 +55,19 @@ public final class PlayerSlots {
   }
 
   /**
-   * One unlocked slot by its inventory index, or empty when that index is locked, out of range, or
-   * not a slot an automated operation may take from.
+   * One slot of the player's own inventory by its index.
+   *
+   * <p>Whether that slot may be used is the caller's decision, because only the caller knows what
+   * to say when it may not: a locked slot and an index no slot has are refused for different
+   * reasons and a player told the wrong one learns to distrust their locks. An index outside the
+   * range is a contract breach rather than a case to handle, since every caller has already decided
+   * what to do about one.
    */
-  public static Optional<SingleSlotStorage<ItemVariant>> unlockedSlot(
-      PlayerEntity player, LockedSlots locks, int index) {
+  public static SingleSlotStorage<ItemVariant> slotAt(PlayerEntity player, int index) {
     Objects.requireNonNull(player, "player");
-    final LockedSlots locked = locks == null ? LockedSlots.empty() : locks;
-    if (!LockedSlots.isValidSlot(index) || locked.isLocked(index)) {
-      return Optional.empty();
+    if (!LockedSlots.isValidSlot(index)) {
+      throw new IndexOutOfBoundsException("no lockable player slot at index " + index);
     }
-    return Optional.of(InventoryStorage.of(player.getInventory(), null).getSlot(index));
+    return InventoryStorage.of(player.getInventory(), null).getSlot(index);
   }
 }

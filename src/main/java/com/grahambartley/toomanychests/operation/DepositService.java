@@ -145,9 +145,8 @@ public final class DepositService {
     if (locks.isLocked(payload.slot())) {
       return DepositOutcome.slotLocked();
     }
-    return PlayerSlots.unlockedSlot(context.player(), locks, payload.slot())
-        .map(source -> give(context, List.of(source), payload.amount()))
-        .orElseGet(DepositOutcome::refused);
+    return give(
+        context, List.of(PlayerSlots.slotAt(context.player(), payload.slot())), payload.amount());
   }
 
   /**

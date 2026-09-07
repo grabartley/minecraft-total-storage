@@ -119,13 +119,20 @@ class TerminalScreenLayoutTest {
         TerminalScreenLayout.y(TerminalScreenLayout.HOTBAR_START));
   }
 
+  /**
+   * Under the recess rather than under the window: the toolbar column widens the window without
+   * widening the grid, and the grid is what the eye compares the inventory against.
+   */
   @Test
-  void theInventoryIsCentredInTheWindow() {
+  void theInventoryIsCentredUnderTheRecess() {
     int inventoryWidth = TerminalScreenLayout.COLUMNS * TerminalScreenLayout.SLOT_SIZE;
+    int leftMargin = TerminalScreenLayout.x(0) - TerminalScreenLayout.INSET_X;
     int rightMargin =
-        TerminalScreenLayout.WINDOW_WIDTH - (TerminalScreenLayout.x(0) + inventoryWidth);
+        TerminalScreenLayout.INSET_X
+            + TerminalScreenLayout.INSET_WIDTH
+            - (TerminalScreenLayout.x(0) + inventoryWidth);
 
-    assertEquals(TerminalScreenLayout.x(0), rightMargin);
+    assertEquals(leftMargin, rightMargin);
   }
 
   /** The recess the listing is drawn into must not run over the label under it. */

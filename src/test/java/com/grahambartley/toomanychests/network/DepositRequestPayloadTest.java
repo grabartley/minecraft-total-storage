@@ -50,11 +50,18 @@ class DepositRequestPayloadTest {
 
   @ParameterizedTest
   @ValueSource(ints = {-1, Integer.MIN_VALUE})
-  void aNegativeSlotOrAmountBecomesZeroRatherThanReachingAnArray(int wrong) {
-    DepositRequestPayload payload = new DepositRequestPayload(1, DepositSource.SLOT, wrong, wrong);
+  void anAmountBelowNothingBecomesNothing(int wrong) {
+    assertEquals(0, new DepositRequestPayload(1, DepositSource.SLOT, 0, wrong).amount());
+  }
 
-    assertEquals(0, payload.slot());
-    assertEquals(0, payload.amount());
+  /**
+   * An index no slot has is carried as it arrived, so the server refuses it. Clamping would turn a
+   * forged request into one acting on the player's first hotbar slot.
+   */
+  @ParameterizedTest
+  @ValueSource(ints = {-1, Integer.MIN_VALUE, 36, 40})
+  void anIndexOutsideTheLockableRangeIsCarriedRatherThanClampedIntoIt(int outside) {
+    assertEquals(outside, new DepositRequestPayload(1, DepositSource.SLOT, outside, 1).slot());
   }
 
   @Test
