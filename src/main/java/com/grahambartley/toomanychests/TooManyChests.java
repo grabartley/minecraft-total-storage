@@ -4,6 +4,7 @@ import com.grahambartley.toomanychests.access.TerminalAccessControl;
 import com.grahambartley.toomanychests.command.TooManyChestsCommand;
 import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.lifecycle.ContainerLifecycle;
+import com.grahambartley.toomanychests.lifecycle.NextTick;
 import com.grahambartley.toomanychests.lifecycle.ServerThread;
 import com.grahambartley.toomanychests.lock.LockedSlotsAttachment;
 import com.grahambartley.toomanychests.mutation.ContainerMutations;
@@ -32,6 +33,7 @@ public class TooManyChests implements ModInitializer {
     ModNetworking.register();
     TooManyChestsCommand.register();
     ServerThread.register();
+    NextTick.register();
     ContainerLifecycle.register();
     TerminalLifecycle.register();
     TerminalAccessControl.register();
@@ -40,6 +42,7 @@ public class TooManyChests implements ModInitializer {
     ServerLifecycleEvents.SERVER_STARTING.register(ServerConfigService::loadFromWorld);
     ServerLifecycleEvents.SERVER_STOPPED.register(
         server -> {
+          NextTick.queue().clear();
           TerminalNetworks.power().shutDownAll();
           TerminalAccessControl.viewers().clear();
           ContainerMutations.registry().clear();
