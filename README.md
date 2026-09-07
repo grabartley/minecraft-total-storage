@@ -48,7 +48,7 @@ Taking more than the network holds takes everything there is and tells you what 
 
 Shift-click a stack in your inventory and the network takes it. Pick a stack up and left click the grid to hand over all of it, or right click to hand over one. The deposit all button beside the grid empties your whole inventory in one press.
 
-**Locked slots, armour and the offhand are never deposited**, by any of these, including deposit all. That is the whole reason locking exists, and it is enforced on the server rather than filtered on the client, so a modified client cannot empty a slot you pinned. Everything else about your own inventory behaves exactly as it does in any container: dragging, splitting, and hotbar swapping are untouched. See [ADR 0029](docs/adr/0029-the-grid-takes-clicks-like-a-container-does.md).
+**Locked slots, armour and the offhand are never deposited**, by any of these, including deposit all. That is the whole reason locking exists, and it is enforced on the server rather than filtered on the client, so a modified client cannot empty a slot you pinned. Shift-click is the one gesture the terminal takes over; picking up, splitting, dragging, and swapping to the hotbar with a number key all behave exactly as they do in any container. See [ADR 0029](docs/adr/0029-the-grid-takes-clicks-like-a-container-does.md).
 
 Where each item lands is the network's decision, made per item against the roles you gave your containers. A `Filtered` container that has declared the item takes it first, and one that already holds it is preferred over one that does not, so like items gather rather than scatter. `General` containers take what is left. `Excluded` containers are never written to, under any configuration.
 

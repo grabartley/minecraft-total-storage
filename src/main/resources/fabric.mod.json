@@ -56,6 +56,7 @@
       "com.grahambartley.toomanychests.gametest.TerminalListingBroadcastGameTest",
       "com.grahambartley.toomanychests.gametest.ListingPayloadGameTest",
       "com.grahambartley.toomanychests.gametest.LiveStoragesGameTest",
+      "com.grahambartley.toomanychests.gametest.PlayerSlotsGameTest",
       "com.grahambartley.toomanychests.gametest.TerminalOperationGateGameTest",
       "com.grahambartley.toomanychests.gametest.WithdrawServiceGameTest",
       "com.grahambartley.toomanychests.gametest.DepositServiceGameTest"

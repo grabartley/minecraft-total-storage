@@ -27,7 +27,7 @@ import net.minecraft.util.Identifier;
 public record DepositRequestPayload(int syncId, DepositSource source, int slot, int amount)
     implements CustomPayload {
 
-  /** Both sources hold at most one stack, so no honest request asks for more than one. */
+  /** Both sources hold one stack at most, so no honest request asks for more than a stack. */
   public static final int MAX_AMOUNT = ItemStackLimits.MAX_STACK_SIZE;
 
   public static final CustomPayload.Id<DepositRequestPayload> ID =

@@ -132,6 +132,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
             this::depositEverything);
     addDrawableChild(depositAll);
     setInitialFocus(search.widget());
+    updateToolbar();
     if (TerminalListingMirror.isShowing(handler.syncId)) {
       return;
     }
@@ -161,8 +162,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     if (requested.needsRequest(scroll.window(), search.text())) {
       requestVisibleRows();
     }
-    depositAll.active = pageThisFrame.status() != ListingStatus.OFFLINE;
-    depositAll.visible = !prompt.isOpen();
+    updateToolbar();
     hovered = prompt.isOpen() ? TerminalScreenLayout.NO_CELL : hoveredCell(mouseX, mouseY);
     super.render(context, mouseX, mouseY, delta);
     if (prompt.isOpen()) {
@@ -205,6 +205,9 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   @Override
   public boolean mouseScrolled(
       double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+    if (prompt.isOpen()) {
+      return true;
+    }
     if (verticalAmount != 0.0
         && scroll.overflows()
         && TerminalScreenLayout.isOverListing(windowX(mouseX), windowY(mouseY))) {
@@ -284,6 +287,15 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     super.onMouseClick(slot, slotId, button, actionType);
   }
 
+  /**
+   * The button says what the terminal can currently do. It steps aside entirely for the amount
+   * prompt, because a widget drawn over a modal panel would take its tooltip with it.
+   */
+  private void updateToolbar() {
+    depositAll.active = TerminalListingMirror.page().status() != ListingStatus.OFFLINE;
+    depositAll.visible = !prompt.isOpen();
+  }
+
   private void depositEverything() {
     ModNetworkingClient.sendDepositAllRequest(handler.syncId);
   }
@@ -304,6 +316,9 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   @Override
   public boolean mouseDragged(
       double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    if (prompt.isOpen()) {
+      return true;
+    }
     if (scrollbar.isDragging()) {
       scrollbar.dragTo(windowY(mouseY) - TerminalScreenLayout.SCROLLBAR_Y);
       return true;

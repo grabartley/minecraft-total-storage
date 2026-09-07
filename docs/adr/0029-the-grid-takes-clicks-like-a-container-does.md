@@ -24,7 +24,7 @@ The grid follows the rule every vanilla container already follows: **a full curs
 
 Depositing over the grid ignores which cell the pointer is over, because a network has no slot to drop into.
 
-Everything else about the player's own inventory behaves exactly as vanilla, including dragging, hotbar swapping, and moving stacks between the hotbar and the backpack. Deposit all is a button, not a gesture.
+Shift-click is the one vanilla gesture reassigned. Everything else about the player's own inventory behaves exactly as vanilla: picking up, splitting, dragging, and swapping to the hotbar with a number key. Moving a stack between the hotbar and the backpack is done by picking it up and putting it down, since shift-click now hands it to the network instead. Deposit all is a button, not a gesture.
 
 ## Consequences
 

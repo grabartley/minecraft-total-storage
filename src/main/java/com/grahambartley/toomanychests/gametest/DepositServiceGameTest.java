@@ -335,6 +335,44 @@ public final class DepositServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
+  /**
+   * A forged index is refused rather than clamped onto a real slot. Armour and the offhand are
+   * named by their own inventory indices here, because those are the ones a client would reach for
+   * if the range check were the only thing keeping them out.
+   */
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void anIndexNoLockableSlotHasIsRefusedRatherThanActedOn(TestContext context) {
+    BarrelBlockEntity barrel =
+        NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    player.getInventory().setStack(0, new ItemStack(Items.DIAMOND, STACK));
+    player.getInventory().setStack(HELMET_SLOT, new ItemStack(Items.DIAMOND_HELMET));
+    int syncId = NetworkOperationFixture.handlerOf(player).syncId;
+
+    for (final int forged :
+        new int[] {-1, Integer.MIN_VALUE, LockedSlots.SLOT_COUNT, HELMET_SLOT, OFFHAND_SLOT}) {
+      DepositOutcome outcome =
+          deposits.deposit(player, DepositRequestPayload.wholeSlot(syncId, forged));
+      context.assertTrue(
+          outcome.result() == DepositResult.REFUSED,
+          "Index " + forged + " was acted on, giving " + outcome.result());
+    }
+
+    context.assertTrue(
+        player.getInventory().getStack(0).getCount() == STACK,
+        "A forged index was clamped onto the first hotbar slot");
+    context.assertTrue(
+        player.getInventory().getStack(HELMET_SLOT).isOf(Items.DIAMOND_HELMET),
+        "Armour was reachable by naming its own inventory index");
+    context.assertTrue(
+        NetworkOperationFixture.countIn(barrel, Items.DIAMOND) == 0L,
+        "A refused deposit stored items anyway");
+    NetworkOperationFixture.finish(context, player);
+  }
+
   /** Per ADR 0009 a request naming another screen reaches no network at all. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
