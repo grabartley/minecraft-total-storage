@@ -3,6 +3,7 @@ package com.grahambartley.toomanychests.operation;
 import com.grahambartley.toomanychests.filter.FilterCandidate;
 import com.grahambartley.toomanychests.filter.FilterCandidateFactory;
 import com.grahambartley.toomanychests.index.NetworkIndex;
+import com.grahambartley.toomanychests.index.NetworkIndexEntry;
 import com.grahambartley.toomanychests.lifecycle.NetworkMembership;
 import com.grahambartley.toomanychests.storage.BlockStorageOrigin;
 import com.grahambartley.toomanychests.storage.StorageOrigin;
@@ -15,6 +16,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
@@ -88,6 +90,7 @@ public final class DepositDestinations {
       NetworkIndex<ItemVariant> index,
       ItemVariant variant) {
     final FilterCandidate candidate = candidates.of(variant);
+    final Optional<NetworkIndexEntry<ItemVariant>> held = index.entry(variant);
     final List<DepositTarget> targets = new ArrayList<>(containers.size());
     for (final Map.Entry<BlockPos, StorageOrigin> container : containers.entrySet()) {
       targets.add(
@@ -95,7 +98,7 @@ public final class DepositDestinations {
               container.getKey(),
               settings.roleFor(container.getKey()),
               settings.filterFor(container.getKey()),
-              index.entry(variant).map(held -> held.isHeldBy(container.getValue())).orElse(false)));
+              held.map(entry -> entry.isHeldBy(container.getValue())).orElse(false)));
     }
     return live.of(
         world,

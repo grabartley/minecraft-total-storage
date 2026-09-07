@@ -107,7 +107,7 @@ class GridClickTest {
     assertEquals(GridAction.NONE, GridClick.of(button, NO_SHIFT, HOLDING, OVER_AN_ITEM));
   }
 
-  /** Middle click over an empty cell has nothing to ask about, so no prompt is opened. */
+  /** A full cursor deposits with the two buttons that put things down, and with nothing else. */
   @Test
   void middleClickWhileHoldingSomethingIsNotADeposit() {
     assertEquals(

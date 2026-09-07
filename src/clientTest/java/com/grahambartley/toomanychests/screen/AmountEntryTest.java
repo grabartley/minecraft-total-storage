@@ -108,8 +108,24 @@ class AmountEntryTest {
 
   @Test
   void everyTypedCharacterIsKeptWhetherOrNotItWasADigit() {
-    assertEquals(PromptKey.HANDLED, new AmountEntry(500).charTyped('4'));
-    assertEquals(PromptKey.HANDLED, new AmountEntry(500).charTyped('x'));
+    AmountEntry digit = new AmountEntry(500);
+    AmountEntry letter = new AmountEntry(500);
+
+    assertEquals(PromptKey.HANDLED, digit.charTyped('4'));
+    assertEquals(PromptKey.HANDLED, letter.charTyped('x'));
+
+    assertEquals("4", digit.text());
+    assertEquals("", letter.text());
+  }
+
+  /** Swallowing a key and acting on it are different things, and both have to happen. */
+  @Test
+  void aSwallowedKeyStillReachesTheNumber() {
+    AmountEntry entry = typing(500, "12");
+
+    entry.keyPressed(GLFW.GLFW_KEY_BACKSPACE);
+
+    assertEquals("1", entry.text());
   }
 
   /** A leading zero leaves the number where it was, so it is not an edit. */

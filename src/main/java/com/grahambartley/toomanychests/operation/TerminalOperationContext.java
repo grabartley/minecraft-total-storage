@@ -2,7 +2,6 @@ package com.grahambartley.toomanychests.operation;
 
 import com.grahambartley.toomanychests.lifecycle.NetworkMembership;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenHandler;
-import com.grahambartley.toomanychests.terminal.TerminalAddress;
 import java.util.Objects;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -31,9 +30,5 @@ public record TerminalOperationContext(
 
   public BlockPos terminal() {
     return handler.terminal();
-  }
-
-  public TerminalAddress address() {
-    return TerminalAddress.of(world, terminal());
   }
 }

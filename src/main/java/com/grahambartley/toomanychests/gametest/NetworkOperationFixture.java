@@ -100,6 +100,15 @@ final class NetworkOperationFixture {
                     settings.containers().with(context.getAbsolutePos(container), assignment)));
   }
 
+  /** Files an item under a tag this network invented, which lives on the terminal itself. */
+  static void fileUnderCustomTag(TestContext context, String tag, String itemId) {
+    context
+        .<TerminalBlockEntity>getBlockEntity(TERMINAL)
+        .updateSettings(
+            settings ->
+                settings.withTags(settings.tags().withCustomTag(tag).withItem(tag, itemId)));
+  }
+
   static TerminalScreenHandler handlerOf(ServerPlayerEntity player) {
     return (TerminalScreenHandler) player.currentScreenHandler;
   }
