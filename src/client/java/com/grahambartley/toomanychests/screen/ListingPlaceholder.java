@@ -13,9 +13,9 @@ import net.minecraft.util.Identifier;
  * the sprite reference: a crate against a magnifier. A player who cannot read the line still learns
  * which of the two they are looking at.
  *
- * <p>A terminal with no network borrows the crate. The two are separated by the line rather than by
- * the picture, because what has gone wrong is that the view is out of date rather than that the
- * network is empty, and no silhouette says "out of date" on its own.
+ * <p>A terminal with no network borrows the crate, and is told apart from an empty one by the line
+ * alone. Both are a network holding nothing the player can reach, so the same picture is honest;
+ * what differs is whether there is a network at all, and that is a sentence rather than a shape.
  *
  * <p>{@link ListingStatus#PENDING} draws nothing. It lasts until the first page lands, and a
  * message that flashes up for a tick every time a terminal opens is noise rather than feedback.

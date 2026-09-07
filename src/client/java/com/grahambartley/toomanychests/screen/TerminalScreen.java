@@ -294,7 +294,10 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
         ListingPlaceholder.SPRITE_SIZE
             + ListingPlaceholder.MESSAGE_GAP
             + lines.size() * LINE_HEIGHT;
-    final int top = TerminalScreenLayout.GRID_Y + (TerminalScreenLayout.GRID_HEIGHT - block) / 2;
+    final int top =
+        Math.max(
+            TerminalScreenLayout.GRID_Y,
+            TerminalScreenLayout.GRID_Y + (TerminalScreenLayout.GRID_HEIGHT - block) / 2);
     context.drawGuiTexture(
         shown.sprite(),
         centreX - ListingPlaceholder.SPRITE_SIZE / 2,
