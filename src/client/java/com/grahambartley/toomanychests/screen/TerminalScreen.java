@@ -23,6 +23,7 @@ import net.minecraft.screen.slot.Slot;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import org.lwjgl.glfw.GLFW;
 
 /**
  * The terminal's window: its chassis, the grid of everything the network holds, and the player's
@@ -39,6 +40,10 @@ import net.minecraft.util.Identifier;
  *
  * <p>Every piece of chassis is a nine-sliced sprite rather than one background image, per ADR 0017,
  * so the window can change size as the filter column grows without a new texture.
+ *
+ * <p>The search box takes focus as the screen opens and keeps it, so typing narrows the grid
+ * without a click first. That is also why this screen has to say what a key press means rather than
+ * leaving it to its parent: see {@link SearchKeyOutcome}.
  */
 public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   private static final Identifier PANEL = sprite("panel/background");
@@ -78,8 +83,13 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   /** What the grid is showing instead of rows, taken with the page so the two cannot disagree. */
   private Optional<ListingPlaceholder> placeholder = Optional.empty();
 
+  private TerminalSearchBox search;
+
   private int hovered = TerminalScreenLayout.NO_CELL;
   private ListingWindow requested = ListingWindow.EMPTY;
+
+  /** The query the server was last told about, so a keystroke is noticed the frame it lands. */
+  private String requestedSearch = "";
 
   public TerminalScreen(TerminalScreenHandler handler, PlayerInventory inventory, Text title) {
     super(handler, inventory, title);
@@ -97,11 +107,16 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
    *
    * <p>Laying the window out again is not opening it. Minecraft runs this on every resize and every
    * change of GUI scale, and treating those as a fresh screen would throw away the page being shown
-   * and ask for the first one again, wherever the player had scrolled to.
+   * and ask for the first one again, wherever the player had scrolled to. The search box is built
+   * again either way, because a resize clears the widgets, and it is handed back what was typed
+   * rather than reopened empty.
    */
   @Override
   protected void init() {
     super.init();
+    search = new TerminalSearchBox(textRenderer, x, y, search == null ? "" : search.text());
+    addDrawableChild(search.widget());
+    setInitialFocus(search.widget());
     if (TerminalListingMirror.isShowing(handler.syncId)) {
       return;
     }
@@ -124,8 +139,12 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
     pageThisFrame = TerminalListingMirror.page();
     placeholder = ListingPlaceholder.forStatus(pageThisFrame.status());
+    final boolean searchChanged = !search.text().equals(requestedSearch);
+    if (searchChanged) {
+      scroll.scrollTo(0);
+    }
     scroll.fit(pageThisFrame.totalMatching());
-    if (!scroll.window().equals(requested)) {
+    if (searchChanged || !scroll.window().equals(requested)) {
       requestVisibleRows();
     }
     hovered = hoveredCell(mouseX, mouseY);
@@ -137,6 +156,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   @Override
   protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
     context.drawGuiTexture(PANEL, x, y, backgroundWidth, backgroundHeight);
+    search.drawBox(context, x, y);
     context.drawGuiTexture(
         INSET,
         x + TerminalScreenLayout.INSET_X,
@@ -174,8 +194,19 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
   }
 
+  /**
+   * A click anywhere on the search box reaches the field, which covers only the text inside it. The
+   * field still sees the click, so one landing on the text puts the cursor where it was aimed
+   * rather than merely taking focus.
+   */
   @Override
   public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    if (button == LEFT_BUTTON
+        && TerminalScreenLayout.isOverSearch(windowX(mouseX), windowY(mouseY))) {
+      setFocused(search.widget());
+      search.widget().mouseClicked(mouseX, mouseY, button);
+      return true;
+    }
     if (button == LEFT_BUTTON
         && TerminalScreenLayout.isOverScrollbar(windowX(mouseX), windowY(mouseY))
         && scrollbar.grab(windowY(mouseY) - TerminalScreenLayout.SCROLLBAR_Y)) {
@@ -194,6 +225,27 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
   }
 
+  /**
+   * A key press while the search box has focus is the player typing into it, so the screen behind
+   * it never sees one. Without this the inventory key would close the terminal rather than write a
+   * letter, and a digit would swap a hotbar slot rather than be typed.
+   */
+  @Override
+  public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    return switch (SearchKeyOutcome.of(
+        keyCode == GLFW.GLFW_KEY_ESCAPE, search.isFocused(), search.isSearching())) {
+      case CLEAR_SEARCH -> {
+        search.clear();
+        yield true;
+      }
+      case TYPE -> {
+        search.keyPressed(keyCode, scanCode, modifiers);
+        yield true;
+      }
+      case CLOSE_SCREEN, PASS_THROUGH -> super.keyPressed(keyCode, scanCode, modifiers);
+    };
+  }
+
   @Override
   public boolean mouseReleased(double mouseX, double mouseY, int button) {
     if (button == LEFT_BUTTON && scrollbar.isDragging()) {
@@ -205,8 +257,9 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   private void requestVisibleRows() {
     requested = scroll.window();
+    requestedSearch = search.text();
     ModNetworkingClient.sendListingRequest(
-        handler.syncId, requested, "", TagCombinationMode.DEFAULT, Set.of());
+        handler.syncId, requested, requestedSearch, TagCombinationMode.DEFAULT, Set.of());
   }
 
   /**

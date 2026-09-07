@@ -5,7 +5,8 @@ package com.grahambartley.toomanychests.filter;
  * subsequence, so {@code dch} finds Dark Oak Chest.
  *
  * <p>Acceptance is deliberately separate from ranking. This answers only whether a row belongs in
- * the results at all; the terminal grid decides what order to present them in.
+ * the results at all; how close it came is {@link MatchStrength}, which this reads so the two can
+ * never disagree about what a match is.
  */
 public final class FuzzyNameMatcher {
   private FuzzyNameMatcher() {}
@@ -16,24 +17,6 @@ public final class FuzzyNameMatcher {
    * @return true when every character of the term appears in the candidate, in order
    */
   public static boolean matches(String candidate, String term) {
-    final String normalisedTerm = FilterText.normalise(term);
-    if (normalisedTerm.isEmpty()) {
-      return true;
-    }
-    final String normalisedCandidate = FilterText.normalise(candidate);
-    if (normalisedCandidate.isEmpty()) {
-      return false;
-    }
-    return isSubsequence(normalisedCandidate, normalisedTerm);
-  }
-
-  private static boolean isSubsequence(String candidate, String term) {
-    int termIndex = 0;
-    for (int i = 0; i < candidate.length() && termIndex < term.length(); i++) {
-      if (candidate.charAt(i) == term.charAt(termIndex)) {
-        termIndex++;
-      }
-    }
-    return termIndex == term.length();
+    return MatchStrength.of(candidate, term).isMatch();
   }
 }

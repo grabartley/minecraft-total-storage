@@ -13,8 +13,6 @@ import java.util.Set;
  * covers how the terms of a query combine and why acceptance stops short of ranking.
  */
 public final class FilterEvaluator {
-  private static final char NAMESPACE_SEPARATOR = ':';
-
   private FilterEvaluator() {}
 
   public static boolean accepts(FilterCandidate candidate, ItemFilter filter) {
@@ -57,13 +55,13 @@ public final class FilterEvaluator {
     return matchesAnyModId(candidate.modId(), query.modIdTerms());
   }
 
-  /** Namespaced terms match literally, bare terms match fuzzily. See ADR 0013. */
+  /**
+   * Namespaced terms match literally, bare terms match fuzzily. See ADR 0013. Read from the same
+   * strength the results are ranked by, so a row cannot be accepted under one rule and ordered
+   * under another.
+   */
   private static boolean matchesName(FilterCandidate candidate, String term) {
-    if (term.indexOf(NAMESPACE_SEPARATOR) >= 0) {
-      return candidate.identifier().contains(term);
-    }
-    return FuzzyNameMatcher.matches(candidate.displayName(), term)
-        || FuzzyNameMatcher.matches(candidate.path(), term);
+    return SearchRanking.ofTerm(candidate, term).isMatch();
   }
 
   private static boolean matchesAnyTag(Set<String> tags, String term) {

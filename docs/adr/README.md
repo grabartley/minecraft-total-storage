@@ -35,6 +35,7 @@ Shared engineering standards across all the mods in this family live in [`../sta
 | [0025](0025-the-network-is-not-an-inventory.md) | The terminal's screen handler holds no network slots |
 | [0026](0026-world-callbacks-defer-their-scans.md) | A world callback defers its scan to the next tick |
 | [0027](0027-the-listing-is-narrowed-on-the-server.md) | The listing is narrowed on the server and answered by revision |
+| [0028](0028-results-are-ranked-before-they-are-paged.md) | Results are ranked before they are paged |
 
 ## Writing A New Record
 

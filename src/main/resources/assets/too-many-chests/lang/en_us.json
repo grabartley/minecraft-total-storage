@@ -16,6 +16,8 @@
   "block.too-many-chests.terminal.unpowered": "This terminal needs a redstone signal before it will open",
   "block.too-many-chests.terminal.denied": "This terminal belongs to someone else",
   "block.too-many-chests.terminal.revoked": "Your access to that terminal has been taken away",
+  "screen.too-many-chests.terminal.search": "Search the network",
+  "screen.too-many-chests.terminal.search.hint": "Search",
   "screen.too-many-chests.terminal.total": "%s in the network",
   "screen.too-many-chests.terminal.containers": "Spread across %s containers",
   "screen.too-many-chests.terminal.empty.network": "This network is empty",
