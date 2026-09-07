@@ -3,6 +3,7 @@ package com.grahambartley.toomanychests.network;
 import com.grahambartley.toomanychests.TooManyChests;
 import com.grahambartley.toomanychests.listing.ListingPage;
 import com.grahambartley.toomanychests.listing.ListingRow;
+import com.grahambartley.toomanychests.listing.ListingStatus;
 import com.grahambartley.toomanychests.listing.ListingWindow;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +24,9 @@ import net.minecraft.util.Identifier;
  *
  * <p>The sync id lets a client drop a page meant for a screen it has since closed, and the revision
  * lets it drop one that a newer page has already overtaken.
+ *
+ * <p>The status travels with the page because a page of no rows is not self-explaining, and the
+ * client holds none of the facts that would tell it apart. See {@link ListingStatus}.
  */
 public record ListingPayload(int syncId, ListingPage<ItemVariant> page) implements CustomPayload {
   public static final CustomPayload.Id<ListingPayload> ID =
@@ -44,18 +48,21 @@ public record ListingPayload(int syncId, ListingPage<ItemVariant> page) implemen
     final ListingPage<ItemVariant> page = payload.page();
     buf.writeVarInt(payload.syncId());
     buf.writeVarLong(page.revision());
+    buf.writeEnumConstant(page.status());
     buf.writeVarInt(page.offset());
     buf.writeVarInt(page.totalMatching());
     buf.writeVarInt(page.size());
     for (final ListingRow<ItemVariant> row : page.rows()) {
       ItemVariant.PACKET_CODEC.encode(buf, row.variant());
       buf.writeVarLong(row.count());
+      buf.writeVarInt(row.providerCount());
     }
   }
 
   private static ListingPayload read(RegistryByteBuf buf) {
     final int syncId = buf.readVarInt();
     final long revision = buf.readVarLong();
+    final ListingStatus status = buf.readEnumConstant(ListingStatus.class);
     final int offset = buf.readVarInt();
     final int totalMatching = buf.readVarInt();
     final int rowCount = buf.readVarInt();
@@ -64,8 +71,11 @@ public record ListingPayload(int syncId, ListingPage<ItemVariant> page) implemen
     }
     final List<ListingRow<ItemVariant>> rows = new ArrayList<>(rowCount);
     for (int row = 0; row < rowCount; row++) {
-      rows.add(new ListingRow<>(ItemVariant.PACKET_CODEC.decode(buf), buf.readVarLong()));
+      rows.add(
+          new ListingRow<>(
+              ItemVariant.PACKET_CODEC.decode(buf), buf.readVarLong(), buf.readVarInt()));
     }
-    return new ListingPayload(syncId, new ListingPage<>(revision, offset, totalMatching, rows));
+    return new ListingPayload(
+        syncId, new ListingPage<>(revision, status, offset, totalMatching, rows));
   }
 }

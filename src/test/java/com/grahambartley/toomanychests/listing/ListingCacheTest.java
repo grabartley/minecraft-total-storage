@@ -15,7 +15,8 @@ class ListingCacheTest {
   private final ListingCache<String> cache = new ListingCache<>();
 
   private static ListingPage<String> page(long revision, String variant) {
-    return new ListingPage<>(revision, 0, 1, List.of(new ListingRow<>(variant, 1L)));
+    return new ListingPage<>(
+        revision, ListingStatus.LIVE, 0, 1, List.of(new ListingRow<>(variant, 1L, 1)));
   }
 
   @Test
@@ -60,7 +61,9 @@ class ListingCacheTest {
 
   @Test
   void aPageCarriesWhereItSitsAndHowMuchThereIsToScrollThrough() {
-    cache.accept(new ListingPage<>(1L, 40, 500, List.of(new ListingRow<>("cobblestone", 8L))));
+    cache.accept(
+        new ListingPage<>(
+            1L, ListingStatus.LIVE, 40, 500, List.of(new ListingRow<>("cobblestone", 8L, 2))));
 
     assertEquals(40, cache.page().offset());
     assertEquals(500, cache.page().totalMatching());

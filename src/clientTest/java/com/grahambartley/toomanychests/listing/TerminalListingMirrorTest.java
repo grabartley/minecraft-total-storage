@@ -15,7 +15,7 @@ class TerminalListingMirrorTest {
 
   /** Empty pages, because what is under test is which page is kept rather than what is in it. */
   private static ListingPage<ItemVariant> page(long revision) {
-    return ListingPage.empty(revision);
+    return ListingPage.pending(revision);
   }
 
   @BeforeEach

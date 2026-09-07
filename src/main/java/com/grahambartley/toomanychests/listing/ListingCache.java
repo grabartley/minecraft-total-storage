@@ -16,7 +16,7 @@ import java.util.Objects;
  * @param <V> the variant type, {@code ItemVariant} in production
  */
 public final class ListingCache<V> {
-  private ListingPage<V> page = ListingPage.empty(ListingRevision.NONE);
+  private ListingPage<V> page = ListingPage.pending(ListingRevision.NONE);
 
   /** Returns whether the page was taken, so a caller drawing it knows there is news. */
   public boolean accept(ListingPage<V> arriving) {
@@ -38,6 +38,6 @@ public final class ListingCache<V> {
    * mark would make every one of its pages look stale.
    */
   public void clear() {
-    page = ListingPage.empty(ListingRevision.NONE);
+    page = ListingPage.pending(ListingRevision.NONE);
   }
 }

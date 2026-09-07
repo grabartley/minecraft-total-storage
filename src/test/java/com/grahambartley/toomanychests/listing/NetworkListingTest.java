@@ -29,6 +29,11 @@ class NetworkListingTest {
           RegistryKey.of(RegistryKeys.WORLD, Identifier.of("minecraft", "overworld")),
           new BlockPos(0, 64, 0));
 
+  private static final StorageOrigin SECOND_ORIGIN =
+      new BlockStorageOrigin(
+          RegistryKey.of(RegistryKeys.WORLD, Identifier.of("minecraft", "overworld")),
+          new BlockPos(4, 64, 0));
+
   private static final Map<String, FilterCandidate> CANDIDATES = candidates();
   private static final Function<String, FilterCandidate> TO_CANDIDATE = CANDIDATES::get;
 
@@ -82,7 +87,28 @@ class NetworkListingTest {
   void everyRowCarriesWhatTheWholeNetworkHoldsOfIt() {
     ListingPage<String> page = page(ItemFilter.NONE, ListingWindow.of(0, 1), 1L);
 
-    assertEquals(new ListingRow<>("cobblestone", 300L), page.rows().get(0));
+    assertEquals(new ListingRow<>("cobblestone", 300L, 1), page.rows().get(0));
+  }
+
+  /**
+   * A tooltip says how many containers hold a variant, and the index is the only place that is
+   * known. Counting them on the client would mean sending the positions ADR 0009 keeps back.
+   */
+  @Test
+  void everyRowCarriesHowManyContainersHoldIt() {
+    ListingPage<String> page =
+        NetworkListing.page(
+            new NetworkIndexBuilder<String>()
+                .add("cobblestone", 100L, ORIGIN)
+                .add("cobblestone", 200L, SECOND_ORIGIN)
+                .build(NetworkIndexOrdering.byKey(Function.identity())),
+            TO_CANDIDATE,
+            ItemFilter.NONE,
+            ListingWindow.of(0, 10),
+            1L);
+
+    assertEquals(300L, page.rows().get(0).count());
+    assertEquals(2, page.rows().get(0).providerCount());
   }
 
   /** The scrollbar is drawn from the total, so it counts matches rather than rows on the page. */
@@ -146,6 +172,36 @@ class NetworkListingTest {
 
     assertTrue(page.isEmpty());
     assertEquals(0, page.totalMatching());
+  }
+
+  @Test
+  void aPageWithRowsSaysTheListingIsLive() {
+    assertEquals(ListingStatus.LIVE, page(ItemFilter.NONE, ListingWindow.of(0, 10), 1L).status());
+  }
+
+  /**
+   * Both of these are a page of no rows, and a screen holding only the rows could not tell a player
+   * whether to put something in the network or to clear what they typed.
+   */
+  @Test
+  void criteriaThatMatchedNothingReadDifferentlyFromANetworkHoldingNothing() {
+    assertEquals(
+        ListingStatus.NO_RESULTS,
+        page(ItemFilter.ofSearch("diamond"), ListingWindow.of(0, 10), 1L).status());
+    assertEquals(
+        ListingStatus.EMPTY_NETWORK,
+        NetworkListing.page(
+                NetworkIndex.empty(), TO_CANDIDATE, ItemFilter.NONE, ListingWindow.of(0, 10), 1L)
+            .status());
+  }
+
+  /**
+   * Scrolling past the end of the results is a page of no rows that is not an empty listing, and
+   * treating it as one would replace the grid with an empty state the moment a slow answer landed.
+   */
+  @Test
+  void scrollingPastTheEndIsStillALiveListing() {
+    assertEquals(ListingStatus.LIVE, page(ItemFilter.NONE, ListingWindow.of(50, 10), 2L).status());
   }
 
   @Test

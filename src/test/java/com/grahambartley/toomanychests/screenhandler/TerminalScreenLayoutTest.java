@@ -1,6 +1,7 @@
 package com.grahambartley.toomanychests.screenhandler;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -9,8 +10,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -19,6 +22,22 @@ class TerminalScreenLayoutTest {
 
   static Stream<Integer> everySlot() {
     return IntStream.range(0, TerminalScreenLayout.SLOT_COUNT).boxed();
+  }
+
+  static Stream<Integer> everyCell() {
+    return IntStream.range(0, TerminalScreenLayout.LISTING_PAGE_SIZE).boxed();
+  }
+
+  static Stream<Arguments> pointsOutsideTheGrid() {
+    final int right = TerminalScreenLayout.GRID_X + TerminalScreenLayout.GRID_WIDTH;
+    final int bottom = TerminalScreenLayout.GRID_Y + TerminalScreenLayout.GRID_HEIGHT;
+    return Stream.of(
+        Arguments.of(TerminalScreenLayout.GRID_X - 1, TerminalScreenLayout.GRID_Y),
+        Arguments.of(TerminalScreenLayout.GRID_X, TerminalScreenLayout.GRID_Y - 1),
+        Arguments.of(right, TerminalScreenLayout.GRID_Y),
+        Arguments.of(TerminalScreenLayout.GRID_X, bottom),
+        Arguments.of(TerminalScreenLayout.SCROLLBAR_X, TerminalScreenLayout.SCROLLBAR_Y),
+        Arguments.of(0, 0));
   }
 
   @Test
@@ -215,13 +234,201 @@ class TerminalScreenLayoutTest {
     assertEquals(
         TerminalScreenLayout.LISTING_PAGE_SIZE,
         TerminalScreenLayout.LISTING_COLUMNS * TerminalScreenLayout.LISTING_ROWS);
+    assertEquals(
+        TerminalScreenLayout.LISTING_COLUMNS * TerminalScreenLayout.CELL_SIZE,
+        TerminalScreenLayout.GRID_WIDTH);
+    assertEquals(
+        TerminalScreenLayout.LISTING_ROWS * TerminalScreenLayout.CELL_SIZE,
+        TerminalScreenLayout.GRID_HEIGHT);
+  }
+
+  /**
+   * The recess sprite's border is fixed at any size and is drawn over its own contents, so a grid
+   * that merely fits inside the recess has its outermost cells drawn behind the frame.
+   */
+  @Test
+  void theGridAndItsScrollbarClearTheRecessFrame() {
     assertTrue(
-        TerminalScreenLayout.LISTING_COLUMNS * TerminalScreenLayout.SLOT_SIZE
-            <= TerminalScreenLayout.INSET_WIDTH,
-        "The cells across should fit inside the recess");
+        TerminalScreenLayout.GRID_X - TerminalScreenLayout.INSET_X
+            >= TerminalScreenLayout.INSET_BORDER,
+        "The grid starts under the recess frame");
     assertTrue(
-        TerminalScreenLayout.LISTING_ROWS * TerminalScreenLayout.SLOT_SIZE
-            <= TerminalScreenLayout.INSET_HEIGHT,
-        "The cells down should fit inside the recess");
+        TerminalScreenLayout.GRID_Y - TerminalScreenLayout.INSET_Y
+            >= TerminalScreenLayout.INSET_BORDER,
+        "The grid starts under the recess frame");
+    assertTrue(
+        TerminalScreenLayout.SCROLLBAR_X + TerminalScreenLayout.SCROLLBAR_WIDTH
+            <= TerminalScreenLayout.INSET_X
+                + TerminalScreenLayout.INSET_WIDTH
+                - TerminalScreenLayout.INSET_BORDER,
+        "The scrollbar ends under the recess frame");
+    assertTrue(
+        TerminalScreenLayout.GRID_Y + TerminalScreenLayout.GRID_HEIGHT
+            <= TerminalScreenLayout.INSET_Y
+                + TerminalScreenLayout.INSET_HEIGHT
+                - TerminalScreenLayout.INSET_BORDER,
+        "The grid ends under the recess frame");
+  }
+
+  /** A window sized around the grid has no strip of dead space beside it. */
+  @Test
+  void theRecessIsExactlyAsWideAsWhatItHolds() {
+    assertEquals(
+        2 * TerminalScreenLayout.INSET_BORDER
+            + TerminalScreenLayout.GRID_WIDTH
+            + TerminalScreenLayout.SCROLLBAR_GAP
+            + TerminalScreenLayout.SCROLLBAR_WIDTH,
+        TerminalScreenLayout.INSET_WIDTH);
+  }
+
+  @Test
+  void theScrollbarSitsBesideTheGridRatherThanOverIt() {
+    assertTrue(
+        TerminalScreenLayout.SCROLLBAR_X
+            >= TerminalScreenLayout.GRID_X + TerminalScreenLayout.GRID_WIDTH,
+        "The scrollbar overlaps the last column of cells");
+    assertEquals(TerminalScreenLayout.GRID_Y, TerminalScreenLayout.SCROLLBAR_Y);
+    assertEquals(TerminalScreenLayout.GRID_HEIGHT, TerminalScreenLayout.SCROLLBAR_HEIGHT);
+  }
+
+  @ParameterizedTest
+  @MethodSource("everyCell")
+  void everyCellIsDrawnInsideTheGrid(int cell) {
+    int cellX = TerminalScreenLayout.cellX(cell);
+    int cellY = TerminalScreenLayout.cellY(cell);
+
+    assertTrue(cellX >= TerminalScreenLayout.GRID_X, "left edge at " + cellX);
+    assertTrue(cellY >= TerminalScreenLayout.GRID_Y, "top edge at " + cellY);
+    assertTrue(
+        cellX + TerminalScreenLayout.CELL_SIZE
+            <= TerminalScreenLayout.GRID_X + TerminalScreenLayout.GRID_WIDTH,
+        "right edge at " + (cellX + TerminalScreenLayout.CELL_SIZE));
+    assertTrue(
+        cellY + TerminalScreenLayout.CELL_SIZE
+            <= TerminalScreenLayout.GRID_Y + TerminalScreenLayout.GRID_HEIGHT,
+        "bottom edge at " + (cellY + TerminalScreenLayout.CELL_SIZE));
+  }
+
+  @Test
+  void noTwoCellsShareAPosition() {
+    Set<String> positions = new HashSet<>();
+
+    everyCell()
+        .forEach(
+            cell ->
+                positions.add(
+                    TerminalScreenLayout.cellX(cell) + "," + TerminalScreenLayout.cellY(cell)));
+
+    assertEquals(TerminalScreenLayout.LISTING_PAGE_SIZE, positions.size());
+  }
+
+  /**
+   * The hit test is the drawing arithmetic run backwards, so proving it against every cell's own
+   * corners is what stops a cell a player can see but cannot click.
+   */
+  @ParameterizedTest
+  @MethodSource("everyCell")
+  void everyCellIsFoundAtItsOwnCorners(int cell) {
+    int cellX = TerminalScreenLayout.cellX(cell);
+    int cellY = TerminalScreenLayout.cellY(cell);
+    int last = TerminalScreenLayout.CELL_SIZE - 1;
+
+    assertEquals(cell, TerminalScreenLayout.cellAt(cellX, cellY));
+    assertEquals(cell, TerminalScreenLayout.cellAt(cellX + last, cellY));
+    assertEquals(cell, TerminalScreenLayout.cellAt(cellX, cellY + last));
+    assertEquals(cell, TerminalScreenLayout.cellAt(cellX + last, cellY + last));
+  }
+
+  @DisplayName("a point beside the grid is no cell rather than the nearest one")
+  @ParameterizedTest(name = "({0}, {1})")
+  @MethodSource("pointsOutsideTheGrid")
+  void aPointOutsideTheGridIsOverNoCell(int windowX, int windowY) {
+    assertEquals(TerminalScreenLayout.NO_CELL, TerminalScreenLayout.cellAt(windowX, windowY));
+  }
+
+  @Test
+  void theScrollbarIsFoundAtItsOwnCornersAndNowhereElse() {
+    assertTrue(
+        TerminalScreenLayout.isOverScrollbar(
+            TerminalScreenLayout.SCROLLBAR_X, TerminalScreenLayout.SCROLLBAR_Y));
+    assertTrue(
+        TerminalScreenLayout.isOverScrollbar(
+            TerminalScreenLayout.SCROLLBAR_X + TerminalScreenLayout.SCROLLBAR_WIDTH - 1,
+            TerminalScreenLayout.SCROLLBAR_Y + TerminalScreenLayout.SCROLLBAR_HEIGHT - 1));
+    assertFalse(
+        TerminalScreenLayout.isOverScrollbar(
+            TerminalScreenLayout.SCROLLBAR_X - 1, TerminalScreenLayout.SCROLLBAR_Y));
+    assertFalse(
+        TerminalScreenLayout.isOverScrollbar(
+            TerminalScreenLayout.SCROLLBAR_X + TerminalScreenLayout.SCROLLBAR_WIDTH,
+            TerminalScreenLayout.SCROLLBAR_Y));
+    assertFalse(
+        TerminalScreenLayout.isOverScrollbar(
+            TerminalScreenLayout.SCROLLBAR_X,
+            TerminalScreenLayout.SCROLLBAR_Y + TerminalScreenLayout.SCROLLBAR_HEIGHT));
+  }
+
+  @DisplayName("an index that is not a cell is refused rather than guessed at")
+  @ParameterizedTest(name = "cell {0}")
+  @ValueSource(ints = {-1, 45, 1000})
+  void anIndexThatIsNotACellIsRefused(int cell) {
+    assertThrows(IndexOutOfBoundsException.class, () -> TerminalScreenLayout.cellX(cell));
+    assertThrows(IndexOutOfBoundsException.class, () -> TerminalScreenLayout.cellY(cell));
+  }
+
+  /**
+   * The gap between the grid and the track is two pixels of nothing, and a wheel ignored over it
+   * would be a strip of the listing that does not scroll.
+   */
+  @Test
+  void theGapBetweenTheGridAndItsScrollbarIsStillTheListing() {
+    int gap = TerminalScreenLayout.GRID_X + TerminalScreenLayout.GRID_WIDTH;
+
+    assertEquals(
+        TerminalScreenLayout.NO_CELL,
+        TerminalScreenLayout.cellAt(gap, TerminalScreenLayout.GRID_Y));
+    assertFalse(TerminalScreenLayout.isOverScrollbar(gap, TerminalScreenLayout.GRID_Y));
+    assertTrue(TerminalScreenLayout.isOverListing(gap, TerminalScreenLayout.GRID_Y));
+  }
+
+  @Test
+  void theListingCoversTheGridAndItsScrollbarAndNothingElse() {
+    assertTrue(
+        TerminalScreenLayout.isOverListing(
+            TerminalScreenLayout.GRID_X, TerminalScreenLayout.GRID_Y));
+    assertTrue(
+        TerminalScreenLayout.isOverListing(
+            TerminalScreenLayout.SCROLLBAR_X + TerminalScreenLayout.SCROLLBAR_WIDTH - 1,
+            TerminalScreenLayout.GRID_Y + TerminalScreenLayout.GRID_HEIGHT - 1));
+    assertFalse(
+        TerminalScreenLayout.isOverListing(
+            TerminalScreenLayout.GRID_X - 1, TerminalScreenLayout.GRID_Y));
+    assertFalse(
+        TerminalScreenLayout.isOverListing(
+            TerminalScreenLayout.GRID_X, TerminalScreenLayout.GRID_Y - 1));
+    assertFalse(
+        TerminalScreenLayout.isOverListing(
+            TerminalScreenLayout.SCROLLBAR_X + TerminalScreenLayout.SCROLLBAR_WIDTH,
+            TerminalScreenLayout.GRID_Y));
+    assertFalse(
+        TerminalScreenLayout.isOverListing(
+            TerminalScreenLayout.GRID_X,
+            TerminalScreenLayout.GRID_Y + TerminalScreenLayout.GRID_HEIGHT));
+  }
+
+  /** Every cell of the grid is part of the listing the wheel scrolls. */
+  @ParameterizedTest
+  @MethodSource("everyCell")
+  void everyCellIsPartOfTheListing(int cell) {
+    assertTrue(
+        TerminalScreenLayout.isOverListing(
+            TerminalScreenLayout.cellX(cell), TerminalScreenLayout.cellY(cell)));
+  }
+
+  /** A 16x16 item plus its two pixel bevel and gutter is exactly what a cell was sized for. */
+  @Test
+  void anItemDrawnAtTheCellOffsetSitsInsideItsCell() {
+    assertEquals(
+        TerminalScreenLayout.CELL_SIZE, 2 * TerminalScreenLayout.CELL_ITEM_OFFSET + ITEM_SIZE);
   }
 }
