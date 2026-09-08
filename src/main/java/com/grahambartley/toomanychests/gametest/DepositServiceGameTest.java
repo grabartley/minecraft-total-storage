@@ -6,6 +6,7 @@ import com.grahambartley.toomanychests.network.DepositRequestPayload;
 import com.grahambartley.toomanychests.operation.DepositOutcome;
 import com.grahambartley.toomanychests.operation.DepositResult;
 import com.grahambartley.toomanychests.operation.DepositService;
+import com.grahambartley.toomanychests.operation.OperationGuards;
 import com.grahambartley.toomanychests.storage.ContainerAssignment;
 import com.grahambartley.toomanychests.storage.ContainerFilter;
 import com.grahambartley.toomanychests.storage.ContainerRole;
@@ -16,6 +17,8 @@ import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.test.BeforeBatch;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 
@@ -29,6 +32,7 @@ import net.minecraft.test.TestContext;
  */
 public final class DepositServiceGameTest implements FabricGameTest {
   private static final String BATCH = "terminal-deposit";
+
   private static final int TICK_LIMIT = 60;
   private static final int STACK = 64;
 
@@ -38,6 +42,17 @@ public final class DepositServiceGameTest implements FabricGameTest {
   private static final int OFFHAND_SLOT = 40;
 
   private final DepositService deposits = new DepositService();
+
+  /**
+   * Cooldowns are JVM-global, so one left over from an earlier batch would refuse a deposit here
+   * for a reason that has nothing to do with what is being tested. Within this batch the tests
+   * overlap but each uses its own player, so they do not put each other on cooldown. Anything that
+   * changes the cooldown setting itself lives in {@code OperationGuardsGameTest}, a batch per test.
+   */
+  @BeforeBatch(batchId = BATCH)
+  public void clearCooldowns(ServerWorld world) {
+    OperationGuards.cooldowns().clear();
+  }
 
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,

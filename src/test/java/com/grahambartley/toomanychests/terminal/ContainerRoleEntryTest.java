@@ -17,7 +17,7 @@ class ContainerRoleEntryTest {
 
   private static ContainerRoleEntry entry(int variants, long items) {
     return new ContainerRoleEntry(
-        SOMEWHERE, ContainerRole.GENERAL, Optional.empty(), variants, items, 4.0);
+        SOMEWHERE, ContainerRole.GENERAL, Optional.empty(), variants, items, 0, 27, 4.0);
   }
 
   @Test
@@ -35,7 +35,7 @@ class ContainerRoleEntryTest {
   @Test
   void anIconThatIsMissingIsTreatedAsNoneRatherThanThrowing() {
     assertTrue(
-        new ContainerRoleEntry(SOMEWHERE, ContainerRole.GENERAL, null, 0, 0L, 0.0)
+        new ContainerRoleEntry(SOMEWHERE, ContainerRole.GENERAL, null, 0, 0L, 0, 0, 0.0)
             .icon()
             .isEmpty());
   }
@@ -44,7 +44,7 @@ class ContainerRoleEntryTest {
   void aRoleThatIsMissingBecomesTheDefaultOne() {
     assertEquals(
         ContainerRole.DEFAULT,
-        new ContainerRoleEntry(SOMEWHERE, null, Optional.empty(), 0, 0L, 0.0).role());
+        new ContainerRoleEntry(SOMEWHERE, null, Optional.empty(), 0, 0L, 0, 0, 0.0).role());
   }
 
   @ParameterizedTest
@@ -53,13 +53,35 @@ class ContainerRoleEntryTest {
     assertThrows(IllegalArgumentException.class, () -> entry(variants, items));
   }
 
+  /**
+   * A container cannot fill more slots than it has, which would make a network read as overfull.
+   */
+  @Test
+  void usingMoreSlotsThanTheContainerHasIsRefused() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ContainerRoleEntry(
+                SOMEWHERE, ContainerRole.GENERAL, Optional.empty(), 0, 0L, 28, 27, 0.0));
+  }
+
+  @ParameterizedTest
+  @CsvSource({"-1, 0", "0, -1"})
+  void aSlotCountBelowZeroIsRefused(int used, int total) {
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ContainerRoleEntry(
+                SOMEWHERE, ContainerRole.GENERAL, Optional.empty(), 0, 0L, used, total, 0.0));
+  }
+
   @Test
   void aDistanceBelowZeroIsRefusedSinceNothingCanBeNearerThanTouching() {
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ContainerRoleEntry(
-                SOMEWHERE, ContainerRole.GENERAL, Optional.empty(), 0, 0L, -1.0));
+                SOMEWHERE, ContainerRole.GENERAL, Optional.empty(), 0, 0L, 0, 0, -1.0));
   }
 
   /** Discovery scans reuse a mutable position, so a row that kept one would drift as they walk. */
@@ -67,7 +89,7 @@ class ContainerRoleEntryTest {
   void aMutablePositionIsCopiedRatherThanHeld() {
     BlockPos.Mutable moving = new BlockPos.Mutable(1, 2, 3);
     ContainerRoleEntry row =
-        new ContainerRoleEntry(moving, ContainerRole.GENERAL, Optional.empty(), 0, 0L, 0.0);
+        new ContainerRoleEntry(moving, ContainerRole.GENERAL, Optional.empty(), 0, 0L, 0, 0, 0.0);
 
     moving.set(9, 9, 9);
 

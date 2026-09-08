@@ -1,9 +1,11 @@
 package com.grahambartley.toomanychests.screen;
 
+import com.grahambartley.toomanychests.config.ClientConfigMirror;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
 import com.grahambartley.toomanychests.screenhandler.TerminalSettingsLayout;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
+import com.grahambartley.toomanychests.terminal.NetworkCapacity;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
 import java.util.List;
 import net.minecraft.client.font.TextRenderer;
@@ -48,6 +50,10 @@ public final class TerminalSettingsPanel {
 
   private static final int LABEL_COLOUR = 0xE4E9F2;
   private static final int MUTED_COLOUR = 0x9AA3B3;
+
+  /** The colour a network close to full is written in, matching the excluded role's warning red. */
+  private static final int WARNING_COLOUR = 0xED6353;
+
   private static final int TEXT_INSET = 4;
   private static final int ICON_SIZE = 16;
   private static final int LINE_HEIGHT = 9;
@@ -257,6 +263,49 @@ public final class TerminalSettingsPanel {
             : Text.literal(String.join(", ", view.trusted())),
         originX,
         originY + TerminalSettingsLayout.rowY(TerminalSetting.TRUSTED.row()),
+        false);
+
+    drawRow(context, TerminalSetting.CAPACITY, originX, originY, false, false);
+    capacity(
+        context,
+        textRenderer,
+        view,
+        originX,
+        originY + TerminalSettingsLayout.rowY(TerminalSetting.CAPACITY.row()));
+  }
+
+  /**
+   * How much room is left, in slots, turning warning-coloured once the network is as full as the
+   * server's threshold. Slots rather than items, because slots are what a deposit runs out of.
+   */
+  private static void capacity(
+      DrawContext context,
+      TextRenderer textRenderer,
+      NetworkSettingsView view,
+      int originX,
+      int rowY) {
+    final NetworkCapacity room = view.capacity();
+    final int left = originX + TerminalSettingsLayout.PANEL_X;
+    final int textY = rowY + (TerminalSettingsLayout.ROW_HEIGHT - 1 - LINE_HEIGHT) / 2;
+    context.drawText(
+        textRenderer,
+        TerminalScreenText.of(TerminalSetting.CAPACITY.label()),
+        left + TEXT_INSET,
+        textY,
+        MUTED_COLOUR,
+        false);
+    final Text value =
+        room.isUnknown()
+            ? TerminalScreenText.of("settings.capacity.unknown")
+            : TerminalScreenText.of("settings.capacity.slots", room.freeSlots(), room.totalSlots());
+    context.drawText(
+        textRenderer,
+        value,
+        left + TerminalSettingsLayout.FULL_ROW_WIDTH - TEXT_INSET - textRenderer.getWidth(value),
+        textY,
+        room.isNearCapacity(ClientConfigMirror.current().nearCapacityWarningPercent())
+            ? WARNING_COLOUR
+            : LABEL_COLOUR,
         false);
   }
 

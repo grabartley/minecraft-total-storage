@@ -21,6 +21,7 @@ import java.util.List;
  * @param effectiveRadius how far it really reaches once the server cap is applied
  * @param maxRadius the server cap, so the limit is never mysterious
  * @param trusted the trust list already resolved to names, empty for a caller who may not read it
+ * @param capacity how many slots the network has spare, across the containers it may write to
  * @param containerOffset how many containers come before the first row here
  * @param containerTotal how many containers the network holds in total
  * @param containers the rows themselves, nearest to the terminal first
@@ -33,6 +34,7 @@ public record NetworkSettingsView(
     boolean mayAdminister,
     boolean powered,
     List<String> trusted,
+    NetworkCapacity capacity,
     int containerOffset,
     int containerTotal,
     List<ContainerRoleEntry> containers) {
@@ -46,6 +48,7 @@ public record NetworkSettingsView(
   public NetworkSettingsView {
     accessMode = accessMode == null ? TerminalAccessMode.OWNER : accessMode;
     trusted = trusted == null ? List.of() : List.copyOf(trusted);
+    capacity = capacity == null ? NetworkCapacity.EMPTY : capacity;
     containers = containers == null ? List.of() : List.copyOf(containers);
     if (trusted.size() > MAX_TRUSTED) {
       throw new IllegalArgumentException("a view may not carry " + trusted.size() + " trusted");
@@ -68,6 +71,7 @@ public record NetworkSettingsView(
         false,
         false,
         List.of(),
+        NetworkCapacity.EMPTY,
         0,
         0,
         List.of());

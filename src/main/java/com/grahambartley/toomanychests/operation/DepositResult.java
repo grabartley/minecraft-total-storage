@@ -23,7 +23,13 @@ public enum DepositResult {
   /** There was something to store and the network had nowhere to put it. */
   NO_SPACE,
   /** The request never reached a network: no screen, no permission, or no power. */
-  REFUSED;
+  REFUSED,
+  /**
+   * The player asked again before the cooldown was up, so nothing was looked at. Told apart from a
+   * refusal because one is about permission and the other about pace, and a player who reads "not
+   * yours to use" when they simply clicked twice will go looking for the wrong problem.
+   */
+  RATE_LIMITED;
 
   public boolean movedAnything() {
     return this == DEPOSITED || this == PARTIAL;

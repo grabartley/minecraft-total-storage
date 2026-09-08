@@ -5,6 +5,7 @@ import com.grahambartley.toomanychests.access.TerminalAccessService;
 import com.grahambartley.toomanychests.block.TerminalBlock;
 import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.listing.ListingWindow;
+import com.grahambartley.toomanychests.network.PayloadCapLog;
 import com.mojang.authlib.GameProfile;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,8 +17,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Builds the settings panel's answer from the terminal as it stands right now.
@@ -32,8 +31,6 @@ import org.slf4j.LoggerFactory;
  * dressed up as a feature.
  */
 public final class NetworkSettingsService {
-  private static final Logger LOGGER = LoggerFactory.getLogger(NetworkSettingsService.class);
-
   private final ContainerRoleService roles;
 
   public NetworkSettingsService() {
@@ -68,6 +65,7 @@ public final class NetworkSettingsService {
         mayAdminister,
         isPowered(world, terminal),
         mayAdminister ? namesOf(world.getServer(), settings.trusted()) : List.of(),
+        NetworkCapacity.of(all),
         window.offset(),
         all.size(),
         window.sliceOf(all));
@@ -87,10 +85,7 @@ public final class NetworkSettingsService {
     final List<String> names = new ArrayList<>(trusted.size());
     for (final UUID player : trusted) {
       if (names.size() >= NetworkSettingsView.MAX_TRUSTED) {
-        LOGGER.info(
-            "Showing the first {} of {} trusted players",
-            NetworkSettingsView.MAX_TRUSTED,
-            trusted.size());
+        PayloadCapLog.reached("trusted players", NetworkSettingsView.MAX_TRUSTED, trusted.size());
         break;
       }
       names.add(nameOf(server, player));

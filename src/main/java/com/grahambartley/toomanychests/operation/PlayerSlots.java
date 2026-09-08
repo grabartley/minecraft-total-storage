@@ -26,6 +26,15 @@ import net.minecraft.entity.player.PlayerEntity;
  * where vanilla would have put them.
  */
 public final class PlayerSlots {
+  /**
+   * How many slots at the front of the inventory are the hotbar.
+   *
+   * <p>{@code PlayerInventory} numbers the hotbar first, so these are the slots an operator may
+   * choose to keep a deposit-all out of: they are where a player leaves the tools they are working
+   * with, and emptying them is the one part of the gesture that can be unwelcome.
+   */
+  public static final int HOTBAR_SLOTS = 9;
+
   private PlayerSlots() {}
 
   /** The unlocked main inventory and hotbar slots, in inventory order. */
@@ -41,6 +50,35 @@ public final class PlayerSlots {
     final InventoryStorage inventory = InventoryStorage.of(player.getInventory(), null);
     final List<SingleSlotStorage<ItemVariant>> open = new ArrayList<>(LockedSlots.SLOT_COUNT);
     for (int index = LockedSlots.FIRST_SLOT; index <= LockedSlots.LAST_SLOT; index++) {
+      if (!locked.isLocked(index)) {
+        open.add(inventory.getSlot(index));
+      }
+    }
+    return List.copyOf(open);
+  }
+
+  /**
+   * The slots a deposit-all may empty, which is the unlocked ones minus the hotbar when the server
+   * has asked for that.
+   *
+   * <p>Off by default, because locking already protects a chosen slot precisely and a blanket rule
+   * over nine of them is the blunter tool. It exists because a server full of players who never
+   * learn about locking would rather have the blunt one than lose their pickaxe.
+   */
+  public static List<SingleSlotStorage<ItemVariant>> depositable(
+      PlayerEntity player, boolean skipHotbar) {
+    Objects.requireNonNull(player, "player");
+    return depositable(player, LockedSlotsAttachment.get(player), skipHotbar);
+  }
+
+  public static List<SingleSlotStorage<ItemVariant>> depositable(
+      PlayerEntity player, LockedSlots locks, boolean skipHotbar) {
+    Objects.requireNonNull(player, "player");
+    final LockedSlots locked = locks == null ? LockedSlots.empty() : locks;
+    final InventoryStorage inventory = InventoryStorage.of(player.getInventory(), null);
+    final int first = skipHotbar ? LockedSlots.FIRST_SLOT + HOTBAR_SLOTS : LockedSlots.FIRST_SLOT;
+    final List<SingleSlotStorage<ItemVariant>> open = new ArrayList<>(LockedSlots.SLOT_COUNT);
+    for (int index = first; index <= LockedSlots.LAST_SLOT; index++) {
       if (!locked.isLocked(index)) {
         open.add(inventory.getSlot(index));
       }

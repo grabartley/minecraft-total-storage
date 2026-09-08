@@ -4,11 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import java.util.Optional;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableTextContent;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 
 /**
@@ -34,7 +36,7 @@ class OperationMessagesTest {
   @Test
   void aWholeWithdrawalAndAWholeDepositSayNothing() {
     assertTrue(OperationMessages.forWithdrawal(WithdrawOutcome.moved(64L, 64L)).isEmpty());
-    assertTrue(OperationMessages.forDeposit(DepositOutcome.stored(64L, 64L)).isEmpty());
+    assertTrue(OperationMessages.forDeposit(DepositOutcome.stored(64L, 64L, List.of())).isEmpty());
   }
 
   @Test
@@ -44,15 +46,6 @@ class OperationMessagesTest {
     assertEquals(PREFIX + "withdraw.partial", keyOf(line));
     assertEquals(9L, argumentsOf(line)[0]);
     assertEquals(64L, argumentsOf(line)[1]);
-  }
-
-  @Test
-  void aPartialDepositNamesWhatWasStoredAndWhatIsStillInHand() {
-    Optional<Text> line = OperationMessages.forDeposit(DepositOutcome.stored(64L, 20L));
-
-    assertEquals(PREFIX + "deposit.partial", keyOf(line));
-    assertEquals(20L, argumentsOf(line)[0]);
-    assertEquals(44L, argumentsOf(line)[1]);
   }
 
   /** The three empty-handed endings are the ones a player cannot tell apart without being told. */
@@ -67,8 +60,6 @@ class OperationMessagesTest {
     assertEquals(
         PREFIX + "deposit.empty",
         keyOf(OperationMessages.forDeposit(DepositOutcome.nothingToDeposit())));
-    assertEquals(
-        PREFIX + "deposit.full", keyOf(OperationMessages.forDeposit(DepositOutcome.noSpace(64L))));
     assertEquals(
         PREFIX + "deposit.locked",
         keyOf(OperationMessages.forDeposit(DepositOutcome.slotLocked())));
@@ -99,10 +90,42 @@ class OperationMessagesTest {
 
   @ParameterizedTest
   @EnumSource(DepositResult.class)
-  void everyDepositEndingIsAnsweredRatherThanFallingThrough(DepositResult result) {
+  void everyDepositEndingThatCanBeBuiltHereIsAnsweredRatherThanFallingThrough(
+      DepositResult result) {
+    DepositOutcome ending = depositEnding(result);
+    if (ending == null) {
+      return;
+    }
     assertEquals(
-        result != DepositResult.DEPOSITED,
-        OperationMessages.forDeposit(depositEnding(result)).isPresent());
+        result != DepositResult.DEPOSITED && result != DepositResult.RATE_LIMITED,
+        OperationMessages.forDeposit(ending).isPresent());
+  }
+
+  /**
+   * A deposit that stored everything says nothing, and one refused for pace has already been
+   * answered by the guard that refused it. Every other ending is spoken for here, because an ending
+   * nobody explains is indistinguishable from a button that did nothing.
+   */
+  @Test
+  void theTwoSilentEndingsAreSilentForDifferentReasons() {
+    assertTrue(OperationMessages.forDeposit(DepositOutcome.stored(64L, 64L, List.of())).isEmpty());
+    assertTrue(OperationMessages.forDeposit(DepositOutcome.rateLimited()).isEmpty());
+    assertEquals(
+        PREFIX + "cooldown.deposit_all",
+        ((TranslatableTextContent)
+                OperationMessages.rateLimited(ExpensiveOperation.DEPOSIT_ALL, 20L).getContent())
+            .getKey());
+  }
+
+  /** Seconds rather than ticks, and never rounded down to "in zero seconds". */
+  @ParameterizedTest
+  @CsvSource({"1,1", "20,1", "21,2", "40,2", "41,3"})
+  void theWaitIsReportedInWholeSecondsAndNeverInNone(long ticks, long seconds) {
+    assertEquals(
+        seconds,
+        ((TranslatableTextContent)
+                OperationMessages.rateLimited(ExpensiveOperation.RESCAN, ticks).getContent())
+            .getArgs()[0]);
   }
 
   private static WithdrawOutcome withdrawalEnding(WithdrawResult result) {
@@ -115,13 +138,18 @@ class OperationMessagesTest {
     };
   }
 
+  /**
+   * The two endings that carry leftovers cannot be built without a registry to name an item, so
+   * they are exercised against a real deposit in {@code DepositServiceGameTest}. Everything here is
+   * an ending that accounts for nothing because nothing stayed behind.
+   */
   private static DepositOutcome depositEnding(DepositResult result) {
     return switch (result) {
-      case DEPOSITED -> DepositOutcome.stored(64L, 64L);
-      case PARTIAL -> DepositOutcome.stored(64L, 20L);
+      case DEPOSITED -> DepositOutcome.stored(64L, 64L, List.of());
+      case PARTIAL, NO_SPACE -> null;
       case NOTHING_TO_DEPOSIT -> DepositOutcome.nothingToDeposit();
       case SLOT_LOCKED -> DepositOutcome.slotLocked();
-      case NO_SPACE -> DepositOutcome.noSpace(64L);
+      case RATE_LIMITED -> DepositOutcome.rateLimited();
       case REFUSED -> DepositOutcome.refused();
     };
   }

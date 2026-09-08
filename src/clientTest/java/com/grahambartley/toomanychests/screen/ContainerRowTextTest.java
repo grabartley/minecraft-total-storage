@@ -24,7 +24,14 @@ class ContainerRowTextTest {
 
   private static ContainerRoleEntry entry(int variants, long items) {
     return new ContainerRoleEntry(
-        new BlockPos(12, 64, -8), ContainerRole.GENERAL, Optional.empty(), variants, items, 4.0);
+        new BlockPos(12, 64, -8),
+        ContainerRole.GENERAL,
+        Optional.empty(),
+        variants,
+        items,
+        0,
+        27,
+        4.0);
   }
 
   private static String keyOf(Text text) {

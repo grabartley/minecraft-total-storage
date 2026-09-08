@@ -4,6 +4,7 @@ import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.network.NetworkSettingsPayload;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
+import com.grahambartley.toomanychests.terminal.NetworkCapacity;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
 import io.netty.buffer.Unpooled;
 import java.util.List;
@@ -91,7 +92,7 @@ public final class NetworkSettingsPayloadGameTest implements FabricGameTest {
   }
 
   private static ContainerRoleEntry row(Optional<ItemVariant> icon) {
-    return new ContainerRoleEntry(WHERE, ContainerRole.EXCLUDED, icon, 4, 900L, 12.0);
+    return new ContainerRoleEntry(WHERE, ContainerRole.EXCLUDED, icon, 4, 900L, 6, 27, 12.0);
   }
 
   private static NetworkSettingsPayload payload(ContainerRoleEntry row) {
@@ -105,6 +106,7 @@ public final class NetworkSettingsPayloadGameTest implements FabricGameTest {
             true,
             true,
             List.of("Alice"),
+            new NetworkCapacity(9, 27),
             0,
             1,
             List.of(row)));

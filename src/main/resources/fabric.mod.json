@@ -67,7 +67,9 @@
       "com.grahambartley.toomanychests.gametest.TerminalSettingsEditsGameTest",
       "com.grahambartley.toomanychests.gametest.TerminalSettingsServiceGameTest",
       "com.grahambartley.toomanychests.gametest.WithdrawServiceGameTest",
-      "com.grahambartley.toomanychests.gametest.DepositServiceGameTest"
+      "com.grahambartley.toomanychests.gametest.DepositServiceGameTest",
+      "com.grahambartley.toomanychests.gametest.DepositLeftoverReportGameTest",
+      "com.grahambartley.toomanychests.gametest.OperationGuardsGameTest"
     ]
   },
   "mixins": [

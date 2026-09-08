@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests.operation;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -8,13 +9,23 @@ import java.util.Objects;
  * <p>What was not taken is still in the player's inventory, never on the floor, so the difference
  * between these two numbers is a report rather than a loss.
  *
+ * <p>What stayed behind is listed by item as well as counted, because "sixty left over" and "sixty
+ * cobblestone left over" answer different questions and only the second one is actionable.
+ *
+ * <p>The list has to add up to what was not stored. Nothing is allowed to report a shortfall it
+ * cannot account for, which is what stops a path quietly reverting to a bare total: an empty list
+ * beside a partial deposit is refused here rather than drawn.
+ *
  * @param result how the deposit ended
  * @param offered how much the player put forward
  * @param moved how much the network really took
+ * @param leftovers what stayed in the player's inventory, by item, largest first
  */
-public record DepositOutcome(DepositResult result, long offered, long moved) {
+public record DepositOutcome(
+    DepositResult result, long offered, long moved, List<DepositLeftover> leftovers) {
   public DepositOutcome {
     Objects.requireNonNull(result, "result");
+    leftovers = leftovers == null ? List.of() : List.copyOf(leftovers);
     if (offered < 0L) {
       throw new IllegalArgumentException("offered must not be negative: " + offered);
     }
@@ -27,35 +38,53 @@ public record DepositOutcome(DepositResult result, long offered, long moved) {
     if (result.movedAnything() != moved > 0L) {
       throw new IllegalArgumentException(result + " does not describe storing " + moved);
     }
+    final long counted = leftovers.stream().mapToLong(DepositLeftover::amount).sum();
+    if (counted != offered - moved) {
+      throw new IllegalArgumentException(
+          "the leftovers add up to " + counted + " but " + (offered - moved) + " stayed behind");
+    }
   }
 
   public static DepositOutcome refused() {
-    return new DepositOutcome(DepositResult.REFUSED, 0L, 0L);
+    return new DepositOutcome(DepositResult.REFUSED, 0L, 0L, List.of());
   }
 
   public static DepositOutcome nothingToDeposit() {
-    return new DepositOutcome(DepositResult.NOTHING_TO_DEPOSIT, 0L, 0L);
+    return new DepositOutcome(DepositResult.NOTHING_TO_DEPOSIT, 0L, 0L, List.of());
   }
 
   public static DepositOutcome slotLocked() {
-    return new DepositOutcome(DepositResult.SLOT_LOCKED, 0L, 0L);
+    return new DepositOutcome(DepositResult.SLOT_LOCKED, 0L, 0L, List.of());
   }
 
-  public static DepositOutcome noSpace(long offered) {
-    return new DepositOutcome(DepositResult.NO_SPACE, offered, 0L);
+  public static DepositOutcome noSpace(long offered, List<DepositLeftover> leftovers) {
+    return new DepositOutcome(DepositResult.NO_SPACE, offered, 0L, leftovers);
+  }
+
+  /** A player asking faster than the server will answer, which changed nothing. */
+  public static DepositOutcome rateLimited() {
+    return new DepositOutcome(DepositResult.RATE_LIMITED, 0L, 0L, List.of());
   }
 
   /** Decides between a whole and a partial deposit from the amounts themselves. */
-  public static DepositOutcome stored(long offered, long moved) {
+  public static DepositOutcome stored(long offered, long moved, List<DepositLeftover> leftovers) {
     if (moved <= 0L) {
       throw new IllegalArgumentException("a deposit that stored nothing needs a reason");
     }
     return new DepositOutcome(
-        moved >= offered ? DepositResult.DEPOSITED : DepositResult.PARTIAL, offered, moved);
+        moved >= offered ? DepositResult.DEPOSITED : DepositResult.PARTIAL,
+        offered,
+        moved,
+        leftovers);
   }
 
   /** What the player is still holding, which is the half of the report that matters to them. */
   public long remaining() {
     return offered - moved;
+  }
+
+  /** How many kinds of item stayed behind, which decides whether they can all be named. */
+  public int leftoverKinds() {
+    return leftovers.size();
   }
 }

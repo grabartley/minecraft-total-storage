@@ -4,6 +4,7 @@ import com.grahambartley.toomanychests.TooManyChests;
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
+import com.grahambartley.toomanychests.terminal.NetworkCapacity;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,8 +25,10 @@ import net.minecraft.util.math.BlockPos;
  *
  * <p>The distance each row carries is dropped rather than sent. It exists to order the list and the
  * server has already ordered it, so sending it would be handing a client a number whose only use is
- * arithmetic the server already did. A tally over the whole network is dropped for the same reason
- * the panel has no room to draw one: {@code /tmc terminal info} is where a network is counted.
+ * arithmetic the server already did. The slot counts go the same way: they are summed into the
+ * network's capacity before the answer is built, and the client is sent that total rather than the
+ * addends. A tally over the whole network is dropped for the same reason the panel has no room to
+ * draw one: {@code /tmc terminal info} is where a network is counted.
  *
  * <p>The icon is sent, because it is the one thing on a row a client cannot work out for itself:
  * which variant a container holds most of is a fact about that container's contents, and per ADR
@@ -63,6 +66,8 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
     for (final String name : view.trusted()) {
       buf.writeString(name, MAX_NAME_LENGTH);
     }
+    buf.writeVarInt(view.capacity().usedSlots());
+    buf.writeVarInt(view.capacity().totalSlots());
     buf.writeVarInt(view.containerOffset());
     buf.writeVarInt(view.containerTotal());
     buf.writeVarInt(view.containers().size());
@@ -85,6 +90,7 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
     final boolean mayAdminister = buf.readBoolean();
     final boolean powered = buf.readBoolean();
     final List<String> trusted = readTrusted(buf);
+    final NetworkCapacity capacity = readCapacity(buf);
     final int offset = buf.readVarInt();
     final int total = buf.readVarInt();
     final List<ContainerRoleEntry> containers = readContainers(buf);
@@ -98,9 +104,21 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
             mayAdminister,
             powered,
             trusted,
+            capacity,
             offset,
             total,
             containers));
+  }
+
+  /**
+   * A used count larger than the total could only come from a forged packet, and a record that
+   * refuses to hold one would take the connection down over a number nobody draws. It is clamped to
+   * something drawable instead.
+   */
+  private static NetworkCapacity readCapacity(RegistryByteBuf buf) {
+    final int used = Math.max(0, buf.readVarInt());
+    final int total = Math.max(0, buf.readVarInt());
+    return new NetworkCapacity(Math.min(used, total), total);
   }
 
   private static List<String> readTrusted(RegistryByteBuf buf) {
@@ -128,7 +146,7 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
       final long items = buf.readVarLong();
       final Optional<ItemVariant> icon =
           buf.readBoolean() ? Optional.of(ItemVariant.PACKET_CODEC.decode(buf)) : Optional.empty();
-      containers.add(new ContainerRoleEntry(container, role, icon, variants, items, 0.0));
+      containers.add(new ContainerRoleEntry(container, role, icon, variants, items, 0, 0, 0.0));
     }
     return containers;
   }

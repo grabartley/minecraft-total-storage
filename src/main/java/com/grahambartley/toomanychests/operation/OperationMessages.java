@@ -1,7 +1,9 @@
 package com.grahambartley.toomanychests.operation;
 
 import com.grahambartley.toomanychests.TooManyChests;
+import java.util.List;
 import java.util.Optional;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 
 /**
@@ -17,6 +19,15 @@ import net.minecraft.text.Text;
  */
 public final class OperationMessages {
   private static final String PREFIX = "operation." + TooManyChests.MOD_ID + ".";
+
+  /**
+   * How many kinds of leftover are named before the line summarises instead.
+   *
+   * <p>A partial deposit-all can leave a dozen kinds behind, and a line naming all of them is one
+   * nobody finishes reading. Naming the largest two and counting the rest keeps the sentence the
+   * length of a sentence while still leading with what a player most wants to hear.
+   */
+  private static final int NAMED_LEFTOVERS = 2;
 
   private OperationMessages() {}
 
@@ -44,15 +55,60 @@ public final class OperationMessages {
           Optional.of(
               line(
                   "deposit.partial",
-                  "Stored %s, with no room for the other %s",
+                  "Stored %s, with no room for %s",
                   outcome.moved(),
-                  outcome.remaining()));
+                  leftovers(outcome.leftovers())));
       case NOTHING_TO_DEPOSIT -> Optional.of(line("deposit.empty", "There is nothing to store"));
       case SLOT_LOCKED ->
           Optional.of(line("deposit.locked", "That slot is locked, so nothing left it"));
       case NO_SPACE -> Optional.of(line("deposit.full", "This network has no room left"));
+      case RATE_LIMITED -> Optional.empty();
       case REFUSED -> Optional.of(line("refused", "That terminal is not yours to use right now"));
     };
+  }
+
+  /**
+   * What a player is told when they asked again too soon. Says the operation by name, so somebody
+   * running two of them in quick succession learns which one is waiting rather than that "an"
+   * operation is.
+   */
+  public static Text rateLimited(ExpensiveOperation operation, long ticksLeft) {
+    return line(
+        "cooldown." + operation.id(),
+        operation == ExpensiveOperation.RESCAN
+            ? "Give the last scan a moment, %ss left"
+            : "Give the last deposit a moment, %ss left",
+        Math.max(1L, (ticksLeft + 19L) / 20L));
+  }
+
+  /**
+   * Names what stayed behind, because a bare total does not say which chest filled up.
+   *
+   * <p>Only ever called for a partial deposit, whose shortfall {@link DepositOutcome} requires to
+   * be accounted for, so there is always at least one kind to name.
+   *
+   * <p>Exactly one unnamed kind gets its own line rather than "1 other kinds". Three kinds left
+   * behind is an ordinary outcome, not an edge, and a Minecraft translation carries no plural rule
+   * to fix the reading afterwards.
+   */
+  private static Text leftovers(List<DepositLeftover> leftovers) {
+    final MutableText named = Text.empty();
+    for (int index = 0; index < Math.min(NAMED_LEFTOVERS, leftovers.size()); index++) {
+      if (index > 0) {
+        named.append(line("deposit.leftover.separator", ", "));
+      }
+      final DepositLeftover left = leftovers.get(index);
+      named.append(
+          line(
+              "deposit.leftover.item", "%s %s", left.amount(), left.variant().getItem().getName()));
+    }
+    final int rest = leftovers.size() - Math.min(NAMED_LEFTOVERS, leftovers.size());
+    if (rest <= 0) {
+      return named;
+    }
+    return rest == 1
+        ? line("deposit.leftover.more.one", "%s and 1 other kind", named)
+        : line("deposit.leftover.more", "%s and %s other kinds", named, rest);
   }
 
   private static Text line(String key, String english, Object... arguments) {

@@ -6,6 +6,8 @@ import com.grahambartley.toomanychests.network.ContainerRoleEditPayload;
 import com.grahambartley.toomanychests.network.TerminalAccessEditPayload;
 import com.grahambartley.toomanychests.network.TerminalActionPayload;
 import com.grahambartley.toomanychests.network.TerminalRadiusEditPayload;
+import com.grahambartley.toomanychests.operation.ExpensiveOperation;
+import com.grahambartley.toomanychests.operation.OperationGuards;
 import com.grahambartley.toomanychests.operation.TerminalOperationContext;
 import com.grahambartley.toomanychests.operation.TerminalOperationGate;
 import com.grahambartley.toomanychests.terminal.ContainerHighlightService;
@@ -143,6 +145,9 @@ public final class TerminalSettingsEdits {
     }
     final TerminalOperationContext context = administrable(player, payload.syncId());
     if (context == null) {
+      return false;
+    }
+    if (!OperationGuards.allows(player, ExpensiveOperation.RESCAN)) {
       return false;
     }
     if (!TerminalNetworks.power().rescan(context.world(), context.terminal())) {

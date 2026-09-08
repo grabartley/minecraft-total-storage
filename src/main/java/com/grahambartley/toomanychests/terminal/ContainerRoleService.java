@@ -118,11 +118,15 @@ public final class ContainerRoleService {
       ServerWorld world, BlockPos terminal, TerminalSettings settings, BlockPos container) {
     final Map<ItemVariant, Long> held = new LinkedHashMap<>();
     long items = 0L;
+    int used = 0;
+    int slots = 0;
     final Optional<StorageProvider> provider =
         resolver.resolve(world, container, settings.roleFor(container));
     if (provider.isPresent()) {
       for (final StorageView<ItemVariant> view : provider.get().storage()) {
+        slots++;
         if (!view.isResourceBlank() && view.getAmount() > 0L) {
+          used++;
           held.merge(view.getResource(), view.getAmount(), Long::sum);
           items += view.getAmount();
         }
@@ -134,6 +138,8 @@ public final class ContainerRoleService {
         commonest(held),
         held.size(),
         items,
+        used,
+        slots,
         terminal.getSquaredDistance(container));
   }
 
