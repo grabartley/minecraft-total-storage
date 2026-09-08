@@ -60,8 +60,9 @@ public final class OperationGuardsGameTest implements FabricGameTest {
 
   /**
    * Asking again before the cooldown is up changes nothing at all rather than half-working. The
-   * inventory is what proves it: a rate limited deposit that still moved items would be a limit
-   * that costs a player their stuff in exchange for protecting the server.
+   * cooldown is set here rather than assumed, so the case does not depend on a default somebody
+   * could change. The inventory is what proves it: a rate limited deposit that still moved items
+   * would be a limit that costs a player their stuff in exchange for protecting the server.
    */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
@@ -73,10 +74,17 @@ public final class OperationGuardsGameTest implements FabricGameTest {
     ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
     player.getInventory().setStack(0, new ItemStack(Items.DIAMOND, STACK));
     int syncId = NetworkOperationFixture.handlerOf(player).syncId;
+    TooManyChestsConfig original = ServerConfigService.current();
 
-    deposits.depositAll(player, syncId);
-    player.getInventory().setStack(0, new ItemStack(Items.COBBLESTONE, STACK));
-    DepositOutcome second = deposits.depositAll(player, syncId);
+    DepositOutcome second;
+    try {
+      withCooldown(context, 10);
+      deposits.depositAll(player, syncId);
+      player.getInventory().setStack(0, new ItemStack(Items.COBBLESTONE, STACK));
+      second = deposits.depositAll(player, syncId);
+    } finally {
+      restore(context, original);
+    }
 
     context.assertTrue(
         second.result() == DepositResult.RATE_LIMITED,

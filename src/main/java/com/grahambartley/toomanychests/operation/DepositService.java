@@ -107,7 +107,13 @@ public final class DepositService {
     return DepositOutcome.stored(offered, stored.moved(), stored.leftovers());
   }
 
-  /** What every offer holds, for the case where the network took none of it. */
+  /**
+   * What every offer holds, for the case where the network took none of it.
+   *
+   * <p>Gathered even though the no-space line does not read it. The outcome has to account for its
+   * whole shortfall, and a caller that wants to say which items were turned away has them without
+   * asking the inventory again.
+   */
   private static List<DepositLeftover> leftoversOf(List<Offer> offers) {
     final Map<ItemVariant, Long> byVariant = new LinkedHashMap<>();
     for (final Offer offer : offers) {

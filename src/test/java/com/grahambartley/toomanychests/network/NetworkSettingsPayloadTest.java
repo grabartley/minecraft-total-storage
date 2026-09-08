@@ -14,6 +14,8 @@ import java.util.Optional;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.util.math.BlockPos;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 /**
  * What a settings answer looks like once it has been across the wire.
@@ -74,6 +76,38 @@ class NetworkSettingsPayloadTest {
     assertEquals(40, received.containerTotal());
     assertEquals(2, received.containers().size());
     assertEquals(new NetworkCapacity(12, 40), received.capacity());
+  }
+
+  @ParameterizedTest
+  @EnumSource(ContainerRole.class)
+  void everyRoleReachesTheRowItBelongsTo(ContainerRole role) {
+    NetworkSettingsPayload sent =
+        new NetworkSettingsPayload(1, view(TerminalAccessMode.OPEN, List.of(row(4, role))));
+
+    ContainerRoleEntry received = roundTrip(sent).view().containers().get(0);
+
+    assertEquals(role, received.role());
+    assertEquals(new BlockPos(4, 64, -4), received.container());
+    assertEquals(3, received.variantCount());
+    assertEquals(168L, received.itemCount());
+  }
+
+  /**
+   * The distance orders the list on the server, and the slot counts are summed into the network's
+   * capacity before the answer is built. Neither has a use on the client, so neither is sent, and a
+   * row arriving with either filled in would mean the wire had grown a field nothing reads.
+   */
+  @Test
+  void whatOnlyTheServerNeedsIsNotCarried() {
+    NetworkSettingsPayload sent =
+        new NetworkSettingsPayload(
+            1, view(TerminalAccessMode.OWNER, List.of(row(9, ContainerRole.GENERAL))));
+
+    ContainerRoleEntry received = roundTrip(sent).view().containers().get(0);
+
+    assertEquals(0.0, received.distanceSq());
+    assertEquals(0, received.usedSlots());
+    assertEquals(0, received.totalSlots());
   }
 
   /**

@@ -136,7 +136,6 @@
   "screen.too-many-chests.terminal.settings.capacity.unknown": "No containers to fill",
   "operation.too-many-chests.cooldown.rescan": "Give the last scan a moment, %ss left",
   "operation.too-many-chests.cooldown.deposit_all": "Give the last deposit a moment, %ss left",
-  "operation.too-many-chests.deposit.leftover.amount": "%s more",
   "operation.too-many-chests.deposit.leftover.item": "%s %s",
   "operation.too-many-chests.deposit.leftover.separator": ", ",
   "operation.too-many-chests.deposit.leftover.more": "%s and %s other kinds",

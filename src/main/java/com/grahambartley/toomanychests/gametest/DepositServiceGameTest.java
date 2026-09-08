@@ -23,6 +23,7 @@ import net.minecraft.test.BeforeBatch;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableTextContent;
 
 /**
  * Putting items into a network, against real containers.
@@ -230,6 +231,71 @@ public final class DepositServiceGameTest implements FabricGameTest {
     context.assertTrue(
         line.contains(Long.toString(outcome.remaining())),
         "The line should count it, got \"" + line + "\"");
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  /**
+   * More kinds than the line will name. The two largest are named and the rest are counted, so both
+   * the separator between them and the "and N other kinds" tail are exercised: a partial
+   * deposit-all routinely leaves more behind than a sentence can carry.
+   */
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aLineWithMoreKindsThanItNamesCountsTheRest(TestContext context) {
+    BarrelBlockEntity barrel =
+        NetworkOperationFixture.fullBarrel(
+            context, NetworkOperationFixture.EAST_BARREL, Items.COBBLESTONE);
+    barrel.setStack(0, new ItemStack(Items.COBBLESTONE, 60));
+    barrel.markDirty();
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    player.getInventory().setStack(0, new ItemStack(Items.COBBLESTONE, 40));
+    player.getInventory().setStack(1, new ItemStack(Items.DIAMOND, 30));
+    player.getInventory().setStack(2, new ItemStack(Items.OAK_LOG, 20));
+
+    DepositOutcome outcome =
+        deposits.depositAll(player, NetworkOperationFixture.handlerOf(player).syncId);
+    String line = OperationMessages.forDeposit(outcome).map(Text::getString).orElse("");
+
+    context.assertTrue(
+        outcome.leftoverKinds() == 3,
+        "Three kinds should stay behind, reported " + outcome.leftoverKinds());
+    context.assertTrue(
+        line.contains(Items.COBBLESTONE.getName().getString()),
+        "The largest leftover should be named, got \"" + line + "\"");
+    context.assertTrue(
+        line.contains(Items.DIAMOND.getName().getString()),
+        "The second largest should be named too, got \"" + line + "\"");
+    context.assertTrue(
+        line.contains("1 other kinds"),
+        "The rest should be counted rather than named, got \"" + line + "\"");
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  /** A network with no room says so under its own key rather than borrowing the partial one. */
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aFullNetworkIsAnsweredUnderItsOwnKey(TestContext context) {
+    NetworkOperationFixture.fullBarrel(context, NetworkOperationFixture.EAST_BARREL, Items.DIAMOND);
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    player.getInventory().setStack(0, new ItemStack(Items.COBBLESTONE, 12));
+
+    DepositOutcome outcome =
+        deposits.depositAll(player, NetworkOperationFixture.handlerOf(player).syncId);
+    Text line = OperationMessages.forDeposit(outcome).orElseThrow();
+
+    context.assertTrue(
+        outcome.result() == DepositResult.NO_SPACE,
+        "A full network should report no space, got " + outcome.result());
+    context.assertTrue(
+        ((TranslatableTextContent) line.getContent())
+            .getKey()
+            .equals("operation.too-many-chests.deposit.full"),
+        "A full network borrowed another line, got "
+            + ((TranslatableTextContent) line.getContent()).getKey());
     NetworkOperationFixture.finish(context, player);
   }
 

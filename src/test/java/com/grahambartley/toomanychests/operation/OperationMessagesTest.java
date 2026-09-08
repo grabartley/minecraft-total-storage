@@ -48,24 +48,6 @@ class OperationMessagesTest {
     assertEquals(64L, argumentsOf(line)[1]);
   }
 
-  /**
-   * A deposit that knew no items still says how much stayed behind, so the count never goes missing
-   * when the leftovers could not be named.
-   */
-  @Test
-  void aPartialDepositWithNoNamedLeftoversStillReportsTheAmount() {
-    Text left = OperationMessages.leftovers(List.of(), 44L);
-
-    assertEquals(
-        PREFIX + "deposit.leftover.amount", ((TranslatableTextContent) left.getContent()).getKey());
-    assertEquals(44L, ((TranslatableTextContent) left.getContent()).getArgs()[0]);
-  }
-
-  /** The amount is nested inside the leftovers line, which names items when it knows any. */
-  private static long amountIn(Object argument) {
-    return (long) ((TranslatableTextContent) ((Text) argument).getContent()).getArgs()[0];
-  }
-
   /** The three empty-handed endings are the ones a player cannot tell apart without being told. */
   @Test
   void everyEmptyHandedEndingGetsAReasonOfItsOwn() {
@@ -108,7 +90,8 @@ class OperationMessagesTest {
 
   @ParameterizedTest
   @EnumSource(DepositResult.class)
-  void everyDepositEndingIsAnsweredRatherThanFallingThrough(DepositResult result) {
+  void everyDepositEndingThatCanBeBuiltHereIsAnsweredRatherThanFallingThrough(
+      DepositResult result) {
     DepositOutcome ending = depositEnding(result);
     if (ending == null) {
       return;

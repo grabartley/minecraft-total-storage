@@ -57,7 +57,7 @@ public final class OperationMessages {
                   "deposit.partial",
                   "Stored %s, with no room for %s",
                   outcome.moved(),
-                  leftovers(outcome.leftovers(), outcome.remaining())));
+                  leftovers(outcome.leftovers())));
       case NOTHING_TO_DEPOSIT -> Optional.of(line("deposit.empty", "There is nothing to store"));
       case SLOT_LOCKED ->
           Optional.of(line("deposit.locked", "That slot is locked, so nothing left it"));
@@ -82,13 +82,12 @@ public final class OperationMessages {
   }
 
   /**
-   * Names what stayed behind, because a bare total does not say which chest filled up. Falls back
-   * to the total once there are more kinds than a line can carry.
+   * Names what stayed behind, because a bare total does not say which chest filled up.
+   *
+   * <p>Only ever called for a partial deposit, whose shortfall {@link DepositOutcome} requires to
+   * be accounted for, so there is always at least one kind to name.
    */
-  static Text leftovers(List<DepositLeftover> leftovers, long remaining) {
-    if (leftovers.isEmpty()) {
-      return line("deposit.leftover.amount", "%s more", remaining);
-    }
+  static Text leftovers(List<DepositLeftover> leftovers) {
     final MutableText named = Text.empty();
     for (int index = 0; index < Math.min(NAMED_LEFTOVERS, leftovers.size()); index++) {
       if (index > 0) {

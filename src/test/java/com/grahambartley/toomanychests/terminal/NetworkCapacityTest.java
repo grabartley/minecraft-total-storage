@@ -5,6 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.grahambartley.toomanychests.storage.ContainerRole;
+import java.util.List;
+import java.util.Optional;
+import net.minecraft.util.math.BlockPos;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -87,5 +91,62 @@ class NetworkCapacityTest {
   @CsvSource({"-1,5", "5,-1"})
   void countingBelowZeroIsRefused(int used, int total) {
     assertThrows(IllegalArgumentException.class, () -> new NetworkCapacity(used, total));
+  }
+
+  private static ContainerRoleEntry row(ContainerRole role, int used, int total) {
+    return new ContainerRoleEntry(BlockPos.ORIGIN, role, Optional.empty(), 0, 0L, used, total, 0.0);
+  }
+
+  @Test
+  void theRoomOfANetworkIsTheRoomOfItsWritableContainersAddedUp() {
+    NetworkCapacity capacity =
+        NetworkCapacity.of(
+            List.of(
+                row(ContainerRole.GENERAL, 5, 27),
+                row(ContainerRole.FILTERED, 9, 27),
+                row(ContainerRole.GENERAL, 1, 54)));
+
+    assertEquals(15, capacity.usedSlots());
+    assertEquals(108, capacity.totalSlots());
+    assertEquals(93, capacity.freeSlots());
+  }
+
+  /**
+   * A container the network may not write to is not room, in either total. Counting it would make
+   * the readout drift further from the truth with every chest deliberately protected.
+   */
+  @Test
+  void anExcludedContainerIsCountedInNeitherTotal() {
+    NetworkCapacity capacity =
+        NetworkCapacity.of(
+            List.of(row(ContainerRole.GENERAL, 5, 27), row(ContainerRole.EXCLUDED, 20, 27)));
+
+    assertEquals(5, capacity.usedSlots());
+    assertEquals(27, capacity.totalSlots());
+  }
+
+  /** A container whose storage could not be read has no slots to offer, and is not room either. */
+  @Test
+  void aContainerThatCouldNotBeReadContributesNothing() {
+    NetworkCapacity capacity =
+        NetworkCapacity.of(
+            List.of(row(ContainerRole.GENERAL, 0, 0), row(ContainerRole.GENERAL, 3, 27)));
+
+    assertEquals(3, capacity.usedSlots());
+    assertEquals(27, capacity.totalSlots());
+  }
+
+  @Test
+  void aNetworkOfNoRowsKnowsNoRoom() {
+    assertTrue(NetworkCapacity.of(List.of()).isUnknown());
+  }
+
+  /** Every row excluded is not the same as a full network: there is nowhere to put anything. */
+  @Test
+  void aNetworkWhoseEveryContainerIsExcludedKnowsNoRoom() {
+    NetworkCapacity capacity = NetworkCapacity.of(List.of(row(ContainerRole.EXCLUDED, 20, 27)));
+
+    assertTrue(capacity.isUnknown());
+    assertFalse(capacity.isFull());
   }
 }

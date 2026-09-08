@@ -27,13 +27,10 @@ public record NetworkCapacity(int usedSlots, int totalSlots) {
    * cost more than everything else the panel shows put together.
    */
   public static NetworkCapacity of(java.util.Collection<ContainerRoleEntry> rows) {
-    if (rows == null) {
-      return EMPTY;
-    }
     int used = 0;
     int total = 0;
     for (final ContainerRoleEntry row : rows) {
-      if (row == null || row.role() == ContainerRole.EXCLUDED) {
+      if (row.role() == ContainerRole.EXCLUDED) {
         continue;
       }
       used += row.usedSlots();
