@@ -52,8 +52,24 @@ public final class NetworkResync {
     if (server == null || changed == null || changed.isEmpty()) {
       return 0;
     }
-    return terminals(server, changed, actingPlayer)
-        + ContainerViewerSync.resyncAll(server, inventoriesOf(server, changed));
+    return terminals(server, changed, actingPlayer) + containersOnly(server, changed);
+  }
+
+  /**
+   * Reaches only the players holding these containers open by hand.
+   *
+   * <p>For a change that rearranges a container without changing what the network holds. A listing
+   * is aggregated counts, so a sort would send every terminal viewer a page identical to the one
+   * they are already looking at, and the acting player needs the container half as much as anybody
+   * else does.
+   *
+   * @return how many screens were resent, which is the surface a test asserts on
+   */
+  public static int containersOnly(MinecraftServer server, Collection<StorageOrigin> changed) {
+    if (server == null || changed == null || changed.isEmpty()) {
+      return 0;
+    }
+    return ContainerViewerSync.resyncAll(server, inventoriesOf(server, changed));
   }
 
   private static int terminals(

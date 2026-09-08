@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests.gametest;
 
+import com.grahambartley.toomanychests.mutation.ContainerMutations;
 import com.grahambartley.toomanychests.screenhandler.ContainerViewerSync;
 import com.grahambartley.toomanychests.sort.ContainerSortService;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
@@ -152,13 +153,16 @@ public final class ContainerViewerSyncGameTest implements FabricGameTest {
         .setStack(2, new ItemStack(Items.STONE, 8));
     ServerPlayerEntity sorter = openedOn(context, DOUBLE_LEFT);
     ServerPlayerEntity watcher = openedOn(context, DOUBLE_LEFT);
-    long before = revisionOf(watcher);
+    int before = revisionOf(watcher);
 
     sorting.sort(sorter, sorter.currentScreenHandler.syncId);
 
     context.assertTrue(
         revisionOf(watcher) > before,
         "The other player at the double chest was left looking at the old layout");
+    context.assertTrue(
+        ContainerMutations.registry().watchedEverywhereCount() == 0,
+        "A sort left a listener hearing about every container on the server");
     finish(context, sorter, watcher);
   }
 

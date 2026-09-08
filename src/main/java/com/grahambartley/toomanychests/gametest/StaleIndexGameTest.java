@@ -189,6 +189,8 @@ public final class StaleIndexGameTest implements FabricGameTest {
         () -> {
           final long carried = NetworkOperationFixture.countCarried(player, Items.DIAMOND);
           context.assertTrue(
+              carried > 0L, "The clicks granted nothing at all, so nothing raced the hopper");
+          context.assertTrue(
               carried <= DRAINABLE,
               "The player was granted " + carried + " of a barrel holding " + DRAINABLE);
           final long after = NetworkOperationFixture.countInWorld(context, Items.DIAMOND, player);

@@ -97,6 +97,14 @@ public final class ContainerMutationRegistry {
     return watchers.size();
   }
 
+  /**
+   * How many listeners are hearing about every container rather than about named ones. Kept
+   * separate from the per-origin count because a leak here is the expensive one.
+   */
+  public int watchedEverywhereCount() {
+    return everywhere.size();
+  }
+
   public boolean isWatched(StorageOrigin origin) {
     return watchers.containsKey(origin);
   }

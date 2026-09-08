@@ -14,7 +14,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
@@ -74,17 +73,22 @@ public final class ContainerSortService {
     if (slots.stream().allMatch(SingleSlotStorage::isResourceBlank)) {
       return SortOutcome.NOTHING_TO_SORT;
     }
+    final OperationResult<Long> result;
+    final List<StorageOrigin> changed;
     try (ContainerMutationWitness witness =
         ContainerMutationWitness.overEverything(ContainerMutations.registry())) {
-      final OperationResult<Long> result =
+      result =
           NetworkTransactions.runner().run(transaction -> rearrange(slots, target, transaction));
-      if (result.rolledBack()) {
-        return SortOutcome.FAILED;
+      if (result.committed()) {
+        target.inventory().markDirty();
       }
-      target.inventory().markDirty();
-      resync(player, target, witness.changed());
-      return SortOutcome.SORTED;
+      changed = List.copyOf(witness.changed());
     }
+    if (result.rolledBack()) {
+      return SortOutcome.FAILED;
+    }
+    resync(player, target, changed);
+    return SortOutcome.SORTED;
   }
 
   /**
@@ -92,14 +96,18 @@ public final class ContainerSortService {
    * be looking at, so the screen that asked for it is the whole audience. Anything else is fanned
    * out by the containers that spoke up, which is what reaches a viewer holding their own screen
    * over the same double chest.
+   *
+   * <p>Only container screens. A sort rearranges a container without changing what the network
+   * holds, and a listing is aggregated counts, so every terminal viewer would be sent a page
+   * identical to the one already in front of them.
    */
   private static void resync(
-      ServerPlayerEntity player, SortTarget target, Set<StorageOrigin> changed) {
+      ServerPlayerEntity player, SortTarget target, List<StorageOrigin> changed) {
     if (changed.isEmpty()) {
       ContainerViewerSync.resync(player.getServer(), target.inventory());
       return;
     }
-    NetworkResync.after(player.getServer(), changed, null);
+    NetworkResync.containersOnly(player.getServer(), changed);
   }
 
   private static List<SingleSlotStorage<ItemVariant>> slotsOf(SortTarget target) {
