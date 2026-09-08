@@ -14,6 +14,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Builds the settings panel's answer from the terminal as it stands right now.
@@ -28,6 +30,8 @@ import net.minecraft.util.math.BlockPos;
  * dressed up as a feature.
  */
 public final class NetworkSettingsService {
+  private static final Logger LOGGER = LoggerFactory.getLogger(NetworkSettingsService.class);
+
   private final ContainerRoleService roles;
 
   public NetworkSettingsService() {
@@ -82,6 +86,10 @@ public final class NetworkSettingsService {
     final List<String> names = new ArrayList<>(trusted.size());
     for (final UUID player : trusted) {
       if (names.size() >= NetworkSettingsView.MAX_TRUSTED) {
+        LOGGER.info(
+            "Showing the first {} of {} trusted players",
+            NetworkSettingsView.MAX_TRUSTED,
+            trusted.size());
         break;
       }
       names.add(nameOf(server, player));

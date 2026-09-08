@@ -46,10 +46,6 @@ public record ContainerHighlightPayload(int ticks, List<HighlightedContainer> co
     }
   }
 
-  public boolean isEmpty() {
-    return containers.isEmpty();
-  }
-
   @Override
   public CustomPayload.Id<ContainerHighlightPayload> getId() {
     return ID;

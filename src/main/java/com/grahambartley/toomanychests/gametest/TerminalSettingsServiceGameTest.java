@@ -3,7 +3,9 @@ package com.grahambartley.toomanychests.gametest;
 import com.grahambartley.toomanychests.network.NetworkSettingsRequestPayload;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenHandler;
 import com.grahambartley.toomanychests.screenhandler.TerminalSettingsService;
+import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.minecraft.block.Blocks;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
@@ -121,8 +123,8 @@ public final class TerminalSettingsServiceGameTest implements FabricGameTest {
     ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
     TerminalScreenHandler handler = NetworkOperationFixture.handlerOf(player);
     panels.request(player, new NetworkSettingsRequestPayload(handler.syncId, 0, 4));
-    context.setBlockState(NetworkOperationFixture.POWER, net.minecraft.block.Blocks.AIR);
-    com.grahambartley.toomanychests.terminal.TerminalNetworks.power()
+    context.setBlockState(NetworkOperationFixture.POWER, Blocks.AIR);
+    TerminalNetworks.power()
         .unloaded(context.getWorld(), context.getAbsolutePos(NetworkOperationFixture.TERMINAL));
 
     boolean closed =

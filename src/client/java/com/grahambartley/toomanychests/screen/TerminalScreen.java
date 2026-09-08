@@ -393,6 +393,10 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     return true;
   }
 
+  /**
+   * The radius buttons carry their own direction in the glyph they wear, so a right click on {@code
+   * -} still decreases. Only the access control has one meaning and two directions to walk it in.
+   */
   private void applyControl(SettingsControl control, SettingsAction direction) {
     final boolean back = direction == SettingsAction.CYCLE_BACK;
     switch (control) {

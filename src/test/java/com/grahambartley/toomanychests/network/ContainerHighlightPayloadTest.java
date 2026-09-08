@@ -56,7 +56,7 @@ class ContainerHighlightPayloadTest {
   void anEmptyHighlightIsCarriedRatherThanRefused() {
     ContainerHighlightPayload empty = new ContainerHighlightPayload(100, List.of());
 
-    assertTrue(empty.isEmpty());
+    assertTrue(empty.containers().isEmpty());
     assertEquals(empty, roundTrip(empty));
   }
 

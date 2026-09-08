@@ -53,8 +53,10 @@ public final class TerminalSettingsEdits {
   }
 
   public boolean setRadius(ServerPlayerEntity player, TerminalRadiusEditPayload payload) {
-    final TerminalOperationContext context =
-        administrable(player, payload == null ? 0 : payload.syncId());
+    if (payload == null) {
+      return false;
+    }
+    final TerminalOperationContext context = administrable(player, payload.syncId());
     if (context == null) {
       return false;
     }
@@ -71,8 +73,10 @@ public final class TerminalSettingsEdits {
   }
 
   public boolean setAccessMode(ServerPlayerEntity player, TerminalAccessEditPayload payload) {
-    final TerminalOperationContext context =
-        administrable(player, payload == null ? 0 : payload.syncId());
+    if (payload == null) {
+      return false;
+    }
+    final TerminalOperationContext context = administrable(player, payload.syncId());
     if (context == null) {
       return false;
     }
@@ -104,6 +108,10 @@ public final class TerminalSettingsEdits {
     }
     if (outcome == RoleChangeOutcome.NOT_IN_NETWORK) {
       player.sendMessage(TerminalMessages.containerNotInNetwork(), true);
+      panels.refresh(player);
+      return false;
+    }
+    if (outcome == RoleChangeOutcome.NO_TERMINAL) {
       panels.refresh(player);
       return false;
     }

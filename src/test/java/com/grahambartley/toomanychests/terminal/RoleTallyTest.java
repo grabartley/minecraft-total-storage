@@ -14,7 +14,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 class RoleTallyTest {
 
   @Test
-  void arunOfRolesIsCountedIntoItsThreeKinds() {
+  void aRunOfRolesIsCountedIntoItsThreeKinds() {
     RoleTally tally =
         RoleTally.of(
             List.of(

@@ -139,6 +139,46 @@ public final class TerminalNetworkCommandGameTest implements FabricGameTest {
     context.complete();
   }
 
+  /**
+   * A rescan tears the network down and builds it again per ADR 0007, so the command door is gated
+   * exactly as the panel door is. Proving one and not the other is how the two drift apart.
+   */
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aPlayerWhoOwnsNoTerminalCannotMakeItWalkItsRegionAgain(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+
+    int result =
+        run(
+            context,
+            server(context).getCommandSource().withLevel(0),
+            "toomanychests terminal " + at(terminal(context)) + " rescan");
+
+    context.assertTrue(result <= 0, "A third party made the terminal rescan, got " + result);
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void theConsoleCanMakeATerminalWalkItsRegionAgain(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+
+    int result =
+        runAsConsole(context, "toomanychests terminal " + at(terminal(context)) + " rescan");
+
+    context.assertTrue(result >= 0, "The console was refused a rescan, got " + result);
+    context.assertTrue(
+        roles.containers(context.getWorld(), terminal(context)).size() == 1,
+        "The network should still hold its barrel after a rescan");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
   /** A highlight has to be shown to somebody, and the console is nobody. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
