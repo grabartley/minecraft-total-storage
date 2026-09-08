@@ -70,6 +70,18 @@ public final class TerminalSearchBox {
     return field.isFocused();
   }
 
+  /**
+   * Takes the field off screen with its tab. Not painting the box behind it would leave the text,
+   * the caret and the suggestion drawn over whatever the other view puts there, and the field would
+   * still be holding the keyboard.
+   */
+  public void setVisible(boolean visible) {
+    field.visible = visible;
+    if (!visible) {
+      field.setFocused(false);
+    }
+  }
+
   public void clear() {
     field.setText("");
   }

@@ -113,7 +113,51 @@ public final class TerminalScreenLayout {
 
   public static final int TOOLBAR_Y = INSET_Y;
 
+  /**
+   * How many views the terminal offers, each with a tab at the top of the toolbar column.
+   *
+   * <p>The tabs live in the column rather than above the window, where vanilla puts them, because
+   * the window is already as tall as vanilla will draw one on a 320x240 screen. A strip above it
+   * would be drawn off the bottom of that screen instead.
+   */
+  public static final int TAB_COUNT = 2;
+
+  /** Air between the tab strip and the actions under it, so the two do not read as one column. */
+  public static final int TOOLBAR_DIVIDER = 4;
+
+  public static final int ACTIONS_Y = TOOLBAR_Y + TAB_COUNT * BUTTON_SIZE + TOOLBAR_DIVIDER;
+
   public static final int WINDOW_WIDTH = TOOLBAR_X + BUTTON_SIZE + INSET_X;
+
+  /** Where a tab sits in the strip, counted from the top of the toolbar column. */
+  public static int tabY(int index) {
+    requireTab(index);
+    return TOOLBAR_Y + index * BUTTON_SIZE;
+  }
+
+  /** Where an action button sits, counted from the top of the actions below the tabs. */
+  public static int actionY(int index) {
+    if (index < 0
+        || ACTIONS_Y + (index + 1) * (BUTTON_SIZE + TOOLBAR_GAP) > INSET_Y + INSET_HEIGHT) {
+      throw new IndexOutOfBoundsException("no room in the toolbar for an action at " + index);
+    }
+    return ACTIONS_Y + index * (BUTTON_SIZE + TOOLBAR_GAP);
+  }
+
+  /** Which tab a point in the window is over, or {@link #NO_CELL} when it is over none. */
+  public static int tabAt(int windowX, int windowY) {
+    if (windowX < TOOLBAR_X || windowX >= TOOLBAR_X + BUTTON_SIZE) {
+      return NO_CELL;
+    }
+    final int index = Math.floorDiv(windowY - TOOLBAR_Y, BUTTON_SIZE);
+    return windowY < TOOLBAR_Y || index >= TAB_COUNT ? NO_CELL : index;
+  }
+
+  private static void requireTab(int index) {
+    if (index < 0 || index >= TAB_COUNT) {
+      throw new IndexOutOfBoundsException("no terminal tab at index " + index);
+    }
+  }
 
   /** The search box spans the recess under it, since it narrows everything the recess shows. */
   public static final int SEARCH_WIDTH = INSET_WIDTH;

@@ -330,6 +330,64 @@ class TerminalScreenLayoutTest {
             TerminalScreenLayout.SEARCH_Y + TerminalScreenLayout.SEARCH_HEIGHT - 1));
   }
 
+  static Stream<Integer> everyTab() {
+    return IntStream.range(0, TerminalScreenLayout.TAB_COUNT).boxed();
+  }
+
+  @ParameterizedTest
+  @MethodSource("everyTab")
+  void everyTabIsDrawnInTheToolbarColumn(int tab) {
+    int top = TerminalScreenLayout.tabY(tab);
+
+    assertTrue(top >= TerminalScreenLayout.TOOLBAR_Y, "tab at " + top);
+    assertTrue(
+        top + TerminalScreenLayout.BUTTON_SIZE <= TerminalScreenLayout.ACTIONS_Y,
+        "the tab strip runs into the actions below it");
+  }
+
+  @Test
+  void theTabsTouchSoTheyReadAsOneStrip() {
+    assertEquals(
+        TerminalScreenLayout.tabY(0) + TerminalScreenLayout.BUTTON_SIZE,
+        TerminalScreenLayout.tabY(1));
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {-1, 2, 100})
+  void anIndexThatIsNotATabIsRefusedRatherThanGuessedAt(int tab) {
+    assertThrows(IndexOutOfBoundsException.class, () -> TerminalScreenLayout.tabY(tab));
+  }
+
+  /** The toolbar has to hold both actions a view needs without running past the recess. */
+  @Test
+  void theToolbarHasRoomForTheActionsBesideTheStrip() {
+    int last = TerminalScreenLayout.actionY(1) + TerminalScreenLayout.BUTTON_SIZE;
+
+    assertTrue(
+        last <= TerminalScreenLayout.INSET_Y + TerminalScreenLayout.INSET_HEIGHT,
+        "the actions run past the recess, ending at " + last);
+  }
+
+  @Test
+  void theActionsAreSeparatedFromTheStripTheySitUnder() {
+    assertTrue(
+        TerminalScreenLayout.actionY(0)
+            >= TerminalScreenLayout.tabY(TerminalScreenLayout.TAB_COUNT - 1)
+                + TerminalScreenLayout.BUTTON_SIZE,
+        "the first action overlaps the last tab");
+  }
+
+  @Test
+  void aClickBesideTheToolbarIsOverNoTab() {
+    assertEquals(
+        TerminalScreenLayout.NO_CELL,
+        TerminalScreenLayout.tabAt(
+            TerminalScreenLayout.TOOLBAR_X - 1, TerminalScreenLayout.TOOLBAR_Y));
+    assertEquals(
+        TerminalScreenLayout.NO_CELL,
+        TerminalScreenLayout.tabAt(TerminalScreenLayout.GRID_X, TerminalScreenLayout.GRID_Y));
+  }
+
   /**
    * A page is asked for one recess at a time, and a request for more rows than a page may carry is
    * clamped rather than refused. A recess grown past the cap would therefore ask for cells it is
