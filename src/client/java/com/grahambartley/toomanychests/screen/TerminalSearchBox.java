@@ -1,6 +1,5 @@
 package com.grahambartley.toomanychests.screen;
 
-import com.grahambartley.toomanychests.TooManyChests;
 import com.grahambartley.toomanychests.network.ListingRequestPayload;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
 import net.minecraft.client.font.TextRenderer;
@@ -24,9 +23,8 @@ import net.minecraft.util.Identifier;
  * would never see it, and an unlabelled box is just a rectangle.
  */
 public final class TerminalSearchBox {
-  private static final Identifier BOX = Identifier.of(TooManyChests.MOD_ID, "search/box");
-  private static final Identifier BOX_FOCUSED =
-      Identifier.of(TooManyChests.MOD_ID, "search/box_focused");
+  private static final Identifier BOX = TerminalSprites.of("search/box");
+  private static final Identifier BOX_FOCUSED = TerminalSprites.of("search/box_focused");
 
   private static final Text HINT = TerminalScreenText.of("search.hint");
 

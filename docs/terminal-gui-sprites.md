@@ -55,6 +55,7 @@ Why sprites rather than one sheet is recorded in [ADR 0017](adr/0017-terminal-gu
 - **Grid cells are 20x20 and the item is drawn at +2,+2.** The 16x16 item sits inside a one pixel bevel and a one pixel gutter. The gutter is where every cell state is drawn, so it must stay clear of the item.
 - **Cells tile with no spacing.** Adjacent gutters read as a two pixel separator, which is what makes a dense grid legible.
 - **Icons are 12x12 and centre in a 20x20 button at +4,+4.**
+- **The toolbar is a column down the right of the window, not a row above the recess.** The window is already as tall as vanilla will draw one on a 320x240 screen, so a row would have cost the grid a line of cells. Buttons stack downwards from the top of the recess, and the window widens to hold them.
 - **The filter column has no fixed width.** Every filter sprite is nine-sliced horizontally, so the column may be any width without clipping the grid; widen the window rather than the grid when the column grows.
 - **The scrollbar is 8 wide.** The track takes the full height of the grid area; the thumb is nine-sliced vertically and may be any height down to 6.
 

@@ -14,7 +14,8 @@ package com.grahambartley.toomanychests.screenhandler;
  * narrowing the grid, so the grid keeps its width when that column arrives.
  *
  * <p>The inventory is centred rather than left-aligned, since a vanilla screen's eight pixel margin
- * only reads as centred at vanilla's width.
+ * only reads as centred at vanilla's width. It is centred under the grid rather than under the
+ * recess or the window, both of which are wider than the grid by chrome rather than by content.
  */
 public final class TerminalScreenLayout {
   /**
@@ -60,8 +61,19 @@ public final class TerminalScreenLayout {
   public static final int TITLE_X = 8;
   public static final int TITLE_Y = PANEL_BORDER + 2;
 
-  /** The search box spans the recess under it, since it narrows everything the recess shows. */
   public static final int SEARCH_HEIGHT = 12;
+
+  /** A toolbar button, sized so a 12x12 icon centres inside it with a border to spare. */
+  public static final int BUTTON_SIZE = 20;
+
+  /** Every toolbar icon is this size, per {@code docs/terminal-gui-sprites.md}. */
+  public static final int ICON_SIZE = 12;
+
+  /** Where an icon sits inside its button, which is what centres it. */
+  public static final int ICON_INSET = (BUTTON_SIZE - ICON_SIZE) / 2;
+
+  /** Air between the recess and the button column beside it, so the two read as separate panels. */
+  public static final int TOOLBAR_GAP = 2;
 
   /** How far the search box's own nine-sliced border reaches, which its text has to clear. */
   public static final int SEARCH_BORDER = 4;
@@ -91,8 +103,19 @@ public final class TerminalScreenLayout {
 
   public static final int INSET_HEIGHT = 2 * INSET_BORDER + GRID_HEIGHT;
 
-  public static final int WINDOW_WIDTH = INSET_WIDTH + 2 * INSET_X;
+  /**
+   * The column of actions that operate on the whole network, beside the recess rather than above
+   * it. The window is already as tall as vanilla will draw one at the smallest screen size, so a
+   * row would have cost the grid a line of cells; per {@code docs/terminal-gui-sprites.md} a
+   * control is given room by widening the window instead.
+   */
+  public static final int TOOLBAR_X = INSET_X + INSET_WIDTH + TOOLBAR_GAP;
 
+  public static final int TOOLBAR_Y = INSET_Y;
+
+  public static final int WINDOW_WIDTH = TOOLBAR_X + BUTTON_SIZE + INSET_X;
+
+  /** The search box spans the recess under it, since it narrows everything the recess shows. */
   public static final int SEARCH_WIDTH = INSET_WIDTH;
 
   public static final int SEARCH_TEXT_X = SEARCH_X + SEARCH_BORDER;
@@ -110,7 +133,15 @@ public final class TerminalScreenLayout {
   public static final int SCROLLBAR_Y = GRID_Y;
   public static final int SCROLLBAR_HEIGHT = GRID_HEIGHT;
 
-  public static final int INVENTORY_X = (WINDOW_WIDTH - COLUMNS * SLOT_SIZE) / 2;
+  /**
+   * The inventory is centred under the grid, rather than under the recess or the window.
+   *
+   * <p>Both of those are wider than the grid by things the eye does not read as content: the recess
+   * carries the scrollbar and the window carries the toolbar column. Centring on either leaves the
+   * inventory visibly off to one side of the nine columns directly above it, which are the nine
+   * columns a player is comparing it against.
+   */
+  public static final int INVENTORY_X = GRID_X + (GRID_WIDTH - COLUMNS * SLOT_SIZE) / 2;
 
   /** Room under the recess for the inventory's own label, plus air on either side of it. */
   public static final int INVENTORY_GAP = 14;

@@ -35,17 +35,22 @@ public final class StorageProviderResolver {
   }
 
   /**
-   * Re-resolves a provider held from an earlier tick, keeping its role. Empty when the container is
-   * gone, or when the origin is not a world position this resolver can reach.
+   * Resolves a container from an origin recorded earlier, which is what a network index entry hands
+   * back. Empty when the container is gone, or when the origin is not a world position this
+   * resolver can reach.
    */
+  public Optional<StorageProvider> resolve(World world, StorageOrigin origin, ContainerRole role) {
+    Objects.requireNonNull(world, "world");
+    if (!(origin instanceof BlockStorageOrigin blockOrigin)
+        || !blockOrigin.worldKey().equals(world.getRegistryKey())) {
+      return Optional.empty();
+    }
+    return resolve(world, blockOrigin.pos(), role);
+  }
+
+  /** Re-resolves a provider held from an earlier tick, keeping its role. */
   public Optional<StorageProvider> revalidate(World world, StorageProvider provider) {
     Objects.requireNonNull(provider, "provider");
-    if (!(provider.origin() instanceof BlockStorageOrigin blockOrigin)) {
-      return Optional.empty();
-    }
-    if (!blockOrigin.worldKey().equals(world.getRegistryKey())) {
-      return Optional.empty();
-    }
-    return resolve(world, blockOrigin.pos(), provider.role());
+    return resolve(world, provider.origin(), provider.role());
   }
 }

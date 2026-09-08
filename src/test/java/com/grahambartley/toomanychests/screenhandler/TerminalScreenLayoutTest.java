@@ -119,13 +119,21 @@ class TerminalScreenLayoutTest {
         TerminalScreenLayout.y(TerminalScreenLayout.HOTBAR_START));
   }
 
+  /**
+   * Under the grid rather than under the recess or the window. Both of those are wider than the
+   * grid by chrome, so centring on either leaves the inventory off to one side of the nine columns
+   * directly above it.
+   */
   @Test
-  void theInventoryIsCentredInTheWindow() {
+  void theInventoryIsCentredUnderTheGrid() {
     int inventoryWidth = TerminalScreenLayout.COLUMNS * TerminalScreenLayout.SLOT_SIZE;
+    int leftMargin = TerminalScreenLayout.x(0) - TerminalScreenLayout.GRID_X;
     int rightMargin =
-        TerminalScreenLayout.WINDOW_WIDTH - (TerminalScreenLayout.x(0) + inventoryWidth);
+        TerminalScreenLayout.GRID_X
+            + TerminalScreenLayout.GRID_WIDTH
+            - (TerminalScreenLayout.x(0) + inventoryWidth);
 
-    assertEquals(TerminalScreenLayout.x(0), rightMargin);
+    assertEquals(leftMargin, rightMargin);
   }
 
   /** The recess the listing is drawn into must not run over the label under it. */
@@ -233,6 +241,43 @@ class TerminalScreenLayoutTest {
         TerminalScreenLayout.SEARCH_X + TerminalScreenLayout.SEARCH_WIDTH
             <= TerminalScreenLayout.WINDOW_WIDTH - TerminalScreenLayout.PANEL_BORDER,
         "the search box runs under the chassis frame");
+  }
+
+  @Test
+  void theToolbarSitsBesideTheRecessRatherThanOverIt() {
+    assertTrue(
+        TerminalScreenLayout.TOOLBAR_X
+            >= TerminalScreenLayout.INSET_X + TerminalScreenLayout.INSET_WIDTH,
+        "the toolbar overlaps the recess");
+    assertEquals(TerminalScreenLayout.INSET_Y, TerminalScreenLayout.TOOLBAR_Y);
+  }
+
+  @Test
+  void aToolbarButtonIsDrawnInsideTheChassisFrame() {
+    assertTrue(
+        TerminalScreenLayout.TOOLBAR_X + TerminalScreenLayout.BUTTON_SIZE
+            <= TerminalScreenLayout.WINDOW_WIDTH - TerminalScreenLayout.PANEL_BORDER,
+        "the button runs under the chassis frame");
+    assertTrue(
+        TerminalScreenLayout.TOOLBAR_Y >= TerminalScreenLayout.PANEL_BORDER,
+        "the button runs under the chassis frame");
+  }
+
+  /** A column added by widening the window keeps the margins either side of it equal. */
+  @Test
+  void theToolbarIsGivenRoomWithoutUnbalancingTheWindow() {
+    assertEquals(
+        TerminalScreenLayout.INSET_X,
+        TerminalScreenLayout.WINDOW_WIDTH
+            - (TerminalScreenLayout.TOOLBAR_X + TerminalScreenLayout.BUTTON_SIZE));
+  }
+
+  /** An icon that merely fits its button reads as pinned to a corner rather than centred in it. */
+  @Test
+  void anIconCentresInTheButtonAroundIt() {
+    assertEquals(
+        TerminalScreenLayout.BUTTON_SIZE,
+        2 * TerminalScreenLayout.ICON_INSET + TerminalScreenLayout.ICON_SIZE);
   }
 
   /**

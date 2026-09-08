@@ -92,9 +92,16 @@ public class TerminalScreenHandler extends ScreenHandler {
   }
 
   /**
-   * Only the player's own inventory is here, so a shift-click moves a stack between the hotbar and
-   * the rest of it. Depositing into the network is a separate operation with its own request, since
-   * a network has no slot for an item to be inserted into.
+   * Where vanilla sends a quick move that this mod's screen did not claim first.
+   *
+   * <p>Per ADR 0029 the terminal screen turns a shift-click on a filled inventory slot into a
+   * deposit request, so that gesture does not arrive here. What still does is a quick move from a
+   * client that never ran the screen code, and one on an empty slot, and both have to land
+   * somewhere sane rather than on an unhandled case.
+   *
+   * <p>Only the player's own inventory is here, so the move is between the hotbar and the rest of
+   * it. The network is never a destination: it has no slot for a stack to be inserted into, and a
+   * deposit is a request the server resolves rather than a slot move.
    */
   @Override
   public ItemStack quickMove(PlayerEntity player, int index) {

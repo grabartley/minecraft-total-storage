@@ -36,6 +36,24 @@ A grid with nothing in it says which nothing it means, because the empty cases a
 
 Power, permission and distance are re-checked every tick the screen is up, not just when it opened. Cutting the terminal's power, breaking it, losing access to it, walking away from it, or dying all close the screen straight away.
 
+## Taking things out
+
+Click a cell and the item comes to you. Left click takes a stack, right click takes half, shift and left click sends it straight to your inventory, and middle click asks how much when the amount you want is not one a gesture can express.
+
+Nothing is ever guessed at. What you click is a name and an amount, never a place: the server works out which containers really hold the item at the moment it extracts, inside one transaction. A listing that has gone stale under you therefore costs a shortfall rather than an item that never existed, and a container broken in the same tick you click it hands over nothing. Two players reaching for the last stack together produce exactly one success. See [ADR 0009](docs/adr/0009-clients-send-intent.md).
+
+Taking more than the network holds takes everything there is and tells you what you did not get. A full inventory takes what fits and leaves the rest in the network. Nothing is ever dropped on the floor, and a locked slot is never used as somewhere to put a withdrawal.
+
+## Putting things in
+
+Shift-click a stack in your inventory and the network takes it. Pick a stack up and left click the grid to hand over all of it, or right click to hand over one. The deposit all button beside the grid empties your whole inventory in one press.
+
+**Locked slots, armour and the offhand are never deposited**, by any of these, including deposit all. That is the whole reason locking exists, and it is enforced on the server rather than filtered on the client, so a modified client cannot empty a slot you pinned. Shift-click is the one mouse gesture the terminal takes over; picking up, splitting, and dragging all behave exactly as they do in any container. The keyboard belongs to the search box while it has focus, so a number key writes a digit rather than swapping a hotbar slot. See [ADR 0029](docs/adr/0029-the-grid-takes-clicks-like-a-container-does.md).
+
+Where each item lands is the network's decision, made per item against the roles you gave your containers. A `Filtered` container that has declared the item takes it first, and one that already holds it is preferred over one that does not, so like items gather rather than scatter. `General` containers take what is left. `Excluded` containers are never written to, under any configuration.
+
+A full `Filtered` container falls through to a `General` one rather than refusing the item. A network with room for some of what you offered stores that much and tells you what is still in your hands, and one with no room at all leaves your inventory exactly as it was and says so. Having nothing to store is a different message from having nowhere to put it.
+
 ## Container roles
 
 Every container a terminal can see carries a role, which is what decides how far the network is allowed to go with it.
