@@ -157,7 +157,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     if (!tab.isSettings() && requested.needsRequest(items.scroll().window(), search.text())) {
       requestVisibleRows();
     }
-    if (tab.isSettings() && !containersWanted().equals(requestedContainers)) {
+    if (tab.isSettings() && !settings.scroll().window().equals(requestedContainers)) {
       requestVisibleContainers();
     }
     updateWidgets(items.page().status());
@@ -189,6 +189,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
       hoveredControl = SettingsControl.NONE;
       return;
     }
+    hoveredTab = TerminalTab.at(windowX, windowY);
     hoveredCell =
         tab.isSettings() ? TerminalScreenLayout.NO_CELL : items.hoveredCell(windowX, windowY);
     hoveredRow = tab.isSettings() ? settings.rowAt(windowX, windowY) : -1;
@@ -330,6 +331,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
       return;
     }
     stopAskingForContainers();
+    search.setVisible(true);
+    setFocused(search.widget());
     requestVisibleRows();
   }
 
@@ -363,13 +366,15 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
    * only knows what it was last told.
    */
   private boolean handleSettingsClick(int windowX, int windowY, int button) {
-    final SettingsControl control = SettingsControl.at(windowX, windowY);
-    if (control.isSomething()) {
-      applyControl(control);
-      return true;
-    }
     if (button != GridClick.LEFT_BUTTON && button != GridClick.RIGHT_BUTTON) {
       return false;
+    }
+    final SettingsControl control = SettingsControl.at(windowX, windowY);
+    if (control.isSomething()) {
+      if (settingsThisFrame.mayAdminister()) {
+        applyControl(control);
+      }
+      return true;
     }
     final int index = settings.rowAt(windowX, windowY);
     final ContainerRoleEntry entry = index < 0 ? null : settingsThisFrame.at(index);
@@ -532,13 +537,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
         Set.of());
   }
 
-  private ListingWindow containersWanted() {
-    return new ListingWindow(
-        settings.scroll().window().offset(), TerminalScreenLayout.CONTAINER_ROWS);
-  }
-
   private void requestVisibleContainers() {
-    requestedContainers = containersWanted();
+    requestedContainers = settings.scroll().window();
     ModNetworkingClient.sendSettingsRequest(
         handler.syncId, requestedContainers.offset(), requestedContainers.length());
   }

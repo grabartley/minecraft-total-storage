@@ -46,6 +46,18 @@ class TerminalTabTest {
     assertEquals(1, TerminalTab.SETTINGS.index());
   }
 
+  /** The tabs are two glyphs, so each has to name itself somewhere a player can read it. */
+  @ParameterizedTest
+  @EnumSource(TerminalTab.class)
+  void everyTabIsNamedUnderItsOwnKey(TerminalTab tab) {
+    assertEquals(tab.name().toLowerCase(java.util.Locale.ROOT), tab.label());
+  }
+
+  @Test
+  void noTwoTabsShareAName() {
+    assertFalse(TerminalTab.ITEMS.label().equals(TerminalTab.SETTINGS.label()));
+  }
+
   @Test
   void onlyOneOfTheTwoViewsIsTheSettingsOne() {
     assertTrue(TerminalTab.SETTINGS.isSettings());

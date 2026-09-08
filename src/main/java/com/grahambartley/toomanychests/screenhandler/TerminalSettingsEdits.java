@@ -124,11 +124,12 @@ public final class TerminalSettingsEdits {
     if (context == null) {
       return false;
     }
-    if (payload.action() == TerminalAction.RESCAN) {
-      TerminalNetworks.power().rescan(context.world(), context.terminal());
-    }
     ContainerHighlightService.highlight(player, context.world(), context.terminal());
-    return payload.action() == TerminalAction.HIGHLIGHT || pushed(context);
+    if (payload.action() != TerminalAction.RESCAN) {
+      return true;
+    }
+    TerminalNetworks.power().rescan(context.world(), context.terminal());
+    return pushed(context);
   }
 
   /** Everyone looking at this terminal is shown the change, not only whoever made it. */
