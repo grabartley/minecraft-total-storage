@@ -426,6 +426,21 @@ class TerminalScreenLayoutTest {
     assertThrows(IndexOutOfBoundsException.class, () -> TerminalScreenLayout.containerRowY(row));
   }
 
+  /**
+   * The header's last row is the one the container list starts on, so it is addressable; anything
+   * past it is not.
+   */
+  @Test
+  void anIndexThatIsNotASettingsRowIsRefusedRatherThanGuessedAt() {
+    assertThrows(IndexOutOfBoundsException.class, () -> TerminalScreenLayout.settingsRowY(-1));
+    assertThrows(
+        IndexOutOfBoundsException.class,
+        () -> TerminalScreenLayout.settingsRowY(TerminalScreenLayout.SETTINGS_HEADER_ROWS + 1));
+    assertEquals(
+        TerminalScreenLayout.CONTAINER_LIST_Y,
+        TerminalScreenLayout.settingsRowY(TerminalScreenLayout.SETTINGS_HEADER_ROWS));
+  }
+
   @Test
   void aClickAboveOrBesideTheContainerListIsOverNoRow() {
     assertEquals(

@@ -183,20 +183,54 @@ public final class TerminalSettingsEditsGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, owner, guest);
   }
 
+  /**
+   * Proven by what the walk found rather than by the call returning. A count that was already true
+   * before the rescan would be just as true if the rescan never ran, so the region is widened first
+   * and the second barrel is what shows the network really walked it again.
+   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
       tickLimit = TICK_LIMIT)
-  public void aRescanIsAcceptedAndLeavesTheNetworkStanding(TestContext context) {
+  public void aRescanPicksUpWhatTheWiderRegionReaches(TestContext context) {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.FAR_BARREL);
     ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    NetworkOperationFixture.widenWithoutRescanning(context, 2);
+    context.assertTrue(
+        containerCount(context) == 1, "The network should start holding only the near barrel");
 
     edits.act(owner, new TerminalActionPayload(syncId(owner), TerminalAction.RESCAN));
 
     context.assertTrue(
-        roles.containers(context.getWorld(), terminal(context)).size() == 1,
-        "The network should still hold its barrel after a rescan");
+        containerCount(context) == 2,
+        "The rescan found " + containerCount(context) + " of the two barrels now in reach");
     NetworkOperationFixture.finish(context, owner);
+  }
+
+  /** A rescan that changes nothing says so, rather than reading as a button that did nothing. */
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aRescanThatFindsNothingNewLeavesTheNetworkExactlyAsItWas(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+
+    boolean accepted =
+        edits.act(owner, new TerminalActionPayload(syncId(owner), TerminalAction.RESCAN));
+
+    context.assertTrue(accepted, "The owner was refused a rescan");
+    context.assertTrue(
+        containerCount(context) == 1,
+        "A rescan with nothing new to find changed the network to "
+            + containerCount(context)
+            + " containers");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  private int containerCount(TestContext context) {
+    return roles.containers(context.getWorld(), terminal(context)).size();
   }
 
   private static int radiusOf(TestContext context) {

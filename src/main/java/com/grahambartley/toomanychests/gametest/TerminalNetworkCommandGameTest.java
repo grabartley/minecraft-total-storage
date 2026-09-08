@@ -141,13 +141,12 @@ public final class TerminalNetworkCommandGameTest implements FabricGameTest {
 
   /**
    * A rescan tears the network down and builds it again per ADR 0007, so the command door is gated
-   * exactly as the panel door is. Proving one and not the other is how the two drift apart.
-   */
-  /**
-   * The refusal is proven by what did not happen rather than by a return code. A rescan that finds
-   * nothing new also returns zero, so a test asserting only on the code would pass with the gate
-   * deleted; widening the reach first gives a permitted rescan something to find, and the container
-   * count is what tells the two apart.
+   * exactly as the panel door is.
+   *
+   * <p>The refusal is proven by what did not happen rather than by a return code. A rescan that
+   * finds nothing new also returns zero, so a test asserting only on the code would pass with the
+   * gate deleted; widening the reach first gives a permitted rescan something to find, and the
+   * container count is what tells the two apart.
    */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
