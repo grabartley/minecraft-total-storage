@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.grahambartley.toomanychests.screenhandler.TerminalSettingsLayout;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 
 class TerminalSettingTest {
@@ -53,9 +54,21 @@ class TerminalSettingTest {
     assertFalse(TerminalSetting.TRUSTED.cyclesOnRowClick());
   }
 
+  /**
+   * The keys are written out rather than derived, because these are what the panel draws through
+   * and a lang file cannot follow a renamed enum constant. A test that recomputes the derivation
+   * would agree with a rename that had quietly changed what a player reads.
+   */
+  @ParameterizedTest
+  @CsvSource({"RADIUS,settings.radius", "ACCESS,settings.access", "TRUSTED,settings.trusted"})
+  void everySettingIsNamedUnderTheKeyTheLangFileCarries(TerminalSetting setting, String key) {
+    assertEquals(key, setting.label());
+  }
+
+  /** Every row of the section has a name, so none of them can be drawn without one. */
   @ParameterizedTest
   @EnumSource(TerminalSetting.class)
-  void everySettingIsNamedUnderItsOwnKey(TerminalSetting setting) {
-    assertEquals("settings." + setting.name().toLowerCase(java.util.Locale.ROOT), setting.label());
+  void everySettingHasALabel(TerminalSetting setting) {
+    assertFalse(setting.label().isBlank());
   }
 }

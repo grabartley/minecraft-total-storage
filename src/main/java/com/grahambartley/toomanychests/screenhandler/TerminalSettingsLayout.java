@@ -107,7 +107,14 @@ public final class TerminalSettingsLayout {
     return windowY < CONTENT_Y || row >= ROWS ? NO_ROW : row;
   }
 
-  /** Whether a point is over the container list's scrollbar rather than over a row. */
+  /**
+   * Whether a point falls in the band kept for the container list's scrollbar.
+   *
+   * <p>Says nothing about which section is open, and a point here is not necessarily over a
+   * scrollbar rather than over something else: a settings row spans the whole panel, so the stepper
+   * that raises the radius reaches into this band. Ask {@code TerminalSettingsPanel} instead when
+   * the answer has to mean "over a scrollbar that is being drawn".
+   */
   public static boolean isOverScrollbar(int windowX, int windowY) {
     return windowX >= TerminalScreenLayout.SCROLLBAR_X
         && windowX < TerminalScreenLayout.SCROLLBAR_X + TerminalScreenLayout.SCROLLBAR_WIDTH

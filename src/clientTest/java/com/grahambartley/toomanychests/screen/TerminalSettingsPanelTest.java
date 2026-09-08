@@ -175,6 +175,38 @@ class TerminalSettingsPanelTest {
         "with a stale count still overflowing, the section is the only thing refusing the grab");
   }
 
+  /**
+   * Every way in agrees about which section has a scrollbar, so no one of them can be the one that
+   * forgets. A drag begun on the list and carried into the terminal section stops there.
+   */
+  @Test
+  void noWayInReachesAScrollbarTheOpenSectionIsNotShowing() {
+    TerminalSettingsPanel panel = containers();
+    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 5));
+    int onTheThumb = TerminalSettingsLayout.CONTENT_Y + 1;
+
+    assertTrue(panel.isOverScrollbar(TerminalScreenLayout.SCROLLBAR_X, onTheThumb));
+    assertTrue(panel.grabScrollbar(onTheThumb));
+    assertTrue(panel.isDraggingScrollbar());
+
+    panel.show(SettingsSection.TERMINAL);
+
+    assertFalse(panel.isOverScrollbar(TerminalScreenLayout.SCROLLBAR_X, onTheThumb));
+    assertFalse(panel.grabScrollbar(onTheThumb));
+    assertFalse(panel.isDraggingScrollbar());
+  }
+
+  /** The stepper that raises the radius sits in the gutter, and must not be taken for a grab. */
+  @Test
+  void aClickOnTheRadiusStepperIsNotAGrabOnTheScrollbar() {
+    TerminalSettingsPanel panel = new TerminalSettingsPanel();
+    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 5));
+    int rightmost = SettingsControl.radiusUpX() + SettingsControl.size() - 1;
+
+    assertFalse(panel.isOverScrollbar(rightmost, SettingsControl.radiusY()));
+    assertFalse(panel.grabScrollbar(SettingsControl.radiusY()));
+  }
+
   /** A settings row is not a container row, however far along the panel the click landed. */
   @Test
   void aClickOnTheRadiusStepperIsOverNoContainerRow() {

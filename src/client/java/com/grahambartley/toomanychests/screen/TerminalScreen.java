@@ -273,7 +273,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
           && settings.scroll().overflows()
           && (TerminalSettingsLayout.rowAt(windowX(mouseX), windowY(mouseY))
                   != TerminalSettingsLayout.NO_ROW
-              || TerminalSettingsLayout.isOverScrollbar(windowX(mouseX), windowY(mouseY)))) {
+              || settings.isOverScrollbar(windowX(mouseX), windowY(mouseY)))) {
         settings.scroll().scrollBy(notches);
         return true;
       }
@@ -307,9 +307,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     }
     if (tab.isSettings()) {
       if (button == GridClick.LEFT_BUTTON
-          && settings.scrolls()
-          && TerminalSettingsLayout.isOverScrollbar(windowX, windowY)
-          && settings.scrollbar().grab(windowY - TerminalSettingsLayout.CONTENT_Y)) {
+          && settings.isOverScrollbar(windowX, windowY)
+          && settings.grabScrollbar(windowY)) {
         return true;
       }
       return handleSettingsClick(windowX, windowY, button)
@@ -516,8 +515,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     if (prompt.isOpen()) {
       return true;
     }
-    if (settings.scrollbar().isDragging()) {
-      settings.scrollbar().dragTo(windowY(mouseY) - TerminalSettingsLayout.CONTENT_Y);
+    if (settings.isDraggingScrollbar()) {
+      settings.dragScrollbarTo(windowY(mouseY));
       return true;
     }
     if (items.scrollbar().isDragging()) {
@@ -576,8 +575,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   @Override
   public boolean mouseReleased(double mouseX, double mouseY, int button) {
-    if (button == GridClick.LEFT_BUTTON && settings.scrollbar().isDragging()) {
-      settings.scrollbar().release();
+    if (button == GridClick.LEFT_BUTTON && settings.isDraggingScrollbar()) {
+      settings.releaseScrollbar();
       return true;
     }
     if (button == GridClick.LEFT_BUTTON && items.scrollbar().isDragging()) {

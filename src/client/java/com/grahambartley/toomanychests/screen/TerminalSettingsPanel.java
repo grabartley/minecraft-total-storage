@@ -80,13 +80,44 @@ public final class TerminalSettingsPanel {
   public void show(SettingsSection shown) {
     section = shown;
     scroll.scrollTo(0);
+    scrollbar.release();
   }
 
   public ListingScroll scroll() {
     return scroll;
   }
 
-  public TerminalScrollbar scrollbar() {
+  /**
+   * Whether a point is over a scrollbar this panel is actually showing.
+   *
+   * <p>The section is folded in here rather than asked beside every call, because a settings row
+   * spans the whole panel and the stepper that raises the radius reaches into the band the
+   * container list keeps for its own scrollbar. Every way in has to agree about that, and a rule
+   * spelled out at four call sites is a rule three of them will keep and one will not.
+   */
+  public boolean isOverScrollbar(int windowX, int windowY) {
+    return scrolls() && TerminalSettingsLayout.isOverScrollbar(windowX, windowY);
+  }
+
+  /** Takes hold of the thumb, measured from the top of the window rather than of the track. */
+  public boolean grabScrollbar(int windowY) {
+    return scrolls() && scrollbar.grab(windowY - TerminalSettingsLayout.CONTENT_Y);
+  }
+
+  /** Whether a drag begun on this panel's scrollbar is still running. */
+  public boolean isDraggingScrollbar() {
+    return scrolls() && scrollbar.isDragging();
+  }
+
+  public void dragScrollbarTo(int windowY) {
+    scrollbar.dragTo(windowY - TerminalSettingsLayout.CONTENT_Y);
+  }
+
+  public void releaseScrollbar() {
+    scrollbar.release();
+  }
+
+  TerminalScrollbar scrollbar() {
     return scrollbar;
   }
 
