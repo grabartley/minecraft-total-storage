@@ -1,6 +1,7 @@
 package com.grahambartley.toomanychests.screen;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
@@ -153,6 +154,36 @@ class TerminalSettingsPanelTest {
     panel.show(SettingsSection.CONTAINERS);
 
     assertEquals(0, panel.scroll().firstIndex());
+  }
+
+  /**
+   * Only the container list scrolls, and the panel says so rather than leaving the scrollbar to
+   * refuse on its own. It refuses by asking whether it overflows, which is the other section's
+   * count until the next answer arrives, so for those frames a click on the radius stepper would be
+   * taken as a grab on a scrollbar that is not drawn.
+   */
+  @Test
+  void onlyTheContainerListScrolls() {
+    TerminalSettingsPanel panel = containers();
+    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 5));
+
+    assertTrue(panel.scrolls());
+    panel.show(SettingsSection.TERMINAL);
+    assertFalse(panel.scrolls());
+    assertTrue(
+        panel.scroll().overflows(),
+        "with a stale count still overflowing, the section is the only thing refusing the grab");
+  }
+
+  /** A settings row is not a container row, however far along the panel the click landed. */
+  @Test
+  void aClickOnTheRadiusStepperIsOverNoContainerRow() {
+    TerminalSettingsPanel panel = new TerminalSettingsPanel();
+
+    assertEquals(
+        TerminalSettingsLayout.NO_ROW,
+        panel.containerRowAt(
+            SettingsControl.radiusUpX() + SettingsControl.size() - 1, SettingsControl.radiusY()));
   }
 
   /** A list that shrank under a scrolled panel must not leave it pointing past the end. */

@@ -18,7 +18,7 @@ import net.minecraft.util.Identifier;
  * <p>Two sections behind a strip along the top, because the recess is a hundred pixels tall and the
  * window cannot grow: sharing that between the terminal's own settings and its container list makes
  * both unusable, where splitting it costs fourteen pixels once and leaves each section room to
- * breathe. See {@link TerminalScreenLayout#SECTION_COUNT}.
+ * breathe. See {@link TerminalSettingsLayout#SECTION_COUNT}.
  *
  * <p>Every row is twenty pixels, which is what lets a container row carry a real item icon and a
  * setting row carry a control big enough to aim at. A container is recognised by what is in it far
@@ -66,6 +66,17 @@ public final class TerminalSettingsPanel {
     return section;
   }
 
+  /**
+   * Whether the open section has a list to scroll, which only the container one does.
+   *
+   * <p>Asked before the scrollbar is offered a click or a wheel notch. The scrollbar refusing on
+   * its own is not enough: it refuses by asking whether it overflows, and between switching section
+   * and the next answer from the server that is still the other section's count.
+   */
+  public boolean scrolls() {
+    return section == SettingsSection.CONTAINERS;
+  }
+
   public void show(SettingsSection shown) {
     section = shown;
     scroll.scrollTo(0);
@@ -84,14 +95,17 @@ public final class TerminalSettingsPanel {
     scroll.fit(section == SettingsSection.CONTAINERS ? view.containerTotal() : 0);
   }
 
-  /** The row of the whole container list a screen position is over, or -1 for none. */
+  /**
+   * The row of the whole container list a screen position is over, or {@link
+   * TerminalSettingsLayout#NO_ROW} for none.
+   */
   public int containerRowAt(int windowX, int windowY) {
     if (section != SettingsSection.CONTAINERS
         || TerminalSettingsLayout.isOverScrollbar(windowX, windowY)) {
-      return -1;
+      return TerminalSettingsLayout.NO_ROW;
     }
     final int row = TerminalSettingsLayout.rowAt(windowX, windowY);
-    return row == TerminalSettingsLayout.NO_ROW ? -1 : scroll.firstIndex() + row;
+    return row == TerminalSettingsLayout.NO_ROW ? row : scroll.firstIndex() + row;
   }
 
   /** The terminal setting a screen position is over, or null for none. */
@@ -180,7 +194,8 @@ public final class TerminalSettingsPanel {
         view.isClamped()
             ? TerminalScreenText.of(
                 "settings.radius.clamped", view.radius(), view.effectiveRadius())
-            : TerminalScreenText.of("settings.radius", view.radius(), view.maxRadius()),
+            : TerminalScreenText.of(
+                TerminalSetting.RADIUS.label(), view.radius(), view.maxRadius()),
         originX,
         originY + TerminalSettingsLayout.rowY(TerminalSetting.RADIUS.row()),
         LABEL_COLOUR);
@@ -195,7 +210,7 @@ public final class TerminalSettingsPanel {
     labelled(
         context,
         textRenderer,
-        TerminalScreenText.of("settings.access"),
+        TerminalScreenText.of(TerminalSetting.ACCESS.label()),
         TerminalScreenText.of("access." + view.accessMode().id()),
         originX,
         originY + TerminalSettingsLayout.rowY(TerminalSetting.ACCESS.row()),
@@ -205,7 +220,7 @@ public final class TerminalSettingsPanel {
     labelled(
         context,
         textRenderer,
-        TerminalScreenText.of("settings.trusted"),
+        TerminalScreenText.of(TerminalSetting.TRUSTED.label()),
         view.trusted().isEmpty()
             ? TerminalScreenText.of("settings.trusted.none")
             : Text.literal(String.join(", ", view.trusted())),

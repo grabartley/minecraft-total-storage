@@ -269,9 +269,10 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     }
     final int notches = verticalAmount > 0.0 ? -1 : 1;
     if (tab.isSettings()) {
-      if (settings.scroll().overflows()
+      if (settings.scrolls()
+          && settings.scroll().overflows()
           && (TerminalSettingsLayout.rowAt(windowX(mouseX), windowY(mouseY))
-                  != TerminalScreenLayout.NO_CELL
+                  != TerminalSettingsLayout.NO_ROW
               || TerminalSettingsLayout.isOverScrollbar(windowX(mouseX), windowY(mouseY)))) {
         settings.scroll().scrollBy(notches);
         return true;
@@ -306,6 +307,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     }
     if (tab.isSettings()) {
       if (button == GridClick.LEFT_BUTTON
+          && settings.scrolls()
           && TerminalSettingsLayout.isOverScrollbar(windowX, windowY)
           && settings.scrollbar().grab(windowY - TerminalSettingsLayout.CONTENT_Y)) {
         return true;
@@ -418,7 +420,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   private boolean handleContainerClick(
       int windowX, int windowY, int button, boolean mayAdminister) {
     final int index = settings.containerRowAt(windowX, windowY);
-    final ContainerRoleEntry entry = index < 0 ? null : settingsThisFrame.at(index);
+    final ContainerRoleEntry entry =
+        index == TerminalSettingsLayout.NO_ROW ? null : settingsThisFrame.at(index);
     final SettingsAction action = SettingsClick.of(button, entry != null, mayAdminister);
     if (action == SettingsAction.NONE) {
       return false;
@@ -621,7 +624,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
       return;
     }
     final int index = settings.containerRowAt(hoveredWindowX, hoveredWindowY);
-    final ContainerRoleEntry entry = index < 0 ? null : settingsThisFrame.at(index);
+    final ContainerRoleEntry entry =
+        index == TerminalSettingsLayout.NO_ROW ? null : settingsThisFrame.at(index);
     if (entry == null) {
       return;
     }

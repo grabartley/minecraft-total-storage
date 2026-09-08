@@ -99,6 +99,24 @@ class SettingsControlTest {
     assertTrue(SettingsControl.RADIUS_UP.isSomething());
   }
 
+  /**
+   * The stepper that raises the radius reaches into the band the container list keeps for its
+   * scrollbar, because a settings row spans the whole panel and that list's does not.
+   *
+   * <p>Recorded here because it is the reason the scrollbar has to be offered a click only on the
+   * section that has one: it is asked first, and six of these sixteen pixels are inside its band.
+   */
+  @Test
+  void theStepperThatRaisesTheRadiusReachesIntoTheScrollbarsBand() {
+    int rightmost = SettingsControl.radiusUpX() + SettingsControl.size() - 1;
+
+    assertTrue(
+        TerminalSettingsLayout.isOverScrollbar(rightmost, SettingsControl.radiusY()),
+        "the stepper no longer overlaps the gutter, so this case has nothing left to pin");
+    assertEquals(
+        SettingsControl.RADIUS_UP, SettingsControl.at(rightmost, SettingsControl.radiusY()));
+  }
+
   /** The other rows carry no steppers, so a click on one must not reach the radius. */
   @Test
   void aClickOnAnotherSettingsRowIsNotAStepper() {
