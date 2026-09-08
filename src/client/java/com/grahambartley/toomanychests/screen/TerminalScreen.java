@@ -81,8 +81,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   private TerminalTab hoveredTab;
   private int hoveredCell = TerminalScreenLayout.NO_CELL;
-  private int hoveredRow = -1;
-  private SettingsControl hoveredControl = SettingsControl.NONE;
+  private int hoveredWindowX = Integer.MIN_VALUE;
+  private int hoveredWindowY = Integer.MIN_VALUE;
 
   public TerminalScreen(TerminalScreenHandler handler, PlayerInventory inventory, Text title) {
     super(handler, inventory, title);
@@ -185,15 +185,15 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     if (prompt.isOpen()) {
       hoveredTab = null;
       hoveredCell = TerminalScreenLayout.NO_CELL;
-      hoveredRow = -1;
-      hoveredControl = SettingsControl.NONE;
+      hoveredWindowX = Integer.MIN_VALUE;
+      hoveredWindowY = Integer.MIN_VALUE;
       return;
     }
     hoveredTab = TerminalTab.at(windowX, windowY);
     hoveredCell =
         tab.isSettings() ? TerminalScreenLayout.NO_CELL : items.hoveredCell(windowX, windowY);
-    hoveredRow = tab.isSettings() ? settings.rowAt(windowX, windowY) : -1;
-    hoveredControl = tab.isSettings() ? SettingsControl.at(windowX, windowY) : SettingsControl.NONE;
+    hoveredWindowX = windowX;
+    hoveredWindowY = windowY;
   }
 
   @Override
@@ -251,7 +251,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   protected void drawForeground(DrawContext context, int mouseX, int mouseY) {
     super.drawForeground(context, mouseX, mouseY);
     if (tab.isSettings()) {
-      settings.draw(context, textRenderer, settingsThisFrame, 0, 0, hoveredRow, hoveredControl);
+      settings.draw(context, textRenderer, settingsThisFrame, 0, 0, hoveredWindowX, hoveredWindowY);
       return;
     }
     items.drawRows(context, textRenderer);
@@ -269,9 +269,9 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     final int notches = verticalAmount > 0.0 ? -1 : 1;
     if (tab.isSettings()) {
       if (settings.scroll().overflows()
-          && (TerminalScreenLayout.containerRowAt(windowX(mouseX), windowY(mouseY))
+          && (TerminalScreenLayout.settingsRowAt(windowX(mouseX), windowY(mouseY))
                   != TerminalScreenLayout.NO_CELL
-              || TerminalScreenLayout.isOverContainerScrollbar(windowX(mouseX), windowY(mouseY)))) {
+              || TerminalScreenLayout.isOverSettingsScrollbar(windowX(mouseX), windowY(mouseY)))) {
         settings.scroll().scrollBy(notches);
         return true;
       }
@@ -305,8 +305,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     }
     if (tab.isSettings()) {
       if (button == GridClick.LEFT_BUTTON
-          && TerminalScreenLayout.isOverContainerScrollbar(windowX, windowY)
-          && settings.scrollbar().grab(windowY - TerminalScreenLayout.CONTAINER_LIST_Y)) {
+          && TerminalScreenLayout.isOverSettingsScrollbar(windowX, windowY)
+          && settings.scrollbar().grab(windowY - TerminalScreenLayout.SETTINGS_CONTENT_Y)) {
         return true;
       }
       return handleSettingsClick(windowX, windowY, button)
@@ -369,57 +369,86 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   }
 
   /**
-   * A click on the settings panel. Nothing is applied here: every control sends what the player
-   * asked for and waits, because per ADR 0008 whether they may is the server's answer and this end
-   * only knows what it was last told.
+   * A click on the settings view, which has four things it could have landed on: a section tab, a
+   * stepper, a setting that cycles, or a container row. Each is asked in the order it is drawn.
+   *
+   * <p>Nothing is applied here. Every control sends what the player asked for and waits, because
+   * per ADR 0008 whether they may is the server's answer and this end only knows what it was last
+   * told.
    */
   private boolean handleSettingsClick(int windowX, int windowY, int button) {
-    final SettingsControl control = SettingsControl.at(windowX, windowY);
-    final SettingsAction onControl =
-        SettingsClick.of(button, control.isSomething(), settingsThisFrame.mayAdminister());
-    if (onControl != SettingsAction.NONE) {
-      if (onControl != SettingsAction.REFUSED) {
-        applyControl(control, onControl);
-      }
+    final SettingsSection clicked = SettingsSection.at(windowX, windowY);
+    if (clicked != null) {
+      showSection(clicked);
       return true;
     }
-    final int index = settings.rowAt(windowX, windowY);
+    final boolean mayAdminister = settingsThisFrame.mayAdminister();
+    if (settings.section() == SettingsSection.TERMINAL) {
+      final SettingsControl control = SettingsControl.at(windowX, windowY);
+      if (control.isSomething()) {
+        if (mayAdminister && button == GridClick.LEFT_BUTTON) {
+          stepRadius(control);
+        }
+        return true;
+      }
+      return handleSettingClick(windowX, windowY, button, mayAdminister);
+    }
+    return handleContainerClick(windowX, windowY, button, mayAdminister);
+  }
+
+  /** A setting a click can change, which today is the access mode and nothing else. */
+  private boolean handleSettingClick(int windowX, int windowY, int button, boolean mayAdminister) {
+    final TerminalSetting setting = settings.settingAt(windowX, windowY);
+    final SettingsAction action =
+        SettingsClick.of(button, setting != null && setting.cyclesOnRowClick(), mayAdminister);
+    if (action == SettingsAction.NONE) {
+      return setting != null;
+    }
+    if (action != SettingsAction.REFUSED) {
+      ModNetworkingClient.sendAccessEdit(
+          handler.syncId,
+          action == SettingsAction.CYCLE_BACK
+              ? AccessModeCycle.previous(settingsThisFrame.accessMode())
+              : AccessModeCycle.next(settingsThisFrame.accessMode()));
+    }
+    return true;
+  }
+
+  private boolean handleContainerClick(
+      int windowX, int windowY, int button, boolean mayAdminister) {
+    final int index = settings.containerRowAt(windowX, windowY);
     final ContainerRoleEntry entry = index < 0 ? null : settingsThisFrame.at(index);
-    final SettingsAction onRow =
-        SettingsClick.of(button, entry != null, settingsThisFrame.mayAdminister());
-    if (onRow == SettingsAction.NONE) {
+    final SettingsAction action = SettingsClick.of(button, entry != null, mayAdminister);
+    if (action == SettingsAction.NONE) {
       return false;
     }
-    if (onRow != SettingsAction.REFUSED) {
+    if (action != SettingsAction.REFUSED) {
       ModNetworkingClient.sendRoleEdit(
           handler.syncId,
           entry.container(),
-          onRow == SettingsAction.CYCLE_BACK
+          action == SettingsAction.CYCLE_BACK
               ? ContainerRoleCycle.previous(entry.role())
               : ContainerRoleCycle.next(entry.role()));
     }
     return true;
   }
 
-  /**
-   * The radius buttons carry their own direction in the glyph they wear, so a right click on {@code
-   * -} still decreases. Only the access control has one meaning and two directions to walk it in.
-   */
-  private void applyControl(SettingsControl control, SettingsAction direction) {
-    final boolean back = direction == SettingsAction.CYCLE_BACK;
-    switch (control) {
-      case RADIUS_DOWN ->
-          ModNetworkingClient.sendRadiusEdit(handler.syncId, settingsThisFrame.radius() - 1);
-      case RADIUS_UP ->
-          ModNetworkingClient.sendRadiusEdit(handler.syncId, settingsThisFrame.radius() + 1);
-      case ACCESS_CYCLE ->
-          ModNetworkingClient.sendAccessEdit(
-              handler.syncId,
-              back
-                  ? AccessModeCycle.previous(settingsThisFrame.accessMode())
-                  : AccessModeCycle.next(settingsThisFrame.accessMode()));
-      case NONE -> {}
+  /** Switching section resets the scroll, so a list is never opened part way down. */
+  private void showSection(SettingsSection shown) {
+    if (settings.section() != shown) {
+      settings.show(shown);
+      requestVisibleContainers();
     }
+  }
+
+  /**
+   * The radius steps by one. The two steppers carry their direction in the glyph they wear, so
+   * neither needs a cycle and a right click on one means nothing.
+   */
+  private void stepRadius(SettingsControl control) {
+    ModNetworkingClient.sendRadiusEdit(
+        handler.syncId,
+        settingsThisFrame.radius() + (control == SettingsControl.RADIUS_UP ? 1 : -1));
   }
 
   /**
@@ -484,7 +513,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
       return true;
     }
     if (settings.scrollbar().isDragging()) {
-      settings.scrollbar().dragTo(windowY(mouseY) - TerminalScreenLayout.CONTAINER_LIST_Y);
+      settings.scrollbar().dragTo(windowY(mouseY) - TerminalScreenLayout.SETTINGS_CONTENT_Y);
       return true;
     }
     if (items.scrollbar().isDragging()) {

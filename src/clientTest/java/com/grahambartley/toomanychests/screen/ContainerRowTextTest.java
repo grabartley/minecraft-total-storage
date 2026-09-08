@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
+import java.util.Optional;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableTextContent;
 import net.minecraft.util.math.BlockPos;
@@ -23,7 +24,7 @@ class ContainerRowTextTest {
 
   private static ContainerRoleEntry entry(int variants, long items) {
     return new ContainerRoleEntry(
-        new BlockPos(12, 64, -8), ContainerRole.GENERAL, variants, items, 4.0);
+        new BlockPos(12, 64, -8), ContainerRole.GENERAL, Optional.empty(), variants, items, 4.0);
   }
 
   private static String keyOf(Text text) {
@@ -34,22 +35,40 @@ class ContainerRowTextTest {
     return ((TranslatableTextContent) text.getContent()).getArgs();
   }
 
-  /** A row has to be recognisable as a chest the player stood in front of, not just a position. */
+  /**
+   * A row leads with what is in the container, because that is what a player recognises. The
+   * coordinates are what they need only once they have found the row they mean, so those go to the
+   * tooltip.
+   */
+  /** "1 kinds" reads as a bug, and a Minecraft translation carries no plural rule to fix it. */
   @Test
-  void aStockedContainerReadsAsItsPositionAndWhatIsInIt() {
-    Text row = ContainerRowText.position(entry(3, 168L));
+  void aContainerHoldingOneKindIsNotDescribedInThePlural() {
+    Text row = ContainerRowText.contents(entry(1, 32L));
+
+    assertEquals(PREFIX + "settings.container.one", keyOf(row));
+    assertEquals(1, argumentsOf(row).length);
+  }
+
+  @Test
+  void aContainerHoldingSeveralKindsCountsThem() {
+    Text row = ContainerRowText.contents(entry(2, 32L));
 
     assertEquals(PREFIX + "settings.container", keyOf(row));
-    assertEquals("12 64 -8", argumentsOf(row)[0]);
-    assertEquals(3, argumentsOf(row)[1]);
+    assertEquals(2, argumentsOf(row)[0]);
   }
 
   @Test
   void anEmptyContainerSaysSoRatherThanReadingAsZeroKinds() {
-    Text row = ContainerRowText.position(entry(0, 0L));
+    assertEquals(
+        PREFIX + "settings.container.empty", keyOf(ContainerRowText.contents(entry(0, 0L))));
+  }
 
-    assertEquals(PREFIX + "settings.container.empty", keyOf(row));
-    assertEquals("12 64 -8", argumentsOf(row)[0]);
+  @Test
+  void thePositionIsSaidSeparatelyForTheTooltip() {
+    Text where = ContainerRowText.position(entry(3, 168L));
+
+    assertEquals(PREFIX + "settings.container.at", keyOf(where));
+    assertEquals("12 64 -8", argumentsOf(where)[0]);
   }
 
   @ParameterizedTest

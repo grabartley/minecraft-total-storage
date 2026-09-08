@@ -401,108 +401,160 @@ class TerminalScreenLayoutTest {
         TerminalScreenLayout.SETTINGS_X + TerminalScreenLayout.SETTINGS_WIDTH);
   }
 
-  @Test
-  void theContainerListStartsBelowTheHeaderAndEndsInsideTheRecess() {
+  static Stream<Integer> everySection() {
+    return IntStream.range(0, TerminalScreenLayout.SECTION_COUNT).boxed();
+  }
+
+  static Stream<Integer> everySettingsRow() {
+    return IntStream.range(0, TerminalScreenLayout.SETTINGS_ROWS).boxed();
+  }
+
+  @ParameterizedTest
+  @MethodSource("everySection")
+  void everySectionTabIsClickableWhereItIsDrawn(int section) {
+    int left = TerminalScreenLayout.sectionTabX(section);
+
+    assertEquals(section, TerminalScreenLayout.sectionTabAt(left, TerminalScreenLayout.SETTINGS_Y));
     assertEquals(
-        TerminalScreenLayout.settingsRowY(TerminalScreenLayout.SETTINGS_HEADER_ROWS),
-        TerminalScreenLayout.CONTAINER_LIST_Y);
-    assertTrue(
-        TerminalScreenLayout.containerRowY(TerminalScreenLayout.CONTAINER_ROWS - 1)
-                + TerminalScreenLayout.CONTAINER_ROW_HEIGHT
-            <= TerminalScreenLayout.SETTINGS_Y + TerminalScreenLayout.SETTINGS_HEIGHT,
-        "the last container row runs past the recess");
+        section,
+        TerminalScreenLayout.sectionTabAt(
+            left + TerminalScreenLayout.SECTION_TAB_WIDTH - 1,
+            TerminalScreenLayout.SETTINGS_Y + TerminalScreenLayout.SECTION_TAB_HEIGHT - 1));
   }
 
   @Test
-  void theContainerListHasRoomForAtLeastAFewRows() {
+  void theSectionTabsSpanThePanelWithoutOverlapping() {
+    assertEquals(TerminalScreenLayout.SETTINGS_X, TerminalScreenLayout.sectionTabX(0));
+    assertEquals(
+        TerminalScreenLayout.sectionTabX(0) + TerminalScreenLayout.SECTION_TAB_WIDTH,
+        TerminalScreenLayout.sectionTabX(1));
     assertTrue(
-        TerminalScreenLayout.CONTAINER_ROWS >= 3,
-        "a list of " + TerminalScreenLayout.CONTAINER_ROWS + " rows is not navigable");
+        TerminalScreenLayout.sectionTabX(TerminalScreenLayout.SECTION_COUNT - 1)
+                + TerminalScreenLayout.SECTION_TAB_WIDTH
+            <= TerminalScreenLayout.SETTINGS_X + TerminalScreenLayout.SETTINGS_WIDTH,
+        "the strip runs past the panel");
+  }
+
+  @Test
+  void aClickBelowTheStripIsNoSectionTab() {
+    assertEquals(
+        TerminalScreenLayout.NO_CELL,
+        TerminalScreenLayout.sectionTabAt(
+            TerminalScreenLayout.SETTINGS_X,
+            TerminalScreenLayout.SETTINGS_Y + TerminalScreenLayout.SECTION_TAB_HEIGHT));
+    assertEquals(
+        TerminalScreenLayout.NO_CELL,
+        TerminalScreenLayout.sectionTabAt(
+            TerminalScreenLayout.SETTINGS_X - 1, TerminalScreenLayout.SETTINGS_Y));
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {-1, 2, 100})
+  void anIndexThatIsNotASectionIsRefusedRatherThanGuessedAt(int section) {
+    assertThrows(IndexOutOfBoundsException.class, () -> TerminalScreenLayout.sectionTabX(section));
+  }
+
+  /** Enough rows to be a list rather than a peephole, which is what splitting the panel bought. */
+  @Test
+  void thereIsRoomForEnoughRowsToBeAList() {
+    assertTrue(
+        TerminalScreenLayout.SETTINGS_ROWS >= 4,
+        "a list of " + TerminalScreenLayout.SETTINGS_ROWS + " rows is not navigable");
+  }
+
+  /** A row has to hold a sixteen pixel item icon and a control, with air around them. */
+  @Test
+  void aRowIsTallEnoughToHoldAnIconAndAControl() {
+    assertTrue(
+        TerminalScreenLayout.SETTINGS_ROW_HEIGHT >= TerminalScreenLayout.SETTINGS_CONTROL_SIZE + 2,
+        "a row of "
+            + TerminalScreenLayout.SETTINGS_ROW_HEIGHT
+            + " cannot hold a control of "
+            + TerminalScreenLayout.SETTINGS_CONTROL_SIZE);
+    assertEquals(
+        TerminalScreenLayout.SETTINGS_ROW_HEIGHT,
+        2 * TerminalScreenLayout.SETTINGS_CONTROL_INSET
+            + TerminalScreenLayout.SETTINGS_CONTROL_SIZE);
+  }
+
+  @Test
+  void theRowsStartBelowTheStripAndEndInsideTheRecess() {
+    assertTrue(
+        TerminalScreenLayout.SETTINGS_CONTENT_Y
+            >= TerminalScreenLayout.SETTINGS_Y + TerminalScreenLayout.SECTION_TAB_HEIGHT,
+        "the rows run under the strip");
+    assertTrue(
+        TerminalScreenLayout.settingsRowY(TerminalScreenLayout.SETTINGS_ROWS - 1)
+                + TerminalScreenLayout.SETTINGS_ROW_HEIGHT
+            <= TerminalScreenLayout.SETTINGS_Y + TerminalScreenLayout.SETTINGS_HEIGHT,
+        "the last row runs past the recess");
+  }
+
+  @ParameterizedTest
+  @MethodSource("everySettingsRow")
+  void everySettingsRowIsClickableWhereItIsDrawn(int row) {
+    assertEquals(
+        row,
+        TerminalScreenLayout.settingsRowAt(
+            TerminalScreenLayout.SETTINGS_X, TerminalScreenLayout.settingsRowY(row)));
   }
 
   @ParameterizedTest
   @ValueSource(ints = {-1, 100})
-  void anIndexThatIsNotAContainerRowIsRefusedRatherThanGuessedAt(int row) {
-    assertThrows(IndexOutOfBoundsException.class, () -> TerminalScreenLayout.containerRowY(row));
+  void anIndexThatIsNotASettingsRowIsRefusedRatherThanGuessedAt(int row) {
+    assertThrows(IndexOutOfBoundsException.class, () -> TerminalScreenLayout.settingsRowY(row));
+  }
+
+  @Test
+  void aClickOnTheStripOrBesideTheRowsIsOverNoRow() {
+    assertEquals(
+        TerminalScreenLayout.NO_CELL,
+        TerminalScreenLayout.settingsRowAt(
+            TerminalScreenLayout.SETTINGS_X, TerminalScreenLayout.SETTINGS_CONTENT_Y - 1));
+    assertEquals(
+        TerminalScreenLayout.NO_CELL,
+        TerminalScreenLayout.settingsRowAt(
+            TerminalScreenLayout.SETTINGS_X - 1, TerminalScreenLayout.SETTINGS_CONTENT_Y));
   }
 
   /**
-   * The header's last row is the one the container list starts on, so it is addressable; anything
-   * past it is not.
+   * A row spans the whole panel, because only the section that scrolls has a gutter. Which section
+   * that is belongs to the panel, so rejecting the gutter is proven in {@code
+   * TerminalSettingsPanelTest} rather than here.
    */
   @Test
-  void anIndexThatIsNotASettingsRowIsRefusedRatherThanGuessedAt() {
-    assertThrows(IndexOutOfBoundsException.class, () -> TerminalScreenLayout.settingsRowY(-1));
-    assertThrows(
-        IndexOutOfBoundsException.class,
-        () -> TerminalScreenLayout.settingsRowY(TerminalScreenLayout.SETTINGS_HEADER_ROWS + 1));
+  void aSettingsRowSpansThePanelAndTheGutterIsStillTheScrollbars() {
+    assertEquals(TerminalScreenLayout.SETTINGS_WIDTH, TerminalScreenLayout.SETTINGS_FULL_ROW_WIDTH);
     assertEquals(
-        TerminalScreenLayout.CONTAINER_LIST_Y,
-        TerminalScreenLayout.settingsRowY(TerminalScreenLayout.SETTINGS_HEADER_ROWS));
-  }
-
-  @Test
-  void aClickAboveOrBesideTheContainerListIsOverNoRow() {
-    assertEquals(
-        TerminalScreenLayout.NO_CELL,
-        TerminalScreenLayout.containerRowAt(
-            TerminalScreenLayout.SETTINGS_X, TerminalScreenLayout.CONTAINER_LIST_Y - 1));
-    assertEquals(
-        TerminalScreenLayout.NO_CELL,
-        TerminalScreenLayout.containerRowAt(
-            TerminalScreenLayout.SETTINGS_X - 1, TerminalScreenLayout.CONTAINER_LIST_Y));
-    assertEquals(
-        TerminalScreenLayout.NO_CELL,
-        TerminalScreenLayout.containerRowAt(
-            TerminalScreenLayout.SETTINGS_X + TerminalScreenLayout.SETTINGS_WIDTH,
-            TerminalScreenLayout.CONTAINER_LIST_Y));
-  }
-
-  /** The gutter belongs to the scrollbar, so a click there must not land on the row behind it. */
-  @Test
-  void aClickOnTheContainerScrollbarIsNotARow() {
-    assertEquals(
-        TerminalScreenLayout.NO_CELL,
-        TerminalScreenLayout.containerRowAt(
-            TerminalScreenLayout.SCROLLBAR_X, TerminalScreenLayout.CONTAINER_LIST_Y));
+        0,
+        TerminalScreenLayout.settingsRowAt(
+            TerminalScreenLayout.SCROLLBAR_X, TerminalScreenLayout.SETTINGS_CONTENT_Y));
     assertTrue(
-        TerminalScreenLayout.isOverContainerScrollbar(
-            TerminalScreenLayout.SCROLLBAR_X, TerminalScreenLayout.CONTAINER_LIST_Y));
+        TerminalScreenLayout.isOverSettingsScrollbar(
+            TerminalScreenLayout.SCROLLBAR_X, TerminalScreenLayout.SETTINGS_CONTENT_Y));
   }
 
   @Test
-  void theContainerRowsLeaveTheGutterToTheirScrollbar() {
+  void aContainerRowLeavesTheGutterToItsScrollbar() {
     assertTrue(
-        TerminalScreenLayout.SETTINGS_X + TerminalScreenLayout.CONTAINER_ROW_WIDTH
+        TerminalScreenLayout.SETTINGS_X + TerminalScreenLayout.SETTINGS_ROW_WIDTH
             <= TerminalScreenLayout.SCROLLBAR_X,
-        "the rows run under the scrollbar");
+        "the container rows run under the scrollbar");
   }
 
   @Test
-  void aPointBesideTheContainerScrollbarIsNotOverIt() {
+  void aPointBesideTheSettingsScrollbarIsNotOverIt() {
     assertFalse(
-        TerminalScreenLayout.isOverContainerScrollbar(
-            TerminalScreenLayout.SCROLLBAR_X - 1, TerminalScreenLayout.CONTAINER_LIST_Y));
+        TerminalScreenLayout.isOverSettingsScrollbar(
+            TerminalScreenLayout.SCROLLBAR_X - 1, TerminalScreenLayout.SETTINGS_CONTENT_Y));
     assertFalse(
-        TerminalScreenLayout.isOverContainerScrollbar(
-            TerminalScreenLayout.SCROLLBAR_X, TerminalScreenLayout.CONTAINER_LIST_Y - 1));
+        TerminalScreenLayout.isOverSettingsScrollbar(
+            TerminalScreenLayout.SCROLLBAR_X, TerminalScreenLayout.SETTINGS_CONTENT_Y - 1));
     assertFalse(
-        TerminalScreenLayout.isOverContainerScrollbar(
+        TerminalScreenLayout.isOverSettingsScrollbar(
             TerminalScreenLayout.SCROLLBAR_X,
-            TerminalScreenLayout.CONTAINER_LIST_Y + TerminalScreenLayout.CONTAINER_LIST_HEIGHT));
-  }
-
-  @ParameterizedTest
-  @MethodSource("everyContainerRow")
-  void everyContainerRowIsClickableWhereItIsDrawn(int row) {
-    assertEquals(
-        row,
-        TerminalScreenLayout.containerRowAt(
-            TerminalScreenLayout.SETTINGS_X, TerminalScreenLayout.containerRowY(row)));
-  }
-
-  static Stream<Integer> everyContainerRow() {
-    return IntStream.range(0, TerminalScreenLayout.CONTAINER_ROWS).boxed();
+            TerminalScreenLayout.SETTINGS_CONTENT_Y
+                + TerminalScreenLayout.SETTINGS_CONTENT_HEIGHT));
   }
 
   /**

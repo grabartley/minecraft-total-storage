@@ -10,6 +10,7 @@ import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
 import com.grahambartley.toomanychests.terminal.RoleTally;
 import io.netty.buffer.Unpooled;
 import java.util.List;
+import java.util.Optional;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.util.math.BlockPos;
 import org.junit.jupiter.api.Test;
@@ -28,7 +29,7 @@ class NetworkSettingsPayloadTest {
   }
 
   private static ContainerRoleEntry row(int x, ContainerRole role) {
-    return new ContainerRoleEntry(new BlockPos(x, 64, -x), role, 3, 168L, 9.0);
+    return new ContainerRoleEntry(new BlockPos(x, 64, -x), role, Optional.empty(), 3, 168L, 9.0);
   }
 
   private static NetworkSettingsPayload roundTrip(NetworkSettingsPayload payload) {

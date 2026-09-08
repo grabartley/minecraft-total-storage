@@ -187,64 +187,108 @@ public final class TerminalScreenLayout {
 
   public static final int SETTINGS_WIDTH = GRID_WIDTH + SCROLLBAR_GAP + SCROLLBAR_WIDTH;
 
-  /**
-   * How wide a row is, which is the panel less the gutter its scrollbar stands in. The list is
-   * allowed to be longer than the panel is tall, so it needs the same affordance the grid has: a
-   * list that silently shows four of six containers reads as a network with four containers.
-   */
-  public static final int CONTAINER_ROW_WIDTH = GRID_WIDTH;
-
   public static final int SETTINGS_HEIGHT = GRID_HEIGHT;
 
-  /** One line of text plus the air under it, which is the settings panel's unit of height. */
-  public static final int SETTINGS_ROW_HEIGHT = 12;
+  /**
+   * The settings view is split into sections reached from a strip along its top.
+   *
+   * <p>The recess is a hundred pixels tall and the window cannot grow, since it already stands at
+   * the height vanilla will draw one at on a 320x240 screen. One column holding both the terminal's
+   * settings and its container list therefore has to shrink one of them to nothing: three settings
+   * at a readable twenty pixels leave room for two containers, and four containers leave the
+   * settings at twelve pixels with controls too small to aim at.
+   *
+   * <p>Splitting them costs fourteen pixels once and gives each section eighty-four, which is four
+   * rows that a player can read and hit. It is also where a third section goes when tags arrive.
+   */
+  public static final int SECTION_COUNT = 2;
 
-  /** A control small enough to sit on a settings row without pushing the rows apart. */
-  public static final int SETTINGS_CONTROL_SIZE = 10;
+  public static final int SECTION_TAB_HEIGHT = 14;
 
-  /** How many rows of the header sit above the container list: radius, access, trust, tally. */
-  public static final int SETTINGS_HEADER_ROWS = 4;
+  /** Air under the strip, so the section it opens does not look joined to the tab. */
+  public static final int SECTION_GAP = 2;
 
-  public static final int CONTAINER_LIST_Y =
-      SETTINGS_Y + SETTINGS_HEADER_ROWS * SETTINGS_ROW_HEIGHT;
+  public static final int SECTION_TAB_WIDTH = SETTINGS_WIDTH / SECTION_COUNT;
 
-  public static final int CONTAINER_LIST_HEIGHT =
-      SETTINGS_HEIGHT - SETTINGS_HEADER_ROWS * SETTINGS_ROW_HEIGHT;
+  public static final int SETTINGS_CONTENT_Y = SETTINGS_Y + SECTION_TAB_HEIGHT + SECTION_GAP;
 
-  /** A container row is taller than a text row, because it carries a role chip beside its text. */
-  public static final int CONTAINER_ROW_HEIGHT = 13;
+  public static final int SETTINGS_CONTENT_HEIGHT =
+      SETTINGS_HEIGHT - SECTION_TAB_HEIGHT - SECTION_GAP;
 
-  public static final int CONTAINER_ROWS = CONTAINER_LIST_HEIGHT / CONTAINER_ROW_HEIGHT;
+  /**
+   * Tall enough for a sixteen pixel item icon with air around it, and for a control big enough to
+   * aim at. This is the number that decides whether the panel reads as cramped.
+   */
+  public static final int SETTINGS_ROW_HEIGHT = 20;
 
-  public static int settingsRowY(int row) {
-    if (row < 0 || row > SETTINGS_HEADER_ROWS) {
-      throw new IndexOutOfBoundsException("no settings row at " + row);
-    }
-    return SETTINGS_Y + row * SETTINGS_ROW_HEIGHT;
+  public static final int SETTINGS_ROWS = SETTINGS_CONTENT_HEIGHT / SETTINGS_ROW_HEIGHT;
+
+  /**
+   * A container row leaves the gutter to its scrollbar, the way the item grid does. A settings row
+   * has no list to scroll and takes the whole panel, so the terminal section shows no empty channel
+   * down its side.
+   */
+  public static final int SETTINGS_ROW_WIDTH = GRID_WIDTH;
+
+  public static final int SETTINGS_FULL_ROW_WIDTH = SETTINGS_WIDTH;
+
+  /** A control on a settings row, inset so it does not touch the row's own edges. */
+  public static final int SETTINGS_CONTROL_SIZE = 16;
+
+  public static final int SETTINGS_CONTROL_INSET =
+      (SETTINGS_ROW_HEIGHT - SETTINGS_CONTROL_SIZE) / 2;
+
+  public static int sectionTabX(int section) {
+    requireSection(section);
+    return SETTINGS_X + section * SECTION_TAB_WIDTH;
   }
 
-  /** Whether a point is over the container list's scrollbar rather than over a row. */
-  public static boolean isOverContainerScrollbar(int windowX, int windowY) {
-    return windowX >= SCROLLBAR_X
-        && windowX < SCROLLBAR_X + SCROLLBAR_WIDTH
-        && windowY >= CONTAINER_LIST_Y
-        && windowY < CONTAINER_LIST_Y + CONTAINER_LIST_HEIGHT;
-  }
-
-  public static int containerRowY(int row) {
-    if (row < 0 || row >= CONTAINER_ROWS) {
-      throw new IndexOutOfBoundsException("no container row at " + row);
-    }
-    return CONTAINER_LIST_Y + row * CONTAINER_ROW_HEIGHT;
-  }
-
-  /** Which container row a point is over, or {@link #NO_CELL} when it is over none of them. */
-  public static int containerRowAt(int windowX, int windowY) {
-    if (windowX < SETTINGS_X || windowX >= SETTINGS_X + CONTAINER_ROW_WIDTH) {
+  /** Which section tab a point is over, or {@link #NO_CELL} when it is over none. */
+  public static int sectionTabAt(int windowX, int windowY) {
+    if (windowY < SETTINGS_Y || windowY >= SETTINGS_Y + SECTION_TAB_HEIGHT) {
       return NO_CELL;
     }
-    final int row = Math.floorDiv(windowY - CONTAINER_LIST_Y, CONTAINER_ROW_HEIGHT);
-    return windowY < CONTAINER_LIST_Y || row >= CONTAINER_ROWS ? NO_CELL : row;
+    final int section = Math.floorDiv(windowX - SETTINGS_X, SECTION_TAB_WIDTH);
+    return windowX < SETTINGS_X || section >= SECTION_COUNT ? NO_CELL : section;
+  }
+
+  public static int settingsRowY(int row) {
+    requireSettingsRow(row);
+    return SETTINGS_CONTENT_Y + row * SETTINGS_ROW_HEIGHT;
+  }
+
+  /**
+   * Which row of the open section a point is over, or {@link #NO_CELL} when it is over none.
+   *
+   * <p>Measured against the whole panel. A section with a scrollbar rejects the gutter itself,
+   * since only that section has one.
+   */
+  public static int settingsRowAt(int windowX, int windowY) {
+    if (windowX < SETTINGS_X || windowX >= SETTINGS_X + SETTINGS_FULL_ROW_WIDTH) {
+      return NO_CELL;
+    }
+    final int row = Math.floorDiv(windowY - SETTINGS_CONTENT_Y, SETTINGS_ROW_HEIGHT);
+    return windowY < SETTINGS_CONTENT_Y || row >= SETTINGS_ROWS ? NO_CELL : row;
+  }
+
+  /** Whether a point is over the settings list's scrollbar rather than over a row. */
+  public static boolean isOverSettingsScrollbar(int windowX, int windowY) {
+    return windowX >= SCROLLBAR_X
+        && windowX < SCROLLBAR_X + SCROLLBAR_WIDTH
+        && windowY >= SETTINGS_CONTENT_Y
+        && windowY < SETTINGS_CONTENT_Y + SETTINGS_CONTENT_HEIGHT;
+  }
+
+  private static void requireSection(int section) {
+    if (section < 0 || section >= SECTION_COUNT) {
+      throw new IndexOutOfBoundsException("no settings section at " + section);
+    }
+  }
+
+  private static void requireSettingsRow(int row) {
+    if (row < 0 || row >= SETTINGS_ROWS) {
+      throw new IndexOutOfBoundsException("no settings row at " + row);
+    }
   }
 
   /**

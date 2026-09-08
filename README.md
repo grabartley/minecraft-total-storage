@@ -58,7 +58,9 @@ A full `Filtered` container falls through to a `General` one rather than refusin
 
 The terminal has two views, switched with the tabs down its right-hand side: the items it holds, and how it is configured. The settings view is where a storage area stops being whatever happened to be in range and becomes something you arranged.
 
-It shows the terminal's radius against the server's cap, who may open it, who it trusts, and every container it is currently reaching, nearest first, with what each one holds. Clicking a container walks its role forwards and right-clicking walks it back, so marking a chest `Excluded` is two clicks from opening the terminal.
+The settings view has two sections. **Terminal** holds the radius, stepped from either end of its own row, the access mode, cycled by clicking its row, and the trust list. **Containers** lists everything the network reaches, nearest first, each row showing what that container mostly holds so you can recognise it without reading coordinates. Clicking a row walks its role forwards and right-clicking walks it back, so marking a chest `Excluded` is two clicks from opening the terminal.
+
+The two are separate because the window is already as tall as Minecraft will draw one on the smallest screen it supports. Sharing that height between a handful of settings and a list of fifty containers makes both unusable; giving each its own section costs one strip of tabs and leaves both room to read.
 
 Only the owner and operators can change any of it. Everyone else sees the same panel with its controls greyed out, which is the truth rather than a missing control. Permission is checked again when each change arrives, so a modified client that draws itself the buttons gains buttons that refuse it.
 

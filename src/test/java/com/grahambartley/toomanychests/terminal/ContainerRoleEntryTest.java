@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.toomanychests.storage.ContainerRole;
+import java.util.Optional;
 import net.minecraft.util.math.BlockPos;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -15,7 +16,8 @@ class ContainerRoleEntryTest {
   private static final BlockPos SOMEWHERE = new BlockPos(8, 64, -3);
 
   private static ContainerRoleEntry entry(int variants, long items) {
-    return new ContainerRoleEntry(SOMEWHERE, ContainerRole.GENERAL, variants, items, 4.0);
+    return new ContainerRoleEntry(
+        SOMEWHERE, ContainerRole.GENERAL, Optional.empty(), variants, items, 4.0);
   }
 
   @Test
@@ -24,9 +26,25 @@ class ContainerRoleEntryTest {
     assertFalse(entry(1, 1L).isEmpty());
   }
 
+  /** A container holding nothing has no icon to draw, which the row has to be able to say. */
+  @Test
+  void aContainerHoldingNothingCarriesNoIcon() {
+    assertTrue(entry(0, 0L).icon().isEmpty());
+  }
+
+  @Test
+  void anIconThatIsMissingIsTreatedAsNoneRatherThanThrowing() {
+    assertTrue(
+        new ContainerRoleEntry(SOMEWHERE, ContainerRole.GENERAL, null, 0, 0L, 0.0)
+            .icon()
+            .isEmpty());
+  }
+
   @Test
   void aRoleThatIsMissingBecomesTheDefaultOne() {
-    assertEquals(ContainerRole.DEFAULT, new ContainerRoleEntry(SOMEWHERE, null, 0, 0L, 0.0).role());
+    assertEquals(
+        ContainerRole.DEFAULT,
+        new ContainerRoleEntry(SOMEWHERE, null, Optional.empty(), 0, 0L, 0.0).role());
   }
 
   @ParameterizedTest
@@ -39,14 +57,17 @@ class ContainerRoleEntryTest {
   void aDistanceBelowZeroIsRefusedSinceNothingCanBeNearerThanTouching() {
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ContainerRoleEntry(SOMEWHERE, ContainerRole.GENERAL, 0, 0L, -1.0));
+        () ->
+            new ContainerRoleEntry(
+                SOMEWHERE, ContainerRole.GENERAL, Optional.empty(), 0, 0L, -1.0));
   }
 
   /** Discovery scans reuse a mutable position, so a row that kept one would drift as they walk. */
   @Test
   void aMutablePositionIsCopiedRatherThanHeld() {
     BlockPos.Mutable moving = new BlockPos.Mutable(1, 2, 3);
-    ContainerRoleEntry row = new ContainerRoleEntry(moving, ContainerRole.GENERAL, 0, 0L, 0.0);
+    ContainerRoleEntry row =
+        new ContainerRoleEntry(moving, ContainerRole.GENERAL, Optional.empty(), 0, 0L, 0.0);
 
     moving.set(9, 9, 9);
 

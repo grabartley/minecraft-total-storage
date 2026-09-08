@@ -9,10 +9,13 @@ import com.grahambartley.toomanychests.terminal.RoleTally;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 
 /**
  * The settings panel's answer on its way to the screen that asked for it.
@@ -23,6 +26,10 @@ import net.minecraft.util.Identifier;
  * <p>The distance each row carries is dropped rather than sent. It exists to order the list and the
  * server has already ordered it, so sending it would be handing a client a number whose only use is
  * arithmetic the server already did.
+ *
+ * <p>The icon is sent, because it is the one thing on a row a client cannot work out for itself:
+ * which variant a container holds most of is a fact about that container's contents, and per ADR
+ * 0025 the client never sees them.
  */
 public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
     implements CustomPayload {
@@ -67,6 +74,8 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
       buf.writeEnumConstant(row.role());
       buf.writeVarInt(row.variantCount());
       buf.writeVarLong(row.itemCount());
+      buf.writeBoolean(row.icon().isPresent());
+      row.icon().ifPresent(icon -> ItemVariant.PACKET_CODEC.encode(buf, icon));
     }
   }
 
@@ -118,13 +127,13 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
     }
     final List<ContainerRoleEntry> containers = new ArrayList<>(count);
     for (int row = 0; row < count; row++) {
-      containers.add(
-          new ContainerRoleEntry(
-              buf.readBlockPos(),
-              buf.readEnumConstant(ContainerRole.class),
-              buf.readVarInt(),
-              buf.readVarLong(),
-              0.0));
+      final BlockPos container = buf.readBlockPos();
+      final ContainerRole role = buf.readEnumConstant(ContainerRole.class);
+      final int variants = buf.readVarInt();
+      final long items = buf.readVarLong();
+      final Optional<ItemVariant> icon =
+          buf.readBoolean() ? Optional.of(ItemVariant.PACKET_CODEC.decode(buf)) : Optional.empty();
+      containers.add(new ContainerRoleEntry(container, role, icon, variants, items, 0.0));
     }
     return containers;
   }

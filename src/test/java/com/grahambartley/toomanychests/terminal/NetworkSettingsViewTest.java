@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.IntStream;
 import net.minecraft.util.math.BlockPos;
 import org.junit.jupiter.api.Test;
@@ -16,7 +17,8 @@ import org.junit.jupiter.api.Test;
 class NetworkSettingsViewTest {
 
   private static ContainerRoleEntry row(int index) {
-    return new ContainerRoleEntry(new BlockPos(index, 64, 0), ContainerRole.GENERAL, 1, 1L, index);
+    return new ContainerRoleEntry(
+        new BlockPos(index, 64, 0), ContainerRole.GENERAL, Optional.empty(), 1, 1L, index);
   }
 
   private static NetworkSettingsView view(

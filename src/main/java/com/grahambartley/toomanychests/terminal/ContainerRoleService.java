@@ -10,7 +10,9 @@ import com.grahambartley.toomanychests.storage.StorageProvider;
 import com.grahambartley.toomanychests.storage.StorageProviderResolver;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
@@ -114,14 +116,14 @@ public final class ContainerRoleService {
 
   private ContainerRoleEntry entryFor(
       ServerWorld world, BlockPos terminal, TerminalSettings settings, BlockPos container) {
-    int variants = 0;
+    final Map<ItemVariant, Long> held = new LinkedHashMap<>();
     long items = 0L;
     final Optional<StorageProvider> provider =
         resolver.resolve(world, container, settings.roleFor(container));
     if (provider.isPresent()) {
       for (final StorageView<ItemVariant> view : provider.get().storage()) {
         if (!view.isResourceBlank() && view.getAmount() > 0L) {
-          variants++;
+          held.merge(view.getResource(), view.getAmount(), Long::sum);
           items += view.getAmount();
         }
       }
@@ -129,9 +131,20 @@ public final class ContainerRoleService {
     return new ContainerRoleEntry(
         container,
         settings.roleFor(container),
-        variants,
+        commonest(held),
+        held.size(),
         items,
         terminal.getSquaredDistance(container));
+  }
+
+  /**
+   * The variant a container holds most of, which is what the row draws to be recognisable. Ties go
+   * to whichever the container listed first, so the same chest draws the same icon twice running.
+   */
+  private static Optional<ItemVariant> commonest(Map<ItemVariant, Long> held) {
+    return held.entrySet().stream()
+        .max(Comparator.comparingLong(Map.Entry::getValue))
+        .map(Map.Entry::getKey);
   }
 
   private static boolean reaches(ServerWorld world, BlockPos terminal, BlockPos container) {

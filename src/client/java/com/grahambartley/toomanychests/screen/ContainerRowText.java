@@ -21,16 +21,22 @@ public final class ContainerRowText {
 
   private ContainerRowText() {}
 
+  /** What the row says beside its icon: how much is in there, which is what a player compares. */
+  public static Text contents(ContainerRoleEntry entry) {
+    if (entry.isEmpty()) {
+      return TerminalScreenText.of("settings.container.empty");
+    }
+    final String amount = ItemCountFormat.cell(entry.itemCount());
+    return entry.variantCount() == 1
+        ? TerminalScreenText.of("settings.container.one", amount)
+        : TerminalScreenText.of("settings.container", entry.variantCount(), amount);
+  }
+
+  /** Where it is, which a player needs only once they have found the row they mean. */
   public static Text position(ContainerRoleEntry entry) {
-    final String at =
-        entry.container().getX() + " " + entry.container().getY() + " " + entry.container().getZ();
-    return entry.isEmpty()
-        ? TerminalScreenText.of("settings.container.empty", at)
-        : TerminalScreenText.of(
-            "settings.container",
-            at,
-            entry.variantCount(),
-            ItemCountFormat.cell(entry.itemCount()));
+    return TerminalScreenText.of(
+        "settings.container.at",
+        entry.container().getX() + " " + entry.container().getY() + " " + entry.container().getZ());
   }
 
   public static Text role(ContainerRole role) {

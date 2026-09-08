@@ -77,6 +77,11 @@ public record NetworkSettingsView(
         List.of());
   }
 
+  /** The smallest reach a terminal may be set to, so a stepper at the end greys out. */
+  public int minRadius() {
+    return TerminalSettings.MIN_RADIUS;
+  }
+
   /** Whether the terminal is running at less than it was configured for, which is worth saying. */
   public boolean isClamped() {
     return effectiveRadius < radius;
