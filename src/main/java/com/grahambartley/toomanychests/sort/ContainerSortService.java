@@ -2,7 +2,11 @@ package com.grahambartley.toomanychests.sort;
 
 import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.lock.LockedSlotsAttachment;
+import com.grahambartley.toomanychests.mutation.ContainerMutationWitness;
+import com.grahambartley.toomanychests.mutation.ContainerMutations;
+import com.grahambartley.toomanychests.operation.NetworkResync;
 import com.grahambartley.toomanychests.screenhandler.ContainerViewerSync;
+import com.grahambartley.toomanychests.storage.StorageOrigin;
 import com.grahambartley.toomanychests.transaction.NetworkTransactions;
 import com.grahambartley.toomanychests.transaction.OperationResult;
 import java.util.ArrayList;
@@ -10,6 +14,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
@@ -58,19 +63,43 @@ public final class ContainerSortService {
     return apply(player, target.get());
   }
 
+  /**
+   * The containers that really moved are heard from rather than named, because a screen over a
+   * double chest is one inventory spanning two block entities and the sorting player's instance of
+   * it is not the one anybody else is holding. What the mutations name is the block entities
+   * themselves, which every viewer's screen can be matched against.
+   */
   private SortOutcome apply(ServerPlayerEntity player, SortTarget target) {
     final List<SingleSlotStorage<ItemVariant>> slots = slotsOf(target);
     if (slots.stream().allMatch(SingleSlotStorage::isResourceBlank)) {
       return SortOutcome.NOTHING_TO_SORT;
     }
-    final OperationResult<Long> result =
-        NetworkTransactions.runner().run(transaction -> rearrange(slots, target, transaction));
-    if (result.rolledBack()) {
-      return SortOutcome.FAILED;
+    try (ContainerMutationWitness witness =
+        ContainerMutationWitness.overEverything(ContainerMutations.registry())) {
+      final OperationResult<Long> result =
+          NetworkTransactions.runner().run(transaction -> rearrange(slots, target, transaction));
+      if (result.rolledBack()) {
+        return SortOutcome.FAILED;
+      }
+      target.inventory().markDirty();
+      resync(player, target, witness.changed());
+      return SortOutcome.SORTED;
     }
-    target.inventory().markDirty();
-    ContainerViewerSync.resync(player.getServer(), target.inventory());
-    return SortOutcome.SORTED;
+  }
+
+  /**
+   * A sort no block entity announced is a sort of the player's own inventory, which nobody else can
+   * be looking at, so the screen that asked for it is the whole audience. Anything else is fanned
+   * out by the containers that spoke up, which is what reaches a viewer holding their own screen
+   * over the same double chest.
+   */
+  private static void resync(
+      ServerPlayerEntity player, SortTarget target, Set<StorageOrigin> changed) {
+    if (changed.isEmpty()) {
+      ContainerViewerSync.resync(player.getServer(), target.inventory());
+      return;
+    }
+    NetworkResync.after(player.getServer(), changed, null);
   }
 
   private static List<SingleSlotStorage<ItemVariant>> slotsOf(SortTarget target) {

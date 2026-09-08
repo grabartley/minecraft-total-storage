@@ -23,6 +23,7 @@ import net.minecraft.world.World;
  */
 public final class ContainerMutationRegistry {
   private final Map<StorageOrigin, Set<ContainerMutationListener>> watchers = new HashMap<>();
+  private final Set<ContainerMutationListener> everywhere = new LinkedHashSet<>();
 
   public void watch(StorageOrigin origin, ContainerMutationListener listener) {
     Objects.requireNonNull(origin, "origin");
@@ -41,6 +42,24 @@ public final class ContainerMutationRegistry {
     }
   }
 
+  /**
+   * Listens to every container in the world rather than to named ones, for a caller that knows
+   * something is about to change and cannot name where. Sorting a double chest is the case: the
+   * screen names one inventory spanning two block entities, and only the mutations themselves say
+   * which those were.
+   *
+   * <p>Meant for the length of one operation and no longer. A listener left here hears about every
+   * container on the server for ever, which is the cost the per-origin map exists to avoid.
+   */
+  public void watchEverywhere(ContainerMutationListener listener) {
+    Objects.requireNonNull(listener, "listener");
+    everywhere.add(listener);
+  }
+
+  public void stopWatchingEverywhere(ContainerMutationListener listener) {
+    everywhere.remove(listener);
+  }
+
   /** Drops a listener from every container it watches, which is what powering off amounts to. */
   public void unwatchAll(ContainerMutationListener listener) {
     watchers
@@ -53,22 +72,25 @@ public final class ContainerMutationRegistry {
   }
 
   public void publish(RegistryKey<World> worldKey, BlockPos pos) {
-    if (watchers.isEmpty() || worldKey == null || pos == null) {
+    if (isIdle() || worldKey == null || pos == null) {
       return;
     }
     final StorageOrigin origin = new BlockStorageOrigin(worldKey, pos);
+    // Copied because a listener is entitled to stop watching the container it is being told about.
+    for (final ContainerMutationListener listener : List.copyOf(everywhere)) {
+      listener.containerChanged(origin);
+    }
     final Set<ContainerMutationListener> registered = watchers.get(origin);
     if (registered == null) {
       return;
     }
-    // Copied because a listener is entitled to stop watching the container it is being told about.
     for (final ContainerMutationListener listener : List.copyOf(registered)) {
       listener.containerChanged(origin);
     }
   }
 
   public boolean isIdle() {
-    return watchers.isEmpty();
+    return watchers.isEmpty() && everywhere.isEmpty();
   }
 
   public int watchedContainerCount() {
@@ -81,5 +103,6 @@ public final class ContainerMutationRegistry {
 
   public void clear() {
     watchers.clear();
+    everywhere.clear();
   }
 }

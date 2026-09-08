@@ -25,9 +25,10 @@ import net.minecraft.util.math.Direction;
  * is that everybody looking at the container is told, and that a player at a different one is left
  * alone.
  *
- * <p>A double chest is the case worth its own tests. The network holds each half as its own
- * container while the player who opened it by hand is looking at one screen over both, so matching
- * on the block entity alone would leave that screen stale exactly when it was written to.
+ * <p>A double chest is the case worth its own tests. A change names one block entity while the
+ * player who opened the chest by hand is looking at one inventory spanning both halves, and every
+ * player who opens it gets their own spanning inventory, so neither end of the match can be taken
+ * at face value.
  */
 public final class ContainerViewerSyncGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
@@ -136,6 +137,33 @@ public final class ContainerViewerSyncGameTest implements FabricGameTest {
 
     context.assertEquals(resynced, 0, "A viewer of another double chest should hear nothing");
     finish(context, watcher);
+  }
+
+  /**
+   * Sorting a double chest, which is the case a screen instance cannot answer. Every player who
+   * opens one gets their own inventory spanning the two halves, so the sorter's own instance is not
+   * the one the bystander is holding and only the block entities are common to both.
+   */
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void bothPlayersAtOneDoubleChestAreResyncedByASort(TestContext context) {
+    placeDoubleChest(context, DOUBLE_LEFT, DOUBLE_RIGHT);
+    context
+        .<ChestBlockEntity>getBlockEntity(DOUBLE_RIGHT)
+        .setStack(2, new ItemStack(Items.STONE, 8));
+    ServerPlayerEntity sorter = openedOn(context, DOUBLE_LEFT);
+    ServerPlayerEntity watcher = openedOn(context, DOUBLE_LEFT);
+    long before = revisionOf(watcher);
+
+    sorting.sort(sorter, sorter.currentScreenHandler.syncId);
+
+    context.assertTrue(
+        revisionOf(watcher) > before,
+        "The other player at the double chest was left looking at the old layout");
+    finish(context, sorter, watcher);
+  }
+
+  private static int revisionOf(ServerPlayerEntity player) {
+    return player.currentScreenHandler.getRevision();
   }
 
   private static void placeDoubleChest(TestContext context, BlockPos left, BlockPos right) {

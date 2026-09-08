@@ -44,7 +44,8 @@ public final class NetworkResync {
    * Resyncs every viewer of these containers except the player who caused the change, whose own
    * screen the operation answers directly.
    *
-   * @return how many screens were resent
+   * @return how many screens were resent, which is the surface a test asserts on rather than
+   *     something a caller acts upon
    */
   public static int after(
       MinecraftServer server, Collection<StorageOrigin> changed, UUID actingPlayer) {

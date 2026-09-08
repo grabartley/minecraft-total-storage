@@ -22,9 +22,11 @@ import net.minecraft.server.network.ServerPlayerEntity;
  * container at once and a resync that is nearly complete is the one that leaves an item on a client
  * that no longer exists on the server.
  *
- * <p>Half of a double chest counts as the whole of it. The network holds each half as its own
- * container, while a player who opened it by hand is looking at one screen over both, so matching
- * on the block entity alone would leave that screen stale exactly when it was written to.
+ * <p>Half of a double chest counts as the whole of it. A change names a block entity, while a
+ * player who opened the chest by hand is looking at one inventory spanning both halves, so matching
+ * on the block entity alone would leave that screen stale exactly when it was written to. Every
+ * player who opens one gets their own spanning inventory, which is why the changed side is always
+ * named as block entities and never as a screen's own view of them.
  */
 public final class ContainerViewerSync {
   private ContainerViewerSync() {}
@@ -50,13 +52,19 @@ public final class ContainerViewerSync {
     return resynced;
   }
 
+  /**
+   * Distinct inventories rather than slots, because a container screen repeats one inventory across
+   * dozens of slots and the question is the same for every one of them.
+   */
   private static boolean shows(ScreenHandler handler, Set<Inventory> changed) {
+    final Set<Inventory> shown = new HashSet<>();
     for (final Slot slot : handler.slots) {
-      if (changed.contains(slot.inventory) || isHalfOf(slot.inventory, changed)) {
+      if (changed.contains(slot.inventory)) {
         return true;
       }
+      shown.add(slot.inventory);
     }
-    return false;
+    return shown.stream().anyMatch(inventory -> isHalfOf(inventory, changed));
   }
 
   private static boolean isHalfOf(Inventory shown, Set<Inventory> changed) {

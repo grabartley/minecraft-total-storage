@@ -87,9 +87,9 @@ public final class WithdrawService {
    * value.
    *
    * <p>It is seeded rather than left empty because the runner also rolls back an operation that
-   * threw, and that path never reaches the settling. An operation that threw moved nothing and the
-   * player is owed an answer either way, so the seed is the ending a rollback had before any of
-   * this could tell the two empty-handed ones apart.
+   * threw, and that path never reaches the settling. The seed is the ending that asks nothing of
+   * the player: an operation that threw has already been logged as an error, and telling somebody
+   * their inventory is full would send them to fix a slot that was never the problem.
    */
   private WithdrawOutcome gather(
       TerminalOperationContext context,
@@ -98,7 +98,7 @@ public final class WithdrawService {
       Storage<ItemVariant> to,
       List<Storage<ItemVariant>> from) {
     final AtomicReference<WithdrawOutcome> settled =
-        new AtomicReference<>(WithdrawOutcome.noRoom(wanted));
+        new AtomicReference<>(WithdrawOutcome.nothingAvailable(wanted));
     NetworkMutation.run(
         context,
         transaction -> {

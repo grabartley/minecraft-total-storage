@@ -27,12 +27,14 @@ import java.util.Set;
 public final class ContainerMutationWitness implements ContainerMutationListener, AutoCloseable {
   private final ContainerMutationRegistry registry;
   private final List<StorageOrigin> watching;
+  private final boolean everywhere;
   private final Set<StorageOrigin> changed = new LinkedHashSet<>();
 
   private ContainerMutationWitness(
-      ContainerMutationRegistry registry, List<StorageOrigin> watching) {
+      ContainerMutationRegistry registry, List<StorageOrigin> watching, boolean everywhere) {
     this.registry = registry;
     this.watching = watching;
+    this.everywhere = everywhere;
   }
 
   /** Starts listening straight away, so nothing between construction and use goes unheard. */
@@ -41,14 +43,28 @@ public final class ContainerMutationWitness implements ContainerMutationListener
     Objects.requireNonNull(registry, "registry");
     final List<StorageOrigin> watching =
         origins == null ? List.of() : List.copyOf(new LinkedHashSet<>(origins));
-    final ContainerMutationWitness witness = new ContainerMutationWitness(registry, watching);
+    final ContainerMutationWitness witness =
+        new ContainerMutationWitness(registry, watching, false);
     watching.forEach(origin -> registry.watch(origin, witness));
+    return witness;
+  }
+
+  /**
+   * Listens to every container instead of to named ones, for an operation that cannot name what it
+   * is about to touch. Sorting is the case: a screen over a double chest names one inventory
+   * spanning two block entities, and only the mutations say which those were.
+   */
+  public static ContainerMutationWitness overEverything(ContainerMutationRegistry registry) {
+    Objects.requireNonNull(registry, "registry");
+    final ContainerMutationWitness witness =
+        new ContainerMutationWitness(registry, List.of(), true);
+    registry.watchEverywhere(witness);
     return witness;
   }
 
   /** The containers that announced a change, in the order they announced it. */
   public Set<StorageOrigin> changed() {
-    return Collections.unmodifiableSet(new LinkedHashSet<>(changed));
+    return Collections.unmodifiableSet(changed);
   }
 
   @Override
@@ -60,6 +76,10 @@ public final class ContainerMutationWitness implements ContainerMutationListener
 
   @Override
   public void close() {
+    if (everywhere) {
+      registry.stopWatchingEverywhere(this);
+      return;
+    }
     watching.forEach(origin -> registry.unwatch(origin, this));
   }
 }

@@ -1,8 +1,12 @@
 package com.grahambartley.toomanychests.gametest;
 
 import com.grahambartley.toomanychests.access.TerminalAccessControl;
+import com.grahambartley.toomanychests.mutation.ContainerMutations;
 import com.grahambartley.toomanychests.network.WithdrawRequestPayload;
+import com.grahambartley.toomanychests.operation.NetworkMutation;
 import com.grahambartley.toomanychests.operation.NetworkResync;
+import com.grahambartley.toomanychests.operation.TerminalOperationContext;
+import com.grahambartley.toomanychests.operation.TerminalOperationGate;
 import com.grahambartley.toomanychests.operation.WithdrawDestination;
 import com.grahambartley.toomanychests.operation.WithdrawService;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenHandler;
@@ -236,6 +240,41 @@ public final class ConcurrentViewerResyncGameTest implements FabricGameTest {
         "A viewer with no player behind them should have been dropped, register holds "
             + TerminalAccessControl.viewers().viewing(terminal).size());
     NetworkOperationFixture.finish(context, player);
+  }
+
+  /**
+   * An operation that threw is rolled back by the runner rather than propagating, so the fan-out
+   * still runs and the witness still has to come off the registry. One left behind would hear about
+   * every container it was watching for the rest of the server's life.
+   */
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void anOperationThatThrewLeavesNothingListeningBehindIt(TestContext context) {
+    NetworkOperationFixture.stockedBarrel(
+        context, NetworkOperationFixture.EAST_BARREL, Items.DIAMOND, STACK);
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    int watchedBefore = ContainerMutations.registry().watchedContainerCount();
+
+    NetworkMutation.run(
+        contextOf(player),
+        transaction -> {
+          throw new IllegalStateException("a network operation that could not finish");
+        });
+
+    context.assertTrue(
+        ContainerMutations.registry().watchedContainerCount() == watchedBefore,
+        "A witness outlived the operation that opened it, registry went from "
+            + watchedBefore
+            + " to "
+            + ContainerMutations.registry().watchedContainerCount());
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  private static TerminalOperationContext contextOf(ServerPlayerEntity player) {
+    return TerminalOperationGate.open(player, NetworkOperationFixture.handlerOf(player).syncId)
+        .orElseThrow();
   }
 
   private void take(ServerPlayerEntity player, int amount) {

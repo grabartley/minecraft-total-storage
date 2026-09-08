@@ -1,6 +1,7 @@
 package com.grahambartley.toomanychests.mutation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -141,6 +142,49 @@ class ContainerMutationWitnessTest {
 
       assertThrows(UnsupportedOperationException.class, () -> witness.changed().clear());
     }
+  }
+
+  @Test
+  void aWitnessOverEverythingHearsAboutAContainerNobodyNamed() {
+    try (ContainerMutationWitness witness = ContainerMutationWitness.overEverything(registry)) {
+      registry.publish(OVERWORLD, new BlockPos(7, 64, 0));
+
+      assertEquals(List.of(originAt(7)), List.copyOf(witness.changed()));
+    }
+  }
+
+  @Test
+  void aWitnessOverEverythingHearsEveryHalfOfWhatChanged() {
+    try (ContainerMutationWitness witness = ContainerMutationWitness.overEverything(registry)) {
+      registry.publish(OVERWORLD, new BlockPos(0, 64, 0));
+      registry.publish(OVERWORLD, new BlockPos(1, 64, 0));
+
+      assertEquals(List.of(CHEST, BARREL), List.copyOf(witness.changed()));
+    }
+  }
+
+  @Test
+  void closingAWitnessOverEverythingLeavesTheRegistryIdle() {
+    try (ContainerMutationWitness witness = ContainerMutationWitness.overEverything(registry)) {
+      assertFalse(registry.isIdle());
+    }
+
+    assertTrue(registry.isIdle());
+  }
+
+  @Test
+  void aClosedWitnessOverEverythingHearsNothingMore() {
+    ContainerMutationWitness witness = ContainerMutationWitness.overEverything(registry);
+    witness.close();
+
+    registry.publish(OVERWORLD, new BlockPos(0, 64, 0));
+
+    assertTrue(witness.changed().isEmpty());
+  }
+
+  @Test
+  void aWitnessOverEverythingNeedsARegistry() {
+    assertThrows(NullPointerException.class, () -> ContainerMutationWitness.overEverything(null));
   }
 
   private static StorageOrigin originAt(int x) {
