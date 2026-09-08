@@ -5,7 +5,6 @@ import com.grahambartley.toomanychests.transaction.OperationResult;
 import com.grahambartley.toomanychests.transaction.StorageTransfers;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -97,20 +96,19 @@ public final class WithdrawService {
       long wanted,
       Storage<ItemVariant> to,
       List<Storage<ItemVariant>> from) {
-    final AtomicReference<WithdrawOutcome> settled =
-        new AtomicReference<>(WithdrawOutcome.nothingAvailable(wanted));
+    final WithdrawOutcome[] settled = {WithdrawOutcome.nothingAvailable(wanted)};
     NetworkMutation.run(
         context,
         transaction -> {
           final long moved = StorageTransfers.gather(from, to, variant, wanted, transaction);
           if (moved > 0L) {
-            settled.set(WithdrawOutcome.moved(wanted, moved));
+            settled[0] = WithdrawOutcome.moved(wanted, moved);
             return OperationResult.committed(moved);
           }
-          settled.set(WithdrawShortfall.of(to, variant, wanted, transaction));
+          settled[0] = WithdrawShortfall.of(to, variant, wanted, transaction);
           return OperationResult.rolledBack("nothing could be taken");
         });
-    return settled.get();
+    return settled[0];
   }
 
   private static Storage<ItemVariant> destinationFor(

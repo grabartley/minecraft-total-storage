@@ -1,7 +1,11 @@
 package com.grahambartley.toomanychests.screenhandler;
 
+import com.grahambartley.toomanychests.storage.BlockStorageOrigin;
+import com.grahambartley.toomanychests.storage.StorageOrigin;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import net.minecraft.inventory.DoubleInventory;
 import net.minecraft.inventory.Inventory;
@@ -9,6 +13,7 @@ import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 
 /**
  * Tells everyone who has a container open by hand that its contents have moved.
@@ -33,6 +38,33 @@ public final class ContainerViewerSync {
 
   public static int resync(MinecraftServer server, Inventory inventory) {
     return inventory == null ? 0 : resyncAll(server, Set.of(inventory));
+  }
+
+  /** Reaches everybody showing any of these containers, named by where they live. */
+  public static int resyncOrigins(MinecraftServer server, Collection<StorageOrigin> origins) {
+    return resyncAll(server, inventoriesOf(server, origins));
+  }
+
+  /**
+   * The containers still standing, which is all a screen can be open on. One that has just been
+   * broken has nothing to resync and its viewers were closed out with it.
+   */
+  public static List<Inventory> inventoriesOf(
+      MinecraftServer server, Collection<StorageOrigin> origins) {
+    if (server == null || origins == null) {
+      return List.of();
+    }
+    final List<Inventory> inventories = new ArrayList<>(origins.size());
+    for (final StorageOrigin origin : origins) {
+      if (!(origin instanceof BlockStorageOrigin block)) {
+        continue;
+      }
+      final ServerWorld world = server.getWorld(block.worldKey());
+      if (world != null && world.getBlockEntity(block.pos()) instanceof Inventory inventory) {
+        inventories.add(inventory);
+      }
+    }
+    return inventories;
   }
 
   /** Returns how many screens were resent, which is what a caller logs or asserts on. */

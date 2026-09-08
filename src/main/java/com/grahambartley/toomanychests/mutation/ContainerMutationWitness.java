@@ -25,17 +25,11 @@ import java.util.Set;
  * rest of the server's life, and would keep the operation that opened it alive with them.
  */
 public final class ContainerMutationWitness implements ContainerMutationListener, AutoCloseable {
-  private final ContainerMutationRegistry registry;
-  private final List<StorageOrigin> watching;
-  private final boolean everywhere;
   private final Set<StorageOrigin> changed = new LinkedHashSet<>();
 
-  private ContainerMutationWitness(
-      ContainerMutationRegistry registry, List<StorageOrigin> watching, boolean everywhere) {
-    this.registry = registry;
-    this.watching = watching;
-    this.everywhere = everywhere;
-  }
+  private Runnable stopListening;
+
+  private ContainerMutationWitness() {}
 
   /** Starts listening straight away, so nothing between construction and use goes unheard. */
   public static ContainerMutationWitness over(
@@ -43,9 +37,9 @@ public final class ContainerMutationWitness implements ContainerMutationListener
     Objects.requireNonNull(registry, "registry");
     final List<StorageOrigin> watching =
         origins == null ? List.of() : List.copyOf(new LinkedHashSet<>(origins));
-    final ContainerMutationWitness witness =
-        new ContainerMutationWitness(registry, watching, false);
+    final ContainerMutationWitness witness = new ContainerMutationWitness();
     watching.forEach(origin -> registry.watch(origin, witness));
+    witness.stopListening = () -> watching.forEach(origin -> registry.unwatch(origin, witness));
     return witness;
   }
 
@@ -56,9 +50,9 @@ public final class ContainerMutationWitness implements ContainerMutationListener
    */
   public static ContainerMutationWitness overEverything(ContainerMutationRegistry registry) {
     Objects.requireNonNull(registry, "registry");
-    final ContainerMutationWitness witness =
-        new ContainerMutationWitness(registry, List.of(), true);
+    final ContainerMutationWitness witness = new ContainerMutationWitness();
     registry.watchEverywhere(witness);
+    witness.stopListening = () -> registry.stopWatchingEverywhere(witness);
     return witness;
   }
 
@@ -74,12 +68,13 @@ public final class ContainerMutationWitness implements ContainerMutationListener
     }
   }
 
+  /** Whichever way this witness started listening is the way it stops, and it stops only once. */
   @Override
   public void close() {
-    if (everywhere) {
-      registry.stopWatchingEverywhere(this);
-      return;
+    final Runnable stopping = stopListening;
+    stopListening = null;
+    if (stopping != null) {
+      stopping.run();
     }
-    watching.forEach(origin -> registry.unwatch(origin, this));
   }
 }

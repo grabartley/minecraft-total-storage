@@ -4,7 +4,6 @@ import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.lock.LockedSlotsAttachment;
 import com.grahambartley.toomanychests.mutation.ContainerMutationWitness;
 import com.grahambartley.toomanychests.mutation.ContainerMutations;
-import com.grahambartley.toomanychests.operation.NetworkResync;
 import com.grahambartley.toomanychests.screenhandler.ContainerViewerSync;
 import com.grahambartley.toomanychests.storage.StorageOrigin;
 import com.grahambartley.toomanychests.transaction.NetworkTransactions;
@@ -18,6 +17,7 @@ import net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 
@@ -92,10 +92,10 @@ public final class ContainerSortService {
   }
 
   /**
-   * A sort no block entity announced is a sort of the player's own inventory, which nobody else can
-   * be looking at, so the screen that asked for it is the whole audience. Anything else is fanned
-   * out by the containers that spoke up, which is what reaches a viewer holding their own screen
-   * over the same double chest.
+   * The containers that spoke up plus the one that was asked for, which is what reaches a viewer
+   * holding their own screen over the same double chest without ever leaving out the player who
+   * pressed the button. A sort of the player's own inventory announces nothing, because no block
+   * entity backs it, and is answered by the target alone.
    *
    * <p>Only container screens. A sort rearranges a container without changing what the network
    * holds, and a listing is aggregated counts, so every terminal viewer would be sent a page
@@ -103,11 +103,10 @@ public final class ContainerSortService {
    */
   private static void resync(
       ServerPlayerEntity player, SortTarget target, List<StorageOrigin> changed) {
-    if (changed.isEmpty()) {
-      ContainerViewerSync.resync(player.getServer(), target.inventory());
-      return;
-    }
-    NetworkResync.containersOnly(player.getServer(), changed);
+    final List<Inventory> showing =
+        new ArrayList<>(ContainerViewerSync.inventoriesOf(player.getServer(), changed));
+    showing.add(target.inventory());
+    ContainerViewerSync.resyncAll(player.getServer(), showing);
   }
 
   private static List<SingleSlotStorage<ItemVariant>> slotsOf(SortTarget target) {

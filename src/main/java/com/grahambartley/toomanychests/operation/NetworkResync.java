@@ -3,19 +3,14 @@ package com.grahambartley.toomanychests.operation;
 import com.grahambartley.toomanychests.lifecycle.NetworkMembership;
 import com.grahambartley.toomanychests.screenhandler.ContainerViewerSync;
 import com.grahambartley.toomanychests.screenhandler.TerminalViewerSync;
-import com.grahambartley.toomanychests.storage.BlockStorageOrigin;
 import com.grahambartley.toomanychests.storage.StorageOrigin;
 import com.grahambartley.toomanychests.terminal.TerminalAddress;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import com.grahambartley.toomanychests.terminal.TerminalsHolding;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
-import net.minecraft.inventory.Inventory;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
 
 /**
  * Puts everyone who can see a set of containers back in step with what they now hold.
@@ -44,6 +39,10 @@ public final class NetworkResync {
    * Resyncs every viewer of these containers except the player who caused the change, whose own
    * screen the operation answers directly.
    *
+   * <p>Only the terminal half excludes the acting player. A player has one open screen, so somebody
+   * holding the container itself open is not also at a terminal, and the container half is exactly
+   * where the acting player might be the one who needs telling.
+   *
    * @return how many screens were resent, which is the surface a test asserts on rather than
    *     something a caller acts upon
    */
@@ -52,24 +51,8 @@ public final class NetworkResync {
     if (server == null || changed == null || changed.isEmpty()) {
       return 0;
     }
-    return terminals(server, changed, actingPlayer) + containersOnly(server, changed);
-  }
-
-  /**
-   * Reaches only the players holding these containers open by hand.
-   *
-   * <p>For a change that rearranges a container without changing what the network holds. A listing
-   * is aggregated counts, so a sort would send every terminal viewer a page identical to the one
-   * they are already looking at, and the acting player needs the container half as much as anybody
-   * else does.
-   *
-   * @return how many screens were resent, which is the surface a test asserts on
-   */
-  public static int containersOnly(MinecraftServer server, Collection<StorageOrigin> changed) {
-    if (server == null || changed == null || changed.isEmpty()) {
-      return 0;
-    }
-    return ContainerViewerSync.resyncAll(server, inventoriesOf(server, changed));
+    return terminals(server, changed, actingPlayer)
+        + ContainerViewerSync.resyncOrigins(server, changed);
   }
 
   private static int terminals(
@@ -85,24 +68,5 @@ public final class NetworkResync {
       }
     }
     return resynced;
-  }
-
-  /**
-   * The containers still standing, which is all a screen can be open on. One that has just been
-   * broken has nothing to resync and its viewers were closed out with it.
-   */
-  private static List<Inventory> inventoriesOf(
-      MinecraftServer server, Collection<StorageOrigin> changed) {
-    final List<Inventory> inventories = new ArrayList<>(changed.size());
-    for (final StorageOrigin origin : changed) {
-      if (!(origin instanceof BlockStorageOrigin block)) {
-        continue;
-      }
-      final ServerWorld world = server.getWorld(block.worldKey());
-      if (world != null && world.getBlockEntity(block.pos()) instanceof Inventory inventory) {
-        inventories.add(inventory);
-      }
-    }
-    return inventories;
   }
 }

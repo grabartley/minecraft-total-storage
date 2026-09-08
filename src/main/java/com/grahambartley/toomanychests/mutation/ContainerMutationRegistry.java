@@ -77,8 +77,10 @@ public final class ContainerMutationRegistry {
     }
     final StorageOrigin origin = new BlockStorageOrigin(worldKey, pos);
     // Copied because a listener is entitled to stop watching the container it is being told about.
-    for (final ContainerMutationListener listener : List.copyOf(everywhere)) {
-      listener.containerChanged(origin);
+    if (!everywhere.isEmpty()) {
+      for (final ContainerMutationListener listener : List.copyOf(everywhere)) {
+        listener.containerChanged(origin);
+      }
     }
     final Set<ContainerMutationListener> registered = watchers.get(origin);
     if (registered == null) {
