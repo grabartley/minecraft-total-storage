@@ -9,7 +9,9 @@ import com.mojang.authlib.GameProfile;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import net.minecraft.block.BlockState;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -73,7 +75,7 @@ public final class NetworkSettingsService {
   }
 
   private static boolean isPowered(ServerWorld world, BlockPos terminal) {
-    final net.minecraft.block.BlockState state = world.getBlockState(terminal);
+    final BlockState state = world.getBlockState(terminal);
     return state.contains(TerminalBlock.POWERED) && state.get(TerminalBlock.POWERED);
   }
 
@@ -82,7 +84,7 @@ public final class NetworkSettingsService {
    * seen by this server keeps their UUID rather than vanishing from the list, because a name the
    * cache cannot supply is still an entry the owner needs to be able to remove.
    */
-  private static List<String> namesOf(MinecraftServer server, java.util.Set<UUID> trusted) {
+  private static List<String> namesOf(MinecraftServer server, Set<UUID> trusted) {
     final List<String> names = new ArrayList<>(trusted.size());
     for (final UUID player : trusted) {
       if (names.size() >= NetworkSettingsView.MAX_TRUSTED) {

@@ -6,6 +6,7 @@ import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
 import com.grahambartley.toomanychests.terminal.ContainerRoleService;
 import com.grahambartley.toomanychests.terminal.RoleChangeOutcome;
 import com.grahambartley.toomanychests.terminal.RoleTally;
+import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import java.util.List;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.item.Items;
@@ -210,8 +211,7 @@ public final class ContainerRoleServiceGameTest implements FabricGameTest {
   public void anUnpoweredTerminalListsNoContainers(TestContext context) {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
     ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
-    com.grahambartley.toomanychests.terminal.TerminalNetworks.power()
-        .unloaded(context.getWorld(), terminal(context));
+    TerminalNetworks.power().unloaded(context.getWorld(), terminal(context));
 
     context.assertTrue(
         roles.containers(context.getWorld(), terminal(context)).isEmpty(),

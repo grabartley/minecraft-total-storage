@@ -39,6 +39,11 @@ public final class TerminalMessages {
         PREFIX + "radius-clamped", "The server caps this terminal at %s blocks", blocks);
   }
 
+  /** Said when a rescan changed nothing, so the button is not mistaken for one that did nothing. */
+  public static Text nothingNewToFind() {
+    return line("rescan-unchanged", "This terminal had nothing new to find");
+  }
+
   private static Text line(String key, String english) {
     return Text.translatableWithFallback(PREFIX + key, english);
   }

@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests.gametest;
 
+import com.grahambartley.toomanychests.access.TerminalAccessControl;
 import com.grahambartley.toomanychests.access.TerminalCaller;
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.listing.ListingWindow;
@@ -9,6 +10,7 @@ import com.grahambartley.toomanychests.terminal.NetworkSettingsService;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.minecraft.block.Blocks;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.GameTest;
@@ -76,8 +78,7 @@ public final class NetworkSettingsServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
     ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
     ServerPlayerEntity guest = NetworkOperationFixture.alsoOpen(context);
-    com.grahambartley.toomanychests.access.TerminalAccessControl.trust()
-        .trust(context.getWorld(), terminal(context), guest.getUuid());
+    TerminalAccessControl.trust().trust(context.getWorld(), terminal(context), guest.getUuid());
 
     context.assertTrue(
         viewFor(owner, context, 0, 8).trusted().size() == 1,
@@ -137,7 +138,7 @@ public final class NetworkSettingsServiceGameTest implements FabricGameTest {
   public void anUnpoweredTerminalSaysSoRatherThanLookingEmpty(TestContext context) {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
     ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
-    context.setBlockState(NetworkOperationFixture.POWER, net.minecraft.block.Blocks.AIR);
+    context.setBlockState(NetworkOperationFixture.POWER, Blocks.AIR);
     TerminalNetworks.power().unloaded(context.getWorld(), terminal(context));
 
     NetworkSettingsView view = viewFor(owner, context, 0, 8);
@@ -155,7 +156,7 @@ public final class NetworkSettingsServiceGameTest implements FabricGameTest {
   public void theAccessModeShownIsTheOneTheTerminalIsIn(TestContext context) {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
     ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
-    com.grahambartley.toomanychests.access.TerminalAccessControl.trust()
+    TerminalAccessControl.trust()
         .setAccessMode(context.getWorld(), terminal(context), TerminalAccessMode.TRUSTED);
 
     context.assertTrue(

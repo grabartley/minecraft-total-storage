@@ -31,6 +31,10 @@ final class NetworkOperationFixture {
   static final BlockPos TERMINAL = new BlockPos(3, 1, 3);
   static final BlockPos POWER = new BlockPos(3, 1, 2);
   static final BlockPos EAST_BARREL = new BlockPos(4, 1, 3);
+
+  /** Two blocks out, so it joins the network only once the radius is widened past its default. */
+  static final BlockPos FAR_BARREL = new BlockPos(5, 1, 3);
+
   static final BlockPos WEST_BARREL = new BlockPos(2, 1, 3);
   static final BlockPos STANDING = new BlockPos(3, 1, 4);
 
@@ -107,6 +111,17 @@ final class NetworkOperationFixture {
         .updateSettings(
             settings ->
                 settings.withTags(settings.tags().withCustomTag(tag).withItem(tag, itemId)));
+  }
+
+  /**
+   * Widens the terminal's configured reach without walking the region, so the next rescan has
+   * something to find. Going through {@code TerminalRadiusService} would rescan as it wrote, which
+   * is exactly what a test of rescan must not do for it.
+   */
+  static void widenWithoutRescanning(TestContext context, int radius) {
+    context
+        .<TerminalBlockEntity>getBlockEntity(TERMINAL)
+        .updateSettings(settings -> settings.withRadius(radius));
   }
 
   static TerminalScreenHandler handlerOf(ServerPlayerEntity player) {

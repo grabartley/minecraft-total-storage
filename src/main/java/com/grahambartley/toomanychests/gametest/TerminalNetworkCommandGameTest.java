@@ -143,13 +143,18 @@ public final class TerminalNetworkCommandGameTest implements FabricGameTest {
    * A rescan tears the network down and builds it again per ADR 0007, so the command door is gated
    * exactly as the panel door is. Proving one and not the other is how the two drift apart.
    */
+  /**
+   * The refusal is proven by what did not happen rather than by a return code. A rescan that finds
+   * nothing new also returns zero, so a test asserting only on the code would pass with the gate
+   * deleted; widening the reach first gives a permitted rescan something to find, and the container
+   * count is what tells the two apart.
+   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
       tickLimit = TICK_LIMIT)
   public void aPlayerWhoOwnsNoTerminalCannotMakeItWalkItsRegionAgain(TestContext context) {
-    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
-    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    ServerPlayerEntity owner = openTerminalWithAWiderRegionToFind(context);
 
     int result =
         run(
@@ -157,7 +162,10 @@ public final class TerminalNetworkCommandGameTest implements FabricGameTest {
             server(context).getCommandSource().withLevel(0),
             "toomanychests terminal " + at(terminal(context)) + " rescan");
 
-    context.assertTrue(result <= 0, "A third party made the terminal rescan, got " + result);
+    context.assertTrue(result == 0, "A third party's rescan reported work, got " + result);
+    context.assertTrue(
+        containerCount(context) == 1,
+        "A third party made the terminal pick up " + containerCount(context) + " containers");
     NetworkOperationFixture.finish(context, owner);
   }
 
@@ -166,17 +174,32 @@ public final class TerminalNetworkCommandGameTest implements FabricGameTest {
       batchId = BATCH,
       tickLimit = TICK_LIMIT)
   public void theConsoleCanMakeATerminalWalkItsRegionAgain(TestContext context) {
-    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
-    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    ServerPlayerEntity owner = openTerminalWithAWiderRegionToFind(context);
 
     int result =
         runAsConsole(context, "toomanychests terminal " + at(terminal(context)) + " rescan");
 
-    context.assertTrue(result >= 0, "The console was refused a rescan, got " + result);
+    context.assertTrue(result > 0, "The console was refused a rescan, got " + result);
     context.assertTrue(
-        roles.containers(context.getWorld(), terminal(context)).size() == 1,
-        "The network should still hold its barrel after a rescan");
+        containerCount(context) == 2,
+        "The rescan found " + containerCount(context) + " of the two barrels now in reach");
     NetworkOperationFixture.finish(context, owner);
+  }
+
+  /**
+   * A terminal running a region narrower than it is now configured for, which is the only state in
+   * which a rescan does anything at all.
+   */
+  private static ServerPlayerEntity openTerminalWithAWiderRegionToFind(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.FAR_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    NetworkOperationFixture.widenWithoutRescanning(context, 2);
+    return owner;
+  }
+
+  private int containerCount(TestContext context) {
+    return roles.containers(context.getWorld(), terminal(context)).size();
   }
 
   /** A highlight has to be shown to somebody, and the console is nobody. */

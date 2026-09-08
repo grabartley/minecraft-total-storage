@@ -210,6 +210,9 @@ public final class TerminalScreenLayout {
   public static final int CONTAINER_ROWS = CONTAINER_LIST_HEIGHT / CONTAINER_ROW_HEIGHT;
 
   public static int settingsRowY(int row) {
+    if (row < 0 || row > SETTINGS_HEADER_ROWS) {
+      throw new IndexOutOfBoundsException("no settings row at " + row);
+    }
     return SETTINGS_Y + row * SETTINGS_ROW_HEIGHT;
   }
 

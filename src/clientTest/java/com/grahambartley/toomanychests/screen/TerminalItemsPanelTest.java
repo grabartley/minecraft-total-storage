@@ -22,6 +22,11 @@ import org.junit.jupiter.api.Test;
  */
 class TerminalItemsPanelTest {
 
+  /** A page the server says is live, carrying no rows, which is a client scrolled past the end. */
+  private static ListingPage<ItemVariant> live(int totalMatching) {
+    return new ListingPage<>(1L, ListingStatus.LIVE, 0, totalMatching, List.of());
+  }
+
   private static TerminalItemsPanel showing(ListingPage<ItemVariant> page) {
     TerminalItemsPanel panel = new TerminalItemsPanel();
     panel.beginFrame(page);
@@ -47,13 +52,17 @@ class TerminalItemsPanelTest {
         panel.hoveredCell(TerminalScreenLayout.cellX(4) + 1, TerminalScreenLayout.cellY(4) + 1));
   }
 
+  /** A live page reaches the hit test itself, where a pending one stops at the has-rows guard. */
   @Test
   void aPointerBesideTheGridHasNoCellUnderIt() {
-    TerminalItemsPanel panel = showing(ListingPage.pending(0L));
+    TerminalItemsPanel panel = showing(live(500));
 
     assertEquals(
         TerminalScreenLayout.NO_CELL,
         panel.hoveredCell(TerminalScreenLayout.GRID_X - 1, TerminalScreenLayout.GRID_Y));
+    assertEquals(
+        TerminalScreenLayout.NO_CELL,
+        panel.hoveredCell(TerminalScreenLayout.GRID_X, TerminalScreenLayout.GRID_Y - 1));
   }
 
   @Test

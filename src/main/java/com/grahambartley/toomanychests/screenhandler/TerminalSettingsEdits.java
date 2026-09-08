@@ -145,7 +145,9 @@ public final class TerminalSettingsEdits {
     if (context == null) {
       return false;
     }
-    TerminalNetworks.power().rescan(context.world(), context.terminal());
+    if (!TerminalNetworks.power().rescan(context.world(), context.terminal())) {
+      player.sendMessage(TerminalMessages.nothingNewToFind(), true);
+    }
     ContainerHighlightService.highlight(player, context.world(), context.terminal());
     return pushed(context);
   }
