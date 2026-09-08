@@ -86,8 +86,12 @@ public final class OperationMessages {
    *
    * <p>Only ever called for a partial deposit, whose shortfall {@link DepositOutcome} requires to
    * be accounted for, so there is always at least one kind to name.
+   *
+   * <p>Exactly one unnamed kind gets its own line rather than "1 other kinds". Three kinds left
+   * behind is an ordinary outcome, not an edge, and a Minecraft translation carries no plural rule
+   * to fix the reading afterwards.
    */
-  static Text leftovers(List<DepositLeftover> leftovers) {
+  private static Text leftovers(List<DepositLeftover> leftovers) {
     final MutableText named = Text.empty();
     for (int index = 0; index < Math.min(NAMED_LEFTOVERS, leftovers.size()); index++) {
       if (index > 0) {
@@ -99,7 +103,12 @@ public final class OperationMessages {
               "deposit.leftover.item", "%s %s", left.amount(), left.variant().getItem().getName()));
     }
     final int rest = leftovers.size() - Math.min(NAMED_LEFTOVERS, leftovers.size());
-    return rest <= 0 ? named : line("deposit.leftover.more", "%s and %s other kinds", named, rest);
+    if (rest <= 0) {
+      return named;
+    }
+    return rest == 1
+        ? line("deposit.leftover.more.one", "%s and 1 other kind", named)
+        : line("deposit.leftover.more", "%s and %s other kinds", named, rest);
   }
 
   private static Text line(String key, String english, Object... arguments) {

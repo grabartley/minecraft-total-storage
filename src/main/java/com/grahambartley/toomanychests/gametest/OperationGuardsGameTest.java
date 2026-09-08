@@ -36,15 +36,15 @@ public final class OperationGuardsGameTest implements FabricGameTest {
   private static final int STACK = 64;
 
   /** One batch per test, because each one owns a server-wide value for its duration. */
-  private static final String DEFAULT_COOLDOWN_BATCH = "guards-cooldown-default";
+  private static final String SET_COOLDOWN_BATCH = "guards-cooldown-set";
 
   private static final String NO_COOLDOWN_BATCH = "guards-cooldown-off";
   private static final String HOTBAR_BATCH = "guards-hotbar";
 
   private final DepositService deposits = new DepositService();
 
-  @BeforeBatch(batchId = DEFAULT_COOLDOWN_BATCH)
-  public void clearBeforeDefaultCooldown(ServerWorld world) {
+  @BeforeBatch(batchId = SET_COOLDOWN_BATCH)
+  public void clearBeforeSetCooldown(ServerWorld world) {
     OperationGuards.cooldowns().clear();
   }
 
@@ -66,7 +66,7 @@ public final class OperationGuardsGameTest implements FabricGameTest {
    */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
-      batchId = DEFAULT_COOLDOWN_BATCH,
+      batchId = SET_COOLDOWN_BATCH,
       tickLimit = TICK_LIMIT)
   public void aSecondDepositAllInTheSameTickIsRefusedAndMovesNothing(TestContext context) {
     BarrelBlockEntity barrel =

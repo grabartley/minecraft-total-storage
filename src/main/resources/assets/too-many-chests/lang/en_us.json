@@ -139,6 +139,7 @@
   "operation.too-many-chests.deposit.leftover.item": "%s %s",
   "operation.too-many-chests.deposit.leftover.separator": ", ",
   "operation.too-many-chests.deposit.leftover.more": "%s and %s other kinds",
+  "operation.too-many-chests.deposit.leftover.more.one": "%s and 1 other kind",
   "key.categories.too-many-chests": "Too Many Chests",
   "key.too-many-chests.deposit_all": "Deposit all"
 }
