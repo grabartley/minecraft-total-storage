@@ -12,7 +12,15 @@ public enum TerminalSetting {
   /** Who may open it, cycled by clicking the row. */
   ACCESS,
   /** Who it trusts, which is read here and edited from the command line. */
-  TRUSTED;
+  TRUSTED,
+  /**
+   * How much room the network has left, which is read rather than set.
+   *
+   * <p>It sits with the settings rather than with the containers because it is a fact about the
+   * whole network, and because a player finding out they are full on a failed deposit is the thing
+   * it exists to prevent.
+   */
+  CAPACITY;
 
   public int row() {
     return ordinal();

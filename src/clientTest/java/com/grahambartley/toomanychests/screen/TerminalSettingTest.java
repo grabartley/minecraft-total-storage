@@ -60,7 +60,12 @@ class TerminalSettingTest {
    * would agree with a rename that had quietly changed what a player reads.
    */
   @ParameterizedTest
-  @CsvSource({"RADIUS,settings.radius", "ACCESS,settings.access", "TRUSTED,settings.trusted"})
+  @CsvSource({
+    "RADIUS,settings.radius",
+    "ACCESS,settings.access",
+    "TRUSTED,settings.trusted",
+    "CAPACITY,settings.capacity"
+  })
   void everySettingIsNamedUnderTheKeyTheLangFileCarries(TerminalSetting setting, String key) {
     assertEquals(key, setting.label());
   }

@@ -9,6 +9,7 @@ import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
 import com.grahambartley.toomanychests.screenhandler.TerminalSettingsLayout;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
+import com.grahambartley.toomanychests.terminal.NetworkCapacity;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +38,7 @@ class TerminalSettingsPanelTest {
         true,
         true,
         List.of(),
+        NetworkCapacity.EMPTY,
         0,
         total,
         IntStream.range(0, Math.min(total, TerminalSettingsLayout.ROWS))

@@ -30,7 +30,7 @@
   "operation.too-many-chests.withdraw.partial": "Took %s of %s, the rest would not fit",
   "operation.too-many-chests.withdraw.gone": "The network no longer holds that",
   "operation.too-many-chests.withdraw.full": "You have nowhere to put that",
-  "operation.too-many-chests.deposit.partial": "Stored %s, with no room for the other %s",
+  "operation.too-many-chests.deposit.partial": "Stored %s, with no room for %s",
   "operation.too-many-chests.deposit.empty": "There is nothing to store",
   "operation.too-many-chests.deposit.locked": "That slot is locked, so nothing left it",
   "operation.too-many-chests.deposit.full": "This network has no room left",
@@ -130,5 +130,14 @@
   "screen.too-many-chests.terminal.section.terminal": "Terminal",
   "screen.too-many-chests.terminal.section.containers": "Containers",
   "screen.too-many-chests.terminal.settings.role.hint": "Click to change what the network may do with it",
-  "screen.too-many-chests.terminal.settings.container.one": "1 kind, %s"
+  "screen.too-many-chests.terminal.settings.container.one": "1 kind, %s",
+  "screen.too-many-chests.terminal.settings.capacity": "Room",
+  "screen.too-many-chests.terminal.settings.capacity.slots": "%s of %s slots free",
+  "screen.too-many-chests.terminal.settings.capacity.unknown": "No containers to fill",
+  "operation.too-many-chests.cooldown.rescan": "Give the last scan a moment to finish",
+  "operation.too-many-chests.cooldown.deposit_all": "Give the last deposit a moment to finish",
+  "operation.too-many-chests.deposit.leftover.amount": "%s more",
+  "operation.too-many-chests.deposit.leftover.more": "%s and %s other kinds",
+  "key.categories.too-many-chests": "Too Many Chests",
+  "key.too-many-chests.deposit_all": "Deposit all"
 }

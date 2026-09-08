@@ -1,7 +1,9 @@
 package com.grahambartley.toomanychests.operation;
 
 import com.grahambartley.toomanychests.TooManyChests;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import net.minecraft.text.Text;
 
 /**
@@ -17,6 +19,15 @@ import net.minecraft.text.Text;
  */
 public final class OperationMessages {
   private static final String PREFIX = "operation." + TooManyChests.MOD_ID + ".";
+
+  /**
+   * How many kinds of leftover are named before the line summarises instead.
+   *
+   * <p>A partial deposit-all can leave a dozen kinds behind, and a line naming all of them is one
+   * nobody finishes reading. Naming the largest two and counting the rest keeps the sentence the
+   * length of a sentence while still leading with what a player most wants to hear.
+   */
+  private static final int NAMED_LEFTOVERS = 2;
 
   private OperationMessages() {}
 
@@ -44,15 +55,49 @@ public final class OperationMessages {
           Optional.of(
               line(
                   "deposit.partial",
-                  "Stored %s, with no room for the other %s",
+                  "Stored %s, with no room for %s",
                   outcome.moved(),
-                  outcome.remaining()));
+                  leftovers(outcome.leftovers(), outcome.remaining())));
       case NOTHING_TO_DEPOSIT -> Optional.of(line("deposit.empty", "There is nothing to store"));
       case SLOT_LOCKED ->
           Optional.of(line("deposit.locked", "That slot is locked, so nothing left it"));
       case NO_SPACE -> Optional.of(line("deposit.full", "This network has no room left"));
+      case RATE_LIMITED -> Optional.empty();
       case REFUSED -> Optional.of(line("refused", "That terminal is not yours to use right now"));
     };
+  }
+
+  /**
+   * What a player is told when they asked again too soon. Says the operation by name, so somebody
+   * running two of them in quick succession learns which one is waiting rather than that "an"
+   * operation is.
+   */
+  public static Text rateLimited(ExpensiveOperation operation, long ticksLeft) {
+    return line(
+        "cooldown." + operation.id(),
+        operation == ExpensiveOperation.RESCAN
+            ? "Give the last scan a moment to finish"
+            : "Give the last deposit a moment to finish",
+        Math.max(1L, (ticksLeft + 19L) / 20L));
+  }
+
+  /**
+   * Names what stayed behind, because a bare total does not say which chest filled up. Falls back
+   * to the total once there are more kinds than a line can carry.
+   */
+  static Text leftovers(List<DepositLeftover> leftovers, long remaining) {
+    if (leftovers.isEmpty()) {
+      return line("deposit.leftover.amount", "%s more", remaining);
+    }
+    final String named =
+        leftovers.stream()
+            .limit(NAMED_LEFTOVERS)
+            .map(left -> left.amount() + " " + left.variant().getItem().getName().getString())
+            .collect(Collectors.joining(", "));
+    final int rest = leftovers.size() - Math.min(NAMED_LEFTOVERS, leftovers.size());
+    return rest <= 0
+        ? Text.literal(named)
+        : line("deposit.leftover.more", "%s and %s other kinds", named, rest);
   }
 
   private static Text line(String key, String english, Object... arguments) {

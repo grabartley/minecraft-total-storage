@@ -1,6 +1,7 @@
 package com.grahambartley.toomanychests.operation;
 
 import com.grahambartley.toomanychests.ModSounds;
+import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.lock.LockedSlots;
 import com.grahambartley.toomanychests.lock.LockedSlotsAttachment;
 import com.grahambartley.toomanychests.network.DepositRequestPayload;
@@ -8,6 +9,8 @@ import com.grahambartley.toomanychests.transaction.NetworkTransactions;
 import com.grahambartley.toomanychests.transaction.OperationResult;
 import com.grahambartley.toomanychests.transaction.StorageTransfers;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -56,15 +59,29 @@ public final class DepositService {
     return report(player, take(context, payload));
   }
 
-  /** The player's whole inventory, minus everything a lock or a role puts out of reach. */
+  /**
+   * The player's whole inventory, minus everything a lock, a role, or the operator's hotbar setting
+   * puts out of reach.
+   *
+   * <p>Rate limited, because it is the one gesture that reads every container in the network at
+   * once. The limit is spent only once the request has proven itself real: a packet naming a screen
+   * the sender never opened is refused before it can put a legitimate click on cooldown.
+   */
   public DepositOutcome depositAll(ServerPlayerEntity player, int syncId) {
     final TerminalOperationContext context =
         TerminalOperationGate.open(player, syncId).orElse(null);
     if (context == null) {
       return report(player, DepositOutcome.refused());
     }
+    if (!OperationGuards.allows(player, ExpensiveOperation.DEPOSIT_ALL)) {
+      return DepositOutcome.rateLimited();
+    }
     return report(
-        player, give(context, PlayerSlots.unlocked(player), ItemStackLimits.MAX_STACK_SIZE));
+        player,
+        give(
+            context,
+            PlayerSlots.depositable(player, ServerConfigService.current().depositAllSkipsHotbar()),
+            ItemStackLimits.MAX_STACK_SIZE));
   }
 
   /**
@@ -81,19 +98,43 @@ public final class DepositService {
       return DepositOutcome.nothingToDeposit();
     }
     final long offered = offers.stream().mapToLong(Offer::amount).sum();
-    final OperationResult<Long> result =
+    final OperationResult<Stored> result =
         NetworkTransactions.runner().run(transaction -> store(context, offers, transaction));
     if (result.rolledBack()) {
-      return DepositOutcome.noSpace(offered);
+      return DepositOutcome.noSpace(offered, leftoversOf(offers));
     }
-    return DepositOutcome.stored(offered, result.orElse(0L));
+    final Stored stored = result.orElse(Stored.nothing());
+    return DepositOutcome.stored(offered, stored.moved(), stored.leftovers());
+  }
+
+  /** What every offer holds, for the case where the network took none of it. */
+  private static List<DepositLeftover> leftoversOf(List<Offer> offers) {
+    final Map<ItemVariant, Long> byVariant = new LinkedHashMap<>();
+    for (final Offer offer : offers) {
+      byVariant.merge(offer.variant(), offer.amount(), Long::sum);
+    }
+    return listed(byVariant);
+  }
+
+  /**
+   * Largest first, so a report that has to be shortened keeps the item a player most wants to hear
+   * about. Ties keep the order the inventory listed them in, so the same inventory reports the same
+   * way twice.
+   */
+  private static List<DepositLeftover> listed(Map<ItemVariant, Long> byVariant) {
+    return byVariant.entrySet().stream()
+        .filter(entry -> entry.getValue() > 0L)
+        .sorted(
+            Comparator.comparingLong((Map.Entry<ItemVariant, Long> e) -> e.getValue()).reversed())
+        .map(entry -> new DepositLeftover(entry.getKey(), entry.getValue()))
+        .toList();
   }
 
   /**
    * Routing is worked out for every variant at once, before anything moves, so emptying a full
    * inventory reads the terminal and its containers once rather than once per kind of item.
    */
-  private OperationResult<Long> store(
+  private OperationResult<Stored> store(
       TerminalOperationContext context, List<Offer> offers, TransactionContext transaction) {
     final Map<ItemVariant, List<Storage<ItemVariant>>> routed =
         destinations.forVariants(
@@ -102,17 +143,21 @@ public final class DepositService {
             context.network(),
             offers.stream().map(Offer::variant).distinct().toList());
     long moved = 0L;
+    final Map<ItemVariant, Long> behind = new LinkedHashMap<>();
     for (final Offer offer : offers) {
       final List<Storage<ItemVariant>> targets = routed.getOrDefault(offer.variant(), List.of());
-      if (targets.isEmpty()) {
-        continue;
+      final long took =
+          targets.isEmpty()
+              ? 0L
+              : StorageTransfers.distribute(
+                  offer.source(), targets, offer.variant(), offer.amount(), transaction);
+      moved += took;
+      if (took < offer.amount()) {
+        behind.merge(offer.variant(), offer.amount() - took, Long::sum);
       }
-      moved +=
-          StorageTransfers.distribute(
-              offer.source(), targets, offer.variant(), offer.amount(), transaction);
     }
     return moved > 0L
-        ? OperationResult.committed(moved)
+        ? OperationResult.committed(new Stored(moved, listed(behind)))
         : OperationResult.rolledBack("the network had nowhere to put any of it");
   }
 
@@ -176,4 +221,11 @@ public final class DepositService {
 
   /** One slot's worth of a deposit, read before the transaction so the total can be reported. */
   private record Offer(SingleSlotStorage<ItemVariant> source, ItemVariant variant, long amount) {}
+
+  /** What one transaction managed, and what it could not take, gathered per item. */
+  private record Stored(long moved, List<DepositLeftover> leftovers) {
+    static Stored nothing() {
+      return new Stored(0L, List.of());
+    }
+  }
 }

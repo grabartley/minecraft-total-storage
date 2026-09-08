@@ -4,11 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import java.util.Optional;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableTextContent;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 
 /**
@@ -52,7 +54,25 @@ class OperationMessagesTest {
 
     assertEquals(PREFIX + "deposit.partial", keyOf(line));
     assertEquals(20L, argumentsOf(line)[0]);
-    assertEquals(44L, argumentsOf(line)[1]);
+    assertEquals(44L, amountIn(argumentsOf(line)[1]));
+  }
+
+  /**
+   * A deposit that knew no items still says how much stayed behind, so the count never goes missing
+   * when the leftovers could not be named.
+   */
+  @Test
+  void aPartialDepositWithNoNamedLeftoversStillReportsTheAmount() {
+    Text left = OperationMessages.leftovers(List.of(), 44L);
+
+    assertEquals(
+        PREFIX + "deposit.leftover.amount", ((TranslatableTextContent) left.getContent()).getKey());
+    assertEquals(44L, ((TranslatableTextContent) left.getContent()).getArgs()[0]);
+  }
+
+  /** The amount is nested inside the leftovers line, which names items when it knows any. */
+  private static long amountIn(Object argument) {
+    return (long) ((TranslatableTextContent) ((Text) argument).getContent()).getArgs()[0];
   }
 
   /** The three empty-handed endings are the ones a player cannot tell apart without being told. */
@@ -101,8 +121,35 @@ class OperationMessagesTest {
   @EnumSource(DepositResult.class)
   void everyDepositEndingIsAnsweredRatherThanFallingThrough(DepositResult result) {
     assertEquals(
-        result != DepositResult.DEPOSITED,
+        result != DepositResult.DEPOSITED && result != DepositResult.RATE_LIMITED,
         OperationMessages.forDeposit(depositEnding(result)).isPresent());
+  }
+
+  /**
+   * A deposit that stored everything says nothing, and one refused for pace has already been
+   * answered by the guard that refused it. Every other ending is spoken for here, because an ending
+   * nobody explains is indistinguishable from a button that did nothing.
+   */
+  @Test
+  void theTwoSilentEndingsAreSilentForDifferentReasons() {
+    assertTrue(OperationMessages.forDeposit(DepositOutcome.stored(64L, 64L)).isEmpty());
+    assertTrue(OperationMessages.forDeposit(DepositOutcome.rateLimited()).isEmpty());
+    assertEquals(
+        PREFIX + "cooldown.deposit_all",
+        ((TranslatableTextContent)
+                OperationMessages.rateLimited(ExpensiveOperation.DEPOSIT_ALL, 20L).getContent())
+            .getKey());
+  }
+
+  /** Seconds rather than ticks, and never rounded down to "in zero seconds". */
+  @ParameterizedTest
+  @CsvSource({"1,1", "20,1", "21,2", "40,2", "41,3"})
+  void theWaitIsReportedInWholeSecondsAndNeverInNone(long ticks, long seconds) {
+    assertEquals(
+        seconds,
+        ((TranslatableTextContent)
+                OperationMessages.rateLimited(ExpensiveOperation.RESCAN, ticks).getContent())
+            .getArgs()[0]);
   }
 
   private static WithdrawOutcome withdrawalEnding(WithdrawResult result) {
@@ -122,6 +169,7 @@ class OperationMessagesTest {
       case NOTHING_TO_DEPOSIT -> DepositOutcome.nothingToDeposit();
       case SLOT_LOCKED -> DepositOutcome.slotLocked();
       case NO_SPACE -> DepositOutcome.noSpace(64L);
+      case RATE_LIMITED -> DepositOutcome.rateLimited();
       case REFUSED -> DepositOutcome.refused();
     };
   }

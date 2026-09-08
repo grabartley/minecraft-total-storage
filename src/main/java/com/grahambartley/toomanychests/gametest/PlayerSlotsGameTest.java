@@ -84,6 +84,78 @@ public final class PlayerSlotsGameTest implements FabricGameTest {
     context.complete();
   }
 
+  /**
+   * The hotbar setting, taken as an argument rather than read from server config, so this says what
+   * the rule is without a value another batch could change underneath it. That a deposit really
+   * reads the operator's setting is proven in {@code DepositServiceGameTest}.
+   */
+  @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void keepingTheHotbarLeavesExactlyTheFirstNineSlotsBehind(TestContext context) {
+    ServerPlayerEntity player = context.createMockCreativeServerPlayerInWorld();
+
+    List<SingleSlotStorage<ItemVariant>> offered =
+        PlayerSlots.depositable(player, LockedSlots.empty(), true);
+
+    context.assertTrue(
+        offered.size() == LockedSlots.SLOT_COUNT - PlayerSlots.HOTBAR_SLOTS,
+        "Offered "
+            + offered.size()
+            + " of "
+            + (LockedSlots.SLOT_COUNT - PlayerSlots.HOTBAR_SLOTS)
+            + " slots with the hotbar kept");
+    context.complete();
+  }
+
+  /** Off by default, so the gesture reaches the whole inventory unless a server says otherwise. */
+  @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void notKeepingTheHotbarOffersTheWholeInventory(TestContext context) {
+    ServerPlayerEntity player = context.createMockCreativeServerPlayerInWorld();
+
+    List<SingleSlotStorage<ItemVariant>> offered =
+        PlayerSlots.depositable(player, LockedSlots.empty(), false);
+
+    context.assertTrue(
+        offered.size() == LockedSlots.SLOT_COUNT,
+        "Offered " + offered.size() + " of " + LockedSlots.SLOT_COUNT + " slots");
+    context.complete();
+  }
+
+  /**
+   * The hotbar rule and a lock are both subtractions, and applying one must not undo the other. A
+   * slot locked inside the kept hotbar is kept once, not offered because it was already excluded.
+   */
+  @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void keepingTheHotbarStillHonoursLocksInTheRestOfTheInventory(TestContext context) {
+    ServerPlayerEntity player = context.createMockCreativeServerPlayerInWorld();
+
+    List<SingleSlotStorage<ItemVariant>> offered =
+        PlayerSlots.depositable(player, LockedSlots.of(List.of(3, 20)), true);
+
+    context.assertTrue(
+        offered.size() == LockedSlots.SLOT_COUNT - PlayerSlots.HOTBAR_SLOTS - 1,
+        "A lock inside the hotbar should not be subtracted twice, offered " + offered.size());
+    context.complete();
+  }
+
+  /** What is kept is the front of the inventory, which is what a player sees as their hotbar. */
+  @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void theSlotsKeptAreTheHotbarRatherThanTheEndOfTheInventory(TestContext context) {
+    ServerPlayerEntity player = context.createMockCreativeServerPlayerInWorld();
+    player.getInventory().setStack(0, new ItemStack(Items.DIAMOND, 1));
+    player.getInventory().setStack(PlayerSlots.HOTBAR_SLOTS, new ItemStack(Items.OAK_LOG, 1));
+
+    List<SingleSlotStorage<ItemVariant>> offered =
+        PlayerSlots.depositable(player, LockedSlots.empty(), true);
+
+    context.assertTrue(
+        offered.stream().noneMatch(slot -> slot.getResource().isOf(Items.DIAMOND)),
+        "The hotbar slot was offered anyway");
+    context.assertTrue(
+        offered.stream().anyMatch(slot -> slot.getResource().isOf(Items.OAK_LOG)),
+        "The first slot past the hotbar should still be offered");
+    context.complete();
+  }
+
   private static boolean refuses(ServerPlayerEntity player, int index) {
     try {
       PlayerSlots.slotAt(player, index);

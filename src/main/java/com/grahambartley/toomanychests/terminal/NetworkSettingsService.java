@@ -35,13 +35,15 @@ public final class NetworkSettingsService {
   private static final Logger LOGGER = LoggerFactory.getLogger(NetworkSettingsService.class);
 
   private final ContainerRoleService roles;
+  private final NetworkCapacityService capacity;
 
   public NetworkSettingsService() {
-    this(new ContainerRoleService());
+    this(new ContainerRoleService(), new NetworkCapacityService());
   }
 
-  public NetworkSettingsService(ContainerRoleService roles) {
+  public NetworkSettingsService(ContainerRoleService roles, NetworkCapacityService capacity) {
     this.roles = Objects.requireNonNull(roles, "roles");
+    this.capacity = Objects.requireNonNull(capacity, "capacity");
   }
 
   public NetworkSettingsView viewFor(
@@ -68,9 +70,22 @@ public final class NetworkSettingsService {
         mayAdminister,
         isPowered(world, terminal),
         mayAdminister ? namesOf(world.getServer(), settings.trusted()) : List.of(),
+        capacityOf(world, terminal),
         window.offset(),
         all.size(),
         window.sliceOf(all));
+  }
+
+  /**
+   * Counted from the live containers rather than from the index, and only for a running network. An
+   * unpowered terminal holds nothing, so a count of its room would be a number about a network that
+   * is not there.
+   */
+  private NetworkCapacity capacityOf(ServerWorld world, BlockPos terminal) {
+    return TerminalNetworks.power()
+        .network(world, terminal)
+        .map(network -> capacity.of(world, terminal, network))
+        .orElse(NetworkCapacity.EMPTY);
   }
 
   private static boolean isPowered(ServerWorld world, BlockPos terminal) {

@@ -3,6 +3,7 @@ package com.grahambartley.toomanychests.operation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -39,10 +40,13 @@ class DepositOutcomeTest {
   @Test
   void aResultThatContradictsItsAmountsIsRefused() {
     assertThrows(
-        IllegalArgumentException.class, () -> new DepositOutcome(DepositResult.DEPOSITED, 64L, 0L));
+        IllegalArgumentException.class,
+        () -> new DepositOutcome(DepositResult.DEPOSITED, 64L, 0L, List.of()));
     assertThrows(
-        IllegalArgumentException.class, () -> new DepositOutcome(DepositResult.NO_SPACE, 64L, 9L));
+        IllegalArgumentException.class,
+        () -> new DepositOutcome(DepositResult.NO_SPACE, 64L, 9L, List.of()));
     assertThrows(
-        IllegalArgumentException.class, () -> new DepositOutcome(DepositResult.PARTIAL, 9L, 64L));
+        IllegalArgumentException.class,
+        () -> new DepositOutcome(DepositResult.PARTIAL, 9L, 64L, List.of()));
   }
 }

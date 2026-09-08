@@ -4,6 +4,7 @@ import com.grahambartley.toomanychests.TooManyChests;
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
+import com.grahambartley.toomanychests.terminal.NetworkCapacity;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,6 +64,8 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
     for (final String name : view.trusted()) {
       buf.writeString(name, MAX_NAME_LENGTH);
     }
+    buf.writeVarInt(view.capacity().usedSlots());
+    buf.writeVarInt(view.capacity().totalSlots());
     buf.writeVarInt(view.containerOffset());
     buf.writeVarInt(view.containerTotal());
     buf.writeVarInt(view.containers().size());
@@ -85,6 +88,7 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
     final boolean mayAdminister = buf.readBoolean();
     final boolean powered = buf.readBoolean();
     final List<String> trusted = readTrusted(buf);
+    final NetworkCapacity capacity = readCapacity(buf);
     final int offset = buf.readVarInt();
     final int total = buf.readVarInt();
     final List<ContainerRoleEntry> containers = readContainers(buf);
@@ -98,9 +102,21 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
             mayAdminister,
             powered,
             trusted,
+            capacity,
             offset,
             total,
             containers));
+  }
+
+  /**
+   * A used count larger than the total could only come from a forged packet, and a record that
+   * refuses to hold one would take the connection down over a number nobody draws. It is clamped to
+   * something drawable instead.
+   */
+  private static NetworkCapacity readCapacity(RegistryByteBuf buf) {
+    final int used = Math.max(0, buf.readVarInt());
+    final int total = Math.max(0, buf.readVarInt());
+    return new NetworkCapacity(Math.min(used, total), total);
   }
 
   private static List<String> readTrusted(RegistryByteBuf buf) {

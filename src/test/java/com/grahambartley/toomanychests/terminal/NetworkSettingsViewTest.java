@@ -31,6 +31,7 @@ class NetworkSettingsViewTest {
         true,
         true,
         List.of(),
+        NetworkCapacity.EMPTY,
         offset,
         total,
         IntStream.range(0, rows).mapToObj(NetworkSettingsViewTest::row).toList());
@@ -93,7 +94,17 @@ class NetworkSettingsViewTest {
         IllegalArgumentException.class,
         () ->
             new NetworkSettingsView(
-                16, 16, 32, TerminalAccessMode.OWNER, true, true, tooMany, 0, 0, List.of()));
+                16,
+                16,
+                32,
+                TerminalAccessMode.OWNER,
+                true,
+                true,
+                tooMany,
+                NetworkCapacity.EMPTY,
+                0,
+                0,
+                List.of()));
   }
 
   @Test
@@ -107,7 +118,7 @@ class NetworkSettingsViewTest {
   @Test
   void aViewMissingItsPartsFallsBackRatherThanCarryingNulls() {
     NetworkSettingsView view =
-        new NetworkSettingsView(16, 16, 32, null, false, false, null, 0, 0, null);
+        new NetworkSettingsView(16, 16, 32, null, false, false, null, null, 0, 0, null);
 
     assertEquals(TerminalAccessMode.OWNER, view.accessMode());
     assertTrue(view.trusted().isEmpty());

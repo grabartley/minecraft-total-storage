@@ -4,6 +4,7 @@ import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.network.NetworkSettingsPayload;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
+import com.grahambartley.toomanychests.terminal.NetworkCapacity;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
 import io.netty.buffer.Unpooled;
 import java.util.List;
@@ -105,6 +106,7 @@ public final class NetworkSettingsPayloadGameTest implements FabricGameTest {
             true,
             true,
             List.of("Alice"),
+            new NetworkCapacity(9, 27),
             0,
             1,
             List.of(row)));

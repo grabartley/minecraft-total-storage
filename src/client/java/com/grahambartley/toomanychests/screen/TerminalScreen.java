@@ -488,6 +488,17 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     search.setVisible(!settingsShowing);
   }
 
+  /**
+   * Whether this press is the deposit-all key, which a focused search box outranks.
+   *
+   * <p>A key bound to a letter is a letter first while somebody is typing one, which is how vanilla
+   * treats its own inventory key inside the creative search field. Yielding is what stops searching
+   * for "redstone" from emptying an inventory on the r.
+   */
+  private boolean isDepositAllKey(int keyCode, int scanCode) {
+    return TerminalKeyBindings.isDepositAll(keyCode, scanCode) && !search.isFocused();
+  }
+
   private void depositEverything() {
     ModNetworkingClient.sendDepositAllRequest(handler.syncId);
   }
@@ -535,6 +546,10 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     if (prompt.isOpen()) {
       return handlePromptKey(prompt.keyPressed(keyCode));
+    }
+    if (isDepositAllKey(keyCode, scanCode)) {
+      depositEverything();
+      return true;
     }
     if (tab.isSettings()) {
       return super.keyPressed(keyCode, scanCode, modifiers);

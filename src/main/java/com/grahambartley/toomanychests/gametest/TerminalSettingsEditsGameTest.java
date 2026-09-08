@@ -5,6 +5,7 @@ import com.grahambartley.toomanychests.network.ContainerRoleEditPayload;
 import com.grahambartley.toomanychests.network.TerminalAccessEditPayload;
 import com.grahambartley.toomanychests.network.TerminalActionPayload;
 import com.grahambartley.toomanychests.network.TerminalRadiusEditPayload;
+import com.grahambartley.toomanychests.operation.OperationGuards;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenHandler;
 import com.grahambartley.toomanychests.screenhandler.TerminalSettingsEdits;
 import com.grahambartley.toomanychests.screenhandler.TerminalSettingsService;
@@ -14,6 +15,8 @@ import com.grahambartley.toomanychests.terminal.TerminalAction;
 import com.grahambartley.toomanychests.terminal.TerminalLookup;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.test.BeforeBatch;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
@@ -33,6 +36,15 @@ public final class TerminalSettingsEditsGameTest implements FabricGameTest {
   private final TerminalSettingsService panels = new TerminalSettingsService();
   private final TerminalSettingsEdits edits = new TerminalSettingsEdits(panels);
   private final ContainerRoleService roles = new ContainerRoleService();
+
+  /**
+   * Cooldowns are JVM-global and these tests share a batch, so a deposit in one would put the next
+   * on cooldown and fail it for a reason that has nothing to do with what it is testing.
+   */
+  @BeforeBatch(batchId = BATCH)
+  public void clearCooldowns(ServerWorld world) {
+    OperationGuards.cooldowns().clear();
+  }
 
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
@@ -224,6 +236,35 @@ public final class TerminalSettingsEditsGameTest implements FabricGameTest {
     context.assertTrue(
         containerCount(context) == 1,
         "A rescan with nothing new to find changed the network to "
+            + containerCount(context)
+            + " containers");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  /**
+   * Rescanning walks the terminal's whole region block by block, so it is rate limited like the
+   * other expensive gestures. The second ask must change nothing rather than half-work, and it must
+   * be told apart from a refusal about permission: one is about pace, the other about ownership,
+   * and a player who reads the wrong one goes looking for the wrong problem.
+   */
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aSecondRescanInTheSameTickIsRefusedAndScansNothing(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.FAR_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    edits.act(owner, new TerminalActionPayload(syncId(owner), TerminalAction.RESCAN));
+    NetworkOperationFixture.widenWithoutRescanning(context, 2);
+
+    boolean second =
+        edits.act(owner, new TerminalActionPayload(syncId(owner), TerminalAction.RESCAN));
+
+    context.assertTrue(second == false, "A second rescan in the same tick should be refused");
+    context.assertTrue(
+        containerCount(context) == 1,
+        "A rate limited rescan walked the region anyway and found "
             + containerCount(context)
             + " containers");
     NetworkOperationFixture.finish(context, owner);

@@ -2,10 +2,12 @@ package com.grahambartley.toomanychests.network;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
+import com.grahambartley.toomanychests.terminal.NetworkCapacity;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
 import io.netty.buffer.Unpooled;
 import java.util.List;
@@ -31,7 +33,17 @@ class NetworkSettingsPayloadTest {
 
   private static NetworkSettingsView view(TerminalAccessMode mode, List<ContainerRoleEntry> rows) {
     return new NetworkSettingsView(
-        24, 16, 32, mode, true, true, List.of("Alice", "Bob"), 7, 40, rows);
+        24,
+        16,
+        32,
+        mode,
+        true,
+        true,
+        List.of("Alice", "Bob"),
+        new NetworkCapacity(12, 40),
+        7,
+        40,
+        rows);
   }
 
   private static ContainerRoleEntry row(int x, ContainerRole role) {
@@ -63,6 +75,21 @@ class NetworkSettingsPayloadTest {
     assertEquals(7, received.containerOffset());
     assertEquals(40, received.containerTotal());
     assertEquals(2, received.containers().size());
+    assertEquals(new NetworkCapacity(12, 40), received.capacity());
+  }
+
+  /**
+   * A used count above the total could only be forged, and a record that refused to hold one would
+   * drop the connection over a number nobody draws.
+   */
+  @Test
+  void aForgedCapacityIsClampedRatherThanTakingTheConnectionDown() {
+    RegistryByteBuf buffer = buffer();
+    NetworkSettingsPayload.CODEC.encode(
+        buffer, new NetworkSettingsPayload(1, view(TerminalAccessMode.OWNER, List.of())));
+    NetworkSettingsView received = NetworkSettingsPayload.CODEC.decode(buffer).view();
+
+    assertTrue(received.capacity().usedSlots() <= received.capacity().totalSlots());
   }
 
   @ParameterizedTest
