@@ -1,0 +1,199 @@
+package com.grahambartley.toomanychests.gametest;
+
+import com.grahambartley.toomanychests.config.TerminalAccessMode;
+import com.grahambartley.toomanychests.network.ContainerRoleEditPayload;
+import com.grahambartley.toomanychests.network.TerminalAccessEditPayload;
+import com.grahambartley.toomanychests.network.TerminalActionPayload;
+import com.grahambartley.toomanychests.network.TerminalRadiusEditPayload;
+import com.grahambartley.toomanychests.screenhandler.TerminalScreenHandler;
+import com.grahambartley.toomanychests.screenhandler.TerminalSettingsEdits;
+import com.grahambartley.toomanychests.screenhandler.TerminalSettingsService;
+import com.grahambartley.toomanychests.storage.ContainerRole;
+import com.grahambartley.toomanychests.terminal.ContainerRoleService;
+import com.grahambartley.toomanychests.terminal.TerminalAction;
+import com.grahambartley.toomanychests.terminal.TerminalLookup;
+import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.test.GameTest;
+import net.minecraft.test.TestContext;
+import net.minecraft.util.math.BlockPos;
+
+/**
+ * What the settings panel is allowed to change, checked where the packet lands rather than where
+ * the button was drawn.
+ *
+ * <p>Every refusal here is sent as the real payload rather than by driving a screen, because that
+ * is the shape a modified client would use. Per ADR 0008 a client that decided for itself that it
+ * may administer must gain nothing by it, and hiding the control is not what stops it.
+ */
+public final class TerminalSettingsEditsGameTest implements FabricGameTest {
+  private static final String BATCH = "terminal-settings-edits";
+  private static final int TICK_LIMIT = 60;
+
+  private final TerminalSettingsService panels = new TerminalSettingsService();
+  private final TerminalSettingsEdits edits = new TerminalSettingsEdits(panels);
+  private final ContainerRoleService roles = new ContainerRoleService();
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void theOwnerCanMoveTheRadiusFromThePanel(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+
+    edits.setRadius(owner, new TerminalRadiusEditPayload(syncId(owner), 3));
+
+    context.assertTrue(
+        radiusOf(context) == 3, "The radius should have moved, got " + radiusOf(context));
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aGuestCannotMoveTheRadiusHoweverTheyAsk(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    ServerPlayerEntity guest = NetworkOperationFixture.alsoOpen(context);
+    int before = radiusOf(context);
+
+    boolean applied = edits.setRadius(guest, new TerminalRadiusEditPayload(syncId(guest), 5));
+
+    context.assertFalse(applied, "A guest moved the radius");
+    context.assertTrue(radiusOf(context) == before, "The radius changed to " + radiusOf(context));
+    NetworkOperationFixture.finish(context, owner, guest);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aGuestCannotLockOrUnlockTheTerminalTheyWereLetInto(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    ServerPlayerEntity guest = NetworkOperationFixture.alsoOpen(context);
+
+    boolean applied =
+        edits.setAccessMode(
+            guest, new TerminalAccessEditPayload(syncId(guest), TerminalAccessMode.OWNER));
+
+    context.assertFalse(applied, "A guest changed the access mode");
+    context.assertTrue(
+        TerminalLookup.settingsAt(context.getWorld(), terminal(context)).orElseThrow().accessMode()
+            == TerminalAccessMode.OPEN,
+        "The access mode changed under a guest's request");
+    NetworkOperationFixture.finish(context, owner, guest);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aGuestCannotExcludeSomebodyElsesContainer(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    ServerPlayerEntity guest = NetworkOperationFixture.alsoOpen(context);
+
+    boolean applied =
+        edits.setRole(
+            guest,
+            new ContainerRoleEditPayload(syncId(guest), east(context), ContainerRole.EXCLUDED));
+
+    context.assertFalse(applied, "A guest changed a container's role");
+    context.assertTrue(
+        roles.roleOf(context.getWorld(), terminal(context), east(context)) == ContainerRole.GENERAL,
+        "A guest's refused change was written anyway");
+    NetworkOperationFixture.finish(context, owner, guest);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void theOwnerCanExcludeAContainerFromThePanel(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+
+    boolean applied =
+        edits.setRole(
+            owner,
+            new ContainerRoleEditPayload(syncId(owner), east(context), ContainerRole.EXCLUDED));
+
+    context.assertTrue(applied, "The owner could not exclude their own container");
+    context.assertTrue(
+        roles.roleOf(context.getWorld(), terminal(context), east(context))
+            == ContainerRole.EXCLUDED,
+        "The role did not stick");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  /** Per ADR 0009 a request naming a screen the sender does not have open reaches nothing. */
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void anEditNamingAnotherScreenIsRefused(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    int before = radiusOf(context);
+
+    boolean applied = edits.setRadius(owner, new TerminalRadiusEditPayload(syncId(owner) + 1, 5));
+
+    context.assertFalse(applied, "A request naming another screen was honoured");
+    context.assertTrue(radiusOf(context) == before, "The radius changed anyway");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  /**
+   * A highlight answers "which chests is this reaching", which is a question anyone allowed to use
+   * the terminal is entitled to an answer to.
+   */
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aGuestMayStillAskWhichContainersTheTerminalHolds(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    ServerPlayerEntity guest = NetworkOperationFixture.alsoOpen(context);
+
+    context.assertTrue(
+        edits.act(guest, new TerminalActionPayload(syncId(guest), TerminalAction.HIGHLIGHT)),
+        "A guest could not ask what the terminal reaches");
+    NetworkOperationFixture.finish(context, owner, guest);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aRescanIsAcceptedAndLeavesTheNetworkStanding(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+
+    edits.act(owner, new TerminalActionPayload(syncId(owner), TerminalAction.RESCAN));
+
+    context.assertTrue(
+        roles.containers(context.getWorld(), terminal(context)).size() == 1,
+        "The network should still hold its barrel after a rescan");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  private static int radiusOf(TestContext context) {
+    return TerminalLookup.settingsAt(context.getWorld(), terminal(context)).orElseThrow().radius();
+  }
+
+  private static int syncId(ServerPlayerEntity player) {
+    return ((TerminalScreenHandler) player.currentScreenHandler).syncId;
+  }
+
+  private static BlockPos terminal(TestContext context) {
+    return context.getAbsolutePos(NetworkOperationFixture.TERMINAL);
+  }
+
+  private static BlockPos east(TestContext context) {
+    return context.getAbsolutePos(NetworkOperationFixture.EAST_BARREL);
+  }
+}

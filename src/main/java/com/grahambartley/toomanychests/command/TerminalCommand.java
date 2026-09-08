@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests.command;
 
+import com.grahambartley.toomanychests.terminal.ContainerHighlightService;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import com.grahambartley.toomanychests.terminal.TerminalRadius;
 import com.grahambartley.toomanychests.terminal.TerminalRadiusService;
@@ -48,7 +49,11 @@ public final class TerminalCommand {
                                 .executes(TerminalCommand::setRadius)))
                 .then(TerminalAccessCommand.accessNode())
                 .then(TerminalAccessCommand.trustNode())
-                .then(TerminalAccessCommand.untrustNode()));
+                .then(TerminalAccessCommand.untrustNode())
+                .then(TerminalNetworkCommand.infoNode())
+                .then(TerminalNetworkCommand.roleNode())
+                .then(TerminalNetworkCommand.rescanNode())
+                .then(TerminalNetworkCommand.highlightNode()));
   }
 
   /**
@@ -91,6 +96,9 @@ public final class TerminalCommand {
             ? CommandMessages.terminalRadiusClamped(pos, radius.get())
             : CommandMessages.terminalRadiusSet(pos, radius.get());
     source.sendFeedback(() -> reply, true);
+    if (source.getPlayer() != null) {
+      ContainerHighlightService.highlight(source.getPlayer(), source.getWorld(), pos);
+    }
     return radius.get().blocks();
   }
 }

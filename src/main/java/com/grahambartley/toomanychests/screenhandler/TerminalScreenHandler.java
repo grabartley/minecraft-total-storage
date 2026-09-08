@@ -33,6 +33,7 @@ public class TerminalScreenHandler extends ScreenHandler {
 
   private final TerminalOpenData data;
   private final TerminalListingState listing = new TerminalListingState();
+  private final TerminalSettingsState settings = new TerminalSettingsState();
 
   public TerminalScreenHandler(int syncId, PlayerInventory playerInventory, TerminalOpenData data) {
     super(ModScreenHandlers.TERMINAL, syncId);
@@ -58,6 +59,14 @@ public class TerminalScreenHandler extends ScreenHandler {
    */
   public TerminalListingState listing() {
     return listing;
+  }
+
+  /**
+   * What this screen is currently asking the settings panel for, which like the listing belongs to
+   * the screen rather than to the terminal.
+   */
+  public TerminalSettingsState settings() {
+    return settings;
   }
 
   public int radius() {

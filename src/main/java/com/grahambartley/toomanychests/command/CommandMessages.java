@@ -3,6 +3,8 @@ package com.grahambartley.toomanychests.command;
 import com.grahambartley.toomanychests.config.ConfigSetting;
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.config.TooManyChestsConfig;
+import com.grahambartley.toomanychests.storage.ContainerRole;
+import com.grahambartley.toomanychests.terminal.RoleTally;
 import com.grahambartley.toomanychests.terminal.TerminalRadius;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
@@ -244,6 +246,102 @@ public final class CommandMessages {
 
   public static Text sortFailed() {
     return line("sort.failed", "The sort was rolled back and nothing moved");
+  }
+
+  public static Text helpTerminalInfo() {
+    return line(
+        "help.terminal.info",
+        "/tmc terminal <pos> info summarises one terminal, and rescan makes it look again");
+  }
+
+  public static Text helpTerminalRole() {
+    return line(
+        "help.terminal.role",
+        "/tmc terminal <pos> role <container> [general|filtered|excluded] reads or sets what the"
+            + " network may do to a container");
+  }
+
+  public static Text helpTerminalHighlight() {
+    return line(
+        "help.terminal.highlight",
+        "/tmc terminal <pos> highlight outlines the containers it is holding");
+  }
+
+  public static Text terminalInfoHeader(BlockPos pos) {
+    return line("terminal.info.header", "The terminal at %s:", at(pos));
+  }
+
+  public static Text terminalInfoPower(boolean powered) {
+    return powered
+        ? line("terminal.info.powered", "- Powered, so its network is running")
+        : line("terminal.info.unpowered", "- Unpowered, so it is holding nothing");
+  }
+
+  public static Text terminalInfoRadius(TerminalRadius radius) {
+    return radius.clamped()
+        ? line(
+            "terminal.info.radius.held",
+            "- Set to a radius of %s, reaching %s under the server maximum",
+            radius.requested(),
+            radius.blocks())
+        : line("terminal.info.radius", "- Radius %s", radius.blocks());
+  }
+
+  public static Text terminalInfoAccess(TerminalAccessMode mode) {
+    return line("terminal.info.access", "- %s access", mode.id());
+  }
+
+  public static Text terminalInfoContainers(RoleTally tally) {
+    return line(
+        "terminal.info.containers",
+        "- %s containers: %s general, %s filtered, %s excluded",
+        tally.total(),
+        tally.general(),
+        tally.filtered(),
+        tally.excluded());
+  }
+
+  public static Text containerRole(BlockPos container, ContainerRole role) {
+    return line("container.role", "The container at %s is %s", at(container), role.id());
+  }
+
+  public static Text containerRoleSet(BlockPos container, ContainerRole role) {
+    return line("container.role.set", "Made the container at %s %s", at(container), role.id());
+  }
+
+  public static Text containerRoleUnchanged(BlockPos container, ContainerRole role) {
+    return line(
+        "container.role.unchanged", "The container at %s was already %s", at(container), role.id());
+  }
+
+  public static Text containerNotReached(BlockPos terminal, BlockPos container) {
+    return line(
+        "container.role.unreachable",
+        "The terminal at %s does not reach the container at %s",
+        at(terminal),
+        at(container));
+  }
+
+  public static Text unknownRole(String requested, String roles) {
+    return line("container.role.unknown", "'%s' is not a role. Roles are: %s", requested, roles);
+  }
+
+  public static Text terminalRescanned(BlockPos pos, boolean rescanned) {
+    return rescanned
+        ? line("terminal.rescanned", "The terminal at %s scanned its region again", at(pos))
+        : line("terminal.rescan.unchanged", "The terminal at %s had nothing new to find", at(pos));
+  }
+
+  public static Text terminalHighlighted(BlockPos pos, int containers) {
+    return line(
+        "terminal.highlighted",
+        "Showing the %s containers the terminal at %s holds",
+        containers,
+        at(pos));
+  }
+
+  public static Text highlightNeedsAPlayer() {
+    return line("terminal.highlight.console", "A highlight has to be shown to a player");
   }
 
   private static String at(BlockPos pos) {

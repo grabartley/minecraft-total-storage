@@ -55,10 +55,15 @@
       "com.grahambartley.toomanychests.gametest.TerminalListingServiceGameTest",
       "com.grahambartley.toomanychests.gametest.TerminalListingBroadcastGameTest",
       "com.grahambartley.toomanychests.gametest.ListingPayloadGameTest",
+      "com.grahambartley.toomanychests.gametest.ContainerHighlightServiceGameTest",
+      "com.grahambartley.toomanychests.gametest.ContainerRoleServiceGameTest",
+      "com.grahambartley.toomanychests.gametest.NetworkSettingsServiceGameTest",
       "com.grahambartley.toomanychests.gametest.DepositDestinationsGameTest",
       "com.grahambartley.toomanychests.gametest.LiveStoragesGameTest",
       "com.grahambartley.toomanychests.gametest.PlayerSlotsGameTest",
+      "com.grahambartley.toomanychests.gametest.TerminalNetworkCommandGameTest",
       "com.grahambartley.toomanychests.gametest.TerminalOperationGateGameTest",
+      "com.grahambartley.toomanychests.gametest.TerminalSettingsEditsGameTest",
       "com.grahambartley.toomanychests.gametest.WithdrawServiceGameTest",
       "com.grahambartley.toomanychests.gametest.DepositServiceGameTest"
     ]

@@ -1,7 +1,7 @@
 package com.grahambartley.toomanychests.screen;
 
+import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.filter.TagCombinationMode;
-import com.grahambartley.toomanychests.listing.ListingPage;
 import com.grahambartley.toomanychests.listing.ListingRow;
 import com.grahambartley.toomanychests.listing.ListingStatus;
 import com.grahambartley.toomanychests.listing.TerminalListingMirror;
@@ -11,9 +11,11 @@ import com.grahambartley.toomanychests.operation.WithdrawAmount;
 import com.grahambartley.toomanychests.operation.WithdrawDestination;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenHandler;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
+import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
+import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
+import com.grahambartley.toomanychests.terminal.TerminalAction;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.client.gui.DrawContext;
@@ -23,23 +25,21 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 /**
- * The terminal's window: its chassis, the grid of everything the network holds, and the player's
- * own inventory.
+ * The terminal's window: its chassis, whichever of its two views is showing, and the player's own
+ * inventory.
  *
- * <p>The grid is not made of slots and cannot be. Per ADR 0025 the network is not an inventory, so
- * a cell is drawn from a row of the page the server last sent rather than from anything the handler
- * addresses, and a cell holds a variant and a total rather than a stack.
+ * <p>Each view owns its own recess full of content, so this class owns the frame around them: the
+ * chassis, the tab strip, the toolbar, and deciding which view a click was meant for. See {@link
+ * TerminalItemsPanel} and {@link TerminalSettingsPanel} for the views themselves.
  *
- * <p>Cells are addressed by their position in the whole listing rather than by their position in
- * the page in hand. A scroll and the page answering it are a round trip apart, and drawing by page
- * position would slide every cell sideways for that round trip instead of leaving the rows that
- * still overlap exactly where they were.
+ * <p>Both views are drawn into the same recess because the window is already as tall as vanilla
+ * will draw one on a 320x240 screen, so there is no room for a second. That is also why the tabs
+ * sit in the toolbar column rather than above the window, where vanilla puts them.
  *
  * <p>Every piece of chassis is a nine-sliced sprite rather than one background image, per ADR 0017,
  * so the window can change size as the filter column grows without a new texture.
@@ -51,52 +51,31 @@ import org.lwjgl.glfw.GLFW;
 public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   private static final Identifier PANEL = TerminalSprites.of("panel/background");
   private static final Identifier INSET = TerminalSprites.of("panel/inset");
-  private static final Identifier CELL = TerminalSprites.of("slot/cell");
-  private static final Identifier CELL_HOVER = TerminalSprites.of("slot/cell_hover");
-  private static final Identifier SCROLL_TRACK = TerminalSprites.of("scroll/track");
-  private static final Identifier SCROLL_THUMB = TerminalSprites.of("scroll/thumb");
-  private static final Identifier SCROLL_THUMB_DISABLED =
-      TerminalSprites.of("scroll/thumb_disabled");
-
-  private static final int ITEM_SIZE = 16;
-  private static final int LINE_HEIGHT = 9;
-
-  /** Far enough forward to clear the item model the count is written across. */
-  private static final float COUNT_ELEVATION = 200.0F;
-
-  private static final int COUNT_COLOUR = 0xFFFFFF;
-
-  /** The palette's mid glyph, which is what reads on the recess floor behind an empty grid. */
-  private static final int PLACEHOLDER_COLOUR = 0x9AA3B3;
-
+  private static final Identifier TAB_SELECTED = TerminalSprites.of("tab/selected");
+  private static final Identifier TAB_UNSELECTED = TerminalSprites.of("tab/unselected");
+  private static final Identifier ITEMS_ICON = TerminalSprites.of("icon/items");
+  private static final Identifier SETTINGS_ICON = TerminalSprites.of("icon/settings");
   private static final Identifier DEPOSIT_ALL_ICON = TerminalSprites.of("icon/deposit_all");
+  private static final Identifier RESCAN_ICON = TerminalSprites.of("icon/rescan");
+  private static final Identifier HIGHLIGHT_ICON = TerminalSprites.of("icon/highlight");
 
-  private final ListingScroll scroll =
-      new ListingScroll(TerminalScreenLayout.LISTING_COLUMNS, TerminalScreenLayout.LISTING_ROWS);
-
-  private final TerminalScrollbar scrollbar =
-      new TerminalScrollbar(scroll, TerminalScreenLayout.SCROLLBAR_HEIGHT);
-
-  /**
-   * The page every part of one frame draws from, taken once at the top of it. Reading the mirror
-   * again partway through would let the chassis, the cells and the tooltip disagree about what is
-   * on screen.
-   */
-  private ListingPage<ItemVariant> pageThisFrame = ListingPage.pending(0L);
-
-  /** What the grid is showing instead of rows, taken with the page so the two cannot disagree. */
-  private Optional<ListingPlaceholder> placeholder = Optional.empty();
-
-  private TerminalSearchBox search;
-
-  private TerminalIconButton depositAll;
-
+  private final TerminalItemsPanel items = new TerminalItemsPanel();
+  private final TerminalSettingsPanel settings = new TerminalSettingsPanel();
   private final WithdrawAmountPrompt prompt = new WithdrawAmountPrompt();
 
   /** What the server was last told this screen wants, so a scroll or a keystroke is noticed. */
   private final ListingCriteria requested = new ListingCriteria();
 
-  private int hovered = TerminalScreenLayout.NO_CELL;
+  private TerminalTab tab = TerminalTab.ITEMS;
+  private TerminalSearchBox search;
+  private TerminalIconButton depositAll;
+  private TerminalIconButton rescan;
+  private TerminalIconButton highlight;
+
+  private NetworkSettingsView settingsThisFrame = NetworkSettingsView.pending();
+  private int hoveredCell = TerminalScreenLayout.NO_CELL;
+  private int hoveredRow = -1;
+  private SettingsControl hoveredControl = SettingsControl.NONE;
 
   public TerminalScreen(TerminalScreenHandler handler, PlayerInventory inventory, Text title) {
     super(handler, inventory, title);
@@ -123,27 +102,36 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     super.init();
     search = new TerminalSearchBox(textRenderer, x, y, search == null ? "" : search.text());
     addDrawableChild(search.widget());
-    depositAll =
-        new TerminalIconButton(
-            x + TerminalScreenLayout.TOOLBAR_X,
-            y + TerminalScreenLayout.TOOLBAR_Y,
-            DEPOSIT_ALL_ICON,
-            TerminalScreenText.of("deposit_all"),
-            this::depositEverything);
-    addDrawableChild(depositAll);
+    depositAll = action(0, DEPOSIT_ALL_ICON, "deposit_all", this::depositEverything);
+    rescan = action(0, RESCAN_ICON, "rescan", () -> act(TerminalAction.RESCAN));
+    highlight = action(1, HIGHLIGHT_ICON, "highlight", () -> act(TerminalAction.HIGHLIGHT));
     setInitialFocus(search.widget());
     updateToolbar(TerminalListingMirror.page().status());
     if (TerminalListingMirror.isShowing(handler.syncId)) {
       return;
     }
     TerminalListingMirror.opened(handler.syncId);
+    NetworkSettingsMirror.opened(handler.syncId);
     requestVisibleRows();
+  }
+
+  private TerminalIconButton action(int row, Identifier icon, String label, Runnable onPress) {
+    final TerminalIconButton button =
+        new TerminalIconButton(
+            x + TerminalScreenLayout.TOOLBAR_X,
+            y + TerminalScreenLayout.actionY(row),
+            icon,
+            TerminalScreenText.of(label),
+            onPress);
+    addDrawableChild(button);
+    return button;
   }
 
   @Override
   public void removed() {
     super.removed();
     TerminalListingMirror.closed();
+    NetworkSettingsMirror.closed();
   }
 
   /**
@@ -153,17 +141,17 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
    */
   @Override
   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-    pageThisFrame = TerminalListingMirror.page();
-    placeholder = ListingPlaceholder.forStatus(pageThisFrame.status());
+    items.beginFrame(TerminalListingMirror.page());
+    settingsThisFrame = NetworkSettingsMirror.view();
+    settings.fit(settingsThisFrame);
     if (requested.isNewQuery(search.text())) {
-      scroll.scrollTo(0);
+      items.scroll().scrollTo(0);
     }
-    scroll.fit(pageThisFrame.totalMatching());
-    if (requested.needsRequest(scroll.window(), search.text())) {
+    if (!tab.isSettings() && requested.needsRequest(items.scroll().window(), search.text())) {
       requestVisibleRows();
     }
-    updateToolbar(pageThisFrame.status());
-    hovered = prompt.isOpen() ? TerminalScreenLayout.NO_CELL : hoveredCell(mouseX, mouseY);
+    updateToolbar(items.page().status());
+    updateHovered(mouseX, mouseY);
     super.render(context, mouseX, mouseY, delta);
     if (prompt.isOpen()) {
       prompt.draw(context, textRenderer, x, y);
@@ -173,18 +161,38 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     drawCellTooltip(context, mouseX, mouseY);
   }
 
+  private void updateHovered(int mouseX, int mouseY) {
+    final int windowX = windowX(mouseX);
+    final int windowY = windowY(mouseY);
+    if (prompt.isOpen()) {
+      hoveredCell = TerminalScreenLayout.NO_CELL;
+      hoveredRow = -1;
+      hoveredControl = SettingsControl.NONE;
+      return;
+    }
+    hoveredCell =
+        tab.isSettings() ? TerminalScreenLayout.NO_CELL : items.hoveredCell(windowX, windowY);
+    hoveredRow = tab.isSettings() ? settings.rowAt(windowX, windowY) : -1;
+    hoveredControl = tab.isSettings() ? SettingsControl.at(windowX, windowY) : SettingsControl.NONE;
+  }
+
   @Override
   protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
     context.drawGuiTexture(PANEL, x, y, backgroundWidth, backgroundHeight);
-    search.drawBox(context, x, y);
+    if (!tab.isSettings()) {
+      search.drawBox(context, x, y);
+    }
     context.drawGuiTexture(
         INSET,
         x + TerminalScreenLayout.INSET_X,
         y + TerminalScreenLayout.INSET_Y,
         TerminalScreenLayout.INSET_WIDTH,
         TerminalScreenLayout.INSET_HEIGHT);
-    drawCells(context);
-    drawScrollbar(context);
+    if (!tab.isSettings()) {
+      items.drawCells(context, x, y, hoveredCell);
+      items.drawScrollbar(context, x, y);
+    }
+    drawTabs(context);
     for (final Slot slot : handler.slots) {
       context.drawGuiTexture(
           INSET,
@@ -195,11 +203,36 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     }
   }
 
+  private void drawTabs(DrawContext context) {
+    drawTab(context, TerminalTab.ITEMS, ITEMS_ICON);
+    drawTab(context, TerminalTab.SETTINGS, SETTINGS_ICON);
+  }
+
+  private void drawTab(DrawContext context, TerminalTab drawn, Identifier icon) {
+    final int left = x + TerminalScreenLayout.TOOLBAR_X;
+    final int top = y + TerminalScreenLayout.tabY(drawn.index());
+    context.drawGuiTexture(
+        drawn == tab ? TAB_SELECTED : TAB_UNSELECTED,
+        left,
+        top,
+        TerminalScreenLayout.BUTTON_SIZE,
+        TerminalScreenLayout.BUTTON_SIZE);
+    context.drawGuiTexture(
+        icon,
+        left + TerminalScreenLayout.ICON_INSET,
+        top + TerminalScreenLayout.ICON_INSET,
+        TerminalScreenLayout.ICON_SIZE,
+        TerminalScreenLayout.ICON_SIZE);
+  }
+
   @Override
   protected void drawForeground(DrawContext context, int mouseX, int mouseY) {
     super.drawForeground(context, mouseX, mouseY);
-    placeholder.ifPresent(shown -> drawPlaceholder(context, shown));
-    drawRows(context);
+    if (tab.isSettings()) {
+      settings.draw(context, textRenderer, settingsThisFrame, 0, 0, hoveredRow, hoveredControl);
+      return;
+    }
+    items.drawRows(context, textRenderer);
   }
 
   @Override
@@ -208,10 +241,20 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     if (prompt.isOpen()) {
       return true;
     }
-    if (verticalAmount != 0.0
-        && scroll.overflows()
+    if (verticalAmount == 0.0) {
+      return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+    }
+    final int notches = verticalAmount > 0.0 ? -1 : 1;
+    if (tab.isSettings()) {
+      if (settings.scroll().overflows()) {
+        settings.scroll().scrollBy(notches);
+        requestVisibleContainers();
+      }
+      return true;
+    }
+    if (items.scroll().overflows()
         && TerminalScreenLayout.isOverListing(windowX(mouseX), windowY(mouseY))) {
-      scroll.scrollBy(verticalAmount > 0.0 ? -1 : 1);
+      items.scroll().scrollBy(notches);
       return true;
     }
     return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
@@ -228,21 +271,44 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
       prompt.close();
       return true;
     }
-    if (button == GridClick.LEFT_BUTTON
-        && TerminalScreenLayout.isOverSearch(windowX(mouseX), windowY(mouseY))) {
+    final int windowX = windowX(mouseX);
+    final int windowY = windowY(mouseY);
+    final TerminalTab clicked = TerminalTab.at(windowX, windowY);
+    if (clicked != null) {
+      showTab(clicked);
+      return true;
+    }
+    if (tab.isSettings()) {
+      return handleSettingsClick(windowX, windowY, button)
+          || super.mouseClicked(mouseX, mouseY, button);
+    }
+    if (button == GridClick.LEFT_BUTTON && TerminalScreenLayout.isOverSearch(windowX, windowY)) {
       setFocused(search.widget());
       search.widget().mouseClicked(mouseX, mouseY, button);
       return true;
     }
     if (button == GridClick.LEFT_BUTTON
-        && TerminalScreenLayout.isOverScrollbar(windowX(mouseX), windowY(mouseY))
-        && scrollbar.grab(windowY(mouseY) - TerminalScreenLayout.SCROLLBAR_Y)) {
+        && TerminalScreenLayout.isOverScrollbar(windowX, windowY)
+        && items.scrollbar().grab(windowY - TerminalScreenLayout.SCROLLBAR_Y)) {
       return true;
     }
-    if (handleGridClick(mouseX, mouseY, button)) {
+    if (handleGridClick(windowX, windowY, button)) {
       return true;
     }
     return super.mouseClicked(mouseX, mouseY, button);
+  }
+
+  /** Switching view asks for whatever the new one draws, since neither is sent unprompted. */
+  private void showTab(TerminalTab shown) {
+    if (tab == shown) {
+      return;
+    }
+    tab = shown;
+    if (tab.isSettings()) {
+      requestVisibleContainers();
+    } else {
+      requestVisibleRows();
+    }
   }
 
   /**
@@ -250,12 +316,12 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
    * grid holds no slots per ADR 0025, so every button and modifier over it means what this screen
    * says it means and nothing is moved until the server answers.
    */
-  private boolean handleGridClick(double mouseX, double mouseY, int button) {
-    final int cell = TerminalScreenLayout.cellAt(windowX(mouseX), windowY(mouseY));
+  private boolean handleGridClick(int windowX, int windowY, int button) {
+    final int cell = TerminalScreenLayout.cellAt(windowX, windowY);
     if (cell == TerminalScreenLayout.NO_CELL) {
       return false;
     }
-    final ListingRow<ItemVariant> row = pageThisFrame.status().hasRows() ? rowAt(cell) : null;
+    final ListingRow<ItemVariant> row = items.page().status().hasRows() ? items.rowAt(cell) : null;
     final GridAction action =
         GridClick.of(button, hasShiftDown(), !handler.getCursorStack().isEmpty(), row != null);
     if (action == GridAction.NONE) {
@@ -267,6 +333,49 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     }
     TerminalGridRequests.send(action, handler.syncId, row == null ? null : row.variant());
     return true;
+  }
+
+  /**
+   * A click on the settings panel. Nothing is applied here: every control sends what the player
+   * asked for and waits, because per ADR 0008 whether they may is the server's answer and this end
+   * only knows what it was last told.
+   */
+  private boolean handleSettingsClick(int windowX, int windowY, int button) {
+    final SettingsControl control = SettingsControl.at(windowX, windowY);
+    if (control.isSomething()) {
+      applyControl(control);
+      return true;
+    }
+    final int index = settings.rowAt(windowX, windowY);
+    final ContainerRoleEntry entry = index < 0 ? null : settingsThisFrame.at(index);
+    if (entry == null) {
+      return false;
+    }
+    ModNetworkingClient.sendRoleEdit(
+        handler.syncId,
+        entry.container(),
+        button == GridClick.RIGHT_BUTTON
+            ? ContainerRoleCycle.previous(entry.role())
+            : ContainerRoleCycle.next(entry.role()));
+    return true;
+  }
+
+  private void applyControl(SettingsControl control) {
+    switch (control) {
+      case RADIUS_DOWN ->
+          ModNetworkingClient.sendRadiusEdit(handler.syncId, settingsThisFrame.radius() - 1);
+      case RADIUS_UP ->
+          ModNetworkingClient.sendRadiusEdit(handler.syncId, settingsThisFrame.radius() + 1);
+      case ACCESS_CYCLE ->
+          ModNetworkingClient.sendAccessEdit(
+              handler.syncId, nextMode(settingsThisFrame.accessMode()));
+      case NONE -> {}
+    }
+  }
+
+  private static TerminalAccessMode nextMode(TerminalAccessMode mode) {
+    final TerminalAccessMode[] modes = TerminalAccessMode.values();
+    return modes[Math.floorMod(mode.ordinal() + 1, modes.length)];
   }
 
   /**
@@ -288,16 +397,26 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   }
 
   /**
-   * The button says what the terminal can currently do. It steps aside entirely for the amount
-   * prompt, because a widget drawn over a modal panel would take its tooltip with it.
+   * Each view brings its own actions. Deposit all belongs to the items view because it is about
+   * what the network holds; rescan and highlight belong to the settings view because they are about
+   * what it reaches.
    */
   private void updateToolbar(ListingStatus status) {
-    depositAll.active = status != ListingStatus.OFFLINE;
-    depositAll.visible = !prompt.isOpen();
+    final boolean offline = status == ListingStatus.OFFLINE;
+    depositAll.active = !offline;
+    depositAll.visible = !prompt.isOpen() && !tab.isSettings();
+    rescan.visible = !prompt.isOpen() && tab.isSettings();
+    highlight.visible = rescan.visible;
+    rescan.active = settingsThisFrame.mayAdminister();
+    highlight.active = settingsThisFrame.powered();
   }
 
   private void depositEverything() {
     ModNetworkingClient.sendDepositAllRequest(handler.syncId);
+  }
+
+  private void act(TerminalAction action) {
+    ModNetworkingClient.sendTerminalAction(handler.syncId, action);
   }
 
   /**
@@ -319,8 +438,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     if (prompt.isOpen()) {
       return true;
     }
-    if (scrollbar.isDragging()) {
-      scrollbar.dragTo(windowY(mouseY) - TerminalScreenLayout.SCROLLBAR_Y);
+    if (items.scrollbar().isDragging()) {
+      items.scrollbar().dragTo(windowY(mouseY) - TerminalScreenLayout.SCROLLBAR_Y);
       return true;
     }
     return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
@@ -372,15 +491,15 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   @Override
   public boolean mouseReleased(double mouseX, double mouseY, int button) {
-    if (button == GridClick.LEFT_BUTTON && scrollbar.isDragging()) {
-      scrollbar.release();
+    if (button == GridClick.LEFT_BUTTON && items.scrollbar().isDragging()) {
+      items.scrollbar().release();
       return true;
     }
     return super.mouseReleased(mouseX, mouseY, button);
   }
 
   private void requestVisibleRows() {
-    requested.requested(scroll.window(), search.text());
+    requested.requested(items.scroll().window(), search.text());
     ModNetworkingClient.sendListingRequest(
         handler.syncId,
         requested.window(),
@@ -389,139 +508,22 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
         Set.of());
   }
 
-  /**
-   * A grid explaining why it has no rows draws no cells. The empty-state art was drawn against the
-   * recess floor, and forty-five cells behind it leave the illustration showing through the gutters
-   * between them rather than reading as a picture.
-   */
-  private void drawCells(DrawContext context) {
-    if (placeholder.isPresent()) {
-      return;
-    }
-    for (int cell = 0; cell < TerminalScreenLayout.LISTING_PAGE_SIZE; cell++) {
-      context.drawGuiTexture(
-          cell == hovered ? CELL_HOVER : CELL,
-          x + TerminalScreenLayout.cellX(cell),
-          y + TerminalScreenLayout.cellY(cell),
-          TerminalScreenLayout.CELL_SIZE,
-          TerminalScreenLayout.CELL_SIZE);
-    }
-  }
-
-  private void drawScrollbar(DrawContext context) {
-    context.drawGuiTexture(
-        SCROLL_TRACK,
-        x + TerminalScreenLayout.SCROLLBAR_X,
-        y + TerminalScreenLayout.SCROLLBAR_Y,
-        TerminalScreenLayout.SCROLLBAR_WIDTH,
-        TerminalScreenLayout.SCROLLBAR_HEIGHT);
-    context.drawGuiTexture(
-        scrollbar.isEnabled() ? SCROLL_THUMB : SCROLL_THUMB_DISABLED,
-        x + TerminalScreenLayout.SCROLLBAR_X,
-        y + TerminalScreenLayout.SCROLLBAR_Y + scrollbar.thumbTop(),
-        TerminalScreenLayout.SCROLLBAR_WIDTH,
-        scrollbar.thumbHeight());
-  }
-
-  private void drawRows(DrawContext context) {
-    if (!pageThisFrame.status().hasRows()) {
-      return;
-    }
-    for (int cell = 0; cell < TerminalScreenLayout.LISTING_PAGE_SIZE; cell++) {
-      final ListingRow<ItemVariant> row = rowAt(cell);
-      if (row == null) {
-        continue;
-      }
-      final int itemX = TerminalScreenLayout.cellX(cell) + TerminalScreenLayout.CELL_ITEM_OFFSET;
-      final int itemY = TerminalScreenLayout.cellY(cell) + TerminalScreenLayout.CELL_ITEM_OFFSET;
-      context.drawItem(row.variant().toStack(), itemX, itemY);
-      drawCount(context, ItemCountFormat.cell(row.count()), itemX, itemY);
-    }
-  }
-
-  /**
-   * The count sits in the item's bottom right corner as a stack size does, shrunk only as far as
-   * the cell demands. A network total can be several times wider than the two digits vanilla ever
-   * has to fit there, but most cells hold a count that fits at full size, and shrinking those too
-   * turns the common case to mush at the smallest GUI scale for the sake of the rare one.
-   */
-  private void drawCount(DrawContext context, String label, int itemX, int itemY) {
-    final int width = textRenderer.getWidth(label);
-    final float scale = Math.min(1.0F, (float) ITEM_SIZE / width);
-    context.getMatrices().push();
-    context.getMatrices().translate(0.0F, 0.0F, COUNT_ELEVATION);
-    context.getMatrices().scale(scale, scale, 1.0F);
-    context.drawText(
-        textRenderer,
-        label,
-        Math.round((itemX + ITEM_SIZE) / scale) - width,
-        Math.round((itemY + ITEM_SIZE - LINE_HEIGHT * scale) / scale),
-        COUNT_COLOUR,
-        true);
-    context.getMatrices().pop();
-  }
-
-  /**
-   * The message is wrapped to the grid rather than trusted to fit it. English happens to be short
-   * enough, but a translation is not, and one long line runs off both sides of the chassis and off
-   * the screen with it.
-   */
-  private void drawPlaceholder(DrawContext context, ListingPlaceholder shown) {
-    final int centreX = TerminalScreenLayout.GRID_X + TerminalScreenLayout.GRID_WIDTH / 2;
-    final List<OrderedText> lines =
-        textRenderer.wrapLines(shown.message(), TerminalScreenLayout.GRID_WIDTH);
-    final int block =
-        ListingPlaceholder.SPRITE_SIZE
-            + ListingPlaceholder.MESSAGE_GAP
-            + lines.size() * LINE_HEIGHT;
-    final int top =
-        Math.max(
-            TerminalScreenLayout.GRID_Y,
-            TerminalScreenLayout.GRID_Y + (TerminalScreenLayout.GRID_HEIGHT - block) / 2);
-    context.drawGuiTexture(
-        shown.sprite(),
-        centreX - ListingPlaceholder.SPRITE_SIZE / 2,
-        top,
-        ListingPlaceholder.SPRITE_SIZE,
-        ListingPlaceholder.SPRITE_SIZE);
-    int lineY = top + ListingPlaceholder.SPRITE_SIZE + ListingPlaceholder.MESSAGE_GAP;
-    for (final OrderedText line : lines) {
-      context.drawText(
-          textRenderer,
-          line,
-          centreX - textRenderer.getWidth(line) / 2,
-          lineY,
-          PLACEHOLDER_COLOUR,
-          false);
-      lineY += LINE_HEIGHT;
-    }
+  private void requestVisibleContainers() {
+    ModNetworkingClient.sendSettingsRequest(
+        handler.syncId,
+        settings.scroll().window().offset(),
+        Math.max(TerminalScreenLayout.CONTAINER_ROWS, settings.scroll().window().length()));
   }
 
   private void drawCellTooltip(DrawContext context, int mouseX, int mouseY) {
-    if (hovered == TerminalScreenLayout.NO_CELL) {
+    if (hoveredCell == TerminalScreenLayout.NO_CELL) {
       return;
     }
-    final ListingRow<ItemVariant> row = rowAt(hovered);
+    final ListingRow<ItemVariant> row = items.rowAt(hoveredCell);
     final ItemStack stack = row.variant().toStack();
     final List<Text> lines = new ArrayList<>(Screen.getTooltipFromItem(client, stack));
     lines.addAll(ListingTooltip.extraLines(row));
     context.drawTooltip(textRenderer, lines, mouseX, mouseY);
-  }
-
-  /** The cell under the pointer, or {@link TerminalScreenLayout#NO_CELL} when it holds no row. */
-  private int hoveredCell(int mouseX, int mouseY) {
-    if (!pageThisFrame.status().hasRows()) {
-      return TerminalScreenLayout.NO_CELL;
-    }
-    final int cell = TerminalScreenLayout.cellAt(windowX(mouseX), windowY(mouseY));
-    if (cell == TerminalScreenLayout.NO_CELL || rowAt(cell) == null) {
-      return TerminalScreenLayout.NO_CELL;
-    }
-    return cell;
-  }
-
-  private ListingRow<ItemVariant> rowAt(int cell) {
-    return pageThisFrame.at(scroll.firstIndex() + cell);
   }
 
   private int windowX(double mouseX) {

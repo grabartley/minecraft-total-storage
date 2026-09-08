@@ -330,6 +330,132 @@ class TerminalScreenLayoutTest {
             TerminalScreenLayout.SEARCH_Y + TerminalScreenLayout.SEARCH_HEIGHT - 1));
   }
 
+  static Stream<Integer> everyTab() {
+    return IntStream.range(0, TerminalScreenLayout.TAB_COUNT).boxed();
+  }
+
+  @ParameterizedTest
+  @MethodSource("everyTab")
+  void everyTabIsDrawnInTheToolbarColumn(int tab) {
+    int top = TerminalScreenLayout.tabY(tab);
+
+    assertTrue(top >= TerminalScreenLayout.TOOLBAR_Y, "tab at " + top);
+    assertTrue(
+        top + TerminalScreenLayout.BUTTON_SIZE <= TerminalScreenLayout.ACTIONS_Y,
+        "the tab strip runs into the actions below it");
+  }
+
+  @Test
+  void theTabsTouchSoTheyReadAsOneStrip() {
+    assertEquals(
+        TerminalScreenLayout.tabY(0) + TerminalScreenLayout.BUTTON_SIZE,
+        TerminalScreenLayout.tabY(1));
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {-1, 2, 100})
+  void anIndexThatIsNotATabIsRefusedRatherThanGuessedAt(int tab) {
+    assertThrows(IndexOutOfBoundsException.class, () -> TerminalScreenLayout.tabY(tab));
+  }
+
+  /** The toolbar has to hold both actions a view needs without running past the recess. */
+  @Test
+  void theToolbarHasRoomForTheActionsBesideTheStrip() {
+    int last = TerminalScreenLayout.actionY(1) + TerminalScreenLayout.BUTTON_SIZE;
+
+    assertTrue(
+        last <= TerminalScreenLayout.INSET_Y + TerminalScreenLayout.INSET_HEIGHT,
+        "the actions run past the recess, ending at " + last);
+  }
+
+  @Test
+  void theActionsAreSeparatedFromTheStripTheySitUnder() {
+    assertTrue(
+        TerminalScreenLayout.actionY(0)
+            >= TerminalScreenLayout.tabY(TerminalScreenLayout.TAB_COUNT - 1)
+                + TerminalScreenLayout.BUTTON_SIZE,
+        "the first action overlaps the last tab");
+  }
+
+  @Test
+  void aClickBesideTheToolbarIsOverNoTab() {
+    assertEquals(
+        TerminalScreenLayout.NO_CELL,
+        TerminalScreenLayout.tabAt(
+            TerminalScreenLayout.TOOLBAR_X - 1, TerminalScreenLayout.TOOLBAR_Y));
+    assertEquals(
+        TerminalScreenLayout.NO_CELL,
+        TerminalScreenLayout.tabAt(TerminalScreenLayout.GRID_X, TerminalScreenLayout.GRID_Y));
+  }
+
+  /**
+   * The settings panel and the grid share one recess, so it must cover exactly what the grid does.
+   */
+  @Test
+  void theSettingsPanelFillsTheRecessTheGridUses() {
+    assertEquals(TerminalScreenLayout.GRID_X, TerminalScreenLayout.SETTINGS_X);
+    assertEquals(TerminalScreenLayout.GRID_Y, TerminalScreenLayout.SETTINGS_Y);
+    assertEquals(TerminalScreenLayout.GRID_HEIGHT, TerminalScreenLayout.SETTINGS_HEIGHT);
+    assertEquals(
+        TerminalScreenLayout.SCROLLBAR_X + TerminalScreenLayout.SCROLLBAR_WIDTH,
+        TerminalScreenLayout.SETTINGS_X + TerminalScreenLayout.SETTINGS_WIDTH);
+  }
+
+  @Test
+  void theContainerListStartsBelowTheHeaderAndEndsInsideTheRecess() {
+    assertEquals(
+        TerminalScreenLayout.settingsRowY(TerminalScreenLayout.SETTINGS_HEADER_ROWS),
+        TerminalScreenLayout.CONTAINER_LIST_Y);
+    assertTrue(
+        TerminalScreenLayout.containerRowY(TerminalScreenLayout.CONTAINER_ROWS - 1)
+                + TerminalScreenLayout.CONTAINER_ROW_HEIGHT
+            <= TerminalScreenLayout.SETTINGS_Y + TerminalScreenLayout.SETTINGS_HEIGHT,
+        "the last container row runs past the recess");
+  }
+
+  @Test
+  void theContainerListHasRoomForAtLeastAFewRows() {
+    assertTrue(
+        TerminalScreenLayout.CONTAINER_ROWS >= 3,
+        "a list of " + TerminalScreenLayout.CONTAINER_ROWS + " rows is not navigable");
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {-1, 100})
+  void anIndexThatIsNotAContainerRowIsRefusedRatherThanGuessedAt(int row) {
+    assertThrows(IndexOutOfBoundsException.class, () -> TerminalScreenLayout.containerRowY(row));
+  }
+
+  @Test
+  void aClickAboveOrBesideTheContainerListIsOverNoRow() {
+    assertEquals(
+        TerminalScreenLayout.NO_CELL,
+        TerminalScreenLayout.containerRowAt(
+            TerminalScreenLayout.SETTINGS_X, TerminalScreenLayout.CONTAINER_LIST_Y - 1));
+    assertEquals(
+        TerminalScreenLayout.NO_CELL,
+        TerminalScreenLayout.containerRowAt(
+            TerminalScreenLayout.SETTINGS_X - 1, TerminalScreenLayout.CONTAINER_LIST_Y));
+    assertEquals(
+        TerminalScreenLayout.NO_CELL,
+        TerminalScreenLayout.containerRowAt(
+            TerminalScreenLayout.SETTINGS_X + TerminalScreenLayout.SETTINGS_WIDTH,
+            TerminalScreenLayout.CONTAINER_LIST_Y));
+  }
+
+  @ParameterizedTest
+  @MethodSource("everyContainerRow")
+  void everyContainerRowIsClickableWhereItIsDrawn(int row) {
+    assertEquals(
+        row,
+        TerminalScreenLayout.containerRowAt(
+            TerminalScreenLayout.SETTINGS_X, TerminalScreenLayout.containerRowY(row)));
+  }
+
+  static Stream<Integer> everyContainerRow() {
+    return IntStream.range(0, TerminalScreenLayout.CONTAINER_ROWS).boxed();
+  }
+
   /**
    * A page is asked for one recess at a time, and a request for more rows than a page may carry is
    * clamped rather than refused. A recess grown past the cap would therefore ask for cells it is

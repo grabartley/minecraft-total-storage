@@ -76,6 +76,7 @@ public final class ModNetworking {
                 .server()
                 .execute(() -> DEPOSITS.depositAll(context.player(), payload.syncId())));
 
+    TerminalSettingsNetworking.register();
     ConfigSync.register();
   }
 }

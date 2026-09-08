@@ -54,6 +54,20 @@ Where each item lands is the network's decision, made per item against the roles
 
 A full `Filtered` container falls through to a `General` one rather than refusing the item. A network with room for some of what you offered stores that much and tells you what is still in your hands, and one with no room at all leaves your inventory exactly as it was and says so. Having nothing to store is a different message from having nowhere to put it.
 
+## Configuring a network
+
+The terminal has two views, switched with the tabs down its right-hand side: the items it holds, and how it is configured. The settings view is where a storage area stops being whatever happened to be in range and becomes something you arranged.
+
+It shows the terminal's radius against the server's cap, who may open it, who it trusts, and every container it is currently reaching, nearest first, with what each one holds. Clicking a container walks its role forwards and right-clicking walks it back, so marking a chest `Excluded` is two clicks from opening the terminal.
+
+Only the owner and operators can change any of it. Everyone else sees the same panel with its controls greyed out, which is the truth rather than a missing control. Permission is checked again when each change arrives, so a modified client that draws itself the buttons gains buttons that refuse it.
+
+## Seeing what a terminal reaches
+
+"Why isn't that chest included" is the question a radius always produces, so the terminal answers it by outlining the containers it is holding, in the world. The outlines appear when you change the radius, and whenever you ask for them from the settings view or with `/tmc terminal <pos> highlight`. They fade after a few seconds: this is feedback, not an overlay.
+
+Each outline is coloured by that container's role, and an `Excluded` one is drawn as a doubled line as well as a different colour, so the distinction survives a player who cannot separate the red from the green. An unpowered terminal outlines nothing, because it is holding nothing.
+
 ## Container roles
 
 Every container a terminal can see carries a role, which is what decides how far the network is allowed to go with it.
@@ -67,6 +81,8 @@ Every container a terminal can see carries a role, which is what decides how far
 `Excluded` is the one that makes the rest safe to turn on. A curated potion chest stays exactly as you arranged it while staying searchable from the terminal. A `Filtered` container additionally records the tags and items it accepts, and that record is stored with its role.
 
 Roles live on the terminal, not on the container, so a chest reached by two overlapping terminals may hold a different role in each. See [ADR 0004](docs/adr/0004-container-roles.md).
+
+Set them from the terminal's settings view, or from the command line for a server with no client mod. A role edit is the one request in the mod that names a block position, and the terminal refuses any container its network does not already reach; see [ADR 0030](docs/adr/0030-a-role-names-a-container-and-the-network-validates-it.md) for why that is not the thing [ADR 0009](docs/adr/0009-clients-send-intent.md) forbids.
 
 Break a container and its role goes with it: whatever you put back on that spot starts as a general container rather than inheriting a decision made about a different one. A container that only leaves because its chunk unloaded keeps everything, and gets it back when the chunk returns. A container broken while its terminal has no power is the exception, since an unpowered terminal is not running and hears nothing. See [ADR 0024](docs/adr/0024-a-role-dies-with-the-container-it-was-given-to.md).
 
@@ -122,6 +138,11 @@ Every server-wide setting is configurable from the console, so a server can be s
 | `/tmc terminal <pos> trust` | owner or operators | The players that terminal trusts |
 | `/tmc terminal <pos> trust <players>` | owner or operators | Adds players to its trust list, online or not |
 | `/tmc terminal <pos> untrust <players>` | owner or operators | Removes players from its trust list |
+| `/tmc terminal <pos> info` | anyone | Summarises one terminal: power, radius, access, and its containers by role |
+| `/tmc terminal <pos> role <container>` | anyone | What one container's role is |
+| `/tmc terminal <pos> role <container> <general\|filtered\|excluded>` | owner or operators | Sets it, refusing a container the terminal does not reach |
+| `/tmc terminal <pos> rescan` | anyone | Makes the terminal walk its region again |
+| `/tmc terminal <pos> highlight` | players | Outlines the containers it is holding |
 | `/tmc sort` | anyone | Sorts the container you have open |
 
 Setting names and their values tab-complete. Changes are saved to the world immediately and pushed to connected clients. Operators are permission level 2.
