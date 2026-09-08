@@ -42,14 +42,6 @@ public record RoleTally(int general, int filtered, int excluded) {
     return new RoleTally(general, filtered, excluded);
   }
 
-  public int countOf(ContainerRole role) {
-    return switch (role == null ? ContainerRole.DEFAULT : role) {
-      case GENERAL -> general;
-      case FILTERED -> filtered;
-      case EXCLUDED -> excluded;
-    };
-  }
-
   public int total() {
     return general + filtered + excluded;
   }

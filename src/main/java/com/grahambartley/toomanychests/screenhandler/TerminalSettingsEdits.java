@@ -111,24 +111,34 @@ public final class TerminalSettingsEdits {
   }
 
   /**
-   * A rescan and a highlight are both open to anyone who may use the terminal. Neither writes
-   * anything, and refusing a player the answer to "which chests is this reaching" would make the
-   * radius harder to understand rather than the base harder to reach.
+   * A highlight is open to anyone who may use the terminal, because refusing a player the answer to
+   * "which chests is this reaching" would make the radius harder to understand rather than the base
+   * harder to reach. A rescan is not: per ADR 0007 it tears the network down and builds it again,
+   * which is both work and a change to what everyone else at the terminal is looking at.
+   *
+   * <p>The outlines are drawn after the rescan rather than before it. Showing them first would
+   * describe the network the walk was about to replace, which is exactly the case a player asks for
+   * a rescan in.
    */
   public boolean act(ServerPlayerEntity player, TerminalActionPayload payload) {
     if (payload == null) {
       return false;
     }
-    final TerminalOperationContext context =
-        TerminalOperationGate.open(player, payload.syncId()).orElse(null);
+    if (payload.action() != TerminalAction.RESCAN) {
+      final TerminalOperationContext context =
+          TerminalOperationGate.open(player, payload.syncId()).orElse(null);
+      if (context == null) {
+        return false;
+      }
+      ContainerHighlightService.highlight(player, context.world(), context.terminal());
+      return true;
+    }
+    final TerminalOperationContext context = administrable(player, payload.syncId());
     if (context == null) {
       return false;
     }
-    ContainerHighlightService.highlight(player, context.world(), context.terminal());
-    if (payload.action() != TerminalAction.RESCAN) {
-      return true;
-    }
     TerminalNetworks.power().rescan(context.world(), context.terminal());
+    ContainerHighlightService.highlight(player, context.world(), context.terminal());
     return pushed(context);
   }
 

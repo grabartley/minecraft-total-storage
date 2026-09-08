@@ -40,10 +40,6 @@ public final class ContainerHighlights {
     return ticksLeft > 0 && !containers.isEmpty();
   }
 
-  public static int ticksLeft() {
-    return ticksLeft;
-  }
-
   public static void clear() {
     containers = List.of();
     ticksLeft = 0;

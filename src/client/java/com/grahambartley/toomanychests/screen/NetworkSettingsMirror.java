@@ -39,10 +39,6 @@ public final class NetworkSettingsMirror {
     return view;
   }
 
-  public static boolean isShowing(int syncId) {
-    return openSyncId != NO_SCREEN && openSyncId == syncId;
-  }
-
   public static void closed() {
     openSyncId = NO_SCREEN;
     view = NetworkSettingsView.pending();

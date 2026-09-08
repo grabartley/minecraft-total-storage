@@ -142,12 +142,19 @@ public final class TerminalNetworkCommand {
     return outcome.applied() ? 1 : 0;
   }
 
+  /** Gated like every other verb that makes a terminal do work, and for the same reason. */
   private static int rescan(CommandContext<ServerCommandSource> context)
       throws CommandSyntaxException {
     final ServerCommandSource source = context.getSource();
     final BlockPos pos = TerminalCommand.terminalPos(context);
-    if (TerminalLookup.at(source.getWorld(), pos).isEmpty()) {
+    final Optional<TerminalSettings> settings = TerminalLookup.settingsAt(source.getWorld(), pos);
+    if (settings.isEmpty()) {
       source.sendError(CommandMessages.noTerminalAt(pos));
+      return 0;
+    }
+    if (!TerminalCaller.of(source.getPlayer(), TooManyChestsCommand.isOperator(source))
+        .mayAdminister(settings.get())) {
+      source.sendError(CommandMessages.terminalNotYours(pos));
       return 0;
     }
     final boolean rescanned = TerminalNetworks.power().rescan(source.getWorld(), pos);

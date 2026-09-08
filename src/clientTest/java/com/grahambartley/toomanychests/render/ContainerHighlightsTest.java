@@ -28,7 +28,6 @@ class ContainerHighlightsTest {
 
     assertTrue(ContainerHighlights.isShowing());
     assertEquals(one(), ContainerHighlights.showing());
-    assertEquals(5, ContainerHighlights.ticksLeft());
   }
 
   /** Feedback rather than an overlay: it goes away on its own and stops with the game. */
@@ -49,7 +48,6 @@ class ContainerHighlightsTest {
     ContainerHighlights.tick();
 
     assertFalse(ContainerHighlights.isShowing());
-    assertEquals(0, ContainerHighlights.ticksLeft());
   }
 
   /** A newer answer supersedes an older one rather than adding to it. */
@@ -66,7 +64,7 @@ class ContainerHighlightsTest {
   void anEmptyAnswerShowsNothingForNoTimeAtAll() {
     ContainerHighlights.show(List.of(), 100);
 
-    assertEquals(0, ContainerHighlights.ticksLeft());
+    assertFalse(ContainerHighlights.isShowing());
   }
 
   @Test
@@ -83,6 +81,6 @@ class ContainerHighlightsTest {
     ContainerHighlights.clear();
 
     assertFalse(ContainerHighlights.isShowing());
-    assertEquals(0, ContainerHighlights.ticksLeft());
+    assertTrue(ContainerHighlights.showing().isEmpty());
   }
 }

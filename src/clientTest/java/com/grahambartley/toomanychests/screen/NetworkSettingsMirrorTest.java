@@ -72,8 +72,8 @@ class NetworkSettingsMirrorTest {
     NetworkSettingsMirror.opened(8);
 
     assertEquals(NetworkSettingsView.pending().radius(), NetworkSettingsMirror.view().radius());
-    assertTrue(NetworkSettingsMirror.isShowing(8));
-    assertFalse(NetworkSettingsMirror.isShowing(7));
+    assertTrue(NetworkSettingsMirror.accept(8, answered(30)));
+    assertFalse(NetworkSettingsMirror.accept(7, answered(40)));
   }
 
   @Test
@@ -83,7 +83,7 @@ class NetworkSettingsMirrorTest {
 
     NetworkSettingsMirror.closed();
 
-    assertFalse(NetworkSettingsMirror.isShowing(7));
+    assertFalse(NetworkSettingsMirror.accept(7, answered(30)));
     assertEquals(NetworkSettingsView.pending().radius(), NetworkSettingsMirror.view().radius());
   }
 }

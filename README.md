@@ -141,7 +141,7 @@ Every server-wide setting is configurable from the console, so a server can be s
 | `/tmc terminal <pos> info` | anyone | Summarises one terminal: power, radius, access, and its containers by role |
 | `/tmc terminal <pos> role <container>` | anyone | What one container's role is |
 | `/tmc terminal <pos> role <container> <general\|filtered\|excluded>` | owner or operators | Sets it, refusing a container the terminal does not reach |
-| `/tmc terminal <pos> rescan` | anyone | Makes the terminal walk its region again |
+| `/tmc terminal <pos> rescan` | owner or operators | Makes the terminal walk its region again |
 | `/tmc terminal <pos> highlight` | players | Outlines the containers it is holding |
 | `/tmc sort` | anyone | Sorts the container you have open |
 

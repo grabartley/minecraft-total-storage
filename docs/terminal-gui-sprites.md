@@ -75,6 +75,7 @@ Every state differs from its neighbour by shape, not only by colour, so the scre
 | Button resting → disabled | The bevel is removed entirely and the button reads flat |
 | Scroll thumb → disabled | The bevel is removed entirely |
 | Empty network vs no results | A dashed crate outline against a magnifier: different silhouettes, not a recoloured one |
+| In-world outline, general vs excluded | The excluded container is outlined twice, one box inset inside the other, so it reads as a doubled line rather than a differently coloured one |
 
 ## Palette
 

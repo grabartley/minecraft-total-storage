@@ -93,6 +93,14 @@ public final class TerminalItemsPanel {
     return cell;
   }
 
+  /**
+   * The row drawn in a cell, addressed by its place in the whole listing.
+   *
+   * <p>Not unit tested, unlike {@link TerminalSettingsPanel#rowAt}, because a page of rows needs an
+   * {@code ItemVariant} and that needs a registry. Both halves of the arithmetic are covered on
+   * their own by {@code ListingPageTest} and {@code ListingScrollTest}, and the composition is
+   * exercised end to end by the terminal's automated QA run.
+   */
   public ListingRow<ItemVariant> rowAt(int cell) {
     return page.at(scroll.firstIndex() + cell);
   }

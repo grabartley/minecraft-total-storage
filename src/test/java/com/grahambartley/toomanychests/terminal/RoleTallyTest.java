@@ -32,8 +32,12 @@ class RoleTallyTest {
   @ParameterizedTest
   @EnumSource(ContainerRole.class)
   void everyRoleIsCountedUnderItself(ContainerRole role) {
-    assertEquals(1, RoleTally.of(List.of(role)).countOf(role));
-    assertEquals(1, RoleTally.of(List.of(role)).total());
+    RoleTally tally = RoleTally.of(List.of(role));
+
+    assertEquals(1, tally.total());
+    assertEquals(role == ContainerRole.GENERAL ? 1 : 0, tally.general());
+    assertEquals(role == ContainerRole.FILTERED ? 1 : 0, tally.filtered());
+    assertEquals(role == ContainerRole.EXCLUDED ? 1 : 0, tally.excluded());
   }
 
   /** A container the network has never been told about holds the default role rather than none. */
@@ -41,7 +45,7 @@ class RoleTallyTest {
   void aRoleThatIsMissingCountsAsTheDefaultOne() {
     RoleTally tally = RoleTally.of(Arrays.asList(null, null));
 
-    assertEquals(2, tally.countOf(ContainerRole.DEFAULT));
+    assertEquals(2, tally.general());
     assertEquals(2, tally.total());
   }
 
@@ -61,12 +65,7 @@ class RoleTallyTest {
   }
 
   @Test
-  void countingIsAskedByRoleRatherThanByPosition() {
-    RoleTally tally = new RoleTally(3, 5, 7);
-
-    assertEquals(3, tally.countOf(ContainerRole.GENERAL));
-    assertEquals(5, tally.countOf(ContainerRole.FILTERED));
-    assertEquals(7, tally.countOf(ContainerRole.EXCLUDED));
-    assertEquals(3, tally.countOf(null));
+  void aTallyTotalsTheThreeKindsItHolds() {
+    assertEquals(15, new RoleTally(3, 5, 7).total());
   }
 }

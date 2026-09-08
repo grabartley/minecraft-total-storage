@@ -366,31 +366,35 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
    * only knows what it was last told.
    */
   private boolean handleSettingsClick(int windowX, int windowY, int button) {
-    if (button != GridClick.LEFT_BUTTON && button != GridClick.RIGHT_BUTTON) {
-      return false;
-    }
     final SettingsControl control = SettingsControl.at(windowX, windowY);
-    if (control.isSomething()) {
-      if (settingsThisFrame.mayAdminister()) {
-        applyControl(control);
+    final SettingsAction onControl =
+        SettingsClick.of(button, control.isSomething(), settingsThisFrame.mayAdminister());
+    if (onControl != SettingsAction.NONE) {
+      if (onControl != SettingsAction.REFUSED) {
+        applyControl(control, onControl);
       }
       return true;
     }
     final int index = settings.rowAt(windowX, windowY);
     final ContainerRoleEntry entry = index < 0 ? null : settingsThisFrame.at(index);
-    if (entry == null || !settingsThisFrame.mayAdminister()) {
-      return entry != null;
+    final SettingsAction onRow =
+        SettingsClick.of(button, entry != null, settingsThisFrame.mayAdminister());
+    if (onRow == SettingsAction.NONE) {
+      return false;
     }
-    ModNetworkingClient.sendRoleEdit(
-        handler.syncId,
-        entry.container(),
-        button == GridClick.RIGHT_BUTTON
-            ? ContainerRoleCycle.previous(entry.role())
-            : ContainerRoleCycle.next(entry.role()));
+    if (onRow != SettingsAction.REFUSED) {
+      ModNetworkingClient.sendRoleEdit(
+          handler.syncId,
+          entry.container(),
+          onRow == SettingsAction.CYCLE_BACK
+              ? ContainerRoleCycle.previous(entry.role())
+              : ContainerRoleCycle.next(entry.role()));
+    }
     return true;
   }
 
-  private void applyControl(SettingsControl control) {
+  private void applyControl(SettingsControl control, SettingsAction direction) {
+    final boolean back = direction == SettingsAction.CYCLE_BACK;
     switch (control) {
       case RADIUS_DOWN ->
           ModNetworkingClient.sendRadiusEdit(handler.syncId, settingsThisFrame.radius() - 1);
@@ -398,7 +402,10 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
           ModNetworkingClient.sendRadiusEdit(handler.syncId, settingsThisFrame.radius() + 1);
       case ACCESS_CYCLE ->
           ModNetworkingClient.sendAccessEdit(
-              handler.syncId, AccessModeCycle.next(settingsThisFrame.accessMode()));
+              handler.syncId,
+              back
+                  ? AccessModeCycle.previous(settingsThisFrame.accessMode())
+                  : AccessModeCycle.next(settingsThisFrame.accessMode()));
       case NONE -> {}
     }
   }
@@ -432,7 +439,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     depositAll.visible = !prompt.isOpen() && !settingsShowing;
     rescan.visible = !prompt.isOpen() && settingsShowing;
     highlight.visible = rescan.visible;
-    rescan.active = settingsThisFrame.powered();
+    rescan.active = settingsThisFrame.powered() && settingsThisFrame.mayAdminister();
     highlight.active = settingsThisFrame.powered();
     search.setVisible(!settingsShowing);
   }

@@ -108,6 +108,50 @@ public final class TerminalSettingsServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
+  /**
+   * The case the close path skips the gate for. A terminal that lost power under an open panel is
+   * exactly when the server must stop pushing to it, and the gate needs a live network.
+   */
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aPanelClosesEvenWhenTheNetworkHasGone(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    TerminalScreenHandler handler = NetworkOperationFixture.handlerOf(player);
+    panels.request(player, new NetworkSettingsRequestPayload(handler.syncId, 0, 4));
+    context.setBlockState(NetworkOperationFixture.POWER, net.minecraft.block.Blocks.AIR);
+    com.grahambartley.toomanychests.terminal.TerminalNetworks.power()
+        .unloaded(context.getWorld(), context.getAbsolutePos(NetworkOperationFixture.TERMINAL));
+
+    boolean closed =
+        panels.request(player, new NetworkSettingsRequestPayload(handler.syncId, 0, 0));
+
+    context.assertTrue(closed, "An unpowered terminal refused to close its panel");
+    context.assertFalse(handler.settings().isOpen(), "The panel stayed open");
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  /** A close naming a screen the sender does not have open reaches nothing, like every request. */
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aCloseNamingAnotherScreenIsRefused(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    TerminalScreenHandler handler = NetworkOperationFixture.handlerOf(player);
+    panels.request(player, new NetworkSettingsRequestPayload(handler.syncId, 0, 4));
+
+    boolean closed =
+        panels.request(player, new NetworkSettingsRequestPayload(handler.syncId + 1, 0, 0));
+
+    context.assertFalse(closed, "A close naming another screen was honoured");
+    context.assertTrue(handler.settings().isOpen(), "Somebody else's close shut this panel");
+    NetworkOperationFixture.finish(context, player);
+  }
+
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,

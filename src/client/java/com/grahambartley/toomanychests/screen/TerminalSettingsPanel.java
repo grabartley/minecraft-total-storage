@@ -186,7 +186,7 @@ public final class TerminalSettingsPanel {
     final int top = originY + TerminalScreenLayout.containerRowY(row);
     final int width = TerminalScreenLayout.SETTINGS_WIDTH;
     context.drawGuiTexture(
-        entry.role() == ContainerRole.EXCLUDED ? ROW_ACTIVE : hovered ? ROW_HOVER : ROW,
+        hovered ? ROW_HOVER : entry.role() == ContainerRole.EXCLUDED ? ROW_ACTIVE : ROW,
         left,
         top,
         width,

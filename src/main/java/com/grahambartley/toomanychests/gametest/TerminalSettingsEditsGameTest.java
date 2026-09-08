@@ -165,6 +165,24 @@ public final class TerminalSettingsEditsGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, owner, guest);
   }
 
+  /**
+   * A rescan tears the network down and builds it again, so it is gated like every other change.
+   */
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aGuestCannotMakeSomebodyElsesTerminalWalkItsRegionAgain(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    ServerPlayerEntity guest = NetworkOperationFixture.alsoOpen(context);
+
+    context.assertFalse(
+        edits.act(guest, new TerminalActionPayload(syncId(guest), TerminalAction.RESCAN)),
+        "A guest made the terminal rescan");
+    NetworkOperationFixture.finish(context, owner, guest);
+  }
+
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
