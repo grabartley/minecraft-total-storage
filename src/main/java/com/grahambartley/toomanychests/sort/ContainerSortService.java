@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests.sort;
 
 import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.lock.LockedSlotsAttachment;
+import com.grahambartley.toomanychests.screenhandler.ContainerViewerSync;
 import com.grahambartley.toomanychests.transaction.NetworkTransactions;
 import com.grahambartley.toomanychests.transaction.OperationResult;
 import java.util.ArrayList;
@@ -68,7 +69,7 @@ public final class ContainerSortService {
       return SortOutcome.FAILED;
     }
     target.inventory().markDirty();
-    SortViewerSync.resync(player.getServer(), target.inventory());
+    ContainerViewerSync.resync(player.getServer(), target.inventory());
     return SortOutcome.SORTED;
   }
 

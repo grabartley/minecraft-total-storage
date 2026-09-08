@@ -1,14 +1,16 @@
 package com.grahambartley.toomanychests.operation;
 
 import com.grahambartley.toomanychests.network.WithdrawRequestPayload;
-import com.grahambartley.toomanychests.transaction.NetworkTransactions;
 import com.grahambartley.toomanychests.transaction.OperationResult;
 import com.grahambartley.toomanychests.transaction.StorageTransfers;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.server.network.ServerPlayerEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Takes items out of a network, and is the only path a client request may take.
@@ -21,11 +23,17 @@ import net.minecraft.server.network.ServerPlayerEntity;
  * <p>Nothing is ever dropped on the floor. What will not fit is left in the network, which is why
  * the destination is inserted into before anything is extracted; see {@link StorageTransfers}.
  *
+ * <p>A request the network cannot meet is an ordinary race rather than a fault, so it is logged at
+ * debug and answered with a resync. Raising it any higher would fill an operator's log with the
+ * normal consequence of a listing that is always a little behind the network it describes.
+ *
  * <p>Every ending tells the player something, and every ending that moved less than it was asked
  * for also puts their screen back in step, because the reason it moved less is almost always that
  * their listing had gone stale.
  */
 public final class WithdrawService {
+  private static final Logger LOGGER = LoggerFactory.getLogger(WithdrawService.class);
+
   private final WithdrawSources sources;
 
   public WithdrawService() {
@@ -59,23 +67,48 @@ public final class WithdrawService {
     final List<Storage<ItemVariant>> from =
         sources.holding(context.world(), context.network(), variant);
     if (from.isEmpty()) {
+      LOGGER.debug(
+          "No container in the network at {} still holds {}, so a request for {} grants nothing",
+          context.terminal(),
+          variant,
+          wanted);
       return WithdrawOutcome.nothingAvailable(wanted);
     }
-    final Storage<ItemVariant> to = destinationFor(context, payload.destination());
-    final OperationResult<Long> result =
-        NetworkTransactions.runner()
-            .run(
-                transaction -> {
-                  final long moved =
-                      StorageTransfers.gather(from, to, variant, wanted, transaction);
-                  return moved > 0L
-                      ? OperationResult.committed(moved)
-                      : OperationResult.rolledBack("nothing could be taken");
-                });
-    if (result.rolledBack()) {
-      return WithdrawOutcome.noRoom(wanted);
+    return gather(context, variant, wanted, destinationFor(context, payload.destination()), from);
+  }
+
+  /**
+   * The outcome is settled inside the transaction because deciding why nothing moved needs the
+   * destination as it stood at that moment, and a rolled back result carries a reason rather than a
+   * value.
+   */
+  private WithdrawOutcome gather(
+      TerminalOperationContext context,
+      ItemVariant variant,
+      long wanted,
+      Storage<ItemVariant> to,
+      List<Storage<ItemVariant>> from) {
+    final AtomicReference<WithdrawOutcome> settled = new AtomicReference<>();
+    NetworkMutation.run(
+        context,
+        transaction -> {
+          final long moved = StorageTransfers.gather(from, to, variant, wanted, transaction);
+          if (moved > 0L) {
+            settled.set(WithdrawOutcome.moved(wanted, moved));
+            return OperationResult.committed(moved);
+          }
+          settled.set(WithdrawShortfall.of(to, variant, wanted, transaction));
+          return OperationResult.rolledBack("nothing could be taken");
+        });
+    final WithdrawOutcome outcome = settled.get();
+    if (outcome.result() == WithdrawResult.NOTHING_AVAILABLE) {
+      LOGGER.debug(
+          "The network at {} listed {} but held none of it when asked for {}",
+          context.terminal(),
+          variant,
+          wanted);
     }
-    return WithdrawOutcome.moved(wanted, result.orElse(0L));
+    return outcome;
   }
 
   private static Storage<ItemVariant> destinationFor(

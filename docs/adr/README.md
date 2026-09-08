@@ -39,6 +39,7 @@ Shared engineering standards across all the mods in this family live in [`../sta
 | [0029](0029-the-grid-takes-clicks-like-a-container-does.md) | The grid takes clicks the way a container does, and the cursor decides which way they go |
 | [0030](0030-a-role-names-a-container-and-the-network-validates-it.md) | A role names a container, and the network validates it |
 | [0031](0031-expensive-operations-are-paced-per-player-and-per-operation.md) | Expensive operations are paced per player and per operation |
+| [0032](0032-a-commit-resyncs-everyone-who-can-see-it.md) | A commit resyncs everyone who can see what it moved |
 
 ## Writing A New Record
 

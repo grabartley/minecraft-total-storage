@@ -1,7 +1,7 @@
 package com.grahambartley.toomanychests.gametest;
 
+import com.grahambartley.toomanychests.screenhandler.ContainerViewerSync;
 import com.grahambartley.toomanychests.sort.ContainerSortService;
-import com.grahambartley.toomanychests.sort.SortViewerSync;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.block.Blocks;
 import net.minecraft.inventory.Inventory;
@@ -20,7 +20,7 @@ import net.minecraft.util.math.BlockPos;
  * reaches nobody else. What is proven here is that the other one is told as well, and that a player
  * at a different chest is left alone.
  */
-public final class SortViewerSyncGameTest implements FabricGameTest {
+public final class ContainerViewerSyncGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
   private static final String BATCH = "sort-viewers";
   private static final int TICK_LIMIT = 20;
@@ -37,7 +37,7 @@ public final class SortViewerSyncGameTest implements FabricGameTest {
     ServerPlayerEntity watcher = openedOn(context, SHARED_CHEST);
     Inventory chest = context.getBlockEntity(SHARED_CHEST);
 
-    int resynced = SortViewerSync.resync(context.getWorld().getServer(), chest);
+    int resynced = ContainerViewerSync.resync(context.getWorld().getServer(), chest);
 
     context.assertEquals(resynced, 2, "Both viewers of one chest should be resynced");
     finish(context, sorter, watcher);
@@ -51,7 +51,7 @@ public final class SortViewerSyncGameTest implements FabricGameTest {
     ServerPlayerEntity elsewhere = openedOn(context, OTHER_CHEST);
     Inventory chest = context.getBlockEntity(SHARED_CHEST);
 
-    int resynced = SortViewerSync.resync(context.getWorld().getServer(), chest);
+    int resynced = ContainerViewerSync.resync(context.getWorld().getServer(), chest);
 
     context.assertEquals(resynced, 1, "Only the viewers of the sorted chest should be resynced");
     finish(context, sorter, elsewhere);
@@ -79,9 +79,11 @@ public final class SortViewerSyncGameTest implements FabricGameTest {
   public void resyncingWithoutAnInventoryOrAServerDoesNothing(TestContext context) {
     context.setBlockState(SHARED_CHEST, Blocks.CHEST.getDefaultState());
     context.assertEquals(
-        SortViewerSync.resync(context.getWorld().getServer(), null), 0, "No inventory, no resync");
+        ContainerViewerSync.resync(context.getWorld().getServer(), null),
+        0,
+        "No inventory, no resync");
     context.assertEquals(
-        SortViewerSync.resync(null, context.getBlockEntity(SHARED_CHEST)),
+        ContainerViewerSync.resync(null, context.getBlockEntity(SHARED_CHEST)),
         0,
         "No server, no resync");
     context.complete();

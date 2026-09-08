@@ -5,7 +5,6 @@ import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.lock.LockedSlots;
 import com.grahambartley.toomanychests.lock.LockedSlotsAttachment;
 import com.grahambartley.toomanychests.network.DepositRequestPayload;
-import com.grahambartley.toomanychests.transaction.NetworkTransactions;
 import com.grahambartley.toomanychests.transaction.OperationResult;
 import com.grahambartley.toomanychests.transaction.StorageTransfers;
 import java.util.ArrayList;
@@ -99,7 +98,7 @@ public final class DepositService {
     }
     final long offered = offers.stream().mapToLong(Offer::amount).sum();
     final OperationResult<Stored> result =
-        NetworkTransactions.runner().run(transaction -> store(context, offers, transaction));
+        NetworkMutation.run(context, transaction -> store(context, offers, transaction));
     if (result.rolledBack()) {
       return DepositOutcome.noSpace(offered, leftoversOf(offers));
     }

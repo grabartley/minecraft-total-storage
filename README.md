@@ -44,6 +44,10 @@ Nothing is ever guessed at. What you click is a name and an amount, never a plac
 
 Taking more than the network holds takes everything there is and tells you what you did not get. A full inventory takes what fits and leaves the rest in the network. Nothing is ever dropped on the floor, and a locked slot is never used as somewhere to put a withdrawal.
 
+Everybody else looking at what you moved is told the moment you move it, in the same tick rather than on the next sweep. That means the other player at your terminal, anybody at a second terminal whose radius overlaps the same chest, and anybody standing at that chest with it open by hand. Nobody who cannot see the container hears anything at all. See [ADR 0032](docs/adr/0032-a-commit-resyncs-everyone-who-can-see-it.md).
+
+A request the network cannot meet says which of the two things went wrong: the item has gone, or you have nowhere to put it. Those send you to fix different things, so they are never reported as each other.
+
 ## Putting things in
 
 Shift-click a stack in your inventory and the network takes it. Pick a stack up and left click the grid to hand over all of it, or right click to hand over one. The deposit all button beside the grid empties your whole inventory in one press, and so does the deposit all key, bound to `R` by default and rebindable in the controls screen. The key yields to the search box while it has focus, the way the inventory key does inside the creative search, so typing `redstone` searches for redstone rather than emptying your inventory on the `r`.
