@@ -1,6 +1,6 @@
 package com.grahambartley.toomanychests.screen;
 
-import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
+import com.grahambartley.toomanychests.screenhandler.TerminalSettingsLayout;
 
 /**
  * Which half of the settings view is open.
@@ -26,7 +26,7 @@ public enum SettingsSection {
 
   /** The section a click landed on, or null when it landed on none. */
   public static SettingsSection at(int windowX, int windowY) {
-    final int index = TerminalScreenLayout.sectionTabAt(windowX, windowY);
-    return index == TerminalScreenLayout.NO_CELL ? null : values()[index];
+    final int index = TerminalSettingsLayout.sectionTabAt(windowX, windowY);
+    return index == TerminalSettingsLayout.NO_ROW ? null : values()[index];
   }
 }

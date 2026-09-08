@@ -68,7 +68,6 @@ public final class NetworkSettingsService {
         mayAdminister,
         isPowered(world, terminal),
         mayAdminister ? namesOf(world.getServer(), settings.trusted()) : List.of(),
-        RoleTally.of(all.stream().map(ContainerRoleEntry::role).toList()),
         window.offset(),
         all.size(),
         window.sliceOf(all));

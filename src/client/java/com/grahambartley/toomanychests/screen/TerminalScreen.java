@@ -11,6 +11,7 @@ import com.grahambartley.toomanychests.operation.WithdrawAmount;
 import com.grahambartley.toomanychests.operation.WithdrawDestination;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenHandler;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
+import com.grahambartley.toomanychests.screenhandler.TerminalSettingsLayout;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
 import com.grahambartley.toomanychests.terminal.TerminalAction;
@@ -26,6 +27,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
@@ -169,6 +171,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     }
     drawMouseoverTooltip(context, mouseX, mouseY);
     drawCellTooltip(context, mouseX, mouseY);
+    drawContainerTooltip(context, mouseX, mouseY);
     drawTabTooltip(context, mouseX, mouseY);
   }
 
@@ -208,9 +211,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
         y + TerminalScreenLayout.INSET_Y,
         TerminalScreenLayout.INSET_WIDTH,
         TerminalScreenLayout.INSET_HEIGHT);
-    if (tab.isSettings()) {
-      settings.drawScrollbar(context, x, y);
-    } else {
+    if (!tab.isSettings()) {
       items.drawCells(context, x, y, hoveredCell);
       items.drawScrollbar(context, x, y);
     }
@@ -269,9 +270,9 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     final int notches = verticalAmount > 0.0 ? -1 : 1;
     if (tab.isSettings()) {
       if (settings.scroll().overflows()
-          && (TerminalScreenLayout.settingsRowAt(windowX(mouseX), windowY(mouseY))
+          && (TerminalSettingsLayout.rowAt(windowX(mouseX), windowY(mouseY))
                   != TerminalScreenLayout.NO_CELL
-              || TerminalScreenLayout.isOverSettingsScrollbar(windowX(mouseX), windowY(mouseY)))) {
+              || TerminalSettingsLayout.isOverScrollbar(windowX(mouseX), windowY(mouseY)))) {
         settings.scroll().scrollBy(notches);
         return true;
       }
@@ -305,8 +306,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     }
     if (tab.isSettings()) {
       if (button == GridClick.LEFT_BUTTON
-          && TerminalScreenLayout.isOverSettingsScrollbar(windowX, windowY)
-          && settings.scrollbar().grab(windowY - TerminalScreenLayout.SETTINGS_CONTENT_Y)) {
+          && TerminalSettingsLayout.isOverScrollbar(windowX, windowY)
+          && settings.scrollbar().grab(windowY - TerminalSettingsLayout.CONTENT_Y)) {
         return true;
       }
       return handleSettingsClick(windowX, windowY, button)
@@ -513,7 +514,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
       return true;
     }
     if (settings.scrollbar().isDragging()) {
-      settings.scrollbar().dragTo(windowY(mouseY) - TerminalScreenLayout.SETTINGS_CONTENT_Y);
+      settings.scrollbar().dragTo(windowY(mouseY) - TerminalSettingsLayout.CONTENT_Y);
       return true;
     }
     if (items.scrollbar().isDragging()) {
@@ -606,6 +607,30 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   private void stopAskingForContainers() {
     requestedContainers = ListingWindow.EMPTY;
     ModNetworkingClient.sendSettingsRequest(handler.syncId, 0, 0);
+  }
+
+  /**
+   * Where a container is, and what clicking it does.
+   *
+   * <p>A row leads with what is inside it because that is what picks it out of a list, so its
+   * coordinates go here: wanted once, when a player has found the row and now has to walk to the
+   * chest. The hint is only shown to somebody the change would work for.
+   */
+  private void drawContainerTooltip(DrawContext context, int mouseX, int mouseY) {
+    if (!tab.isSettings()) {
+      return;
+    }
+    final int index = settings.containerRowAt(hoveredWindowX, hoveredWindowY);
+    final ContainerRoleEntry entry = index < 0 ? null : settingsThisFrame.at(index);
+    if (entry == null) {
+      return;
+    }
+    final List<Text> lines = new ArrayList<>();
+    lines.add(ContainerRowText.position(entry));
+    if (settingsThisFrame.mayAdminister()) {
+      lines.add(TerminalScreenText.of("settings.role.hint").formatted(Formatting.GRAY));
+    }
+    context.drawTooltip(textRenderer, lines, mouseX, mouseY);
   }
 
   private void drawCellTooltip(DrawContext context, int mouseX, int mouseY) {

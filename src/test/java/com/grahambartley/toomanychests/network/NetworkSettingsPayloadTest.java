@@ -7,7 +7,6 @@ import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
-import com.grahambartley.toomanychests.terminal.RoleTally;
 import io.netty.buffer.Unpooled;
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +16,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
+/**
+ * What a settings answer looks like once it has been across the wire.
+ *
+ * <p>Every row here is sent without an icon, because building an {@code ItemVariant} needs the
+ * registries a plain JVM does not have. What an iconed row does on the wire is proven in {@code
+ * NetworkSettingsPayloadGameTest} instead.
+ */
 class NetworkSettingsPayloadTest {
 
   private static RegistryByteBuf buffer() {
@@ -25,7 +31,7 @@ class NetworkSettingsPayloadTest {
 
   private static NetworkSettingsView view(TerminalAccessMode mode, List<ContainerRoleEntry> rows) {
     return new NetworkSettingsView(
-        24, 16, 32, mode, true, true, List.of("Alice", "Bob"), new RoleTally(3, 2, 1), 7, 40, rows);
+        24, 16, 32, mode, true, true, List.of("Alice", "Bob"), 7, 40, rows);
   }
 
   private static ContainerRoleEntry row(int x, ContainerRole role) {
@@ -54,7 +60,6 @@ class NetworkSettingsPayloadTest {
     assertEquals(32, received.maxRadius());
     assertEquals(TerminalAccessMode.TRUSTED, received.accessMode());
     assertEquals(List.of("Alice", "Bob"), received.trusted());
-    assertEquals(new RoleTally(3, 2, 1), received.tally());
     assertEquals(7, received.containerOffset());
     assertEquals(40, received.containerTotal());
     assertEquals(2, received.containers().size());

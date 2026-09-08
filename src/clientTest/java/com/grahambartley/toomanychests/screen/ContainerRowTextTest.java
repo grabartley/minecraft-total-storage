@@ -35,11 +35,6 @@ class ContainerRowTextTest {
     return ((TranslatableTextContent) text.getContent()).getArgs();
   }
 
-  /**
-   * A row leads with what is in the container, because that is what a player recognises. The
-   * coordinates are what they need only once they have found the row they mean, so those go to the
-   * tooltip.
-   */
   /** "1 kinds" reads as a bug, and a Minecraft translation carries no plural rule to fix it. */
   @Test
   void aContainerHoldingOneKindIsNotDescribedInThePlural() {
@@ -63,6 +58,11 @@ class ContainerRowTextTest {
         PREFIX + "settings.container.empty", keyOf(ContainerRowText.contents(entry(0, 0L))));
   }
 
+  /**
+   * A row leads with what is in the container, because that is what a player recognises. The
+   * coordinates are what they need only once they have found the row they mean, so those go to the
+   * tooltip the screen draws over a hovered row.
+   */
   @Test
   void thePositionIsSaidSeparatelyForTheTooltip() {
     Text where = ContainerRowText.position(entry(3, 168L));

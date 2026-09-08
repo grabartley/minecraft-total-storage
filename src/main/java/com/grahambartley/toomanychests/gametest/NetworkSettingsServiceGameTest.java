@@ -47,7 +47,6 @@ public final class NetworkSettingsServiceGameTest implements FabricGameTest {
     context.assertTrue(view.powered(), "A running terminal should report as powered");
     context.assertTrue(view.containerTotal() == 2, "Counted " + view.containerTotal());
     context.assertTrue(view.containers().size() == 2, "Sent " + view.containers().size() + " rows");
-    context.assertTrue(view.tally().general() == 2, "Both barrels should start general");
     NetworkOperationFixture.finish(context, owner);
   }
 
@@ -105,7 +104,6 @@ public final class NetworkSettingsServiceGameTest implements FabricGameTest {
 
     NetworkSettingsView view = viewFor(owner, context, 0, 8);
 
-    context.assertTrue(view.tally().excluded() == 1, "The tally missed the excluded container");
     context.assertTrue(
         view.containers().get(0).role() == ContainerRole.EXCLUDED,
         "The row missed the excluded role");

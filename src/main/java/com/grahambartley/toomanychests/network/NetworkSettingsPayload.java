@@ -5,7 +5,6 @@ import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
-import com.grahambartley.toomanychests.terminal.RoleTally;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -25,7 +24,8 @@ import net.minecraft.util.math.BlockPos;
  *
  * <p>The distance each row carries is dropped rather than sent. It exists to order the list and the
  * server has already ordered it, so sending it would be handing a client a number whose only use is
- * arithmetic the server already did.
+ * arithmetic the server already did. A tally over the whole network is dropped for the same reason
+ * the panel has no room to draw one: {@code /tmc terminal info} is where a network is counted.
  *
  * <p>The icon is sent, because it is the one thing on a row a client cannot work out for itself:
  * which variant a container holds most of is a fact about that container's contents, and per ADR
@@ -63,9 +63,6 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
     for (final String name : view.trusted()) {
       buf.writeString(name, MAX_NAME_LENGTH);
     }
-    buf.writeVarInt(view.tally().general());
-    buf.writeVarInt(view.tally().filtered());
-    buf.writeVarInt(view.tally().excluded());
     buf.writeVarInt(view.containerOffset());
     buf.writeVarInt(view.containerTotal());
     buf.writeVarInt(view.containers().size());
@@ -88,7 +85,6 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
     final boolean mayAdminister = buf.readBoolean();
     final boolean powered = buf.readBoolean();
     final List<String> trusted = readTrusted(buf);
-    final RoleTally tally = new RoleTally(buf.readVarInt(), buf.readVarInt(), buf.readVarInt());
     final int offset = buf.readVarInt();
     final int total = buf.readVarInt();
     final List<ContainerRoleEntry> containers = readContainers(buf);
@@ -102,7 +98,6 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
             mayAdminister,
             powered,
             trusted,
-            tally,
             offset,
             total,
             containers));

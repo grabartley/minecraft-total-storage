@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
+import com.grahambartley.toomanychests.screenhandler.TerminalSettingsLayout;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -48,12 +48,12 @@ class SettingsControlTest {
   @Test
   void theSteppersSitAtOppositeEndsOfTheirRow() {
     assertEquals(
-        TerminalScreenLayout.SETTINGS_X + TerminalScreenLayout.SETTINGS_CONTROL_INSET,
+        TerminalSettingsLayout.PANEL_X + TerminalSettingsLayout.CONTROL_INSET,
         SettingsControl.radiusDownX());
     assertEquals(
-        TerminalScreenLayout.SETTINGS_X
-            + TerminalScreenLayout.SETTINGS_FULL_ROW_WIDTH
-            - TerminalScreenLayout.SETTINGS_CONTROL_INSET
+        TerminalSettingsLayout.PANEL_X
+            + TerminalSettingsLayout.FULL_ROW_WIDTH
+            - TerminalSettingsLayout.CONTROL_INSET
             - SettingsControl.size(),
         SettingsControl.radiusUpX());
     assertTrue(
@@ -70,22 +70,22 @@ class SettingsControlTest {
 
   @Test
   void aStepperSitsInsideItsOwnRow() {
-    int rowTop = TerminalScreenLayout.settingsRowY(TerminalSetting.RADIUS.row());
+    int rowTop = TerminalSettingsLayout.rowY(TerminalSetting.RADIUS.row());
 
     assertTrue(SettingsControl.radiusY() >= rowTop);
     assertTrue(
         SettingsControl.radiusY() + SettingsControl.size()
-            <= rowTop + TerminalScreenLayout.SETTINGS_ROW_HEIGHT);
+            <= rowTop + TerminalSettingsLayout.ROW_HEIGHT);
   }
 
   /** A settings row has no scrollbar, so it owns the whole panel and leaves no empty channel. */
   @Test
   void aStepperReachesTheEdgeOfThePanelRatherThanTheGutter() {
     assertEquals(
-        TerminalScreenLayout.SETTINGS_X + TerminalScreenLayout.SETTINGS_WIDTH,
+        TerminalSettingsLayout.PANEL_X + TerminalSettingsLayout.PANEL_WIDTH,
         SettingsControl.radiusUpX()
             + SettingsControl.size()
-            + TerminalScreenLayout.SETTINGS_CONTROL_INSET);
+            + TerminalSettingsLayout.CONTROL_INSET);
   }
 
   @Test
@@ -93,7 +93,7 @@ class SettingsControlTest {
     assertEquals(
         SettingsControl.NONE,
         SettingsControl.at(
-            TerminalScreenLayout.SETTINGS_X + TerminalScreenLayout.SETTINGS_ROW_WIDTH / 2,
+            TerminalSettingsLayout.PANEL_X + TerminalSettingsLayout.ROW_WIDTH / 2,
             SettingsControl.radiusY()));
     assertFalse(SettingsControl.NONE.isSomething());
     assertTrue(SettingsControl.RADIUS_UP.isSomething());
@@ -106,6 +106,6 @@ class SettingsControlTest {
         SettingsControl.NONE,
         SettingsControl.at(
             SettingsControl.radiusUpX(),
-            TerminalScreenLayout.settingsRowY(TerminalSetting.ACCESS.row())));
+            TerminalSettingsLayout.rowY(TerminalSetting.ACCESS.row())));
   }
 }

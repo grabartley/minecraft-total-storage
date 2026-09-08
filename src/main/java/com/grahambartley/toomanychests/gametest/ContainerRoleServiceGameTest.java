@@ -9,6 +9,8 @@ import com.grahambartley.toomanychests.terminal.RoleTally;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import java.util.List;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.minecraft.block.entity.BarrelBlockEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.GameTest;
@@ -177,6 +179,43 @@ public final class ContainerRoleServiceGameTest implements FabricGameTest {
             + stocked.variantCount()
             + " kinds and "
             + stocked.itemCount());
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  /**
+   * A row is recognised by what is in it, so it leads with the variant the container holds most of.
+   *
+   * <p>Counted across the whole container rather than per stack: sixty cobblestone split over two
+   * stacks is more cobblestone than fifty diamonds, and a container a player calls the cobblestone
+   * chest has to draw as one. The kinds are distinct variants rather than occupied slots, which is
+   * the other way the same three stacks could be counted.
+   */
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aRowLeadsWithWhateverTheContainerHoldsMostOf(TestContext context) {
+    BarrelBlockEntity barrel =
+        NetworkOperationFixture.stockedBarrel(
+            context, NetworkOperationFixture.EAST_BARREL, Items.DIAMOND, 50);
+    barrel.setStack(1, new ItemStack(Items.COBBLESTONE, 30));
+    barrel.setStack(2, new ItemStack(Items.COBBLESTONE, 30));
+    barrel.markDirty();
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+
+    ContainerRoleEntry row =
+        roles.containers(context.getWorld(), terminal(context)).stream()
+            .filter(listed -> listed.container().equals(east(context)))
+            .findFirst()
+            .orElseThrow();
+
+    context.assertTrue(
+        row.icon().map(icon -> icon.isOf(Items.COBBLESTONE)).orElse(false),
+        "The icon should be what there is most of, got " + row.icon());
+    context.assertTrue(
+        row.variantCount() == 2,
+        "Three stacks of two kinds should count two, got " + row.variantCount());
+    context.assertTrue(row.itemCount() == 110L, "Counted " + row.itemCount() + " of 110 items");
     NetworkOperationFixture.finish(context, player);
   }
 

@@ -1,6 +1,7 @@
 package com.grahambartley.toomanychests.screen;
 
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
+import com.grahambartley.toomanychests.screenhandler.TerminalSettingsLayout;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
@@ -54,10 +55,10 @@ public final class TerminalSettingsPanel {
   /** How much of a row's right edge the role chip is given, measured from the row's end. */
   private static final int CHIP_WIDTH = 52;
 
-  private final ListingScroll scroll = new ListingScroll(1, TerminalScreenLayout.SETTINGS_ROWS);
+  private final ListingScroll scroll = new ListingScroll(1, TerminalSettingsLayout.ROWS);
 
   private final TerminalScrollbar scrollbar =
-      new TerminalScrollbar(scroll, TerminalScreenLayout.SETTINGS_CONTENT_HEIGHT);
+      new TerminalScrollbar(scroll, TerminalSettingsLayout.CONTENT_HEIGHT);
 
   private SettingsSection section = SettingsSection.TERMINAL;
 
@@ -86,11 +87,11 @@ public final class TerminalSettingsPanel {
   /** The row of the whole container list a screen position is over, or -1 for none. */
   public int containerRowAt(int windowX, int windowY) {
     if (section != SettingsSection.CONTAINERS
-        || TerminalScreenLayout.isOverSettingsScrollbar(windowX, windowY)) {
+        || TerminalSettingsLayout.isOverScrollbar(windowX, windowY)) {
       return -1;
     }
-    final int row = TerminalScreenLayout.settingsRowAt(windowX, windowY);
-    return row == TerminalScreenLayout.NO_CELL ? -1 : scroll.firstIndex() + row;
+    final int row = TerminalSettingsLayout.rowAt(windowX, windowY);
+    return row == TerminalSettingsLayout.NO_ROW ? -1 : scroll.firstIndex() + row;
   }
 
   /** The terminal setting a screen position is over, or null for none. */
@@ -98,8 +99,8 @@ public final class TerminalSettingsPanel {
     if (section != SettingsSection.TERMINAL) {
       return null;
     }
-    final int row = TerminalScreenLayout.settingsRowAt(windowX, windowY);
-    return row == TerminalScreenLayout.NO_CELL ? null : TerminalSetting.atRow(row);
+    final int row = TerminalSettingsLayout.rowAt(windowX, windowY);
+    return row == TerminalSettingsLayout.NO_ROW ? null : TerminalSetting.atRow(row);
   }
 
   public void draw(
@@ -125,22 +126,22 @@ public final class TerminalSettingsPanel {
       int originY,
       int mouseX,
       int mouseY) {
-    final int hovered = TerminalScreenLayout.sectionTabAt(mouseX, mouseY);
+    final int hovered = TerminalSettingsLayout.sectionTabAt(mouseX, mouseY);
     for (final SettingsSection shown : SettingsSection.values()) {
-      final int left = originX + TerminalScreenLayout.sectionTabX(shown.index());
-      final int top = originY + TerminalScreenLayout.SETTINGS_Y;
+      final int left = originX + TerminalSettingsLayout.sectionTabX(shown.index());
+      final int top = originY + TerminalSettingsLayout.PANEL_Y;
       context.drawGuiTexture(
           shown == section ? TAB_SELECTED : hovered == shown.index() ? TAB_HOVER : TAB,
           left,
           top,
-          TerminalScreenLayout.SECTION_TAB_WIDTH,
-          TerminalScreenLayout.SECTION_TAB_HEIGHT);
+          TerminalSettingsLayout.SECTION_TAB_WIDTH,
+          TerminalSettingsLayout.SECTION_TAB_HEIGHT);
       final Text label = TerminalScreenText.of(shown.label());
       context.drawText(
           textRenderer,
           label,
-          left + (TerminalScreenLayout.SECTION_TAB_WIDTH - textRenderer.getWidth(label)) / 2,
-          top + (TerminalScreenLayout.SECTION_TAB_HEIGHT - LINE_HEIGHT) / 2 + 1,
+          left + (TerminalSettingsLayout.SECTION_TAB_WIDTH - textRenderer.getWidth(label)) / 2,
+          top + (TerminalSettingsLayout.SECTION_TAB_HEIGHT - LINE_HEIGHT) / 2 + 1,
           shown == section ? LABEL_COLOUR : MUTED_COLOUR,
           false);
     }
@@ -181,7 +182,7 @@ public final class TerminalSettingsPanel {
                 "settings.radius.clamped", view.radius(), view.effectiveRadius())
             : TerminalScreenText.of("settings.radius", view.radius(), view.maxRadius()),
         originX,
-        originY + TerminalScreenLayout.settingsRowY(TerminalSetting.RADIUS.row()),
+        originY + TerminalSettingsLayout.rowY(TerminalSetting.RADIUS.row()),
         LABEL_COLOUR);
 
     drawRow(
@@ -197,7 +198,7 @@ public final class TerminalSettingsPanel {
         TerminalScreenText.of("settings.access"),
         TerminalScreenText.of("access." + view.accessMode().id()),
         originX,
-        originY + TerminalScreenLayout.settingsRowY(TerminalSetting.ACCESS.row()),
+        originY + TerminalSettingsLayout.rowY(TerminalSetting.ACCESS.row()),
         view.mayAdminister());
 
     drawRow(context, TerminalSetting.TRUSTED, originX, originY, false, false);
@@ -209,7 +210,7 @@ public final class TerminalSettingsPanel {
             ? TerminalScreenText.of("settings.trusted.none")
             : Text.literal(String.join(", ", view.trusted())),
         originX,
-        originY + TerminalScreenLayout.settingsRowY(TerminalSetting.TRUSTED.row()),
+        originY + TerminalSettingsLayout.rowY(TerminalSetting.TRUSTED.row()),
         false);
   }
 
@@ -228,12 +229,12 @@ public final class TerminalSettingsPanel {
           textRenderer,
           TerminalScreenText.of(view.powered() ? "settings.empty" : "settings.offline"),
           originX,
-          originY + TerminalScreenLayout.settingsRowY(0),
+          originY + TerminalSettingsLayout.rowY(0),
           MUTED_COLOUR);
       return;
     }
     final int hovered = containerRowAt(mouseX, mouseY);
-    for (int row = 0; row < TerminalScreenLayout.SETTINGS_ROWS; row++) {
+    for (int row = 0; row < TerminalSettingsLayout.ROWS; row++) {
       final int index = scroll.firstIndex() + row;
       final ContainerRoleEntry entry = view.at(index);
       if (entry != null) {
@@ -259,17 +260,17 @@ public final class TerminalSettingsPanel {
       int row,
       boolean hovered,
       boolean changeable) {
-    final int left = originX + TerminalScreenLayout.SETTINGS_X;
-    final int top = originY + TerminalScreenLayout.settingsRowY(row);
+    final int left = originX + TerminalSettingsLayout.PANEL_X;
+    final int top = originY + TerminalSettingsLayout.rowY(row);
     context.drawGuiTexture(
         hovered ? ROW_HOVER : entry.role() == ContainerRole.EXCLUDED ? ROW_ACTIVE : ROW,
         left,
         top,
-        TerminalScreenLayout.SETTINGS_ROW_WIDTH,
-        TerminalScreenLayout.SETTINGS_ROW_HEIGHT - 1);
-    final int iconY = top + (TerminalScreenLayout.SETTINGS_ROW_HEIGHT - 1 - ICON_SIZE) / 2;
+        TerminalSettingsLayout.ROW_WIDTH,
+        TerminalSettingsLayout.ROW_HEIGHT - 1);
+    final int iconY = top + (TerminalSettingsLayout.ROW_HEIGHT - 1 - ICON_SIZE) / 2;
     entry.icon().ifPresent(icon -> context.drawItem(icon.toStack(), left + TEXT_INSET, iconY));
-    final int textY = top + (TerminalScreenLayout.SETTINGS_ROW_HEIGHT - 1 - LINE_HEIGHT) / 2;
+    final int textY = top + (TerminalSettingsLayout.ROW_HEIGHT - 1 - LINE_HEIGHT) / 2;
     context.drawText(
         textRenderer,
         ContainerRowText.contents(entry),
@@ -281,7 +282,7 @@ public final class TerminalSettingsPanel {
     context.drawText(
         textRenderer,
         chip,
-        left + TerminalScreenLayout.SETTINGS_ROW_WIDTH - CHIP_WIDTH,
+        left + TerminalSettingsLayout.ROW_WIDTH - CHIP_WIDTH,
         textY,
         changeable ? ContainerRowText.roleColour(entry.role()) : MUTED_COLOUR,
         false);
@@ -296,10 +297,10 @@ public final class TerminalSettingsPanel {
       boolean active) {
     context.drawGuiTexture(
         active ? ROW_ACTIVE : hovered ? ROW_HOVER : ROW,
-        originX + TerminalScreenLayout.SETTINGS_X,
-        originY + TerminalScreenLayout.settingsRowY(setting.row()),
-        TerminalScreenLayout.SETTINGS_FULL_ROW_WIDTH,
-        TerminalScreenLayout.SETTINGS_ROW_HEIGHT - 1);
+        originX + TerminalSettingsLayout.PANEL_X,
+        originY + TerminalSettingsLayout.rowY(setting.row()),
+        TerminalSettingsLayout.FULL_ROW_WIDTH,
+        TerminalSettingsLayout.ROW_HEIGHT - 1);
   }
 
   /** A row reading as a name on the left and its value on the right, which is what a setting is. */
@@ -311,14 +312,11 @@ public final class TerminalSettingsPanel {
       int originX,
       int rowY,
       boolean changeable) {
-    final int left = originX + TerminalScreenLayout.SETTINGS_X;
-    final int textY = rowY + (TerminalScreenLayout.SETTINGS_ROW_HEIGHT - 1 - LINE_HEIGHT) / 2;
+    final int left = originX + TerminalSettingsLayout.PANEL_X;
+    final int textY = rowY + (TerminalSettingsLayout.ROW_HEIGHT - 1 - LINE_HEIGHT) / 2;
     context.drawText(textRenderer, name, left + TEXT_INSET, textY, MUTED_COLOUR, false);
     final int room =
-        TerminalScreenLayout.SETTINGS_FULL_ROW_WIDTH
-            - 2 * TEXT_INSET
-            - textRenderer.getWidth(name)
-            - 4;
+        TerminalSettingsLayout.FULL_ROW_WIDTH - 2 * TEXT_INSET - textRenderer.getWidth(name) - 4;
     final List<OrderedText> lines = textRenderer.wrapLines(value, Math.max(1, room));
     if (lines.isEmpty()) {
       return;
@@ -327,7 +325,7 @@ public final class TerminalSettingsPanel {
         textRenderer,
         lines.get(0),
         left
-            + TerminalScreenLayout.SETTINGS_ROW_WIDTH
+            + TerminalSettingsLayout.FULL_ROW_WIDTH
             - TEXT_INSET
             - textRenderer.getWidth(lines.get(0)),
         textY,
@@ -343,7 +341,7 @@ public final class TerminalSettingsPanel {
       int originX,
       int rowY,
       int colour) {
-    final int room = TerminalScreenLayout.SETTINGS_FULL_ROW_WIDTH;
+    final int room = TerminalSettingsLayout.FULL_ROW_WIDTH;
     final List<OrderedText> lines = textRenderer.wrapLines(text, room - 2 * SettingsControl.size());
     if (lines.isEmpty()) {
       return;
@@ -351,10 +349,8 @@ public final class TerminalSettingsPanel {
     context.drawText(
         textRenderer,
         lines.get(0),
-        originX
-            + TerminalScreenLayout.SETTINGS_X
-            + (room - textRenderer.getWidth(lines.get(0))) / 2,
-        rowY + (TerminalScreenLayout.SETTINGS_ROW_HEIGHT - 1 - LINE_HEIGHT) / 2,
+        originX + TerminalSettingsLayout.PANEL_X + (room - textRenderer.getWidth(lines.get(0))) / 2,
+        rowY + (TerminalSettingsLayout.ROW_HEIGHT - 1 - LINE_HEIGHT) / 2,
         colour,
         false);
   }
@@ -384,17 +380,17 @@ public final class TerminalSettingsPanel {
   }
 
   /** The list's own scrollbar, drawn in the gutter the rows leave for it. */
-  public void drawScrollbar(DrawContext context, int originX, int originY) {
+  private void drawScrollbar(DrawContext context, int originX, int originY) {
     context.drawGuiTexture(
         SCROLL_TRACK,
         originX + TerminalScreenLayout.SCROLLBAR_X,
-        originY + TerminalScreenLayout.SETTINGS_CONTENT_Y,
+        originY + TerminalSettingsLayout.CONTENT_Y,
         TerminalScreenLayout.SCROLLBAR_WIDTH,
-        TerminalScreenLayout.SETTINGS_CONTENT_HEIGHT);
+        TerminalSettingsLayout.CONTENT_HEIGHT);
     context.drawGuiTexture(
         scrollbar.isEnabled() ? SCROLL_THUMB : SCROLL_THUMB_DISABLED,
         originX + TerminalScreenLayout.SCROLLBAR_X,
-        originY + TerminalScreenLayout.SETTINGS_CONTENT_Y + scrollbar.thumbTop(),
+        originY + TerminalSettingsLayout.CONTENT_Y + scrollbar.thumbTop(),
         TerminalScreenLayout.SCROLLBAR_WIDTH,
         scrollbar.thumbHeight());
   }

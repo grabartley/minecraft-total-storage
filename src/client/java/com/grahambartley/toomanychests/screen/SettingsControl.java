@@ -1,6 +1,6 @@
 package com.grahambartley.toomanychests.screen;
 
-import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
+import com.grahambartley.toomanychests.screenhandler.TerminalSettingsLayout;
 
 /**
  * The controls that sit on a settings row, and which one a click landed on.
@@ -19,23 +19,23 @@ public enum SettingsControl {
   NONE;
 
   public static int size() {
-    return TerminalScreenLayout.SETTINGS_CONTROL_SIZE;
+    return TerminalSettingsLayout.CONTROL_SIZE;
   }
 
   public static int radiusDownX() {
-    return TerminalScreenLayout.SETTINGS_X + TerminalScreenLayout.SETTINGS_CONTROL_INSET;
+    return TerminalSettingsLayout.PANEL_X + TerminalSettingsLayout.CONTROL_INSET;
   }
 
   public static int radiusUpX() {
-    return TerminalScreenLayout.SETTINGS_X
-        + TerminalScreenLayout.SETTINGS_FULL_ROW_WIDTH
-        - TerminalScreenLayout.SETTINGS_CONTROL_INSET
+    return TerminalSettingsLayout.PANEL_X
+        + TerminalSettingsLayout.FULL_ROW_WIDTH
+        - TerminalSettingsLayout.CONTROL_INSET
         - size();
   }
 
   public static int radiusY() {
-    return TerminalScreenLayout.settingsRowY(TerminalSetting.RADIUS.row())
-        + TerminalScreenLayout.SETTINGS_CONTROL_INSET;
+    return TerminalSettingsLayout.rowY(TerminalSetting.RADIUS.row())
+        + TerminalSettingsLayout.CONTROL_INSET;
   }
 
   /** Which control a point in the window is over, on the terminal section only. */

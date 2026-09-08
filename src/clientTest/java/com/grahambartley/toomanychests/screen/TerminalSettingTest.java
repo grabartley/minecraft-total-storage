@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
+import com.grahambartley.toomanychests.screenhandler.TerminalSettingsLayout;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -29,10 +29,10 @@ class TerminalSettingTest {
   @Test
   void everySettingHasARowToBeDrawnOn() {
     assertTrue(
-        TerminalSetting.values().length <= TerminalScreenLayout.SETTINGS_ROWS,
+        TerminalSetting.values().length <= TerminalSettingsLayout.ROWS,
         TerminalSetting.values().length
             + " settings do not fit "
-            + TerminalScreenLayout.SETTINGS_ROWS
+            + TerminalSettingsLayout.ROWS
             + " rows");
   }
 

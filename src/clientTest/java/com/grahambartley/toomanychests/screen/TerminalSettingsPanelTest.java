@@ -5,10 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
+import com.grahambartley.toomanychests.screenhandler.TerminalSettingsLayout;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
-import com.grahambartley.toomanychests.terminal.RoleTally;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -36,10 +36,9 @@ class TerminalSettingsPanelTest {
         true,
         true,
         List.of(),
-        RoleTally.EMPTY,
         0,
         total,
-        IntStream.range(0, Math.min(total, TerminalScreenLayout.SETTINGS_ROWS))
+        IntStream.range(0, Math.min(total, TerminalSettingsLayout.ROWS))
             .mapToObj(
                 index ->
                     new ContainerRoleEntry(
@@ -60,7 +59,7 @@ class TerminalSettingsPanelTest {
   }
 
   static java.util.stream.Stream<Integer> everyRow() {
-    return IntStream.range(0, TerminalScreenLayout.SETTINGS_ROWS).boxed();
+    return IntStream.range(0, TerminalSettingsLayout.ROWS).boxed();
   }
 
   @ParameterizedTest
@@ -70,21 +69,18 @@ class TerminalSettingsPanelTest {
 
     assertEquals(
         row,
-        panel.containerRowAt(
-            TerminalScreenLayout.SETTINGS_X, TerminalScreenLayout.settingsRowY(row)));
+        panel.containerRowAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(row)));
   }
 
   /** Scrolled down, the same screen row is a different container, which is the whole hazard. */
   @Test
   void aClickOnARowFollowsWhereTheListIsScrolledTo() {
     TerminalSettingsPanel panel = containers();
-    panel.fit(viewOf(TerminalScreenLayout.SETTINGS_ROWS + 3));
+    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 3));
     panel.scroll().scrollBy(2);
 
     assertEquals(
-        2,
-        panel.containerRowAt(
-            TerminalScreenLayout.SETTINGS_X, TerminalScreenLayout.settingsRowY(0)));
+        2, panel.containerRowAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(0)));
   }
 
   @Test
@@ -92,12 +88,10 @@ class TerminalSettingsPanelTest {
     TerminalSettingsPanel panel = containers();
 
     assertTrue(
-        panel.containerRowAt(
-                TerminalScreenLayout.SETTINGS_X, TerminalScreenLayout.SETTINGS_CONTENT_Y - 1)
+        panel.containerRowAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.CONTENT_Y - 1)
             < 0);
     assertTrue(
-        panel.containerRowAt(
-                TerminalScreenLayout.SETTINGS_X - 1, TerminalScreenLayout.SETTINGS_CONTENT_Y)
+        panel.containerRowAt(TerminalSettingsLayout.PANEL_X - 1, TerminalSettingsLayout.CONTENT_Y)
             < 0);
   }
 
@@ -106,8 +100,7 @@ class TerminalSettingsPanelTest {
   void aClickOnTheScrollbarIsNotAContainerRow() {
     assertTrue(
         containers()
-                .containerRowAt(
-                    TerminalScreenLayout.SCROLLBAR_X, TerminalScreenLayout.SETTINGS_CONTENT_Y)
+                .containerRowAt(TerminalScreenLayout.SCROLLBAR_X, TerminalSettingsLayout.CONTENT_Y)
             < 0);
   }
 
@@ -117,7 +110,7 @@ class TerminalSettingsPanelTest {
     assertEquals(
         TerminalSetting.RADIUS,
         new TerminalSettingsPanel()
-            .settingAt(TerminalScreenLayout.SCROLLBAR_X, TerminalScreenLayout.SETTINGS_CONTENT_Y));
+            .settingAt(TerminalScreenLayout.SCROLLBAR_X, TerminalSettingsLayout.CONTENT_Y));
   }
 
   /** The terminal section holds no list, so a click there is never a container row. */
@@ -126,8 +119,7 @@ class TerminalSettingsPanelTest {
     TerminalSettingsPanel panel = new TerminalSettingsPanel();
 
     assertTrue(
-        panel.containerRowAt(TerminalScreenLayout.SETTINGS_X, TerminalScreenLayout.settingsRowY(0))
-            < 0);
+        panel.containerRowAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(0)) < 0);
     assertEquals(SettingsSection.TERMINAL, panel.section());
   }
 
@@ -136,8 +128,7 @@ class TerminalSettingsPanelTest {
   void theContainersSectionHasNoSettingRows() {
     assertEquals(
         null,
-        containers()
-            .settingAt(TerminalScreenLayout.SETTINGS_X, TerminalScreenLayout.settingsRowY(0)));
+        containers().settingAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(0)));
   }
 
   @ParameterizedTest
@@ -148,14 +139,14 @@ class TerminalSettingsPanelTest {
     assertEquals(
         setting,
         panel.settingAt(
-            TerminalScreenLayout.SETTINGS_X, TerminalScreenLayout.settingsRowY(setting.row())));
+            TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(setting.row())));
   }
 
   /** Opening a section starts it at the top, so a list is never opened part way down. */
   @Test
   void switchingSectionReturnsTheListToItsTop() {
     TerminalSettingsPanel panel = containers();
-    panel.fit(viewOf(TerminalScreenLayout.SETTINGS_ROWS + 5));
+    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 5));
     panel.scroll().scrollBy(3);
 
     panel.show(SettingsSection.TERMINAL);
@@ -168,7 +159,7 @@ class TerminalSettingsPanelTest {
   @Test
   void theScrollIsBroughtBackInsideAListThatShrank() {
     TerminalSettingsPanel panel = containers();
-    panel.fit(viewOf(TerminalScreenLayout.SETTINGS_ROWS + 5));
+    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 5));
     panel.scroll().scrollBy(5);
 
     panel.fit(viewOf(1));

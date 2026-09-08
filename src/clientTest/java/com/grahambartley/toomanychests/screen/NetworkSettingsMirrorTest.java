@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
-import com.grahambartley.toomanychests.terminal.RoleTally;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -15,17 +14,7 @@ class NetworkSettingsMirrorTest {
 
   private static NetworkSettingsView answered(int radius) {
     return new NetworkSettingsView(
-        radius,
-        radius,
-        32,
-        TerminalAccessMode.OPEN,
-        true,
-        true,
-        List.of(),
-        RoleTally.EMPTY,
-        0,
-        0,
-        List.of());
+        radius, radius, 32, TerminalAccessMode.OPEN, true, true, List.of(), 0, 0, List.of());
   }
 
   @AfterEach
