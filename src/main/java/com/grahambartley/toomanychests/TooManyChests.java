@@ -9,6 +9,7 @@ import com.grahambartley.toomanychests.lifecycle.ServerThread;
 import com.grahambartley.toomanychests.lock.LockedSlotsAttachment;
 import com.grahambartley.toomanychests.mutation.ContainerMutations;
 import com.grahambartley.toomanychests.network.ModNetworking;
+import com.grahambartley.toomanychests.network.PayloadCapLog;
 import com.grahambartley.toomanychests.operation.OperationGuards;
 import com.grahambartley.toomanychests.screenhandler.TerminalListingBroadcast;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLifecycle;
@@ -50,6 +51,7 @@ public class TooManyChests implements ModInitializer {
           TerminalNetworks.power().shutDownAll();
           TerminalAccessControl.viewers().clear();
           OperationGuards.cooldowns().clear();
+          PayloadCapLog.clear();
           ContainerMutations.registry().clear();
           ContainerLifecycle.registry().clear();
         });

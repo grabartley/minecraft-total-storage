@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests.terminal;
 
 import com.grahambartley.toomanychests.lifecycle.NetworkMembership;
 import com.grahambartley.toomanychests.network.ContainerHighlightPayload;
+import com.grahambartley.toomanychests.network.PayloadCapLog;
 import com.grahambartley.toomanychests.storage.BlockStorageOrigin;
 import com.grahambartley.toomanychests.storage.StorageOrigin;
 import java.util.ArrayList;
@@ -70,11 +71,8 @@ public final class ContainerHighlightService {
         Comparator.<BlockPos>comparingDouble(terminal::getSquaredDistance)
             .thenComparingLong(BlockPos::asLong));
     if (positions.size() > ContainerHighlightPayload.MAX_CONTAINERS) {
-      LOGGER.info(
-          "Highlighting the nearest {} of {} containers at {}",
-          ContainerHighlightPayload.MAX_CONTAINERS,
-          positions.size(),
-          terminal);
+      PayloadCapLog.reached(
+          "highlighted containers", ContainerHighlightPayload.MAX_CONTAINERS, positions.size());
     }
     return positions.stream()
         .limit(ContainerHighlightPayload.MAX_CONTAINERS)

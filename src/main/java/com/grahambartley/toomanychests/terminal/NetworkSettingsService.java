@@ -5,6 +5,7 @@ import com.grahambartley.toomanychests.access.TerminalAccessService;
 import com.grahambartley.toomanychests.block.TerminalBlock;
 import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.listing.ListingWindow;
+import com.grahambartley.toomanychests.network.PayloadCapLog;
 import com.mojang.authlib.GameProfile;
 import java.util.ArrayList;
 import java.util.List;
@@ -102,10 +103,7 @@ public final class NetworkSettingsService {
     final List<String> names = new ArrayList<>(trusted.size());
     for (final UUID player : trusted) {
       if (names.size() >= NetworkSettingsView.MAX_TRUSTED) {
-        LOGGER.info(
-            "Showing the first {} of {} trusted players",
-            NetworkSettingsView.MAX_TRUSTED,
-            trusted.size());
+        PayloadCapLog.reached("trusted players", NetworkSettingsView.MAX_TRUSTED, trusted.size());
         break;
       }
       names.add(nameOf(server, player));
