@@ -187,6 +187,13 @@ public final class TerminalScreenLayout {
 
   public static final int SETTINGS_WIDTH = GRID_WIDTH + SCROLLBAR_GAP + SCROLLBAR_WIDTH;
 
+  /**
+   * How wide a row is, which is the panel less the gutter its scrollbar stands in. The list is
+   * allowed to be longer than the panel is tall, so it needs the same affordance the grid has: a
+   * list that silently shows four of six containers reads as a network with four containers.
+   */
+  public static final int CONTAINER_ROW_WIDTH = GRID_WIDTH;
+
   public static final int SETTINGS_HEIGHT = GRID_HEIGHT;
 
   /** One line of text plus the air under it, which is the settings panel's unit of height. */
@@ -216,6 +223,14 @@ public final class TerminalScreenLayout {
     return SETTINGS_Y + row * SETTINGS_ROW_HEIGHT;
   }
 
+  /** Whether a point is over the container list's scrollbar rather than over a row. */
+  public static boolean isOverContainerScrollbar(int windowX, int windowY) {
+    return windowX >= SCROLLBAR_X
+        && windowX < SCROLLBAR_X + SCROLLBAR_WIDTH
+        && windowY >= CONTAINER_LIST_Y
+        && windowY < CONTAINER_LIST_Y + CONTAINER_LIST_HEIGHT;
+  }
+
   public static int containerRowY(int row) {
     if (row < 0 || row >= CONTAINER_ROWS) {
       throw new IndexOutOfBoundsException("no container row at " + row);
@@ -225,7 +240,7 @@ public final class TerminalScreenLayout {
 
   /** Which container row a point is over, or {@link #NO_CELL} when it is over none of them. */
   public static int containerRowAt(int windowX, int windowY) {
-    if (windowX < SETTINGS_X || windowX >= SETTINGS_X + SETTINGS_WIDTH) {
+    if (windowX < SETTINGS_X || windowX >= SETTINGS_X + CONTAINER_ROW_WIDTH) {
       return NO_CELL;
     }
     final int row = Math.floorDiv(windowY - CONTAINER_LIST_Y, CONTAINER_ROW_HEIGHT);

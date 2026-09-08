@@ -458,6 +458,40 @@ class TerminalScreenLayoutTest {
             TerminalScreenLayout.CONTAINER_LIST_Y));
   }
 
+  /** The gutter belongs to the scrollbar, so a click there must not land on the row behind it. */
+  @Test
+  void aClickOnTheContainerScrollbarIsNotARow() {
+    assertEquals(
+        TerminalScreenLayout.NO_CELL,
+        TerminalScreenLayout.containerRowAt(
+            TerminalScreenLayout.SCROLLBAR_X, TerminalScreenLayout.CONTAINER_LIST_Y));
+    assertTrue(
+        TerminalScreenLayout.isOverContainerScrollbar(
+            TerminalScreenLayout.SCROLLBAR_X, TerminalScreenLayout.CONTAINER_LIST_Y));
+  }
+
+  @Test
+  void theContainerRowsLeaveTheGutterToTheirScrollbar() {
+    assertTrue(
+        TerminalScreenLayout.SETTINGS_X + TerminalScreenLayout.CONTAINER_ROW_WIDTH
+            <= TerminalScreenLayout.SCROLLBAR_X,
+        "the rows run under the scrollbar");
+  }
+
+  @Test
+  void aPointBesideTheContainerScrollbarIsNotOverIt() {
+    assertFalse(
+        TerminalScreenLayout.isOverContainerScrollbar(
+            TerminalScreenLayout.SCROLLBAR_X - 1, TerminalScreenLayout.CONTAINER_LIST_Y));
+    assertFalse(
+        TerminalScreenLayout.isOverContainerScrollbar(
+            TerminalScreenLayout.SCROLLBAR_X, TerminalScreenLayout.CONTAINER_LIST_Y - 1));
+    assertFalse(
+        TerminalScreenLayout.isOverContainerScrollbar(
+            TerminalScreenLayout.SCROLLBAR_X,
+            TerminalScreenLayout.CONTAINER_LIST_Y + TerminalScreenLayout.CONTAINER_LIST_HEIGHT));
+  }
+
   @ParameterizedTest
   @MethodSource("everyContainerRow")
   void everyContainerRowIsClickableWhereItIsDrawn(int row) {

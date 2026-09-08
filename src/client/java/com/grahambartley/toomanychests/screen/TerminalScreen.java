@@ -208,7 +208,9 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
         y + TerminalScreenLayout.INSET_Y,
         TerminalScreenLayout.INSET_WIDTH,
         TerminalScreenLayout.INSET_HEIGHT);
-    if (!tab.isSettings()) {
+    if (tab.isSettings()) {
+      settings.drawScrollbar(context, x, y);
+    } else {
       items.drawCells(context, x, y, hoveredCell);
       items.drawScrollbar(context, x, y);
     }
@@ -267,8 +269,9 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     final int notches = verticalAmount > 0.0 ? -1 : 1;
     if (tab.isSettings()) {
       if (settings.scroll().overflows()
-          && TerminalScreenLayout.containerRowAt(windowX(mouseX), windowY(mouseY))
-              != TerminalScreenLayout.NO_CELL) {
+          && (TerminalScreenLayout.containerRowAt(windowX(mouseX), windowY(mouseY))
+                  != TerminalScreenLayout.NO_CELL
+              || TerminalScreenLayout.isOverContainerScrollbar(windowX(mouseX), windowY(mouseY)))) {
         settings.scroll().scrollBy(notches);
         return true;
       }
@@ -301,6 +304,11 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
       return true;
     }
     if (tab.isSettings()) {
+      if (button == GridClick.LEFT_BUTTON
+          && TerminalScreenLayout.isOverContainerScrollbar(windowX, windowY)
+          && settings.scrollbar().grab(windowY - TerminalScreenLayout.CONTAINER_LIST_Y)) {
+        return true;
+      }
       return handleSettingsClick(windowX, windowY, button)
           || super.mouseClicked(mouseX, mouseY, button);
     }
@@ -475,6 +483,10 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     if (prompt.isOpen()) {
       return true;
     }
+    if (settings.scrollbar().isDragging()) {
+      settings.scrollbar().dragTo(windowY(mouseY) - TerminalScreenLayout.CONTAINER_LIST_Y);
+      return true;
+    }
     if (items.scrollbar().isDragging()) {
       items.scrollbar().dragTo(windowY(mouseY) - TerminalScreenLayout.SCROLLBAR_Y);
       return true;
@@ -531,6 +543,10 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   @Override
   public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    if (button == GridClick.LEFT_BUTTON && settings.scrollbar().isDragging()) {
+      settings.scrollbar().release();
+      return true;
+    }
     if (button == GridClick.LEFT_BUTTON && items.scrollbar().isDragging()) {
       items.scrollbar().release();
       return true;

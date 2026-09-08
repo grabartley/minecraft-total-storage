@@ -4,8 +4,10 @@ import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
+import java.util.List;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
@@ -27,6 +29,10 @@ public final class TerminalSettingsPanel {
   private static final Identifier CONTROL = TerminalSprites.of("button/normal");
   private static final Identifier CONTROL_HOVER = TerminalSprites.of("button/hover");
   private static final Identifier CONTROL_DISABLED = TerminalSprites.of("button/disabled");
+  private static final Identifier SCROLL_TRACK = TerminalSprites.of("scroll/track");
+  private static final Identifier SCROLL_THUMB = TerminalSprites.of("scroll/thumb");
+  private static final Identifier SCROLL_THUMB_DISABLED =
+      TerminalSprites.of("scroll/thumb_disabled");
 
   private static final int LABEL_COLOUR = 0xE4E9F2;
   private static final int MUTED_COLOUR = 0x9AA3B3;
@@ -37,8 +43,15 @@ public final class TerminalSettingsPanel {
 
   private final ListingScroll scroll = new ListingScroll(1, TerminalScreenLayout.CONTAINER_ROWS);
 
+  private final TerminalScrollbar scrollbar =
+      new TerminalScrollbar(scroll, TerminalScreenLayout.CONTAINER_LIST_HEIGHT);
+
   public ListingScroll scroll() {
     return scroll;
+  }
+
+  public TerminalScrollbar scrollbar() {
+    return scrollbar;
   }
 
   /** Keeps the scroll inside a list that may have changed size since the last answer. */
@@ -127,12 +140,7 @@ public final class TerminalSettingsPanel {
     label(
         context,
         textRenderer,
-        TerminalScreenText.of(
-            "settings.tally",
-            view.tally().total(),
-            view.tally().general(),
-            view.tally().filtered(),
-            view.tally().excluded()),
+        TerminalScreenText.of("settings.tally", view.tally().total(), view.tally().excluded()),
         originX,
         originY + TerminalScreenLayout.settingsRowY(3),
         MUTED_COLOUR);
@@ -184,7 +192,7 @@ public final class TerminalSettingsPanel {
       boolean changeable) {
     final int left = originX + TerminalScreenLayout.SETTINGS_X;
     final int top = originY + TerminalScreenLayout.containerRowY(row);
-    final int width = TerminalScreenLayout.SETTINGS_WIDTH;
+    final int width = TerminalScreenLayout.CONTAINER_ROW_WIDTH;
     context.drawGuiTexture(
         hovered ? ROW_HOVER : entry.role() == ContainerRole.EXCLUDED ? ROW_ACTIVE : ROW,
         left,
@@ -208,15 +216,41 @@ public final class TerminalSettingsPanel {
         false);
   }
 
+  /**
+   * A header line is trimmed to the panel rather than trusted to fit it. English happens to be
+   * short enough for every line here, but a translation is not, and one long line runs out over the
+   * toolbar beside it and off the chassis.
+   */
   private static void label(
       DrawContext context, TextRenderer textRenderer, Text text, int originX, int y, int colour) {
+    final List<OrderedText> lines =
+        textRenderer.wrapLines(text, TerminalScreenLayout.SETTINGS_WIDTH - 2 * TEXT_INSET);
+    if (lines.isEmpty()) {
+      return;
+    }
     context.drawText(
         textRenderer,
-        text,
+        lines.get(0),
         originX + TerminalScreenLayout.SETTINGS_X + TEXT_INSET,
         y + 2,
         colour,
         false);
+  }
+
+  /** The list's own scrollbar, drawn in the gutter the rows leave for it. */
+  public void drawScrollbar(DrawContext context, int originX, int originY) {
+    context.drawGuiTexture(
+        SCROLL_TRACK,
+        originX + TerminalScreenLayout.SCROLLBAR_X,
+        originY + TerminalScreenLayout.CONTAINER_LIST_Y,
+        TerminalScreenLayout.SCROLLBAR_WIDTH,
+        TerminalScreenLayout.CONTAINER_LIST_HEIGHT);
+    context.drawGuiTexture(
+        scrollbar.isEnabled() ? SCROLL_THUMB : SCROLL_THUMB_DISABLED,
+        originX + TerminalScreenLayout.SCROLLBAR_X,
+        originY + TerminalScreenLayout.CONTAINER_LIST_Y + scrollbar.thumbTop(),
+        TerminalScreenLayout.SCROLLBAR_WIDTH,
+        scrollbar.thumbHeight());
   }
 
   /**

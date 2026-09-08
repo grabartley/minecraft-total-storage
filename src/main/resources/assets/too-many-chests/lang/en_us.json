@@ -44,7 +44,7 @@
   "screen.too-many-chests.terminal.settings.access": "Access: %s",
   "screen.too-many-chests.terminal.settings.trusted": "Trusted: %s",
   "screen.too-many-chests.terminal.settings.trusted.none": "Trusted: nobody but the owner",
-  "screen.too-many-chests.terminal.settings.tally": "%s containers: %s general, %s filtered, %s excluded",
+  "screen.too-many-chests.terminal.settings.tally": "%s containers, %s excluded",
   "screen.too-many-chests.terminal.settings.container": "%s  %s kinds, %s",
   "screen.too-many-chests.terminal.settings.container.empty": "%s  empty",
   "screen.too-many-chests.terminal.settings.empty": "This terminal reaches no containers",

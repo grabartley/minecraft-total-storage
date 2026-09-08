@@ -28,8 +28,16 @@ public final class ContainerHighlightRenderer {
   /** Enough to clear the block's own faces without the outline looking loose around it. */
   private static final double SWELL = 0.002;
 
-  /** How far inside the first outline the second one sits, for the roles drawn doubled. */
-  private static final double INNER_INSET = 0.06;
+  /**
+   * How far inside the first outline the second one sits, for the roles drawn doubled.
+   *
+   * <p>Sized to read from across a room rather than only up close. The doubling is the shape cue
+   * that tells an excluded container apart for a player who cannot separate the red from the white,
+   * so an inset too small to see at the distance a player actually stands is the same as no cue at
+   * all. A fifth of a block is about three pixels of a block face at arm's length and still reads
+   * as one outline inside another from ten blocks away.
+   */
+  private static final double INNER_INSET = 0.2;
 
   private ContainerHighlightRenderer() {}
 
