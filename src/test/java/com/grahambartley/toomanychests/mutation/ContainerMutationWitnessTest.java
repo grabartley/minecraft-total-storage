@@ -1,7 +1,6 @@
 package com.grahambartley.toomanychests.mutation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -29,7 +28,6 @@ class ContainerMutationWitnessTest {
   void aWitnessThatSawNothingReportsNothing() {
     try (ContainerMutationWitness witness =
         ContainerMutationWitness.over(registry, List.of(CHEST, BARREL))) {
-      assertFalse(witness.sawAnything());
       assertEquals(List.of(), List.copyOf(witness.changed()));
     }
   }
@@ -40,7 +38,6 @@ class ContainerMutationWitnessTest {
         ContainerMutationWitness.over(registry, List.of(CHEST, BARREL))) {
       registry.publish(OVERWORLD, new BlockPos(0, 64, 0));
 
-      assertTrue(witness.sawAnything());
       assertEquals(List.of(CHEST), List.copyOf(witness.changed()));
     }
   }
@@ -51,7 +48,7 @@ class ContainerMutationWitnessTest {
         ContainerMutationWitness.over(registry, List.of(CHEST))) {
       registry.publish(OVERWORLD, new BlockPos(2, 64, 0));
 
-      assertFalse(witness.sawAnything());
+      assertTrue(witness.changed().isEmpty());
     }
   }
 
@@ -94,7 +91,7 @@ class ContainerMutationWitnessTest {
 
     registry.publish(OVERWORLD, new BlockPos(0, 64, 0));
 
-    assertFalse(witness.sawAnything());
+    assertTrue(witness.changed().isEmpty());
   }
 
   @Test
@@ -110,7 +107,7 @@ class ContainerMutationWitnessTest {
   void theSameContainerNamedTwiceIsWatchedOnce() {
     try (ContainerMutationWitness witness =
         ContainerMutationWitness.over(registry, List.of(CHEST, CHEST))) {
-      assertEquals(List.of(CHEST), witness.watchedContainers());
+      assertEquals(1, registry.watchedContainerCount());
     }
   }
 
@@ -118,7 +115,7 @@ class ContainerMutationWitnessTest {
   void witnessingNothingWatchesNothing() {
     try (ContainerMutationWitness witness = ContainerMutationWitness.over(registry, List.of())) {
       assertTrue(registry.isIdle());
-      assertFalse(witness.sawAnything());
+      assertTrue(witness.changed().isEmpty());
     }
   }
 
@@ -126,7 +123,7 @@ class ContainerMutationWitnessTest {
   void aNullSetOfContainersIsAnEmptyOne() {
     try (ContainerMutationWitness witness = ContainerMutationWitness.over(registry, null)) {
       assertTrue(registry.isIdle());
-      assertEquals(List.of(), witness.watchedContainers());
+      assertTrue(witness.changed().isEmpty());
     }
   }
 

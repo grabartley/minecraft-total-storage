@@ -1,7 +1,6 @@
 package com.grahambartley.toomanychests.operation;
 
 import com.grahambartley.toomanychests.lifecycle.NetworkMembership;
-import com.grahambartley.toomanychests.network.ModNetworking;
 import com.grahambartley.toomanychests.screenhandler.ContainerViewerSync;
 import com.grahambartley.toomanychests.screenhandler.TerminalViewerSync;
 import com.grahambartley.toomanychests.storage.BlockStorageOrigin;
@@ -64,8 +63,7 @@ public final class NetworkResync {
         if (viewer.getUuid().equals(actingPlayer)) {
           continue;
         }
-        ModNetworking.listings().refresh(viewer);
-        viewer.currentScreenHandler.syncState();
+        TerminalResync.of(viewer);
         resynced++;
       }
     }

@@ -28,7 +28,9 @@ A committed operation resyncs every viewer of every container it really changed,
 
 **Two audiences, told separately.** A terminal viewer gets a fresh page, because what they are looking at is computed from the index. A player with the container open by hand gets a container sync, because what they are looking at is slots. A player who is both gets both, once each. Half of a double chest counts as the whole of it: the network holds each half as its own container while the player opened one screen over both.
 
-**Nobody else hears anything.** Terminals are narrowed to those whose network really holds a changed container, and container screens to those really showing one. A withdrawal from one chest costs nothing to a player at an unrelated terminal, which is what keeps the cost of a move the size of its audience rather than the size of the server.
+**Nobody else hears anything.** Terminals are narrowed to those whose network really holds a changed container, and container screens to those really showing one. A withdrawal from one chest costs nothing to a player at an unrelated terminal.
+
+The two halves reach that answer differently, and only one of them is free. Terminals are found by asking the registry of running networks, which is bounded by how many terminals are powered. Container screens are found by walking the online players and asking what each has open, because vanilla records how many viewers a container has and not who they are. So the container half costs a player walk per committed operation where it previously cost one per sort button press. That is accepted for now: the walk reads open handlers rather than the world, and the alternative is a second viewer register of our own, kept in step with vanilla's, whose drift would be a worse bug than the walk is a cost.
 
 **The acting player is left out of the fan-out.** Their own operation answers them directly, including when it refused and moved nothing. Sending them a second page would be the one duplicate the design can see and avoid.
 

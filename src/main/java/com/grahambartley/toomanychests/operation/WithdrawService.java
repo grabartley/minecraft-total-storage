@@ -66,21 +66,30 @@ public final class WithdrawService {
     }
     final List<Storage<ItemVariant>> from =
         sources.holding(context.world(), context.network(), variant);
-    if (from.isEmpty()) {
+    final WithdrawOutcome outcome =
+        from.isEmpty()
+            ? WithdrawOutcome.nothingAvailable(wanted)
+            : gather(
+                context, variant, wanted, destinationFor(context, payload.destination()), from);
+    if (outcome.result() == WithdrawResult.NOTHING_AVAILABLE) {
       LOGGER.debug(
-          "No container in the network at {} still holds {}, so a request for {} grants nothing",
+          "The network at {} offered {} but held none of it when asked for {}",
           context.terminal(),
           variant,
           wanted);
-      return WithdrawOutcome.nothingAvailable(wanted);
     }
-    return gather(context, variant, wanted, destinationFor(context, payload.destination()), from);
+    return outcome;
   }
 
   /**
    * The outcome is settled inside the transaction because deciding why nothing moved needs the
    * destination as it stood at that moment, and a rolled back result carries a reason rather than a
    * value.
+   *
+   * <p>It is seeded rather than left empty because the runner also rolls back an operation that
+   * threw, and that path never reaches the settling. An operation that threw moved nothing and the
+   * player is owed an answer either way, so the seed is the ending a rollback had before any of
+   * this could tell the two empty-handed ones apart.
    */
   private WithdrawOutcome gather(
       TerminalOperationContext context,
@@ -88,7 +97,8 @@ public final class WithdrawService {
       long wanted,
       Storage<ItemVariant> to,
       List<Storage<ItemVariant>> from) {
-    final AtomicReference<WithdrawOutcome> settled = new AtomicReference<>();
+    final AtomicReference<WithdrawOutcome> settled =
+        new AtomicReference<>(WithdrawOutcome.noRoom(wanted));
     NetworkMutation.run(
         context,
         transaction -> {
@@ -100,15 +110,7 @@ public final class WithdrawService {
           settled.set(WithdrawShortfall.of(to, variant, wanted, transaction));
           return OperationResult.rolledBack("nothing could be taken");
         });
-    final WithdrawOutcome outcome = settled.get();
-    if (outcome.result() == WithdrawResult.NOTHING_AVAILABLE) {
-      LOGGER.debug(
-          "The network at {} listed {} but held none of it when asked for {}",
-          context.terminal(),
-          variant,
-          wanted);
-    }
-    return outcome;
+    return settled.get();
   }
 
   private static Storage<ItemVariant> destinationFor(

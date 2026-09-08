@@ -59,7 +59,7 @@ public final class DuplicationSafetyGameTest implements FabricGameTest {
     context.assertTrue(
         won.moved() + lost.moved() == STACK,
         "The two withdrawals moved " + (won.moved() + lost.moved()) + " of one stack");
-    assertConserved(context, before, TRACKED, first, second);
+    NetworkOperationFixture.assertConserved(context, before, TRACKED, first, second);
     NetworkOperationFixture.finish(context, first, second);
   }
 
@@ -85,7 +85,7 @@ public final class DuplicationSafetyGameTest implements FabricGameTest {
     context.assertTrue(
         outcome.moved() == 0L,
         "A container that has gone granted " + outcome.moved() + " items anyway");
-    assertConserved(context, before, TRACKED, player);
+    NetworkOperationFixture.assertConserved(context, before, TRACKED, player);
     NetworkOperationFixture.finish(context, player);
   }
 
@@ -114,7 +114,7 @@ public final class DuplicationSafetyGameTest implements FabricGameTest {
         outcome.result() == WithdrawResult.NOTHING_AVAILABLE,
         "An unloaded container should leave the network holding none of it, got "
             + outcome.result());
-    assertConserved(context, before, TRACKED, player);
+    NetworkOperationFixture.assertConserved(context, before, TRACKED, player);
     NetworkOperationFixture.finish(context, player);
   }
 
@@ -142,7 +142,7 @@ public final class DuplicationSafetyGameTest implements FabricGameTest {
         "Two terminals over one barrel moved "
             + (first.moved() + second.moved())
             + " of one stack");
-    assertConserved(context, before, TRACKED, south, north);
+    NetworkOperationFixture.assertConserved(context, before, TRACKED, south, north);
     NetworkOperationFixture.finish(context, south, north);
   }
 
@@ -169,7 +169,7 @@ public final class DuplicationSafetyGameTest implements FabricGameTest {
     context.assertTrue(
         outcome.result() == WithdrawResult.NOTHING_AVAILABLE,
         "An item the network never held reported as " + outcome.result());
-    assertConserved(context, before, Items.NETHERITE_INGOT, player);
+    NetworkOperationFixture.assertConserved(context, before, Items.NETHERITE_INGOT, player);
     NetworkOperationFixture.finish(context, player);
   }
 
@@ -187,7 +187,7 @@ public final class DuplicationSafetyGameTest implements FabricGameTest {
 
     context.assertTrue(
         outcome.moved() == 9L, "Nine existed and the request moved " + outcome.moved());
-    assertConserved(context, before, TRACKED, player);
+    NetworkOperationFixture.assertConserved(context, before, TRACKED, player);
     NetworkOperationFixture.finish(context, player);
   }
 
@@ -209,7 +209,7 @@ public final class DuplicationSafetyGameTest implements FabricGameTest {
         NetworkOperationFixture.countCarried(player, TRACKED) == 5L,
         "Six clicks on five diamonds carried away "
             + NetworkOperationFixture.countCarried(player, TRACKED));
-    assertConserved(context, before, TRACKED, player);
+    NetworkOperationFixture.assertConserved(context, before, TRACKED, player);
     NetworkOperationFixture.finish(context, player);
   }
 
@@ -222,13 +222,5 @@ public final class DuplicationSafetyGameTest implements FabricGameTest {
             ItemVariant.of(TRACKED),
             amount,
             destination));
-  }
-
-  private static void assertConserved(
-      TestContext context, long before, Item item, ServerPlayerEntity... players) {
-    final long after = NetworkOperationFixture.countInWorld(context, item, players);
-    context.assertTrue(
-        after == before,
-        "The world held " + before + " " + item.getName().getString() + " and now holds " + after);
   }
 }

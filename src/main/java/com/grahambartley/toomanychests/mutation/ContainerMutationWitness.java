@@ -51,14 +51,6 @@ public final class ContainerMutationWitness implements ContainerMutationListener
     return Collections.unmodifiableSet(new LinkedHashSet<>(changed));
   }
 
-  public boolean sawAnything() {
-    return !changed.isEmpty();
-  }
-
-  public List<StorageOrigin> watchedContainers() {
-    return watching;
-  }
-
   @Override
   public void containerChanged(StorageOrigin origin) {
     if (origin != null) {

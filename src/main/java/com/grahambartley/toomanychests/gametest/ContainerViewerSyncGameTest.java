@@ -4,6 +4,9 @@ import com.grahambartley.toomanychests.screenhandler.ContainerViewerSync;
 import com.grahambartley.toomanychests.sort.ContainerSortService;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.ChestBlock;
+import net.minecraft.block.entity.ChestBlockEntity;
+import net.minecraft.block.enums.ChestType;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -12,21 +15,34 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 
 /**
- * Two players at one chest, which is the case that only exists on a running server.
+ * Reaching everybody who has a container open by hand, which only exists on a running server.
  *
- * <p>They hold two separate screen handlers over one inventory, so the sorting player's own resync
- * reaches nobody else. What is proven here is that the other one is told as well, and that a player
- * at a different chest is left alone.
+ * <p>Two players at one chest hold two separate screen handlers over one inventory, and a terminal
+ * moving items through the network is a third writer neither of them can see. What is proven here
+ * is that everybody looking at the container is told, and that a player at a different one is left
+ * alone.
+ *
+ * <p>A double chest is the case worth its own tests. The network holds each half as its own
+ * container while the player who opened it by hand is looking at one screen over both, so matching
+ * on the block entity alone would leave that screen stale exactly when it was written to.
  */
 public final class ContainerViewerSyncGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
-  private static final String BATCH = "sort-viewers";
+  private static final String BATCH = "container-viewers";
   private static final int TICK_LIMIT = 20;
 
   private static final BlockPos SHARED_CHEST = new BlockPos(3, 1, 3);
   private static final BlockPos OTHER_CHEST = new BlockPos(1, 1, 1);
+
+  /** A chest facing north pairs its left half with the block to its east. */
+  private static final BlockPos DOUBLE_LEFT = new BlockPos(1, 1, 5);
+
+  private static final BlockPos DOUBLE_RIGHT = new BlockPos(2, 1, 5);
+  private static final BlockPos OTHER_DOUBLE_LEFT = new BlockPos(4, 1, 5);
+  private static final BlockPos OTHER_DOUBLE_RIGHT = new BlockPos(5, 1, 5);
 
   private final ContainerSortService sorting = new ContainerSortService();
 
@@ -87,6 +103,54 @@ public final class ContainerViewerSyncGameTest implements FabricGameTest {
         0,
         "No server, no resync");
     context.complete();
+  }
+
+  /** One half changing is the whole screen going stale, because the screen spans both. */
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void aViewerOfADoubleChestIsResyncedByEitherHalfOfIt(TestContext context) {
+    placeDoubleChest(context, DOUBLE_LEFT, DOUBLE_RIGHT);
+    ServerPlayerEntity watcher = openedOn(context, DOUBLE_LEFT);
+
+    int byLeft =
+        ContainerViewerSync.resync(
+            context.getWorld().getServer(), context.<ChestBlockEntity>getBlockEntity(DOUBLE_LEFT));
+    int byRight =
+        ContainerViewerSync.resync(
+            context.getWorld().getServer(), context.<ChestBlockEntity>getBlockEntity(DOUBLE_RIGHT));
+
+    context.assertEquals(byLeft, 1, "The left half should have resynced the screen over both");
+    context.assertEquals(byRight, 1, "The right half should have resynced the screen over both");
+    finish(context, watcher);
+  }
+
+  /** Halves of one double chest are not halves of another. */
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void aViewerOfADifferentDoubleChestIsLeftAlone(TestContext context) {
+    placeDoubleChest(context, DOUBLE_LEFT, DOUBLE_RIGHT);
+    placeDoubleChest(context, OTHER_DOUBLE_LEFT, OTHER_DOUBLE_RIGHT);
+    ServerPlayerEntity watcher = openedOn(context, OTHER_DOUBLE_LEFT);
+
+    int resynced =
+        ContainerViewerSync.resync(
+            context.getWorld().getServer(), context.<ChestBlockEntity>getBlockEntity(DOUBLE_LEFT));
+
+    context.assertEquals(resynced, 0, "A viewer of another double chest should hear nothing");
+    finish(context, watcher);
+  }
+
+  private static void placeDoubleChest(TestContext context, BlockPos left, BlockPos right) {
+    context.setBlockState(
+        left,
+        Blocks.CHEST
+            .getDefaultState()
+            .with(ChestBlock.FACING, Direction.NORTH)
+            .with(ChestBlock.CHEST_TYPE, ChestType.LEFT));
+    context.setBlockState(
+        right,
+        Blocks.CHEST
+            .getDefaultState()
+            .with(ChestBlock.FACING, Direction.NORTH)
+            .with(ChestBlock.CHEST_TYPE, ChestType.RIGHT));
   }
 
   private static ServerPlayerEntity openedOn(TestContext context, BlockPos relative) {

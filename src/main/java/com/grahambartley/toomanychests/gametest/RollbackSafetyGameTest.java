@@ -90,7 +90,7 @@ public final class RollbackSafetyGameTest implements FabricGameTest {
     context.assertTrue(
         NetworkOperationFixture.countIn(barrel, TRACKED) == STACK,
         "The barrel should have filled to the brim and no further");
-    assertConserved(context, before, TRACKED, player);
+    NetworkOperationFixture.assertConserved(context, before, TRACKED, player);
     NetworkOperationFixture.finish(context, player);
   }
 
@@ -115,7 +115,7 @@ public final class RollbackSafetyGameTest implements FabricGameTest {
     context.assertTrue(
         player.getInventory().getStack(DEPOSIT_SLOT).getCount() == STACK,
         "The stack should still be in the slot it started in");
-    assertConserved(context, before, TRACKED, player);
+    NetworkOperationFixture.assertConserved(context, before, TRACKED, player);
     NetworkOperationFixture.finish(context, player);
   }
 
@@ -146,7 +146,7 @@ public final class RollbackSafetyGameTest implements FabricGameTest {
         NetworkOperationFixture.countIn(surviving, TRACKED) == STACK,
         "The whole stack should have landed in the container still standing, found "
             + NetworkOperationFixture.countIn(surviving, TRACKED));
-    assertConserved(context, before, TRACKED, player);
+    NetworkOperationFixture.assertConserved(context, before, TRACKED, player);
     NetworkOperationFixture.finish(context, player);
   }
 
@@ -173,7 +173,7 @@ public final class RollbackSafetyGameTest implements FabricGameTest {
     context.assertTrue(
         box.getStack(0).isOf(Items.SHULKER_BOX) && box.getStack(1).isOf(TRACKED),
         "A failed sort should have left every slot exactly as it was");
-    assertConserved(context, before, TRACKED, player);
+    NetworkOperationFixture.assertConserved(context, before, TRACKED, player);
     NetworkOperationFixture.finish(context, player);
   }
 
@@ -199,7 +199,7 @@ public final class RollbackSafetyGameTest implements FabricGameTest {
     context.assertTrue(
         outcome.result() == WithdrawResult.REFUSED,
         "An unpowered terminal should refuse, got " + outcome.result());
-    assertConserved(context, before, TRACKED, player);
+    NetworkOperationFixture.assertConserved(context, before, TRACKED, player);
     NetworkOperationFixture.finish(context, player);
   }
 
@@ -220,7 +220,7 @@ public final class RollbackSafetyGameTest implements FabricGameTest {
     context.assertTrue(
         outcome.result() == WithdrawResult.REFUSED,
         "A terminal that is no longer there should refuse, got " + outcome.result());
-    assertConserved(context, before, TRACKED, player);
+    NetworkOperationFixture.assertConserved(context, before, TRACKED, player);
     NetworkOperationFixture.finish(context, player);
   }
 
@@ -255,13 +255,5 @@ public final class RollbackSafetyGameTest implements FabricGameTest {
     box.setStack(1, new ItemStack(TRACKED, 5));
     box.markDirty();
     return box;
-  }
-
-  private static void assertConserved(
-      TestContext context, long before, Item item, ServerPlayerEntity... players) {
-    final long after = NetworkOperationFixture.countInWorld(context, item, players);
-    context.assertTrue(
-        after == before,
-        "The world held " + before + " " + item.getName().getString() + " and now holds " + after);
   }
 }

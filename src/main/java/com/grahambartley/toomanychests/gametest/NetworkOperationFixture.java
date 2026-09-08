@@ -57,9 +57,6 @@ final class NetworkOperationFixture {
   /** Big enough to reach the barrels either side of the terminal and nothing beyond the pad. */
   private static final int RADIUS = 1;
 
-  private static final int PAD_WIDTH = 7;
-  private static final int PAD_HEIGHT = 3;
-
   private NetworkOperationFixture() {}
 
   static BarrelBlockEntity placeBarrel(TestContext context, BlockPos where) {
@@ -215,28 +212,35 @@ final class NetworkOperationFixture {
    * its players, and lying on its floor. This is the number a duplication-safety test compares
    * before and after, because a total that only counts the containers cannot tell an item that was
    * moved from one that was made.
+   *
+   * <p>The walk is the structure's own, so a template that grows is covered by the same call. A
+   * sweep of hardcoded bounds would quietly stop covering the world it is asserting over, which is
+   * the one failure this suite cannot afford to have.
    */
   static long countInWorld(TestContext context, Item item, ServerPlayerEntity... players) {
-    long total = 0L;
-    for (int x = 0; x < PAD_WIDTH; x++) {
-      for (int y = 0; y < PAD_HEIGHT; y++) {
-        for (int z = 0; z < PAD_WIDTH; z++) {
-          total += countInContainerAt(context, new BlockPos(x, y, z), item);
-        }
-      }
-    }
+    final long[] total = {0L};
+    context.forEachRelativePos(where -> total[0] += countInContainerAt(context, where, item));
     for (final ItemEntity dropped :
         context
             .getWorld()
             .getEntitiesByClass(ItemEntity.class, context.getTestBox(), any -> true)) {
       if (dropped.getStack().isOf(item)) {
-        total += dropped.getStack().getCount();
+        total[0] += dropped.getStack().getCount();
       }
     }
     for (final ServerPlayerEntity player : players) {
-      total += countCarried(player, item);
+      total[0] += countCarried(player, item);
     }
-    return total;
+    return total[0];
+  }
+
+  /** Asserts the world holds exactly what it held, which is the whole of a duplication test. */
+  static void assertConserved(
+      TestContext context, long before, Item item, ServerPlayerEntity... players) {
+    final long after = countInWorld(context, item, players);
+    context.assertTrue(
+        after == before,
+        "The world held " + before + " " + item.getName().getString() + " and now holds " + after);
   }
 
   private static long countInContainerAt(TestContext context, BlockPos where, Item item) {

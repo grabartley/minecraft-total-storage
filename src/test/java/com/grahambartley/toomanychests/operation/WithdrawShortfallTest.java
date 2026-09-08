@@ -10,24 +10,23 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class WithdrawShortfallTest {
   private static final String DIAMOND = "diamond";
   private static final long A_STACK = 64L;
 
-  @Test
-  void aDestinationWithRoomMeansTheNetworkNoLongerHeldIt() {
-    assertEquals(WithdrawResult.NOTHING_AVAILABLE, resultOf(new FixedRoom(A_STACK)));
-  }
-
-  @Test
-  void aDestinationWithRoomForOneStillMeansTheNetworkNoLongerHeldIt() {
-    assertEquals(WithdrawResult.NOTHING_AVAILABLE, resultOf(new FixedRoom(1L)));
-  }
-
-  @Test
-  void aFullDestinationMeansThereWasNowhereToPutIt() {
-    assertEquals(WithdrawResult.NO_ROOM, resultOf(new FixedRoom(0L)));
+  /** Any room at all means the item had gone; none of it means there was nowhere to put it. */
+  @ParameterizedTest
+  @CsvSource({
+    "64, NOTHING_AVAILABLE",
+    "63, NOTHING_AVAILABLE",
+    "1, NOTHING_AVAILABLE",
+    "0, NO_ROOM"
+  })
+  void theRoomLeftAtTheDestinationDecidesWhichEndingItWas(long room, WithdrawResult expected) {
+    assertEquals(expected, resultOf(new FixedRoom(room)));
   }
 
   @Test
