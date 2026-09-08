@@ -494,9 +494,14 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
    * <p>A key bound to a letter is a letter first while somebody is typing one, which is how vanilla
    * treats its own inventory key inside the creative search field. Yielding is what stops searching
    * for "redstone" from emptying an inventory on the r.
+   *
+   * <p>It follows its button onto the items view and off the settings one. A key that worked where
+   * the button is deliberately hidden would be a second, invisible way to empty an inventory.
    */
   private boolean isDepositAllKey(int keyCode, int scanCode) {
-    return TerminalKeyBindings.isDepositAll(keyCode, scanCode) && !search.isFocused();
+    return TerminalKeyBindings.isDepositAll(keyCode, scanCode)
+        && !tab.isSettings()
+        && !search.isFocused();
   }
 
   private void depositEverything() {

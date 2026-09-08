@@ -92,7 +92,7 @@ public final class NetworkSettingsPayloadGameTest implements FabricGameTest {
   }
 
   private static ContainerRoleEntry row(Optional<ItemVariant> icon) {
-    return new ContainerRoleEntry(WHERE, ContainerRole.EXCLUDED, icon, 4, 900L, 12.0);
+    return new ContainerRoleEntry(WHERE, ContainerRole.EXCLUDED, icon, 4, 900L, 6, 27, 12.0);
   }
 
   private static NetworkSettingsPayload payload(ContainerRoleEntry row) {

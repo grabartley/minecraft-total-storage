@@ -11,6 +11,8 @@ import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.entity.BarrelBlockEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.GameTest;
@@ -27,6 +29,10 @@ import net.minecraft.util.math.BlockPos;
  */
 public final class NetworkSettingsServiceGameTest implements FabricGameTest {
   private static final String BATCH = "network-settings";
+
+  /** A vanilla barrel, which every count here is a multiple of. */
+  private static final int BARREL_SLOTS = 27;
+
   private static final int TICK_LIMIT = 60;
 
   private final NetworkSettingsService settings = new NetworkSettingsService();
@@ -47,6 +53,77 @@ public final class NetworkSettingsServiceGameTest implements FabricGameTest {
     context.assertTrue(view.powered(), "A running terminal should report as powered");
     context.assertTrue(view.containerTotal() == 2, "Counted " + view.containerTotal());
     context.assertTrue(view.containers().size() == 2, "Sent " + view.containers().size() + " rows");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  /**
+   * The room the panel draws, end to end. Counted from the same pass that builds the rows, so what
+   * is proven here is that the sum reaches the view rather than that a container has slots.
+   */
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void thePanelReportsTheRoomTheNetworkReallyHas(TestContext context) {
+    BarrelBlockEntity barrel =
+        NetworkOperationFixture.stockedBarrel(
+            context, NetworkOperationFixture.EAST_BARREL, Items.DIAMOND, 5);
+    barrel.setStack(1, new ItemStack(Items.COBBLESTONE, 9));
+    barrel.markDirty();
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+
+    NetworkSettingsView view = viewFor(owner, context, 0, 8);
+
+    context.assertTrue(
+        view.capacity().totalSlots() == BARREL_SLOTS,
+        "A barrel should report "
+            + BARREL_SLOTS
+            + " slots, reported "
+            + view.capacity().totalSlots());
+    context.assertTrue(
+        view.capacity().usedSlots() == 2,
+        "Two filled slots should read as two, read " + view.capacity().usedSlots());
+    context.assertTrue(
+        view.capacity().freeSlots() == BARREL_SLOTS - 2,
+        "Free should be what is left, read " + view.capacity().freeSlots());
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  /**
+   * A container the network may not write to is not room. Counting it would make the readout drift
+   * further from the truth with every chest a player deliberately protected.
+   */
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void anExcludedContainerIsNeitherRoomNorFullness(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.WEST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    NetworkOperationFixture.assign(
+        context, NetworkOperationFixture.EAST_BARREL, ContainerRole.EXCLUDED);
+
+    NetworkSettingsView view = viewFor(owner, context, 0, 8);
+
+    context.assertTrue(
+        view.capacity().totalSlots() == BARREL_SLOTS,
+        "Only the writable barrel is room, counted " + view.capacity().totalSlots());
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  /** A terminal reaching nothing knows no capacity, which is not the same as having none. */
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aNetworkReachingNothingReportsNoCapacityRatherThanBeingFull(TestContext context) {
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+
+    NetworkSettingsView view = viewFor(owner, context, 0, 8);
+
+    context.assertTrue(view.capacity().isUnknown(), "A network with no containers knows no room");
+    context.assertTrue(!view.capacity().isFull(), "Reaching nothing is not being full");
     NetworkOperationFixture.finish(context, owner);
   }
 

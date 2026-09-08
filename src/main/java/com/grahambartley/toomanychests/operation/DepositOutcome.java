@@ -12,6 +12,10 @@ import java.util.Objects;
  * <p>What stayed behind is listed by item as well as counted, because "sixty left over" and "sixty
  * cobblestone left over" answer different questions and only the second one is actionable.
  *
+ * <p>The list has to add up to what was not stored. Nothing is allowed to report a shortfall it
+ * cannot account for, which is what stops a path quietly reverting to a bare total: an empty list
+ * beside a partial deposit is refused here rather than drawn.
+ *
  * @param result how the deposit ended
  * @param offered how much the player put forward
  * @param moved how much the network really took
@@ -35,7 +39,7 @@ public record DepositOutcome(
       throw new IllegalArgumentException(result + " does not describe storing " + moved);
     }
     final long counted = leftovers.stream().mapToLong(DepositLeftover::amount).sum();
-    if (counted > 0L && counted != offered - moved) {
+    if (counted != offered - moved) {
       throw new IllegalArgumentException(
           "the leftovers add up to " + counted + " but " + (offered - moved) + " stayed behind");
     }
@@ -53,10 +57,6 @@ public record DepositOutcome(
     return new DepositOutcome(DepositResult.SLOT_LOCKED, 0L, 0L, List.of());
   }
 
-  public static DepositOutcome noSpace(long offered) {
-    return noSpace(offered, List.of());
-  }
-
   public static DepositOutcome noSpace(long offered, List<DepositLeftover> leftovers) {
     return new DepositOutcome(DepositResult.NO_SPACE, offered, 0L, leftovers);
   }
@@ -67,10 +67,6 @@ public record DepositOutcome(
   }
 
   /** Decides between a whole and a partial deposit from the amounts themselves. */
-  public static DepositOutcome stored(long offered, long moved) {
-    return stored(offered, moved, List.of());
-  }
-
   public static DepositOutcome stored(long offered, long moved, List<DepositLeftover> leftovers) {
     if (moved <= 0L) {
       throw new IllegalArgumentException("a deposit that stored nothing needs a reason");

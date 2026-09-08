@@ -3,7 +3,7 @@ package com.grahambartley.toomanychests.operation;
 import com.grahambartley.toomanychests.TooManyChests;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 
 /**
@@ -76,8 +76,8 @@ public final class OperationMessages {
     return line(
         "cooldown." + operation.id(),
         operation == ExpensiveOperation.RESCAN
-            ? "Give the last scan a moment to finish"
-            : "Give the last deposit a moment to finish",
+            ? "Give the last scan a moment, %ss left"
+            : "Give the last deposit a moment, %ss left",
         Math.max(1L, (ticksLeft + 19L) / 20L));
   }
 
@@ -89,15 +89,18 @@ public final class OperationMessages {
     if (leftovers.isEmpty()) {
       return line("deposit.leftover.amount", "%s more", remaining);
     }
-    final String named =
-        leftovers.stream()
-            .limit(NAMED_LEFTOVERS)
-            .map(left -> left.amount() + " " + left.variant().getItem().getName().getString())
-            .collect(Collectors.joining(", "));
+    final MutableText named = Text.empty();
+    for (int index = 0; index < Math.min(NAMED_LEFTOVERS, leftovers.size()); index++) {
+      if (index > 0) {
+        named.append(line("deposit.leftover.separator", ", "));
+      }
+      final DepositLeftover left = leftovers.get(index);
+      named.append(
+          line(
+              "deposit.leftover.item", "%s %s", left.amount(), left.variant().getItem().getName()));
+    }
     final int rest = leftovers.size() - Math.min(NAMED_LEFTOVERS, leftovers.size());
-    return rest <= 0
-        ? Text.literal(named)
-        : line("deposit.leftover.more", "%s and %s other kinds", named, rest);
+    return rest <= 0 ? named : line("deposit.leftover.more", "%s and %s other kinds", named, rest);
   }
 
   private static Text line(String key, String english, Object... arguments) {

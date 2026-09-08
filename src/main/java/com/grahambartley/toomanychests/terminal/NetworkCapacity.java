@@ -1,5 +1,7 @@
 package com.grahambartley.toomanychests.terminal;
 
+import com.grahambartley.toomanychests.storage.ContainerRole;
+
 /**
  * How much room a network has left, counted in slots across every container it may write to.
  *
@@ -16,6 +18,29 @@ package com.grahambartley.toomanychests.terminal;
  */
 public record NetworkCapacity(int usedSlots, int totalSlots) {
   public static final NetworkCapacity EMPTY = new NetworkCapacity(0, 0);
+
+  /**
+   * The room across a network's rows, which the settings panel has already built.
+   *
+   * <p>Derived from those rows rather than by walking the containers again. The walk is the
+   * expensive half, it has just happened, and doing it twice for one panel would make the readout
+   * cost more than everything else the panel shows put together.
+   */
+  public static NetworkCapacity of(java.util.Collection<ContainerRoleEntry> rows) {
+    if (rows == null) {
+      return EMPTY;
+    }
+    int used = 0;
+    int total = 0;
+    for (final ContainerRoleEntry row : rows) {
+      if (row == null || row.role() == ContainerRole.EXCLUDED) {
+        continue;
+      }
+      used += row.usedSlots();
+      total += row.totalSlots();
+    }
+    return new NetworkCapacity(used, total);
+  }
 
   public NetworkCapacity {
     if (usedSlots < 0 || totalSlots < 0) {

@@ -13,8 +13,6 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Tells a player which containers their terminal is really holding, by outlining them in the world.
@@ -31,8 +29,6 @@ import org.slf4j.LoggerFactory;
  * a true answer rather than a missing one: the outlines a player does not see are the point.
  */
 public final class ContainerHighlightService {
-  private static final Logger LOGGER = LoggerFactory.getLogger(ContainerHighlightService.class);
-
   /** Long enough to walk a few steps and look around, short enough not to become an overlay. */
   public static final int TICKS = 100;
 

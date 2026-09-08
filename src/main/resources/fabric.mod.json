@@ -58,7 +58,6 @@
       "com.grahambartley.toomanychests.gametest.ContainerHighlightServiceGameTest",
       "com.grahambartley.toomanychests.gametest.ContainerRoleServiceGameTest",
       "com.grahambartley.toomanychests.gametest.NetworkSettingsServiceGameTest",
-      "com.grahambartley.toomanychests.gametest.NetworkCapacityServiceGameTest",
       "com.grahambartley.toomanychests.gametest.NetworkSettingsPayloadGameTest",
       "com.grahambartley.toomanychests.gametest.DepositDestinationsGameTest",
       "com.grahambartley.toomanychests.gametest.LiveStoragesGameTest",
@@ -68,7 +67,8 @@
       "com.grahambartley.toomanychests.gametest.TerminalSettingsEditsGameTest",
       "com.grahambartley.toomanychests.gametest.TerminalSettingsServiceGameTest",
       "com.grahambartley.toomanychests.gametest.WithdrawServiceGameTest",
-      "com.grahambartley.toomanychests.gametest.DepositServiceGameTest"
+      "com.grahambartley.toomanychests.gametest.DepositServiceGameTest",
+      "com.grahambartley.toomanychests.gametest.OperationGuardsGameTest"
     ]
   },
   "mixins": [

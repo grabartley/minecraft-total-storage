@@ -50,6 +50,8 @@ class TerminalSettingsPanelTest {
                         Optional.empty(),
                         0,
                         0L,
+                        0,
+                        27,
                         index))
             .toList());
   }

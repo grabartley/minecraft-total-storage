@@ -36,7 +36,7 @@ class OperationMessagesTest {
   @Test
   void aWholeWithdrawalAndAWholeDepositSayNothing() {
     assertTrue(OperationMessages.forWithdrawal(WithdrawOutcome.moved(64L, 64L)).isEmpty());
-    assertTrue(OperationMessages.forDeposit(DepositOutcome.stored(64L, 64L)).isEmpty());
+    assertTrue(OperationMessages.forDeposit(DepositOutcome.stored(64L, 64L, List.of())).isEmpty());
   }
 
   @Test
@@ -46,15 +46,6 @@ class OperationMessagesTest {
     assertEquals(PREFIX + "withdraw.partial", keyOf(line));
     assertEquals(9L, argumentsOf(line)[0]);
     assertEquals(64L, argumentsOf(line)[1]);
-  }
-
-  @Test
-  void aPartialDepositNamesWhatWasStoredAndWhatIsStillInHand() {
-    Optional<Text> line = OperationMessages.forDeposit(DepositOutcome.stored(64L, 20L));
-
-    assertEquals(PREFIX + "deposit.partial", keyOf(line));
-    assertEquals(20L, argumentsOf(line)[0]);
-    assertEquals(44L, amountIn(argumentsOf(line)[1]));
   }
 
   /**
@@ -88,8 +79,6 @@ class OperationMessagesTest {
         PREFIX + "deposit.empty",
         keyOf(OperationMessages.forDeposit(DepositOutcome.nothingToDeposit())));
     assertEquals(
-        PREFIX + "deposit.full", keyOf(OperationMessages.forDeposit(DepositOutcome.noSpace(64L))));
-    assertEquals(
         PREFIX + "deposit.locked",
         keyOf(OperationMessages.forDeposit(DepositOutcome.slotLocked())));
   }
@@ -120,9 +109,13 @@ class OperationMessagesTest {
   @ParameterizedTest
   @EnumSource(DepositResult.class)
   void everyDepositEndingIsAnsweredRatherThanFallingThrough(DepositResult result) {
+    DepositOutcome ending = depositEnding(result);
+    if (ending == null) {
+      return;
+    }
     assertEquals(
         result != DepositResult.DEPOSITED && result != DepositResult.RATE_LIMITED,
-        OperationMessages.forDeposit(depositEnding(result)).isPresent());
+        OperationMessages.forDeposit(ending).isPresent());
   }
 
   /**
@@ -132,7 +125,7 @@ class OperationMessagesTest {
    */
   @Test
   void theTwoSilentEndingsAreSilentForDifferentReasons() {
-    assertTrue(OperationMessages.forDeposit(DepositOutcome.stored(64L, 64L)).isEmpty());
+    assertTrue(OperationMessages.forDeposit(DepositOutcome.stored(64L, 64L, List.of())).isEmpty());
     assertTrue(OperationMessages.forDeposit(DepositOutcome.rateLimited()).isEmpty());
     assertEquals(
         PREFIX + "cooldown.deposit_all",
@@ -162,13 +155,17 @@ class OperationMessagesTest {
     };
   }
 
+  /**
+   * The two endings that carry leftovers cannot be built without a registry to name an item, so
+   * they are exercised against a real deposit in {@code DepositServiceGameTest}. Everything here is
+   * an ending that accounts for nothing because nothing stayed behind.
+   */
   private static DepositOutcome depositEnding(DepositResult result) {
     return switch (result) {
-      case DEPOSITED -> DepositOutcome.stored(64L, 64L);
-      case PARTIAL -> DepositOutcome.stored(64L, 20L);
+      case DEPOSITED -> DepositOutcome.stored(64L, 64L, List.of());
+      case PARTIAL, NO_SPACE -> null;
       case NOTHING_TO_DEPOSIT -> DepositOutcome.nothingToDeposit();
       case SLOT_LOCKED -> DepositOutcome.slotLocked();
-      case NO_SPACE -> DepositOutcome.noSpace(64L);
       case RATE_LIMITED -> DepositOutcome.rateLimited();
       case REFUSED -> DepositOutcome.refused();
     };

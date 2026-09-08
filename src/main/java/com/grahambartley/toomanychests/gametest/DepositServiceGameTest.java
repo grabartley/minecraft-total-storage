@@ -1,8 +1,5 @@
 package com.grahambartley.toomanychests.gametest;
 
-import com.grahambartley.toomanychests.config.ConfigBuilder;
-import com.grahambartley.toomanychests.config.ServerConfigService;
-import com.grahambartley.toomanychests.config.TooManyChestsConfig;
 import com.grahambartley.toomanychests.lock.LockedSlots;
 import com.grahambartley.toomanychests.lock.LockedSlotsAttachment;
 import com.grahambartley.toomanychests.network.DepositRequestPayload;
@@ -10,7 +7,7 @@ import com.grahambartley.toomanychests.operation.DepositOutcome;
 import com.grahambartley.toomanychests.operation.DepositResult;
 import com.grahambartley.toomanychests.operation.DepositService;
 import com.grahambartley.toomanychests.operation.OperationGuards;
-import com.grahambartley.toomanychests.operation.PlayerSlots;
+import com.grahambartley.toomanychests.operation.OperationMessages;
 import com.grahambartley.toomanychests.storage.ContainerAssignment;
 import com.grahambartley.toomanychests.storage.ContainerFilter;
 import com.grahambartley.toomanychests.storage.ContainerRole;
@@ -25,6 +22,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.test.BeforeBatch;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
+import net.minecraft.text.Text;
 
 /**
  * Putting items into a network, against real containers.
@@ -37,13 +35,6 @@ import net.minecraft.test.TestContext;
 public final class DepositServiceGameTest implements FabricGameTest {
   private static final String BATCH = "terminal-deposit";
 
-  /**
-   * The cooldown and the hotbar setting are server-wide, and batches run in parallel. Anything that
-   * reads or writes one of them runs here instead, so no other batch can change the value between a
-   * test setting it and reading it back.
-   */
-  private static final String GUARDS_BATCH = "terminal-deposit-guards";
-
   private static final int TICK_LIMIT = 60;
   private static final int STACK = 64;
 
@@ -55,16 +46,13 @@ public final class DepositServiceGameTest implements FabricGameTest {
   private final DepositService deposits = new DepositService();
 
   /**
-   * Cooldowns are JVM-global and these tests share a batch, so a deposit in one would put the next
-   * on cooldown and fail it for a reason that has nothing to do with what it is testing.
+   * Cooldowns are JVM-global, so one left over from an earlier batch would refuse a deposit here
+   * for a reason that has nothing to do with what is being tested. Within this batch the tests
+   * overlap but each uses its own player, so they do not put each other on cooldown. Anything that
+   * changes the cooldown setting itself lives in {@code OperationGuardsGameTest}, a batch per test.
    */
   @BeforeBatch(batchId = BATCH)
   public void clearCooldowns(ServerWorld world) {
-    OperationGuards.cooldowns().clear();
-  }
-
-  @BeforeBatch(batchId = GUARDS_BATCH)
-  public void clearGuardCooldowns(ServerWorld world) {
     OperationGuards.cooldowns().clear();
   }
 
@@ -147,87 +135,101 @@ public final class DepositServiceGameTest implements FabricGameTest {
   }
 
   /**
-   * That the operator's hotbar setting really reaches the gesture. Which slots the setting names is
-   * proven in {@code PlayerSlotsGameTest} without touching server-wide state; what this adds is
-   * that the deposit reads the setting at all.
+   * The partial path accounts for its shortfall by item, not only by number.
+   *
+   * <p>Separate from the no-space case because the two are gathered by different code: one lists
+   * every offer, the other lists what each offer could not place. The same variant is spread over
+   * two slots here, so a report that failed to gather them would say two entries where a player
+   * sees one kind.
    */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
-      batchId = GUARDS_BATCH,
+      batchId = BATCH,
       tickLimit = TICK_LIMIT)
-  public void depositAllReadsTheServersHotbarSetting(TestContext context) {
-    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+  public void aPartialDepositAccountsForWhatStayedBehindByItem(TestContext context) {
+    BarrelBlockEntity barrel =
+        NetworkOperationFixture.fullBarrel(
+            context, NetworkOperationFixture.EAST_BARREL, Items.COBBLESTONE);
+    barrel.setStack(0, new ItemStack(Items.COBBLESTONE, 40));
+    barrel.markDirty();
     ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
-    player.getInventory().setStack(0, new ItemStack(Items.COBBLESTONE, 8));
-    player.getInventory().setStack(PlayerSlots.HOTBAR_SLOTS, new ItemStack(Items.OAK_LOG, 8));
-    TooManyChestsConfig original = ServerConfigService.current();
-    withHotbarSkipped(context, true);
+    player.getInventory().setStack(0, new ItemStack(Items.COBBLESTONE, 30));
+    player.getInventory().setStack(1, new ItemStack(Items.COBBLESTONE, 30));
 
-    deposits.depositAll(player, NetworkOperationFixture.handlerOf(player).syncId);
-    restore(context, original);
+    DepositOutcome outcome =
+        deposits.depositAll(player, NetworkOperationFixture.handlerOf(player).syncId);
 
     context.assertTrue(
-        player.getInventory().getStack(0).getCount() == 8,
-        "The hotbar was emptied while the server asked for it to be kept");
+        outcome.result() == DepositResult.PARTIAL,
+        "Room for some of it should report a partial deposit, got " + outcome.result());
     context.assertTrue(
-        player.getInventory().getStack(PlayerSlots.HOTBAR_SLOTS).isEmpty(),
-        "The main inventory should still have been emptied");
+        outcome.leftoverKinds() == 1,
+        "Two slots of one kind should report one kind, reported " + outcome.leftoverKinds());
+    context.assertTrue(
+        outcome.leftovers().get(0).variant().isOf(Items.COBBLESTONE),
+        "The leftover should be named, got " + outcome.leftovers().get(0).variant());
+    context.assertTrue(
+        outcome.leftovers().get(0).amount()
+            == NetworkOperationFixture.countCarried(player, Items.COBBLESTONE),
+        "Reported "
+            + outcome.leftovers().get(0).amount()
+            + " left over but the player holds "
+            + NetworkOperationFixture.countCarried(player, Items.COBBLESTONE));
     NetworkOperationFixture.finish(context, player);
   }
 
   /**
-   * Asking again before the cooldown is up changes nothing at all, rather than half-working. The
-   * inventory is what proves it: a rate limited deposit that still moved items would be a limit
-   * that costs a player their stuff.
+   * A deposit that fits entirely accounts for nothing, which is the other half of the rule: an
+   * outcome may not invent a shortfall any more than it may hide one.
    */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
-      batchId = GUARDS_BATCH,
+      batchId = BATCH,
       tickLimit = TICK_LIMIT)
-  public void aSecondDepositAllInTheSameTickIsRefusedAndMovesNothing(TestContext context) {
-    BarrelBlockEntity barrel =
-        NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
-    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
-    player.getInventory().setStack(0, new ItemStack(Items.DIAMOND, STACK));
-    int syncId = NetworkOperationFixture.handlerOf(player).syncId;
-
-    deposits.depositAll(player, syncId);
-    player.getInventory().setStack(0, new ItemStack(Items.COBBLESTONE, STACK));
-    DepositOutcome second = deposits.depositAll(player, syncId);
-
-    context.assertTrue(
-        second.result() == DepositResult.RATE_LIMITED,
-        "A second deposit in the same tick should be rate limited, got " + second.result());
-    context.assertTrue(
-        player.getInventory().getStack(0).getCount() == STACK,
-        "A rate limited deposit must move nothing");
-    context.assertTrue(
-        NetworkOperationFixture.countIn(barrel, Items.COBBLESTONE) == 0L,
-        "A rate limited deposit reached the containers anyway");
-    NetworkOperationFixture.finish(context, player);
-  }
-
-  /** A cooldown of nothing is the limit switched off, which is what the setting's floor means. */
-  @GameTest(
-      templateName = NetworkOperationFixture.CONTAINER_PAD,
-      batchId = GUARDS_BATCH,
-      tickLimit = TICK_LIMIT)
-  public void aServerThatSetTheCooldownToNothingIsNeverRateLimited(TestContext context) {
+  public void aWholeDepositReportsNoLeftoversAtAll(TestContext context) {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
     ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
     player.getInventory().setStack(0, new ItemStack(Items.DIAMOND, STACK));
-    int syncId = NetworkOperationFixture.handlerOf(player).syncId;
-    TooManyChestsConfig original = ServerConfigService.current();
-    withCooldown(context, 0);
 
-    deposits.depositAll(player, syncId);
-    player.getInventory().setStack(0, new ItemStack(Items.COBBLESTONE, STACK));
-    DepositOutcome second = deposits.depositAll(player, syncId);
-    restore(context, original);
+    DepositOutcome outcome =
+        deposits.depositAll(player, NetworkOperationFixture.handlerOf(player).syncId);
 
     context.assertTrue(
-        second.result() != DepositResult.RATE_LIMITED,
-        "A cooldown of nothing should never refuse, got " + second.result());
+        outcome.result() == DepositResult.DEPOSITED,
+        "An empty barrel should take the lot, got " + outcome.result());
+    context.assertTrue(
+        outcome.leftoverKinds() == 0,
+        "A whole deposit reported " + outcome.leftoverKinds() + " kinds left behind");
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  /** The partial line names the item, which is the whole reason the breakdown is gathered. */
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void thePartialLineNamesTheItemThatStayedBehind(TestContext context) {
+    BarrelBlockEntity barrel =
+        NetworkOperationFixture.fullBarrel(
+            context, NetworkOperationFixture.EAST_BARREL, Items.COBBLESTONE);
+    barrel.setStack(0, new ItemStack(Items.COBBLESTONE, 54));
+    barrel.markDirty();
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    player.getInventory().setStack(0, new ItemStack(Items.COBBLESTONE, 22));
+
+    DepositOutcome outcome =
+        deposits.depositAll(player, NetworkOperationFixture.handlerOf(player).syncId);
+    String line = OperationMessages.forDeposit(outcome).map(Text::getString).orElse("");
+
+    context.assertTrue(
+        outcome.result() == DepositResult.PARTIAL,
+        "This should be a partial deposit, got " + outcome.result());
+    context.assertTrue(
+        line.contains(Items.COBBLESTONE.getName().getString()),
+        "The line should name what stayed behind, got \"" + line + "\"");
+    context.assertTrue(
+        line.contains(Long.toString(outcome.remaining())),
+        "The line should count it, got \"" + line + "\"");
     NetworkOperationFixture.finish(context, player);
   }
 
@@ -291,25 +293,6 @@ public final class DepositServiceGameTest implements FabricGameTest {
             + " left over but the player holds "
             + NetworkOperationFixture.countCarried(player, Items.COBBLESTONE));
     NetworkOperationFixture.finish(context, player);
-  }
-
-  private static void withHotbarSkipped(TestContext context, boolean skip) {
-    ServerConfigService.update(
-        context.getWorld().getServer(),
-        ConfigBuilder.from(ServerConfigService.current()).depositAllSkipsHotbar(skip).build());
-  }
-
-  private static void withCooldown(TestContext context, int ticks) {
-    ServerConfigService.update(
-        context.getWorld().getServer(),
-        ConfigBuilder.from(ServerConfigService.current())
-            .expensiveOperationCooldownTicks(ticks)
-            .build());
-  }
-
-  /** Config is server-wide, so a test that changed it puts it back before the next one reads it. */
-  private static void restore(TestContext context, TooManyChestsConfig original) {
-    ServerConfigService.update(context.getWorld().getServer(), original);
   }
 
   /**

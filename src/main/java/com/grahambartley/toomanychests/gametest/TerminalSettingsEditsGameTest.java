@@ -38,8 +38,9 @@ public final class TerminalSettingsEditsGameTest implements FabricGameTest {
   private final ContainerRoleService roles = new ContainerRoleService();
 
   /**
-   * Cooldowns are JVM-global and these tests share a batch, so a deposit in one would put the next
-   * on cooldown and fail it for a reason that has nothing to do with what it is testing.
+   * Cooldowns are JVM-global, so one left over from an earlier batch would refuse a rescan here for
+   * a reason that has nothing to do with what is being tested. Within this batch the tests overlap
+   * but each uses its own player, so they do not put each other on cooldown.
    */
   @BeforeBatch(batchId = BATCH)
   public void clearCooldowns(ServerWorld world) {

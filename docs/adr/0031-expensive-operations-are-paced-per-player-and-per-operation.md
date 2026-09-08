@@ -38,4 +38,14 @@ Cooldowns are held in memory and forgotten when a player disconnects. They are n
 
 A player who genuinely wants to rescan twice waits half a second. A player trying to spend the server's tick budget gets one walk per cooldown however fast they click.
 
-Because the cooldown is server-wide state, gametests that spend one reset it per batch and any test that changes the setting runs in a batch of its own. Batches run in parallel and share the JVM, so a test that set the value in one would otherwise decide the outcome of a test in another.
+Because the cooldown is server-wide state, gametests that spend one reset it per batch and any test that changes the setting runs in a batch of its own.
+
+The batch is the right unit for that, and it is worth writing down which way round it works, because it is easy to assume the opposite. A probe of three tests, two sharing a batch and one in a second batch, logged this:
+
+| Test | Batch | Started | Ended |
+|---|---|---|---|
+| alpha | A | 538 | 568 |
+| beta | A | 549 | 579 |
+| gamma | B | 607 | 637 |
+
+Tests *within* a batch overlap; batches do not. So a batch is the smallest span in which a test can hold a server-wide value without another test observing it mid-change, which is why the config-sensitive tests take one each rather than sharing one.

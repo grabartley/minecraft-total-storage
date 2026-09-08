@@ -5,36 +5,52 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 
+/**
+ * What a deposit is allowed to claim about itself.
+ *
+ * <p>An outcome that came up short has to account for the shortfall by item, and naming an item
+ * needs a registry, so the endings that carry leftovers are built in {@code DepositServiceGameTest}
+ * against a real inventory. What is left here is every rule that can be broken without one, which
+ * is the set of contradictions a record must never hold: storing more than was offered, reporting a
+ * result its own amounts disagree with, and a shortfall nothing accounts for.
+ */
 class DepositOutcomeTest {
 
-  @ParameterizedTest
-  @CsvSource({"64, 64, DEPOSITED", "64, 20, PARTIAL", "1, 1, DEPOSITED"})
-  void whatMovedDecidesWhetherTheDepositWasWhole(long offered, long moved, DepositResult expected) {
-    assertEquals(expected, DepositOutcome.stored(offered, moved).result());
-  }
-
-  /** What was not stored is still in the player's inventory, so it is reported rather than lost. */
   @Test
-  void whatIsLeftOverIsWhatThePlayerIsStillHolding() {
-    assertEquals(44L, DepositOutcome.stored(64L, 20L).remaining());
-    assertEquals(0L, DepositOutcome.stored(64L, 64L).remaining());
-    assertEquals(64L, DepositOutcome.noSpace(64L).remaining());
+  void aWholeDepositLeavesNothingBehindAndSaysSo() {
+    DepositOutcome whole = DepositOutcome.stored(64L, 64L, List.of());
+
+    assertEquals(DepositResult.DEPOSITED, whole.result());
+    assertEquals(0L, whole.remaining());
+    assertEquals(0, whole.leftoverKinds());
   }
 
   @Test
   void havingNothingToGiveIsToldApartFromHavingNowhereToPutIt() {
     assertEquals(DepositResult.NOTHING_TO_DEPOSIT, DepositOutcome.nothingToDeposit().result());
-    assertEquals(DepositResult.NO_SPACE, DepositOutcome.noSpace(64L).result());
     assertEquals(0L, DepositOutcome.nothingToDeposit().offered());
-    assertEquals(64L, DepositOutcome.noSpace(64L).offered());
+    assertEquals(DepositResult.SLOT_LOCKED, DepositOutcome.slotLocked().result());
+    assertEquals(DepositResult.RATE_LIMITED, DepositOutcome.rateLimited().result());
   }
 
   @Test
   void aDepositThatStoredNothingHasToSayWhy() {
-    assertThrows(IllegalArgumentException.class, () -> DepositOutcome.stored(64L, 0L));
+    assertThrows(IllegalArgumentException.class, () -> DepositOutcome.stored(64L, 0L, List.of()));
+  }
+
+  /**
+   * A shortfall nobody accounts for is the way this record could quietly go back to reporting a
+   * bare total, so it is refused rather than drawn.
+   */
+  @Test
+  void aShortfallWithNothingToAccountForItIsRefused() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new DepositOutcome(DepositResult.PARTIAL, 64L, 20L, List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new DepositOutcome(DepositResult.NO_SPACE, 64L, 0L, List.of()));
   }
 
   @Test
@@ -44,9 +60,13 @@ class DepositOutcomeTest {
         () -> new DepositOutcome(DepositResult.DEPOSITED, 64L, 0L, List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new DepositOutcome(DepositResult.NO_SPACE, 64L, 9L, List.of()));
+        () -> new DepositOutcome(DepositResult.PARTIAL, 9L, 64L, List.of()));
+  }
+
+  @Test
+  void aNegativeAmountIsRefusedRatherThanClamped() {
     assertThrows(
         IllegalArgumentException.class,
-        () -> new DepositOutcome(DepositResult.PARTIAL, 9L, 64L, List.of()));
+        () -> new DepositOutcome(DepositResult.NOTHING_TO_DEPOSIT, -1L, 0L, List.of()));
   }
 }

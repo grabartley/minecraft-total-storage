@@ -45,8 +45,4 @@ public final class TerminalKeyBindings {
   public static boolean isDepositAll(int keyCode, int scanCode) {
     return depositAll != null && depositAll.matchesKey(keyCode, scanCode);
   }
-
-  public static KeyBinding depositAll() {
-    return depositAll;
-  }
 }

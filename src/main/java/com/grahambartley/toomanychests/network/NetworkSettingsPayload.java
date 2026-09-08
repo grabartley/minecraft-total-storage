@@ -25,8 +25,10 @@ import net.minecraft.util.math.BlockPos;
  *
  * <p>The distance each row carries is dropped rather than sent. It exists to order the list and the
  * server has already ordered it, so sending it would be handing a client a number whose only use is
- * arithmetic the server already did. A tally over the whole network is dropped for the same reason
- * the panel has no room to draw one: {@code /tmc terminal info} is where a network is counted.
+ * arithmetic the server already did. The slot counts go the same way: they are summed into the
+ * network's capacity before the answer is built, and the client is sent that total rather than the
+ * addends. A tally over the whole network is dropped for the same reason the panel has no room to
+ * draw one: {@code /tmc terminal info} is where a network is counted.
  *
  * <p>The icon is sent, because it is the one thing on a row a client cannot work out for itself:
  * which variant a container holds most of is a fact about that container's contents, and per ADR
@@ -144,7 +146,7 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
       final long items = buf.readVarLong();
       final Optional<ItemVariant> icon =
           buf.readBoolean() ? Optional.of(ItemVariant.PACKET_CODEC.decode(buf)) : Optional.empty();
-      containers.add(new ContainerRoleEntry(container, role, icon, variants, items, 0.0));
+      containers.add(new ContainerRoleEntry(container, role, icon, variants, items, 0, 0, 0.0));
     }
     return containers;
   }

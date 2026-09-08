@@ -23,6 +23,8 @@ import net.minecraft.util.math.BlockPos;
  * @param icon the variant it holds most of, empty for a container holding nothing
  * @param variantCount how many distinct kinds of item it holds
  * @param itemCount how many items in total
+ * @param usedSlots how many of its slots hold something, which is what capacity is counted in
+ * @param totalSlots how many slots it has at all
  * @param distanceSq how far it sits from the terminal, which is what orders the list
  */
 public record ContainerRoleEntry(
@@ -31,6 +33,8 @@ public record ContainerRoleEntry(
     Optional<ItemVariant> icon,
     int variantCount,
     long itemCount,
+    int usedSlots,
+    int totalSlots,
     double distanceSq) {
 
   public ContainerRoleEntry {
@@ -43,6 +47,13 @@ public record ContainerRoleEntry(
     }
     if (itemCount < 0L) {
       throw new IllegalArgumentException("itemCount must not be negative: " + itemCount);
+    }
+    if (usedSlots < 0 || totalSlots < 0) {
+      throw new IllegalArgumentException("a container cannot have a negative number of slots");
+    }
+    if (usedSlots > totalSlots) {
+      throw new IllegalArgumentException(
+          "a container cannot use " + usedSlots + " of " + totalSlots + " slots");
     }
     if (distanceSq < 0.0) {
       throw new IllegalArgumentException("distanceSq must not be negative: " + distanceSq);

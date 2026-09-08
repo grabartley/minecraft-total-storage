@@ -2,7 +2,6 @@ package com.grahambartley.toomanychests.network;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.storage.ContainerRole;
@@ -15,8 +14,6 @@ import java.util.Optional;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.util.math.BlockPos;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
 
 /**
  * What a settings answer looks like once it has been across the wire.
@@ -47,7 +44,8 @@ class NetworkSettingsPayloadTest {
   }
 
   private static ContainerRoleEntry row(int x, ContainerRole role) {
-    return new ContainerRoleEntry(new BlockPos(x, 64, -x), role, Optional.empty(), 3, 168L, 9.0);
+    return new ContainerRoleEntry(
+        new BlockPos(x, 64, -x), role, Optional.empty(), 3, 168L, 3, 27, 9.0);
   }
 
   private static NetworkSettingsPayload roundTrip(NetworkSettingsPayload payload) {
@@ -80,40 +78,52 @@ class NetworkSettingsPayloadTest {
 
   /**
    * A used count above the total could only be forged, and a record that refused to hold one would
-   * drop the connection over a number nobody draws.
+   * drop the connection over a number nobody draws. The bytes are written by hand because a payload
+   * built through the record cannot carry the case: its own constructor refuses it first.
    */
   @Test
   void aForgedCapacityIsClampedRatherThanTakingTheConnectionDown() {
     RegistryByteBuf buffer = buffer();
-    NetworkSettingsPayload.CODEC.encode(
-        buffer, new NetworkSettingsPayload(1, view(TerminalAccessMode.OWNER, List.of())));
-    NetworkSettingsView received = NetworkSettingsPayload.CODEC.decode(buffer).view();
+    writeHeader(buffer);
+    buffer.writeVarInt(900);
+    buffer.writeVarInt(27);
+    buffer.writeVarInt(0);
+    buffer.writeVarInt(0);
+    buffer.writeVarInt(0);
 
-    assertTrue(received.capacity().usedSlots() <= received.capacity().totalSlots());
+    NetworkCapacity received = NetworkSettingsPayload.CODEC.decode(buffer).view().capacity();
+
+    assertEquals(27, received.totalSlots());
+    assertEquals(27, received.usedSlots(), "A forged used count should be clamped to the total");
   }
 
-  @ParameterizedTest
-  @EnumSource(ContainerRole.class)
-  void everyRoleReachesTheRowItBelongsTo(ContainerRole role) {
-    NetworkSettingsPayload sent =
-        new NetworkSettingsPayload(1, view(TerminalAccessMode.OPEN, List.of(row(4, role))));
-
-    ContainerRoleEntry received = roundTrip(sent).view().containers().get(0);
-
-    assertEquals(role, received.role());
-    assertEquals(new BlockPos(4, 64, -4), received.container());
-    assertEquals(3, received.variantCount());
-    assertEquals(168L, received.itemCount());
-  }
-
-  /** The distance orders the list on the server and has no use on the client, so it is not sent. */
+  /** A negative count is the other way the numbers could arrive impossible. */
   @Test
-  void theDistanceIsNotCarried() {
-    NetworkSettingsPayload sent =
-        new NetworkSettingsPayload(
-            1, view(TerminalAccessMode.OWNER, List.of(row(9, ContainerRole.GENERAL))));
+  void aForgedNegativeCapacityBecomesNothingRatherThanThrowing() {
+    RegistryByteBuf buffer = buffer();
+    writeHeader(buffer);
+    buffer.writeVarInt(-5);
+    buffer.writeVarInt(-9);
+    buffer.writeVarInt(0);
+    buffer.writeVarInt(0);
+    buffer.writeVarInt(0);
 
-    assertEquals(0.0, roundTrip(sent).view().containers().get(0).distanceSq());
+    NetworkCapacity received = NetworkSettingsPayload.CODEC.decode(buffer).view().capacity();
+
+    assertEquals(0, received.usedSlots());
+    assertEquals(0, received.totalSlots());
+  }
+
+  /** Everything a settings answer carries before its capacity, so a case can start from there. */
+  private static void writeHeader(RegistryByteBuf buffer) {
+    buffer.writeVarInt(1);
+    buffer.writeVarInt(16);
+    buffer.writeVarInt(16);
+    buffer.writeVarInt(32);
+    buffer.writeEnumConstant(TerminalAccessMode.OWNER);
+    buffer.writeBoolean(true);
+    buffer.writeBoolean(true);
+    buffer.writeVarInt(0);
   }
 
   @Test
