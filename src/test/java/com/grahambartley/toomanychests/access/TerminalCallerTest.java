@@ -44,7 +44,7 @@ class TerminalCallerTest {
   /** A console has no ownership to appeal to, so it stands on its operator level alone. */
   @Test
   void theConsoleMayConfigureAnyTerminal() {
-    assertTrue(TerminalCaller.console().mayAdminister(ownedTerminal()));
+    assertTrue(TerminalCaller.of(null, true).mayAdminister(ownedTerminal()));
   }
 
   @Test

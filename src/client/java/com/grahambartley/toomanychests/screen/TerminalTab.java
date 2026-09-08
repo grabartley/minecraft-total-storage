@@ -23,15 +23,14 @@ public enum TerminalTab {
     return this == SETTINGS;
   }
 
-  /** The tab a click landed on, or empty when it landed on none. */
+  /** The suffix its name is written under, since a tab is a glyph and needs saying in words. */
+  public String label() {
+    return this == SETTINGS ? "settings" : "items";
+  }
+
+  /** The tab a click landed on, or null when it landed on none. */
   public static TerminalTab at(int windowX, int windowY) {
     final int index = TerminalScreenLayout.tabAt(windowX, windowY);
     return index == TerminalScreenLayout.NO_CELL ? null : values()[index];
-  }
-
-  static {
-    if (values().length != TerminalScreenLayout.TAB_COUNT) {
-      throw new IllegalStateException("the tab strip is not sized for the tabs there are");
-    }
   }
 }

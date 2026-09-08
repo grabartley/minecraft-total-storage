@@ -1,8 +1,6 @@
 package com.grahambartley.toomanychests.screenhandler;
 
 import com.grahambartley.toomanychests.access.TerminalAccessControl;
-import com.grahambartley.toomanychests.access.TerminalAccessRules;
-import com.grahambartley.toomanychests.access.TerminalAccessService;
 import com.grahambartley.toomanychests.access.TerminalCaller;
 import com.grahambartley.toomanychests.network.ContainerRoleEditPayload;
 import com.grahambartley.toomanychests.network.TerminalAccessEditPayload;
@@ -20,7 +18,6 @@ import com.grahambartley.toomanychests.terminal.TerminalMessages;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import com.grahambartley.toomanychests.terminal.TerminalRadius;
 import com.grahambartley.toomanychests.terminal.TerminalRadiusService;
-import com.grahambartley.toomanychests.terminal.TerminalSettings;
 import java.util.Objects;
 import java.util.Optional;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -162,9 +159,8 @@ public final class TerminalSettingsEdits {
 
   private static boolean mayAdminister(
       ServerWorld world, BlockPos terminal, ServerPlayerEntity player) {
-    final TerminalSettings settings = TerminalLookup.settingsAt(world, terminal).orElse(null);
-    return settings != null
-        && TerminalAccessRules.mayAdminister(
-            settings, player.getUuid(), TerminalAccessService.isOperator(player));
+    return TerminalLookup.settingsAt(world, terminal)
+        .map(TerminalCaller.of(player)::mayAdminister)
+        .orElse(false);
   }
 }

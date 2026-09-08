@@ -64,6 +64,7 @@
       "com.grahambartley.toomanychests.gametest.TerminalNetworkCommandGameTest",
       "com.grahambartley.toomanychests.gametest.TerminalOperationGateGameTest",
       "com.grahambartley.toomanychests.gametest.TerminalSettingsEditsGameTest",
+      "com.grahambartley.toomanychests.gametest.TerminalSettingsServiceGameTest",
       "com.grahambartley.toomanychests.gametest.WithdrawServiceGameTest",
       "com.grahambartley.toomanychests.gametest.DepositServiceGameTest"
     ]

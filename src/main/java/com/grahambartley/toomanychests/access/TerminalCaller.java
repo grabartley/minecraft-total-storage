@@ -20,7 +20,6 @@ import net.minecraft.entity.player.PlayerEntity;
  * @param operator whether they hold the level the moderation bypass is granted at
  */
 public record TerminalCaller(Optional<UUID> player, boolean operator) {
-  private static final TerminalCaller CONSOLE = new TerminalCaller(Optional.empty(), true);
   private static final TerminalCaller NOBODY = new TerminalCaller(Optional.empty(), false);
 
   public TerminalCaller {
@@ -34,11 +33,6 @@ public record TerminalCaller(Optional<UUID> player, boolean operator) {
     }
     return new TerminalCaller(
         Optional.of(asking.getUuid()), TerminalAccessService.isOperator(asking));
-  }
-
-  /** A source with no player behind it that already holds the operator level. */
-  public static TerminalCaller console() {
-    return CONSOLE;
   }
 
   /** A caller whose player and level are both already known, which a command source is. */

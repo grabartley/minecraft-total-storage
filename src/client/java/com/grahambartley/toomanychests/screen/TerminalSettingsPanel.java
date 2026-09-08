@@ -161,7 +161,15 @@ public final class TerminalSettingsPanel {
       if (entry == null) {
         continue;
       }
-      drawContainerRow(context, textRenderer, entry, originX, originY, row, index == hoveredRow);
+      drawContainerRow(
+          context,
+          textRenderer,
+          entry,
+          originX,
+          originY,
+          row,
+          index == hoveredRow && view.mayAdminister(),
+          view.mayAdminister());
     }
   }
 
@@ -172,7 +180,8 @@ public final class TerminalSettingsPanel {
       int originX,
       int originY,
       int row,
-      boolean hovered) {
+      boolean hovered,
+      boolean changeable) {
     final int left = originX + TerminalScreenLayout.SETTINGS_X;
     final int top = originY + TerminalScreenLayout.containerRowY(row);
     final int width = TerminalScreenLayout.SETTINGS_WIDTH;
@@ -187,7 +196,7 @@ public final class TerminalSettingsPanel {
         ContainerRowText.position(entry),
         left + TEXT_INSET + 1,
         top + 2,
-        LABEL_COLOUR,
+        changeable ? LABEL_COLOUR : MUTED_COLOUR,
         false);
     final Text chip = ContainerRowText.role(entry.role());
     context.drawText(
@@ -195,7 +204,7 @@ public final class TerminalSettingsPanel {
         chip,
         left + width - CHIP_WIDTH,
         top + 2,
-        ContainerRowText.roleColour(entry.role()),
+        changeable ? ContainerRowText.roleColour(entry.role()) : MUTED_COLOUR,
         false);
   }
 

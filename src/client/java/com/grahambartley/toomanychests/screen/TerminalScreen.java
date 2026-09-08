@@ -1,9 +1,9 @@
 package com.grahambartley.toomanychests.screen;
 
-import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.filter.TagCombinationMode;
 import com.grahambartley.toomanychests.listing.ListingRow;
 import com.grahambartley.toomanychests.listing.ListingStatus;
+import com.grahambartley.toomanychests.listing.ListingWindow;
 import com.grahambartley.toomanychests.listing.TerminalListingMirror;
 import com.grahambartley.toomanychests.network.DepositRequestPayload;
 import com.grahambartley.toomanychests.network.ModNetworkingClient;
@@ -73,6 +73,13 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   private TerminalIconButton highlight;
 
   private NetworkSettingsView settingsThisFrame = NetworkSettingsView.pending();
+
+  /**
+   * What the settings panel last asked for, so a wheel spun hard costs one request rather than ten.
+   */
+  private ListingWindow requestedContainers = ListingWindow.EMPTY;
+
+  private TerminalTab hoveredTab;
   private int hoveredCell = TerminalScreenLayout.NO_CELL;
   private int hoveredRow = -1;
   private SettingsControl hoveredControl = SettingsControl.NONE;
@@ -106,7 +113,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     rescan = action(0, RESCAN_ICON, "rescan", () -> act(TerminalAction.RESCAN));
     highlight = action(1, HIGHLIGHT_ICON, "highlight", () -> act(TerminalAction.HIGHLIGHT));
     setInitialFocus(search.widget());
-    updateToolbar(TerminalListingMirror.page().status());
+    updateWidgets(TerminalListingMirror.page().status());
     if (TerminalListingMirror.isShowing(handler.syncId)) {
       return;
     }
@@ -150,7 +157,10 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     if (!tab.isSettings() && requested.needsRequest(items.scroll().window(), search.text())) {
       requestVisibleRows();
     }
-    updateToolbar(items.page().status());
+    if (tab.isSettings() && !containersWanted().equals(requestedContainers)) {
+      requestVisibleContainers();
+    }
+    updateWidgets(items.page().status());
     updateHovered(mouseX, mouseY);
     super.render(context, mouseX, mouseY, delta);
     if (prompt.isOpen()) {
@@ -159,12 +169,21 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     }
     drawMouseoverTooltip(context, mouseX, mouseY);
     drawCellTooltip(context, mouseX, mouseY);
+    drawTabTooltip(context, mouseX, mouseY);
+  }
+
+  /** The tabs are two glyphs, so what each one opens has to be readable somewhere. */
+  private void drawTabTooltip(DrawContext context, int mouseX, int mouseY) {
+    if (hoveredTab != null) {
+      context.drawTooltip(textRenderer, TerminalScreenText.of(hoveredTab.label()), mouseX, mouseY);
+    }
   }
 
   private void updateHovered(int mouseX, int mouseY) {
     final int windowX = windowX(mouseX);
     final int windowY = windowY(mouseY);
     if (prompt.isOpen()) {
+      hoveredTab = null;
       hoveredCell = TerminalScreenLayout.NO_CELL;
       hoveredRow = -1;
       hoveredControl = SettingsControl.NONE;
@@ -246,11 +265,13 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     }
     final int notches = verticalAmount > 0.0 ? -1 : 1;
     if (tab.isSettings()) {
-      if (settings.scroll().overflows()) {
+      if (settings.scroll().overflows()
+          && TerminalScreenLayout.containerRowAt(windowX(mouseX), windowY(mouseY))
+              != TerminalScreenLayout.NO_CELL) {
         settings.scroll().scrollBy(notches);
-        requestVisibleContainers();
+        return true;
       }
-      return true;
+      return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
     if (items.scroll().overflows()
         && TerminalScreenLayout.isOverListing(windowX(mouseX), windowY(mouseY))) {
@@ -306,9 +327,10 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     tab = shown;
     if (tab.isSettings()) {
       requestVisibleContainers();
-    } else {
-      requestVisibleRows();
+      return;
     }
+    stopAskingForContainers();
+    requestVisibleRows();
   }
 
   /**
@@ -346,10 +368,13 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
       applyControl(control);
       return true;
     }
+    if (button != GridClick.LEFT_BUTTON && button != GridClick.RIGHT_BUTTON) {
+      return false;
+    }
     final int index = settings.rowAt(windowX, windowY);
     final ContainerRoleEntry entry = index < 0 ? null : settingsThisFrame.at(index);
-    if (entry == null) {
-      return false;
+    if (entry == null || !settingsThisFrame.mayAdminister()) {
+      return entry != null;
     }
     ModNetworkingClient.sendRoleEdit(
         handler.syncId,
@@ -368,14 +393,9 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
           ModNetworkingClient.sendRadiusEdit(handler.syncId, settingsThisFrame.radius() + 1);
       case ACCESS_CYCLE ->
           ModNetworkingClient.sendAccessEdit(
-              handler.syncId, nextMode(settingsThisFrame.accessMode()));
+              handler.syncId, AccessModeCycle.next(settingsThisFrame.accessMode()));
       case NONE -> {}
     }
-  }
-
-  private static TerminalAccessMode nextMode(TerminalAccessMode mode) {
-    final TerminalAccessMode[] modes = TerminalAccessMode.values();
-    return modes[Math.floorMod(mode.ordinal() + 1, modes.length)];
   }
 
   /**
@@ -401,14 +421,15 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
    * what the network holds; rescan and highlight belong to the settings view because they are about
    * what it reaches.
    */
-  private void updateToolbar(ListingStatus status) {
-    final boolean offline = status == ListingStatus.OFFLINE;
-    depositAll.active = !offline;
-    depositAll.visible = !prompt.isOpen() && !tab.isSettings();
-    rescan.visible = !prompt.isOpen() && tab.isSettings();
+  private void updateWidgets(ListingStatus status) {
+    final boolean settingsShowing = tab.isSettings();
+    depositAll.active = status != ListingStatus.OFFLINE;
+    depositAll.visible = !prompt.isOpen() && !settingsShowing;
+    rescan.visible = !prompt.isOpen() && settingsShowing;
     highlight.visible = rescan.visible;
-    rescan.active = settingsThisFrame.mayAdminister();
+    rescan.active = settingsThisFrame.powered();
     highlight.active = settingsThisFrame.powered();
+    search.setVisible(!settingsShowing);
   }
 
   private void depositEverything() {
@@ -455,6 +476,9 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     if (prompt.isOpen()) {
       return handlePromptKey(prompt.keyPressed(keyCode));
     }
+    if (tab.isSettings()) {
+      return super.keyPressed(keyCode, scanCode, modifiers);
+    }
     return switch (SearchKeyOutcome.of(
         keyCode == GLFW.GLFW_KEY_ESCAPE, search.isFocused(), search.isSearching())) {
       case CLEAR_SEARCH -> {
@@ -474,7 +498,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     if (prompt.isOpen()) {
       return handlePromptKey(prompt.charTyped(typed));
     }
-    return super.charTyped(typed, modifiers);
+    return !tab.isSettings() && super.charTyped(typed, modifiers);
   }
 
   /** The prompt swallows every key while it is up, so nothing behind it hears the number. */
@@ -508,11 +532,24 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
         Set.of());
   }
 
+  private ListingWindow containersWanted() {
+    return new ListingWindow(
+        settings.scroll().window().offset(), TerminalScreenLayout.CONTAINER_ROWS);
+  }
+
   private void requestVisibleContainers() {
+    requestedContainers = containersWanted();
     ModNetworkingClient.sendSettingsRequest(
-        handler.syncId,
-        settings.scroll().window().offset(),
-        Math.max(TerminalScreenLayout.CONTAINER_ROWS, settings.scroll().window().length()));
+        handler.syncId, requestedContainers.offset(), requestedContainers.length());
+  }
+
+  /**
+   * Leaving the settings view tells the server, so an edit by somebody else stops pushing panels to
+   * a screen that has gone back to the grid. A window of no rows is what closes it.
+   */
+  private void stopAskingForContainers() {
+    requestedContainers = ListingWindow.EMPTY;
+    ModNetworkingClient.sendSettingsRequest(handler.syncId, 0, 0);
   }
 
   private void drawCellTooltip(DrawContext context, int mouseX, int mouseY) {

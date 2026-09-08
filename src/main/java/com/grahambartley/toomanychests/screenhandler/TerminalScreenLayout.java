@@ -178,14 +178,6 @@ public final class TerminalScreenLayout {
   public static final int SCROLLBAR_HEIGHT = GRID_HEIGHT;
 
   /**
-   * The inventory is centred under the grid, rather than under the recess or the window.
-   *
-   * <p>Both of those are wider than the grid by things the eye does not read as content: the recess
-   * carries the scrollbar and the window carries the toolbar column. Centring on either leaves the
-   * inventory visibly off to one side of the nine columns directly above it, which are the nine
-   * columns a player is comparing it against.
-   */
-  /**
    * The settings panel is drawn into the same recess the grid uses, since only one view is on
    * screen at a time and a second recess would be a second thing to keep the same size.
    */
@@ -237,6 +229,14 @@ public final class TerminalScreenLayout {
     return windowY < CONTAINER_LIST_Y || row >= CONTAINER_ROWS ? NO_CELL : row;
   }
 
+  /**
+   * The inventory is centred under the grid, rather than under the recess or the window.
+   *
+   * <p>Both of those are wider than the grid by things the eye does not read as content: the recess
+   * carries the scrollbar and the window carries the toolbar column. Centring on either leaves the
+   * inventory visibly off to one side of the nine columns directly above it, which are the nine
+   * columns a player is comparing it against.
+   */
   public static final int INVENTORY_X = GRID_X + (GRID_WIDTH - COLUMNS * SLOT_SIZE) / 2;
 
   /** Room under the recess for the inventory's own label, plus air on either side of it. */
