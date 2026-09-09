@@ -5,7 +5,7 @@ import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
 public final class TagPromptLayout {
   public static final int NO_ROW = -1;
 
-  public static final int WIDTH = 140;
+  public static final int WIDTH = 172;
 
   public static final int PADDING = 6;
 

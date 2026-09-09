@@ -142,10 +142,7 @@ public final class TerminalTagsPanel {
         top,
         TerminalSettingsLayout.ROW_WIDTH,
         TerminalSettingsLayout.ROW_HEIGHT);
-    final Text label =
-        armed
-            ? TerminalScreenText.of("tags.delete.confirm")
-            : TerminalScreenText.of("tags.row", tag.displayName(), tag.assignedItems());
+    final Text label = armed ? TerminalScreenText.of("tags.delete.confirm") : TagText.row(tag);
     final OrderedText name = TrimmedText.toWidth(textRenderer, label, TagsSectionLayout.NAME_WIDTH);
     context.drawText(
         textRenderer,

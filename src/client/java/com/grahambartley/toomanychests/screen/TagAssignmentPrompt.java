@@ -173,7 +173,7 @@ public final class TagAssignmentPrompt {
     final Text footer =
         view.custom().isEmpty()
             ? TerminalScreenText.of("tags.assign.none")
-            : TerminalScreenText.of("tags.assign.bulk", matching);
+            : TagText.bulkHint(matching);
     final OrderedText trimmed =
         TrimmedText.toWidth(textRenderer, footer, TagPromptLayout.ROW_WIDTH);
     context.drawText(
