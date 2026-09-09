@@ -554,6 +554,9 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   }
 
   private void stopAskingForContainers() {
+    if (requestedContainers.isEmpty()) {
+      return;
+    }
     requestedContainers = ListingWindow.EMPTY;
     ModNetworkingClient.sendSettingsRequest(handler.syncId, 0, 0);
   }

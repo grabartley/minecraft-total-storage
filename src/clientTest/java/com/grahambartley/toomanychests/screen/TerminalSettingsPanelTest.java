@@ -247,7 +247,7 @@ class TerminalSettingsPanelTest {
   }
 
   @Test
-  void theNewTagRowIsCountedSoItScrollsAwayWithTheList() {
+  void theNewTagRowIsCountedSoTheLastTagStillReaches() {
     TerminalSettingsPanel panel = tags();
 
     panel.fit(viewOf(0), TagsSectionLayout.TAG_ROWS + 1);
@@ -255,7 +255,7 @@ class TerminalSettingsPanelTest {
     assertEquals(
         TagsSectionLayout.FIRST_TAG_ROW,
         panel.scroll().totalRows() - (TagsSectionLayout.TAG_ROWS + 1),
-        "the new tag row has to be part of what scrolls or the last tag falls off the end");
+        "the new tag row has to be counted or the last tag falls off the end");
   }
 
   @Test
