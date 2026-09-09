@@ -167,6 +167,7 @@ Gradle + Fabric Loom toolchain with Spotless formatting, JaCoCo coverage, Fabric
 
 ## Documentation
 
+- [`docs/prd.md`](docs/prd.md) states what the mod is: every use case it serves, who may do what, and the rules it holds
 - [`docs/standards.md`](docs/standards.md) covers the engineering standards shared across these mods
 - [`docs/adr/`](docs/adr/) records the architecture decisions behind this mod and the reasoning for each
 - [`docs/terminal-block-art.md`](docs/terminal-block-art.md) is the reference for the terminal block's textures, models and sounds, and the blockstate it needs
