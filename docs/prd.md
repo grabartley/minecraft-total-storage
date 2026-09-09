@@ -1,4 +1,4 @@
-# Too Many Chests — Product Requirements
+# Too Many Chests: Product Requirements
 
 - **Release under specification:** `0.1.0`, pre-release alpha
 - **Minecraft:** 1.21.1, Fabric
@@ -46,7 +46,7 @@ The mod is not a logistics system. There are no pipes, no crafting automation, n
 
 ## 2. Release Scope: 0.1.0
 
-`0.1.0` is a **pre-release alpha**. Every use case in section 5 is in scope. The version signals that the mod is complete against this document but has not been proven at scale on a public server.
+`0.1.0` is a **pre-release alpha**. Every use case in section 5 is in scope. It is cut when each of those use cases holds and section 9's criteria are met, and the version signals that the mod has not yet been proven at scale on a public server.
 
 ### 2.1 What alpha means here
 
@@ -57,7 +57,7 @@ The mod is not a logistics system. There are no pipes, no crafting automation, n
 | Missing convenience for rare workflows | A terminal that can be opened by someone it should not be |
 | Features a pack author may want to disable | Data loss across reload, chunk unload, or death |
 
-The distinction is that alpha tolerates **unpolished**, never **unsafe**. Section 9 makes that a hard boundary.
+The distinction is that alpha tolerates **unpolished**, never **unsafe**. Section 8.1 is where that boundary is written down.
 
 ### 2.2 Deferred beyond this release
 
@@ -97,6 +97,7 @@ The vocabulary the rest of this document uses.
 |---|---|
 | **Terminal** | The block. Owns the network's radius, access rules, container roles, and tag set. Settings live in its block entity and survive power loss. |
 | **Network** | The set of eligible containers within a powered terminal's radius, in loaded chunks. Not an inventory (ADR 0025). |
+| **Radius** | The half-extent of a cuboid centred on the terminal, not a sphere. A cuboid maps onto whole chunk columns without a per-position distance test. |
 | **Container** | Any block exposing `ItemStorage.SIDED`. A double chest is one container, not two. |
 | **Index** | The live aggregated view of the network's contents, keyed by `ItemVariant`. A read-only cache; every write goes through a transaction. |
 | **Origin** | The identity of where a container's items live. A recorded origin is a hint, never a promise (ADR 0009). |
@@ -127,7 +128,7 @@ The vocabulary the rest of this document uses.
 
 Each use case states the actor, what happens, what is explicitly **not** supported, and which side enforces it. Enforcement is named in every case because it is the requirement most easily lost in implementation.
 
-### UC-1 — Build a storage network
+### UC-1: Build a storage network
 
 **Actor:** Player
 
@@ -148,6 +149,7 @@ A player crafts a terminal, places it near their chests, and powers it with reds
 | TERM-11 | Containers in range are highlighted on placement, on radius change, and on demand |
 | TERM-12 | The highlight distinguishes container roles by more than colour alone, and fades rather than persisting |
 | TERM-13 | Breaking a terminal never affects the contents of any connected container |
+| TERM-14 | A terminal's powered state is readable from the block itself at distance and in low light, by shape or emissive detail rather than colour alone |
 
 **Not supported:** forcing chunks to keep a container in the network; indexing containers in unloaded chunks; a network spanning dimensions.
 
@@ -155,7 +157,7 @@ A player crafts a terminal, places it near their chests, and powers it with reds
 
 ---
 
-### UC-2 — Find and withdraw an item
+### UC-2: Find and withdraw an item
 
 **Actor:** Player with access to a terminal
 
@@ -168,23 +170,24 @@ The player opens a terminal, types, and the item is on screen. Clicking takes it
 | Shift + left click | Straight to the player's inventory rather than the cursor |
 | Middle click | Prompt for a custom amount |
 
+With a stack already on the cursor the same grid takes clicks the other way, depositing rather than withdrawing: left click hands over the whole stack, right click hands over one (ADR 0029).
+
 | ID | Requirement |
 |---|---|
 | FIND-1 | The search box takes keyboard focus the moment the terminal opens; no click required |
-| FIND-2 | Matching is fuzzy on display name and identifier, ranked exact, then prefix, then fuzzy |
+| FIND-2 | Matching is ranked exact, then prefix, then substring, then fuzzy, over the display name and the identifier path; a term carrying a namespace separator is matched literally against the full identifier (ADR 0013) |
 | FIND-3 | `#tag` searches tags, `@modid` filters by source mod, and both combine with free text |
 | FIND-4 | Counts are aggregated across the network and formatted for readability at scale |
 | FIND-5 | Items differing only by data components are separate entries with individual counts |
 | FIND-6 | An empty network and an empty search result read differently |
 | FIND-7 | A stale view is visibly indicated rather than silently wrong |
-| FIND-8 | A filter column lists the network's tags, combinable with AND or OR, applying alongside the search box |
+| FIND-8 | A filter column lists the network's tags with their counts, combinable with AND by default or OR, applying alongside the search box and clearable in one action |
 | FIND-9 | Escape clears the search before it closes the screen |
 | GET-1 | Each interaction above yields the correct amount |
 | GET-2 | Asking for more than exists grants everything available and reports the shortfall |
 | GET-3 | A full inventory yields a partial withdrawal; the remainder stays in the network |
-| GET-4 | Nothing is ever dropped on the floor |
-| GET-5 | Locked slots are never used as a destination |
-| GET-6 | The two empty-handed endings are reported distinctly: the item is gone, or there is nowhere to put it |
+| GET-4 | Locked slots are never used as a destination |
+| GET-5 | The two empty-handed endings are reported distinctly: the item is gone, or there is nowhere to put it |
 
 **Not supported:** withdrawing to a specific container; naming a slot or position in a request; the client deciding what a withdrawal may take.
 
@@ -192,7 +195,7 @@ The player opens a terminal, types, and the item is on screen. Clicking takes it
 
 ---
 
-### UC-3 — Deposit an inventory without deciding
+### UC-3: Deposit an inventory without deciding
 
 **Actor:** Player with access to a terminal
 
@@ -204,26 +207,27 @@ Routing order, per item variant:
 2. Any `Filtered` container that accepts it
 3. A `General` container that **already holds it**, topping up partial stacks
 4. Any `General` container with free space
-5. Nothing — the item stays with the player
+5. Nothing, and the item stays with the player
 
 `Excluded` containers are never considered at any step.
 
 | ID | Requirement |
 |---|---|
 | PUT-1 | Single and shift-click deposit work from every inventory slot |
-| PUT-2 | Deposit all empties the inventory in one action |
-| PUT-3 | Locked slots, armour, and the offhand are never deposited, including by deposit all |
-| PUT-4 | Deposit all optionally skips the hotbar, off by default since locking covers that case precisely |
-| PUT-5 | Partial stacks are topped up before empty slots are used |
-| PUT-6 | A stack that fits in no single container splits correctly across several |
-| PUT-7 | A full `Filtered` container falls through to `General` rather than refusing the item |
-| PUT-8 | A network with no room leaves the inventory untouched and says so |
-| PUT-9 | Items that cannot be stored stay in their original slots where possible |
-| PUT-10 | Feedback distinguishes "nothing to deposit" from "no space", and names what could not be stored by item and count |
-| PUT-11 | The terminal shows network capacity, with a configurable near-full warning threshold |
-| PUT-12 | Capacity counts only writable containers, excluding `Excluded` ones |
-| PUT-13 | Ties between candidate containers resolve deterministically |
-| PUT-14 | Quick-stack tops up matching stacks in nearby containers, introducing nothing new, with or without a terminal present |
+| PUT-2 | Deposit all empties the inventory in one action, from a button in the terminal and from a rebindable keybind |
+| PUT-3 | The deposit-all keybind yields to the search box while it has focus, so typing never empties an inventory |
+| PUT-4 | Locked slots, armour, and the offhand are never deposited, including by deposit all |
+| PUT-5 | Deposit all optionally skips the hotbar, off by default since locking covers that case precisely |
+| PUT-6 | Partial stacks are topped up before empty slots are used |
+| PUT-7 | A stack that fits in no single container splits correctly across several |
+| PUT-8 | A full `Filtered` container falls through to `General` rather than refusing the item |
+| PUT-9 | A network with no room leaves the inventory untouched and says so |
+| PUT-10 | Items that cannot be stored stay in their original slots where possible |
+| PUT-11 | Feedback distinguishes "nothing to deposit" from "no space", and names what could not be stored by item and count |
+| PUT-12 | The terminal shows network capacity, with a configurable near-full warning threshold |
+| PUT-13 | Capacity counts only writable containers, excluding `Excluded` ones |
+| PUT-14 | Ties between candidate containers resolve deterministically |
+| PUT-15 | Quick-stack tops up matching stacks in nearby containers, introducing nothing new, with or without a terminal present, from a button in the player inventory and from a keybind |
 
 **Not supported:** depositing into an `Excluded` container under any configuration; dropping an item that will not fit; quick-stack introducing an item into a container that does not already hold some.
 
@@ -231,7 +235,7 @@ Routing order, per item variant:
 
 ---
 
-### UC-4 — Organise the storage area
+### UC-4: Organise the storage area
 
 **Actor:** Terminal owner or operator
 
@@ -249,7 +253,7 @@ The owner assigns roles to containers, creates tags, and files items under them,
 |---|---|
 | ROLE-1 | Every discovered container defaults to `General` |
 | ROLE-2 | Roles persist across reload, power loss, and chunk unload |
-| ROLE-3 | A container broken and replaced at the same position is new and defaults to `General` |
+| ROLE-3 | A container broken and replaced at the same position is new and defaults to `General`, except where its terminal was unpowered throughout, since nothing was running to hear it go (ADR 0024) |
 | ROLE-4 | Roles are per network; an overlapped chest may hold a different role in each |
 | ROLE-5 | Role changes take effect immediately with no rescan |
 | ROLE-6 | A `Filtered` container stores the tags or filters it accepts |
@@ -275,7 +279,7 @@ The owner assigns roles to containers, creates tags, and files items under them,
 
 ---
 
-### UC-5 — Keep the physical chests tidy
+### UC-5: Keep the physical chests tidy
 
 **Actor:** Terminal owner or operator, for network operations; any player, for a container they have open
 
@@ -295,20 +299,20 @@ Default order: category by preset tag grouping, then registry identifier, then d
 | SORT-8 | In-container sorting merges partial stacks before ordering, so sorting also compacts |
 | SORT-9 | A container whose slot restrictions cannot be determined is skipped rather than risked |
 | SORT-10 | Consolidation gathers each variant into the fewest containers, then sorts them |
-| SORT-11 | `Excluded` containers are never read from or written to by any network-initiated operation |
+| SORT-11 | `Excluded` containers are never written to or reordered by any network-initiated operation, and stay readable and withdrawable throughout (ADR 0004) |
 | SORT-12 | `Filtered` containers receive only matching items during consolidation |
 | SORT-13 | Network sort and consolidate are explicit terminal actions, with confirmation above a configurable size, progress, and a summary naming containers touched and `Excluded` ones skipped |
 | SORT-14 | A long operation is budgeted per tick and continues across ticks rather than blocking the server |
 | SORT-15 | An in-progress operation can be cancelled, rolling back cleanly |
 | SORT-16 | The terminal stays responsive while a large operation runs |
 
-**Not supported:** a network-initiated operation touching an `Excluded` container; consolidation pushing a non-matching item into a `Filtered` container; a manual sort being blocked on a container the player has open, `Excluded` included, since that is a deliberate act on a container in front of them.
+**Not supported:** a network-initiated operation writing to or reordering an `Excluded` container; consolidation pushing a non-matching item into a `Filtered` container; a manual sort being blocked on a container the player has open, `Excluded` included, since that is a deliberate act on a container in front of them.
 
 **Enforcement:** server. Network operations require owner or operator permission; sorting a container the player already has open does not.
 
 ---
 
-### UC-6 — Sort anything, from anywhere
+### UC-6: Sort anything, from anywhere
 
 **Actor:** Any player, including a vanilla client
 
@@ -322,7 +326,7 @@ A sort button appears on every container screen and the player inventory. A keyb
 | BTN-4 | The button never overlaps vanilla widgets at GUI scales 1 through 4 |
 | BTN-5 | The button is positioned relative to the screen background so it tracks at every scale and window size |
 | BTN-6 | The button is hidden when the server does not have the mod installed |
-| BTN-7 | A rebindable keybind sorts the open container or the inventory, with a separately bindable no-screen action |
+| BTN-7 | A rebindable keybind sorts the open container or the inventory; pressed with no screen open it quick-stacks, as a separately bindable action |
 | BTN-8 | No default keybinding conflicts with a vanilla key |
 | BTN-9 | `/tmc sort` sorts the open container, or the inventory when none is open, for any player |
 | BTN-10 | Middle-click sorts the open container with no client mod, without disturbing creative stack cloning |
@@ -334,7 +338,7 @@ A sort button appears on every container screen and the player inventory. A keyb
 
 ---
 
-### UC-7 — Protect a hotbar layout
+### UC-7: Protect a hotbar layout
 
 **Actor:** Any player
 
@@ -360,7 +364,7 @@ A player locks the slots holding their tools, weapons, and food. No automated op
 
 ---
 
-### UC-8 — Run a server
+### UC-8: Run a server
 
 **Actor:** Server operator, and pack author
 
@@ -371,7 +375,7 @@ An operator configures every behaviour from the console, with no client mod and 
 | CFG-1 | Server config is an immutable record persisted as JSON per world, not globally |
 | CFG-2 | A missing file yields defaults and writes them; a malformed file falls back, logs clearly, and is preserved rather than overwritten |
 | CFG-3 | Out-of-range values are clamped on load rather than rejected, so a bad edit never stops a server starting |
-| CFG-4 | Every setting is reachable through `/tmc config get`, `set`, and `reset`, with tab completion for names and values |
+| CFG-4 | Every setting is reachable from the command tree, rooted at `/toomanychests` with the alias `/tmc`, with tab completion for names and values. Most sit under `config get`, `set`, and `reset`; container eligibility has its own verbs |
 | CFG-5 | Mutating config commands require permission level 2; console execution works for all of them |
 | CFG-6 | Value validation reports the valid range rather than silently clamping at the command |
 | CFG-7 | Config syncs to clients on join and on change |
@@ -428,7 +432,8 @@ The server config sets the default mode for newly placed terminals. Changing tha
 | Create, assign, delete custom tags | No | No | Yes | Yes |
 | Copy or import a tag set | No | No | Yes, on both terminals | Yes |
 | Network sort and consolidate | No | No | Yes | Yes |
-| Rescan and re-highlight | No | No | Yes | Yes |
+| Rescan | No | No | Yes | Yes |
+| Re-highlight | Only if they may open it | Yes | Yes | Yes |
 | Per-network commands | No | No | Own terminals | Any terminal |
 | Server config commands and screen edits | No | No | No | Yes, level 2 |
 | `/tmc sort`, `/tmc quickstack` | Yes | Yes | Yes | Yes |
@@ -440,7 +445,7 @@ The server config sets the default mode for newly placed terminals. Changing tha
 | ID | Requirement |
 |---|---|
 | PERM-1 | Ownership is recorded by UUID, never by name, and survives reload and the owner logging out |
-| PERM-2 | Permission is re-checked server-side on **every operation**, not only at screen open |
+| PERM-2 | Permission is re-checked on **every operation**, not only when the screen opens, so a player whose access is revoked mid-session cannot continue |
 | PERM-3 | Revoking access closes out a player who already has the screen open, at their next action |
 | PERM-4 | Operator bypass is logged once at open, never per tick |
 | PERM-5 | Denied access produces clear feedback, never a silently failing interaction |
@@ -508,12 +513,13 @@ Concurrent writers exist whatever the player count. A hopper, a comparator, and 
 
 ### 7.4 Side separation
 
+How the boundary is kept in the source tree and verified at build time is an engineering standard, recorded in `docs/standards.md`.
+
 | ID | Requirement |
 |---|---|
 | SIDE-1 | A dedicated server starts without loading a single client class |
-| SIDE-2 | Client-only code lives in the client source set, enforced by the repository's side-safety verification |
-| SIDE-3 | Optional integrations load no classes when the integration is absent |
-| SIDE-4 | The mod loads and runs correctly with none of its optional integrations installed |
+| SIDE-2 | Optional integrations load no classes when the integration is absent |
+| SIDE-3 | The mod loads and runs correctly with none of its optional integrations installed |
 
 ---
 
@@ -521,7 +527,7 @@ Concurrent writers exist whatever the player count. A hopper, a comparator, and 
 
 ### 8.1 Item safety
 
-The property that decides whether the mod is safe in a modpack.
+The property that decides whether the mod is safe in a modpack. How the suite is maintained as the code changes is an engineering standard, recorded in `docs/standards.md`.
 
 | ID | Requirement |
 |---|---|
@@ -532,7 +538,6 @@ The property that decides whether the mod is safe in a modpack.
 | SAFE-5 | A recorded container position is a hint, revalidated against the world before every extraction |
 | SAFE-6 | A request the network cannot meet is an ordinary race, handled quietly with a resync rather than an error |
 | SAFE-7 | Adversarial gametests assert conservation of total item count across containers, inventories, and the floor |
-| SAFE-8 | Every change to a mutating code path adds a case to the duplication-safety suite |
 
 ### 8.2 Performance
 
@@ -564,9 +569,8 @@ The property that decides whether the mod is safe in a modpack.
 |---|---|
 | A11Y-1 | Every state distinction is carried by more than colour alone |
 | A11Y-2 | The interface renders correctly at GUI scales 1 through 4 |
-| A11Y-3 | Sort ordering does not depend on display language by default |
-| A11Y-4 | Every player-facing string carries a translation key with an English fallback |
-| A11Y-5 | Sounds are quiet, mechanical, and not fatiguing on repeat |
+| A11Y-3 | Every player-facing string carries a translation key with an English fallback |
+| A11Y-4 | Sounds are quiet, mechanical, and not fatiguing on repeat |
 
 ### 8.5 Compatibility
 
@@ -601,7 +605,7 @@ Conditions that must hold for a release, whatever the schedule.
 
 ## 10. References
 
-- **Project board** — what is built, what is in progress, and what is next. This document deliberately holds none of that.
-- **Issues and epics** — the working specification, authoritative on acceptance criteria and implementation detail.
-- **`docs/adr/`** — architecture decision records holding the reasoning behind these rules.
-- **`docs/standards.md`** — engineering standards shared across the mod family.
+- **Project board**: what is built, what is in progress, and what is next. This document deliberately holds none of that.
+- **Issues and epics**: the working specification, authoritative on acceptance criteria and implementation detail.
+- **`docs/adr/`**: architecture decision records holding the reasoning behind these rules.
+- **`docs/standards.md`**: engineering standards shared across the mod family.
