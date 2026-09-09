@@ -369,7 +369,11 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     }
     tab = shown;
     if (tab.isSettings()) {
-      requestVisibleContainers();
+      if (settings.section() == SettingsSection.CONTAINERS) {
+        requestVisibleContainers();
+      } else {
+        stopAskingForContainers();
+      }
       return;
     }
     stopAskingForContainers();

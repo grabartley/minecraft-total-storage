@@ -8,7 +8,6 @@ import com.grahambartley.toomanychests.operation.TerminalOperationContext;
 import com.grahambartley.toomanychests.operation.TerminalOperationGate;
 import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import com.grahambartley.toomanychests.tag.TagEdit;
-import com.grahambartley.toomanychests.tag.TagEditOutcome;
 import com.grahambartley.toomanychests.tag.TagEditResult;
 import com.grahambartley.toomanychests.terminal.NetworkTagCandidates;
 import com.grahambartley.toomanychests.terminal.NetworkTagEditor;
@@ -73,16 +72,13 @@ public final class TerminalTagEdits {
 
   private TagEditResult assignMatching(
       TerminalOperationContext context, TerminalCaller caller, String tagId) {
-    final TagEditOutcome refusal =
-        tags.refusalFor(context.world(), context.terminal(), caller, tagId);
-    if (refusal != null) {
-      return TagEditResult.of(refusal);
-    }
-    if (!OperationGuards.allows(context.player(), ExpensiveOperation.ASSIGN_MATCHING)) {
-      return TagEditResult.of(TagEditOutcome.UNCHANGED);
-    }
     return tags.assignMatching(
-        context.world(), context.terminal(), caller, tagId, context.handler().listing().filter());
+        context.world(),
+        context.terminal(),
+        caller,
+        tagId,
+        context.handler().listing().filter(),
+        () -> OperationGuards.allows(context.player(), ExpensiveOperation.ASSIGN_MATCHING));
   }
 
   private static void report(ServerPlayerEntity player, TagEdit action, TagEditResult result) {

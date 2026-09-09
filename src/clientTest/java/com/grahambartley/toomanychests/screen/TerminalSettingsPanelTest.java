@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
+import com.grahambartley.toomanychests.screenhandler.TagsSectionLayout;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
 import com.grahambartley.toomanychests.screenhandler.TerminalSettingsLayout;
 import com.grahambartley.toomanychests.storage.ContainerRole;
@@ -204,5 +205,80 @@ class TerminalSettingsPanelTest {
     panel.fit(viewOf(1), 0);
 
     assertEquals(0, panel.scroll().firstIndex());
+  }
+
+  private static TerminalSettingsPanel tags() {
+    final TerminalSettingsPanel panel = new TerminalSettingsPanel();
+    panel.show(SettingsSection.TAGS);
+    return panel;
+  }
+
+  @Test
+  void theLastCustomTagCanBeReachedByScrolling() {
+    final int total = TagsSectionLayout.TAG_ROWS + 5;
+    TerminalSettingsPanel panel = tags();
+    panel.fit(viewOf(0), total);
+
+    panel.scroll().scrollTo(panel.scroll().maxTopRow());
+
+    assertEquals(
+        total - 1,
+        panel.scroll().firstIndex() + TagsSectionLayout.TAG_ROWS - 1,
+        "the last tag can never be drawn, so it can never be renamed or deleted");
+  }
+
+  @Test
+  void aTagListThatFitsDoesNotScroll() {
+    TerminalSettingsPanel panel = tags();
+
+    panel.fit(viewOf(0), TagsSectionLayout.TAG_ROWS);
+
+    assertFalse(panel.scroll().overflows());
+    assertEquals(0, panel.scroll().maxTopRow());
+  }
+
+  @Test
+  void oneTagMoreThanFitsStartsScrolling() {
+    TerminalSettingsPanel panel = tags();
+
+    panel.fit(viewOf(0), TagsSectionLayout.TAG_ROWS + 1);
+
+    assertTrue(panel.scroll().overflows());
+  }
+
+  @Test
+  void theNewTagRowIsCountedSoItScrollsAwayWithTheList() {
+    TerminalSettingsPanel panel = tags();
+
+    panel.fit(viewOf(0), TagsSectionLayout.TAG_ROWS + 1);
+
+    assertEquals(
+        TagsSectionLayout.FIRST_TAG_ROW,
+        panel.scroll().totalRows() - (TagsSectionLayout.TAG_ROWS + 1),
+        "the new tag row has to be part of what scrolls or the last tag falls off the end");
+  }
+
+  @Test
+  void aNetworkWithNoCustomTagsScrollsNowhere() {
+    TerminalSettingsPanel panel = tags();
+
+    panel.fit(viewOf(0), 0);
+
+    assertFalse(panel.scroll().overflows());
+  }
+
+  @Test
+  void theTagsSectionScrollsWhileTheTerminalSectionDoesNot() {
+    assertTrue(tags().scrolls());
+    assertFalse(new TerminalSettingsPanel().scrolls());
+  }
+
+  @Test
+  void theTerminalSectionNeverScrollsHoweverMuchItIsGiven() {
+    TerminalSettingsPanel panel = new TerminalSettingsPanel();
+
+    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 50), 50);
+
+    assertFalse(panel.scroll().overflows());
   }
 }

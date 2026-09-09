@@ -10,6 +10,7 @@ import com.grahambartley.toomanychests.listing.ListingWindow;
 import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import com.grahambartley.toomanychests.tag.PresetTag;
 import io.netty.buffer.Unpooled;
+import java.util.HashSet;
 import java.util.Set;
 import net.minecraft.network.RegistryByteBuf;
 import org.junit.jupiter.api.DisplayName;
@@ -121,7 +122,7 @@ class ListingRequestPayloadTest {
 
   @Test
   void aRequestNamingEveryTagAColumnCanOfferSurvivesTheWire() {
-    final Set<String> tags = new java.util.HashSet<>();
+    final Set<String> tags = new HashSet<>();
     for (int tag = 0; tag < PresetTag.all().size() + NetworkTagSet.MAX_CUSTOM; tag++) {
       tags.add("tag" + tag);
     }
@@ -133,7 +134,7 @@ class ListingRequestPayloadTest {
 
   @Test
   void aRequestNamingMoreTagsThanAColumnCouldOfferIsRefusedBeforeItIsSent() {
-    final Set<String> tags = new java.util.HashSet<>();
+    final Set<String> tags = new HashSet<>();
     for (int tag = 0; tag <= ListingRequestPayload.MAX_TAGS; tag++) {
       tags.add("tag" + tag);
     }

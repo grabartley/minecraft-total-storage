@@ -15,6 +15,7 @@ import com.grahambartley.toomanychests.tag.TagNameRule;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 
@@ -94,21 +95,13 @@ public final class NetworkTagEditor {
     return store(block, updated, 1);
   }
 
-  public TagEditOutcome refusalFor(
-      ServerWorld world, BlockPos terminal, TerminalCaller caller, String tagId) {
-    final TerminalBlockEntity block = administrable(world, terminal, caller);
-    if (block == null) {
-      return refusalFor(world, terminal);
-    }
-    return editableTag(block.settings().tags(), tagId);
-  }
-
   public TagEditResult assignMatching(
       ServerWorld world,
       BlockPos terminal,
       TerminalCaller caller,
       String tagId,
-      ItemFilter filter) {
+      ItemFilter filter,
+      BooleanSupplier pacing) {
     final TerminalBlockEntity block = administrable(world, terminal, caller);
     if (block == null) {
       return TagEditResult.of(refusalFor(world, terminal));
@@ -117,6 +110,9 @@ public final class NetworkTagEditor {
     final TagEditOutcome editable = editableTag(tags, tagId);
     if (editable != null) {
       return TagEditResult.of(editable);
+    }
+    if (!pacing.getAsBoolean()) {
+      return TagEditResult.of(TagEditOutcome.UNCHANGED);
     }
     final NetworkTag existing = tags.byId(tagId).orElseThrow();
     final Set<String> matching = new LinkedHashSet<>();

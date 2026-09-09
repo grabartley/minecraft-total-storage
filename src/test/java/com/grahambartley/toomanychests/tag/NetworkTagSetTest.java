@@ -246,7 +246,7 @@ class NetworkTagSetTest {
   }
 
   @Test
-  void thesSameItemNamedTwiceIsFiledOnce() {
+  void theSameItemNamedTwiceIsFiledOnce() {
     NetworkTagSet tags =
         NetworkTagSet.defaults()
             .withCustomTag("castle")

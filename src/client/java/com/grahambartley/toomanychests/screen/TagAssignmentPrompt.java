@@ -46,7 +46,7 @@ public final class TagAssignmentPrompt {
   }
 
   public void fit(NetworkTagView view) {
-    scroll.fit(view.tags().size());
+    scroll.fit(view.editableFirst().size());
   }
 
   public boolean scrollBy(int notches) {

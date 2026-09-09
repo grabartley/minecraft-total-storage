@@ -15,6 +15,8 @@ import com.grahambartley.toomanychests.terminal.TerminalLookup;
 import java.util.Set;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.minecraft.block.entity.BarrelBlockEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -293,6 +295,51 @@ public final class TerminalTagEditsGameTest implements FabricGameTest {
     context.assertFalse(
         tagsOf(context).tagIdsFor("minecraft:diamond").contains("keep"),
         "A second whole-network tagging ran inside the cooldown");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aRefusedTaggingLeavesThePacingUnspent(TestContext context) {
+    NetworkOperationFixture.stockedBarrel(
+        context, NetworkOperationFixture.EAST_BARREL, Items.DIAMOND, 8);
+    final ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    edits.edit(owner, TagEditPayload.create(syncId(owner), "castle"));
+    NetworkOperationFixture.watching(owner);
+
+    edits.edit(owner, TagEditPayload.assignMatching(syncId(owner), "nonexistent"));
+    edits.edit(owner, TagEditPayload.assignMatching(syncId(owner), "castle"));
+
+    context.assertTrue(
+        tagsOf(context).tagIdsFor("minecraft:diamond").contains("castle"),
+        "a tagging refused for naming no tag spent the cooldown the real one needed");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void twoVariantsOfOneItemAreCountedOnceWhenTaggedTogether(TestContext context) {
+    final BarrelBlockEntity barrel =
+        NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    barrel.setStack(0, new ItemStack(Items.DIAMOND_PICKAXE, 1));
+    final ItemStack damaged = new ItemStack(Items.DIAMOND_PICKAXE, 1);
+    damaged.setDamage(50);
+    barrel.setStack(1, damaged);
+    barrel.markDirty();
+    final ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    edits.edit(owner, TagEditPayload.create(syncId(owner), "castle"));
+    NetworkOperationFixture.watching(owner);
+
+    edits.edit(owner, TagEditPayload.assignMatching(syncId(owner), "castle"));
+
+    context.assertTrue(
+        tagsOf(context).byId("castle").orElseThrow().items().size() == 1,
+        "two variants of one item should file under one identifier, got "
+            + tagsOf(context).byId("castle").orElseThrow().items());
     NetworkOperationFixture.finish(context, owner);
   }
 
