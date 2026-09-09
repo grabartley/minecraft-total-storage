@@ -113,7 +113,8 @@ The vocabulary the rest of this document uses.
 | Chests, trapped chests, double chests | Furnaces, blast furnaces, smokers | Working inventories, not storage |
 | Barrels | Brewing stands, hoppers, dispensers, droppers, crafters | Same |
 | Placed shulker boxes | Ender chests | Contents are per player; shared network semantics are meaningless |
-| Modded containers exposing item storage | Chest minecarts, chest boats | They move; a position-keyed network cannot track them |
+| Modded containers exposing item storage | Chiseled bookshelves, jukeboxes, decorated pots | Single-purpose display blocks, not storage |
+| | Chest minecarts, chest boats | They move; a position-keyed network cannot track them |
 
 | ID | Requirement |
 |---|---|
@@ -136,13 +137,13 @@ A player crafts a terminal, places it near their chests, and powers it with reds
 
 | ID | Requirement |
 |---|---|
-| TERM-1 | The terminal is craftable in a vanilla crafting table from mid-game materials, with no End content |
+| TERM-1 | The terminal is craftable in a vanilla crafting table from mid-game materials, with no End content (ADR 0022) |
 | TERM-2 | Placement records the owner by UUID and faces the player |
-| TERM-3 | A powered terminal indexes its network; an unpowered one is wholly inert |
+| TERM-3 | A powered terminal indexes its network; an unpowered one is wholly inert (ADR 0007) |
 | TERM-4 | Powering on triggers exactly one discovery scan, not one per neighbour update |
 | TERM-5 | A terminal powered when its chunk loads becomes active without needing a neighbour update |
-| TERM-6 | Radius is per terminal, minimum 1, clamped to the server maximum on write with the clamp reported |
-| TERM-7 | Lowering the server maximum clamps existing terminals without rewriting their configured value |
+| TERM-6 | Radius is per terminal, 16 on a fresh one, minimum 1, clamped to the server maximum on write with the clamp reported |
+| TERM-7 | Lowering the server maximum clamps existing terminals without rewriting their configured value (ADR 0021) |
 | TERM-8 | Changing the radius triggers exactly one rescan |
 | TERM-9 | Settings survive power loss, chunk unload, and world reload |
 | TERM-10 | Losing power with the screen open completes any in-flight transaction, then closes the screen for every viewer |
@@ -175,8 +176,8 @@ With a stack already on the cursor the same grid takes clicks the other way, dep
 | ID | Requirement |
 |---|---|
 | FIND-1 | The search box takes keyboard focus the moment the terminal opens; no click required |
-| FIND-2 | Matching is ranked exact, then prefix, then substring, then fuzzy, over the display name and the identifier path; a term carrying a namespace separator is matched literally against the full identifier (ADR 0013) |
-| FIND-3 | `#tag` searches tags, `@modid` filters by source mod, and both combine with free text |
+| FIND-2 | Matching is ranked exact, then prefix, then substring, then fuzzy, over the display name and the identifier path; a term carrying a namespace separator is matched literally against the full identifier (ADR 0013, ADR 0028) |
+| FIND-3 | `#tag` searches tags and `@modid` filters by source mod, both combining with free text. Name and tag terms narrow each other; mod identifier terms broaden, so `@create @quarry` matches either (ADR 0013) |
 | FIND-4 | Counts are aggregated across the network and formatted for readability at scale |
 | FIND-5 | Items differing only by data components are separate entries with individual counts |
 | FIND-6 | An empty network and an empty search result read differently |
@@ -213,7 +214,7 @@ Routing order, per item variant:
 
 | ID | Requirement |
 |---|---|
-| PUT-1 | Single and shift-click deposit work from every inventory slot |
+| PUT-1 | Shift-click deposits a whole stack from any player inventory slot; a partial deposit is picking the stack up and right-clicking it onto the grid (ADR 0029) |
 | PUT-2 | Deposit all empties the inventory in one action, from a button in the terminal and from a rebindable keybind |
 | PUT-3 | The deposit-all keybind yields to the search box while it has focus, so typing never empties an inventory |
 | PUT-4 | Locked slots, armour, and the offhand are never deposited, including by deposit all |
@@ -227,7 +228,8 @@ Routing order, per item variant:
 | PUT-12 | The terminal shows network capacity, with a configurable near-full warning threshold |
 | PUT-13 | Capacity counts only writable containers, excluding `Excluded` ones |
 | PUT-14 | Ties between candidate containers resolve deterministically |
-| PUT-15 | Quick-stack tops up matching stacks in nearby containers, introducing nothing new, with or without a terminal present, from a button in the player inventory and from a keybind |
+| PUT-15 | Quick-stack tops up matching stacks in nearby containers, introducing nothing new, with or without a terminal present |
+| PUT-16 | Quick-stack is reachable from a button in the player inventory, a rebindable keybind, and `/tmc quickstack`, so a vanilla client can use it |
 
 **Not supported:** depositing into an `Excluded` container under any configuration; dropping an item that will not fit; quick-stack introducing an item into a container that does not already hold some.
 
@@ -293,7 +295,7 @@ Default order: category by preset tag grouping, then registry identifier, then d
 | SORT-2 | Ordering is language independent by default, with display-name ordering as an explicit option |
 | SORT-3 | Full stacks sort ahead of partial stacks of the same item |
 | SORT-4 | A sort request is honoured only for the screen handler the player currently has open |
-| SORT-5 | Screens where reordering is meaningless or harmful are refused, unknown special-purpose screens included |
+| SORT-5 | Screens where reordering is meaningless or harmful are refused, unknown special-purpose screens included, by a deny list and a structural probe (ADR 0018) |
 | SORT-6 | Sorting runs in one transaction; a failure part way rolls back completely |
 | SORT-7 | Every viewer of a sorted container is resynced, both halves of a double chest included |
 | SORT-8 | In-container sorting merges partial stacks before ordering, so sorting also compacts |
@@ -321,12 +323,12 @@ A sort button appears on every container screen and the player inventory. A keyb
 | ID | Requirement |
 |---|---|
 | BTN-1 | Server-side sorting works on chests, barrels, shulker boxes, the player inventory, and modded containers |
-| BTN-2 | A sort button appears on every eligible container screen and the player inventory, and on none of the denied ones |
+| BTN-2 | A sort button appears on every container screen not on the deny list, and on the player inventory; the server may still refuse a screen that fails its structural gate (ADR 0018) |
 | BTN-3 | A modded screen extending the vanilla handled screen receives the button with no mod-specific code |
 | BTN-4 | The button never overlaps vanilla widgets at GUI scales 1 through 4 |
 | BTN-5 | The button is positioned relative to the screen background so it tracks at every scale and window size |
 | BTN-6 | The button is hidden when the server does not have the mod installed |
-| BTN-7 | A rebindable keybind sorts the open container or the inventory; pressed with no screen open it quick-stacks, as a separately bindable action |
+| BTN-7 | A rebindable keybind sorts the container the player has open, or their inventory |
 | BTN-8 | No default keybinding conflicts with a vanilla key |
 | BTN-9 | `/tmc sort` sorts the open container, or the inventory when none is open, for any player |
 | BTN-10 | Middle-click sorts the open container with no client mod, without disturbing creative stack cloning |
@@ -334,7 +336,7 @@ A sort button appears on every container screen and the player inventory. A keyb
 
 **Not supported:** sorting a container the player does not have open; sorting by replaying simulated slot clicks; a client-only installation providing sorting.
 
-**Enforcement:** server, validated against the player's current screen handler. The client contributes a button and a packet and nothing else.
+**Enforcement:** server, validated against the player's current screen handler. The client contributes the button, the keybind, and a packet.
 
 ---
 
@@ -349,12 +351,12 @@ A player locks the slots holding their tools, weapons, and food. No automated op
 | LOCK-1 | Locks are slot-based, not item-based |
 | LOCK-2 | Locks persist across restart and survive death; items still drop per vanilla rules |
 | LOCK-3 | The locked set syncs to the owning client and to nobody else |
-| LOCK-4 | Locks are toggled by a gesture that conflicts with no vanilla inventory interaction |
-| LOCK-5 | Toggling a lock never moves an item, so a mis-click locks a slot rather than throwing something on the floor |
+| LOCK-4 | Alt with left click toggles the lock on the slot under the cursor, in any screen showing the player inventory. There is no lock mode (ADR 0016) |
+| LOCK-5 | The gesture never moves an item, and is swallowed whether or not it lands on a lockable slot, so a mis-click does nothing rather than throwing something on the floor (ADR 0016) |
 | LOCK-6 | An out-of-range slot index from a forged packet is rejected |
-| LOCK-7 | A locked slot is tinted, and carries a badge readable without colour that obscures neither item, count, nor durability bar |
-| LOCK-8 | The tint is disableable in config, leaving the badge as the indicator |
-| LOCK-9 | Every automated path honours locks: sorting by any entry point, deposit, deposit all, and quick-stack |
+| LOCK-7 | A locked slot is tinted, and carries a badge readable without colour that leaves the stack count and durability bar untouched and the item still identifiable |
+| LOCK-8 | The tint is a per-player client display option that can be turned off, leaving the badge as the indicator; it is not a server-wide setting |
+| LOCK-9 | Every automated path honours locks: sorting by any entry point, deposit, deposit all, quick-stack, and any future loadout preset swap (ADR 0010) |
 | LOCK-10 | Manual dragging, shift-clicking, and hotbar swapping are never blocked by a lock |
 | LOCK-11 | Sorting an inventory with locked slots scattered through it sorts around them, leaving them in place |
 
@@ -375,13 +377,13 @@ An operator configures every behaviour from the console, with no client mod and 
 | CFG-1 | Server config is an immutable record persisted as JSON per world, not globally |
 | CFG-2 | A missing file yields defaults and writes them; a malformed file falls back, logs clearly, and is preserved rather than overwritten |
 | CFG-3 | Out-of-range values are clamped on load rather than rejected, so a bad edit never stops a server starting |
-| CFG-4 | Every setting is reachable from the command tree, rooted at `/toomanychests` with the alias `/tmc`, with tab completion for names and values. Most sit under `config get`, `set`, and `reset`; container eligibility has its own verbs |
+| CFG-4 | Every setting is reachable from the command tree, rooted at `/toomanychests` with the alias `/tmc`, with tab completion for names and values. Most sit under `config list`, `get`, `set`, and `reset`, with bare `config` listing them; container eligibility has its own verbs |
 | CFG-5 | Mutating config commands require permission level 2; console execution works for all of them |
 | CFG-6 | Value validation reports the valid range rather than silently clamping at the command |
 | CFG-7 | Config syncs to clients on join and on change |
 | CFG-8 | Every per-network setting reachable from the interface is also reachable by command, targeting a terminal by position |
-| CFG-9 | Every server-wide setting is editable from a Mod Menu screen, read-only for non-operators rather than hidden |
-| CFG-10 | Expensive operations are rate limited per player and per operation, with feedback naming the operation |
+| CFG-9 | Every server-wide setting described in the settings model is editable from a Mod Menu screen, read-only for non-operators rather than hidden; container eligibility overrides stay command-only, being a set keyed by block rather than one value (ADR 0019) |
+| CFG-10 | Expensive operations are rate limited per player and per operation, with feedback naming the operation (ADR 0031) |
 | CFG-11 | Every server-to-client list payload is capped and split across packets rather than built unbounded |
 | CFG-12 | Hitting a cap or budget logs once, not once per occurrence |
 
@@ -391,16 +393,16 @@ An operator configures every behaviour from the console, with no client mod and 
 
 | Setting | Default | Bound |
 |---|---|---|
-| Maximum terminal radius | 16 | Hard clamp on every terminal |
+| Maximum terminal radius | 16 | 1 to 64. An effective ceiling applied where a scan reads a radius; a terminal's configured value is never rewritten (ADR 0021) |
 | Default terminal access mode | `Owner` | Applies to newly placed terminals only |
 | Sort ordering strategy | Registry identifier | Display-name ordering is the alternative |
 | Sort button enabled | On | |
 | Middle-click sort gesture enabled | On | |
-| Quick-stack radius | 8 | |
+| Quick-stack radius | 8 | 1 to 32 |
 | Deposit all skips hotbar | Off | |
-| Near-capacity warning threshold | 90% | |
-| Expensive operation cooldown | Short, in ticks | `0` disables |
-| Per-tick move budget | Tuned | |
+| Near-capacity warning threshold | 90% | 1 to 100 |
+| Expensive operation cooldown | 10 ticks | `0` disables |
+| Per-tick move budget | 64 | Applies to sorting and consolidation |
 | Container eligibility overrides | Empty | |
 
 ---
@@ -417,7 +419,7 @@ Permission is the difference between a storage mod and a griefing tool. Without 
 | `Trusted` | The owner plus players on that terminal's trust list |
 | `Open` | Anyone |
 
-The server config sets the default mode for newly placed terminals. Changing that default never retroactively changes existing terminals.
+The server config sets the default mode for newly placed terminals, owner-locked out of the box (ADR 0008). Changing that default never retroactively changes existing terminals.
 
 ### 6.2 Capability matrix
 
@@ -434,8 +436,10 @@ The server config sets the default mode for newly placed terminals. Changing tha
 | Network sort and consolidate | No | No | Yes | Yes |
 | Rescan | No | No | Yes | Yes |
 | Re-highlight | Only if they may open it | Yes | Yes | Yes |
-| Per-network commands | No | No | Own terminals | Any terminal |
-| Server config commands and screen edits | No | No | No | Yes, level 2 |
+| Read a network's settings by command | Yes | Yes | Yes | Yes |
+| Change a network's settings by command | No | No | Own terminals | Any terminal |
+| Read server config, by command or screen | Yes | Yes | Yes | Yes |
+| Change server config, by command or screen | No | No | No | Yes, level 2 |
 | `/tmc sort`, `/tmc quickstack` | Yes | Yes | Yes | Yes |
 | Sort a container they have open | Yes | Yes | Yes | Yes |
 | Lock their own slots | Yes | Yes | Yes | Yes |
@@ -446,7 +450,7 @@ The server config sets the default mode for newly placed terminals. Changing tha
 |---|---|
 | PERM-1 | Ownership is recorded by UUID, never by name, and survives reload and the owner logging out |
 | PERM-2 | Permission is re-checked on **every operation**, not only when the screen opens, so a player whose access is revoked mid-session cannot continue |
-| PERM-3 | Revoking access closes out a player who already has the screen open, at their next action |
+| PERM-3 | Revoking access closes the screen of a player who already has it open, at the moment of revocation, and tells them why |
 | PERM-4 | Operator bypass is logged once at open, never per tick |
 | PERM-5 | Denied access produces clear feedback, never a silently failing interaction |
 | PERM-6 | Trust list entries resolve for offline players |
@@ -476,12 +480,12 @@ Stating it this way is deliberate. A requirement written as "in multiplayer, che
 | ID | Requirement |
 |---|---|
 | SRV-1 | Every item movement, permission decision, and settings change is made on the server |
-| SRV-2 | The client sends intent and never a container position, slot index, or page offset |
+| SRV-2 | A request naming network contents carries intent only: an item and an amount, never a container position or slot index (ADR 0009). A page offset, a player's own slot index, and a container position naming a role edit are the deliberate exceptions, each validated server-side (ADR 0030) |
 | SRV-3 | Any positional information reaching the server is treated as a stale hint and revalidated |
 | SRV-4 | No client-side value influences a server enforcement decision, config mirror included |
 | SRV-5 | A control hidden on the client is never the enforcement of a rule; the server refuses the packet regardless |
 | SRV-6 | A rejected request resyncs the client rather than failing silently, so a desynced client self-corrects |
-| SRV-7 | The mod is functional with the server alone; the client adds the terminal screen, the sort button, the keybind, and lock rendering, and nothing else |
+| SRV-7 | The mod is functional with the server alone. The client adds presentation: the terminal screen, the sort button and keybinds, locked slot rendering, the in-world container highlight, and the configuration screen |
 
 **The mod must be installed on the server.** A client-only installation provides nothing, because nothing it could do would be authoritative.
 
@@ -560,7 +564,7 @@ The property that decides whether the mod is safe in a modpack. How the suite is
 | Container roles | Yes | Yes | Yes | n/a |
 | Custom tags and assignments | Yes | Yes | Yes | n/a |
 | Terminal ownership | Yes | Yes | Yes | n/a |
-| Network index | No, rebuilt on power-on | Membership drops, returns on chunk load | No, rebuilt | n/a |
+| Network index | No, rebuilt on power-on | Membership drops on sight, returns on chunk load (ADR 0014) | No, rebuilt | n/a |
 | Locked slots | n/a | n/a | Yes | Yes, contents drop per vanilla |
 
 ### 8.4 Accessibility and localisation
