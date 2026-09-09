@@ -94,7 +94,7 @@ jobs:
 
       - name: Build snapshot JAR
         if: github.event_name == 'pull_request' || github.event_name == 'push'
-        run: ./gradlew build -Pversion=$(grep '^mod_version=' gradle.properties | cut -d= -f2)-SNAPSHOT-${{ github.sha }}
+        run: ./gradlew build -PsnapshotSuffix=SNAPSHOT-${{ github.sha }}
 
       - name: Upload snapshot JAR
         if: github.event_name == 'pull_request' || github.event_name == 'push'

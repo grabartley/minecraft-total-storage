@@ -120,7 +120,7 @@ The vocabulary the rest of this document uses.
 |---|---|
 | ELIG-1 | Eligibility is decided in one place and consumed everywhere |
 | ELIG-2 | A modded container not on the deny list is eligible by default |
-| ELIG-3 | Defaults ship as a data-driven block tag a pack can add denials to; removing a shipped denial means replacing the tag or using a config override |
+| ELIG-3 | Defaults ship as a data-driven block tag a pack can add denials to; removing a shipped denial means replacing the tag or using a config override. An override decides in both directions, admitting a denied block or denying an untagged one |
 | ELIG-4 | An operator can change eligibility without a restart |
 | ELIG-5 | Eligibility is read at discovery, so a change triggers a fresh discovery scan on every affected network rather than waiting for one |
 
@@ -149,7 +149,7 @@ A player crafts a terminal, places it near their chests, and powers it with reds
 | TERM-9 | Changing the radius triggers exactly one rescan |
 | TERM-10 | Settings survive power loss, chunk unload, and world reload |
 | TERM-11 | Losing power with the screen open completes any in-flight transaction, then closes the screen for every viewer |
-| TERM-12 | Containers in range are highlighted on placement, on radius change, and on demand |
+| TERM-12 | Containers in range are highlighted when a terminal becomes powered, on radius change, and on demand |
 | TERM-13 | The highlight distinguishes container roles by more than colour alone, and fades rather than persisting |
 | TERM-14 | Breaking a terminal never affects the contents of any connected container |
 | TERM-15 | A terminal's powered state is readable from the block itself at distance and in low light, by shape or emissive detail rather than colour alone |
@@ -421,7 +421,7 @@ Permission is the difference between a storage mod and a griefing tool. Without 
 | `Trusted` | The owner plus players on that terminal's trust list |
 | `Open` | Anyone |
 
-The server config sets the default mode for newly placed terminals, owner-locked out of the box (ADR 0008). A terminal with no recorded owner, which is one placed by something other than a player, is open to everyone whatever its mode, because there is nobody for the modes to be relative to. Changing that default never retroactively changes existing terminals.
+The server config sets the default mode for newly placed terminals, owner-locked out of the box (ADR 0008). A terminal with no recorded owner, which is one placed by something other than a player, is open to everyone whatever its mode, because there is nobody for the modes to be relative to. It is administrable by operators alone: with no owner, every capability the Owner column grants has no one to grant it to. Changing that default never retroactively changes existing terminals.
 
 ### 6.2 Capability matrix
 
@@ -438,7 +438,8 @@ The server config sets the default mode for newly placed terminals, owner-locked
 | Network sort and consolidate | No | No | Yes | Yes |
 | Rescan | No | No | Yes | Yes |
 | Re-highlight | Only if they may open it | Only if they may open it | Yes | Yes |
-| Read a network's settings by command | Yes, excluding the trust list | Yes, excluding the trust list | Yes | Yes |
+| Read a named network setting by command | Yes, excluding the trust list | Yes, excluding the trust list | Yes | Yes |
+| Enumerate a network's membership | Only if they may open it | Only if they may open it | Yes | Yes |
 | Change a network's settings by command | No | No | Own terminals | Any terminal |
 | Read server config, by command or screen | Yes | Yes | Yes | Yes |
 | Change server config, by command or screen | No | No | No | Yes, level 2 |
@@ -455,7 +456,7 @@ The server config sets the default mode for newly placed terminals, owner-locked
 | PERM-3 | Revoking access closes the screen of a player who already has it open, at the moment of revocation, and tells them why |
 | PERM-4 | Operator bypass is logged once at open, never per tick |
 | PERM-5 | Denied access produces clear feedback, never a silently failing interaction |
-| PERM-6 | Trust list entries resolve for offline players |
+| PERM-6 | Trust list entries resolve for offline players known to the server's user cache, and are stored by UUID |
 | PERM-7 | A settings change submitted by a client not entitled to make it is rejected and the panel resynced |
 | PERM-8 | The rules the interface enforces and the rules the commands enforce are one implementation, so the two cannot drift |
 
