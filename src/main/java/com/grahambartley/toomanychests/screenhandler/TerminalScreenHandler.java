@@ -20,6 +20,7 @@ public class TerminalScreenHandler extends ScreenHandler {
   private final TerminalOpenData data;
   private final TerminalListingState listing = new TerminalListingState();
   private final TerminalSettingsState settings = new TerminalSettingsState();
+  private final TerminalTagState tagPanel = new TerminalTagState();
 
   public TerminalScreenHandler(int syncId, PlayerInventory playerInventory, TerminalOpenData data) {
     super(ModScreenHandlers.TERMINAL, syncId);
@@ -46,6 +47,10 @@ public class TerminalScreenHandler extends ScreenHandler {
     return settings;
   }
 
+  public TerminalTagState tags() {
+    return tagPanel;
+  }
+
   public int radius() {
     return data.radius();
   }
@@ -54,7 +59,7 @@ public class TerminalScreenHandler extends ScreenHandler {
     return data.permission();
   }
 
-  public NetworkTagSet tags() {
+  public NetworkTagSet tagSet() {
     return data.tags();
   }
 

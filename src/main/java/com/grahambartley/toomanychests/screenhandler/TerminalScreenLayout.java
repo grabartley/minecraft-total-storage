@@ -51,7 +51,15 @@ public final class TerminalScreenLayout {
 
   public static final int SEARCH_TEXT_MARGIN = 2;
 
-  public static final int INSET_X = PANEL_BORDER + 1;
+  public static final int EDGE = PANEL_BORDER + 1;
+
+  public static final int FILTER_WIDTH = 76;
+
+  public static final int FILTER_GAP = 3;
+
+  public static final int FILTER_X = EDGE;
+
+  public static final int INSET_X = FILTER_X + FILTER_WIDTH + FILTER_GAP;
 
   public static final int SEARCH_X = INSET_X;
   public static final int SEARCH_Y = TITLE_Y + 10;
@@ -73,7 +81,7 @@ public final class TerminalScreenLayout {
 
   public static final int ACTIONS_Y = TOOLBAR_Y + TAB_COUNT * BUTTON_SIZE + TOOLBAR_DIVIDER;
 
-  public static final int WINDOW_WIDTH = TOOLBAR_X + BUTTON_SIZE + INSET_X;
+  public static final int WINDOW_WIDTH = TOOLBAR_X + BUTTON_SIZE + EDGE;
 
   public static int tabY(int index) {
     requireTab(index);
@@ -190,6 +198,10 @@ public final class TerminalScreenLayout {
         && windowX < SCROLLBAR_X + SCROLLBAR_WIDTH
         && windowY >= SCROLLBAR_Y
         && windowY < SCROLLBAR_Y + SCROLLBAR_HEIGHT;
+  }
+
+  public static int filterBottom() {
+    return INSET_Y + INSET_HEIGHT;
   }
 
   public static boolean isOverListing(int windowX, int windowY) {

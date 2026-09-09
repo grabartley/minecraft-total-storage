@@ -5,14 +5,20 @@ import com.grahambartley.toomanychests.screenhandler.TerminalSettingsLayout;
 public enum SettingsSection {
   TERMINAL,
 
-  CONTAINERS;
+  CONTAINERS,
+
+  TAGS;
 
   public int index() {
     return ordinal();
   }
 
   public String label() {
-    return this == TERMINAL ? "section.terminal" : "section.containers";
+    return switch (this) {
+      case TERMINAL -> "section.terminal";
+      case CONTAINERS -> "section.containers";
+      case TAGS -> "section.tags";
+    };
   }
 
   public static SettingsSection at(int windowX, int windowY) {

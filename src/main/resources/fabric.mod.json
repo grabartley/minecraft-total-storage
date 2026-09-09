@@ -74,7 +74,9 @@
       "com.grahambartley.toomanychests.gametest.ConcurrentViewerResyncGameTest",
       "com.grahambartley.toomanychests.gametest.StaleIndexGameTest",
       "com.grahambartley.toomanychests.gametest.RollbackSafetyGameTest",
-      "com.grahambartley.toomanychests.gametest.NetworkMutationGameTest"
+      "com.grahambartley.toomanychests.gametest.NetworkMutationGameTest",
+      "com.grahambartley.toomanychests.gametest.TerminalTagEditsGameTest",
+      "com.grahambartley.toomanychests.gametest.NetworkTagViewServiceGameTest"
     ]
   },
   "mixins": [

@@ -36,6 +36,30 @@ A grid with nothing in it says which nothing it means, because the empty cases a
 
 Power, permission and distance are re-checked every tick the screen is up, not just when it opened. Cutting the terminal's power, breaking it, losing access to it, walking away from it, or dying all close the screen straight away.
 
+## Filtering by tag
+
+Down the left of the screen is a column of the network's tags, and clicking one narrows the grid to the items carrying it. Clicking it again clears it. The column is how you browse by meaning when you do not have a word to type, and it works alongside the search box rather than instead of it: a tag and some typed text both apply, so `castle` plus `stone` finds the stone you filed under Castle.
+
+Every tag shows how many of the network's items it matches **here**, so a tag holding nothing in this network reads as empty rather than looking like a filter that is broken. The column scrolls on its own when a network has more tags than fit.
+
+Several tags can be active at once, and the button above the column decides how they combine. `All` narrows, so a stack has to carry every tag you picked. `Any` broadens, so carrying one of them is enough. Both are genuinely useful, which is why the choice is a button rather than a decision made for you: `stone` and `building` together is a narrowing question, `stone` or `wood` is a broadening one. The button beside it clears every active tag in one press.
+
+Two kinds of tag share the column. **Preset tags** are the thirteen categories the mod works out for you from the item itself, so a diamond pickaxe is in Tools without anybody filing it. They cannot be renamed, deleted, or assigned by hand, because they are computed rather than stored. See [ADR 0011](docs/adr/0011-preset-membership-is-computed.md) and [ADR 0023](docs/adr/0023-presets-are-seeded-not-stored.md).
+
+**Custom tags** are the ones you make, for the categories vanilla does not know about: a base build, a redstone project, the pile of things you owe the neighbours. They sit below the presets and carry a marker beside their name, so which tags are yours to edit reads without relying on colour.
+
+## Making and assigning tags
+
+Custom tags live on the terminal, in the `Tags` section of the settings tab, and they persist across a power cut and a world reload like every other network setting. `+ New tag` names one. Clicking a tag renames it, and the bin beside it deletes it, which asks once before it does, since deleting a tag unfiles everything that was in it.
+
+A name has to be something the query language can address: not empty, at most 32 characters, letters, digits, spaces, dashes and underscores only, not already taken on this network, and not the name of a preset. A refused name says which of those it broke rather than failing quietly. Renaming moves the tag's id along with its name, so `#castle` finds the tag called Castle the moment you rename it, and the items it held come with it. See [ADR 0033](docs/adr/0033-renaming-a-tag-moves-its-id.md).
+
+Ctrl-click any cell in the grid to file that item. The panel lists your custom tags with the ones the item already carries ticked, and clicking one files or unfiles it immediately. Tags apply by item identifier, so filing a pickaxe files every pickaxe, damaged or not.
+
+Filing a large storage area one item at a time is not a plan, so **shift-clicking a tag in that panel files everything the grid is currently showing**. Narrow with the search box or the other tags first, and the panel tells you how many items that is before you do it. That is what makes tagging an existing base something you finish rather than abandon.
+
+Making, renaming, deleting and assigning all need the same permission as any other network setting: the terminal's owner, or an operator. Someone who can merely open the terminal can filter by your tags but cannot restructure them, and that is enforced on the server rather than by hiding the controls, so a modified client cannot rename a tag on a network it does not own.
+
 ## Taking things out
 
 Click a cell and the item comes to you. Left click takes a stack, right click takes half, shift and left click sends it straight to your inventory, and middle click asks how much when the amount you want is not one a gesture can express.

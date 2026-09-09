@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.grahambartley.toomanychests.filter.TagCombinationMode;
 import com.grahambartley.toomanychests.listing.ListingWindow;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -17,49 +19,91 @@ class ListingCriteriaTest {
 
   @Test
   void aScreenThatHasAskedForNothingWantsTheFirstThingItIsAbout() {
-    assertTrue(criteria.needsRequest(FIRST_PAGE, ""));
+    assertTrue(criteria.needsRequest(FIRST_PAGE, "", Set.of(), TagCombinationMode.DEFAULT));
   }
 
   @Test
   void theSamePageUnderTheSameQueryIsNotAskedForTwice() {
-    criteria.requested(FIRST_PAGE, "chest");
+    criteria.requested(FIRST_PAGE, "chest", Set.of(), TagCombinationMode.DEFAULT);
 
-    assertFalse(criteria.needsRequest(FIRST_PAGE, "chest"));
+    assertFalse(criteria.needsRequest(FIRST_PAGE, "chest", Set.of(), TagCombinationMode.DEFAULT));
     assertFalse(criteria.isNewQuery("chest"));
   }
 
   @ParameterizedTest
   @CsvSource({"chest,ches", "chest,chests", "chest,''", "'',chest"})
   void aChangedQueryIsBothANewQueryAndANewRequest(String asked, String wanted) {
-    criteria.requested(FIRST_PAGE, asked);
+    criteria.requested(FIRST_PAGE, asked, Set.of(), TagCombinationMode.DEFAULT);
 
     assertTrue(criteria.isNewQuery(wanted));
-    assertTrue(criteria.needsRequest(FIRST_PAGE, wanted));
+    assertTrue(criteria.needsRequest(FIRST_PAGE, wanted, Set.of(), TagCombinationMode.DEFAULT));
   }
 
   @Test
   void scrollingIsANewRequestWithoutBeingANewQuery() {
-    criteria.requested(FIRST_PAGE, "chest");
+    criteria.requested(FIRST_PAGE, "chest", Set.of(), TagCombinationMode.DEFAULT);
 
     assertFalse(criteria.isNewQuery("chest"));
-    assertTrue(criteria.needsRequest(SECOND_PAGE, "chest"));
+    assertTrue(criteria.needsRequest(SECOND_PAGE, "chest", Set.of(), TagCombinationMode.DEFAULT));
   }
 
   @Test
   void whatWasAskedForIsWhatIsSent() {
-    criteria.requested(SECOND_PAGE, "iron");
+    criteria.requested(SECOND_PAGE, "iron", Set.of(), TagCombinationMode.DEFAULT);
 
     assertEquals(SECOND_PAGE, criteria.window());
     assertEquals("iron", criteria.search());
   }
 
   @Test
+  void turningATagOnIsANewQuestionEvenOnTheSamePage() {
+    criteria.requested(FIRST_PAGE, "chest", Set.of(), TagCombinationMode.DEFAULT);
+
+    assertTrue(criteria.isNewFilter(Set.of("wood"), TagCombinationMode.DEFAULT));
+    assertTrue(
+        criteria.needsRequest(FIRST_PAGE, "chest", Set.of("wood"), TagCombinationMode.DEFAULT));
+  }
+
+  @Test
+  void changingHowTagsCombineIsANewQuestion() {
+    criteria.requested(FIRST_PAGE, "", Set.of("wood"), TagCombinationMode.AND);
+
+    assertTrue(criteria.isNewFilter(Set.of("wood"), TagCombinationMode.OR));
+    assertTrue(criteria.needsRequest(FIRST_PAGE, "", Set.of("wood"), TagCombinationMode.OR));
+  }
+
+  @Test
+  void theSameTagsInAnotherOrderOrCaseAreNotANewQuestion() {
+    criteria.requested(FIRST_PAGE, "", Set.of("wood", "stone"), TagCombinationMode.AND);
+
+    assertFalse(criteria.isNewFilter(Set.of("STONE", "Wood"), TagCombinationMode.AND));
+    assertFalse(
+        criteria.needsRequest(FIRST_PAGE, "", Set.of("stone", "wood"), TagCombinationMode.AND));
+  }
+
+  @Test
+  void whatWasFilteredOnIsWhatIsSent() {
+    criteria.requested(FIRST_PAGE, "", Set.of("Wood"), TagCombinationMode.OR);
+
+    assertEquals(Set.of("wood"), criteria.tags());
+    assertEquals(TagCombinationMode.OR, criteria.mode());
+  }
+
+  @Test
+  void noFilterAtAllDefaultsToNarrowingRatherThanNull() {
+    criteria.requested(FIRST_PAGE, "", null, null);
+
+    assertEquals(Set.of(), criteria.tags());
+    assertEquals(TagCombinationMode.DEFAULT, criteria.mode());
+  }
+
+  @Test
   void nothingAskedForIsAnEmptyQuestionRatherThanANullOne() {
-    criteria.requested(null, null);
+    criteria.requested(null, null, Set.of(), TagCombinationMode.DEFAULT);
 
     assertEquals(ListingWindow.EMPTY, criteria.window());
     assertEquals("", criteria.search());
     assertFalse(criteria.isNewQuery(null));
-    assertFalse(criteria.needsRequest(null, null));
+    assertFalse(criteria.needsRequest(null, null, Set.of(), TagCombinationMode.DEFAULT));
   }
 }

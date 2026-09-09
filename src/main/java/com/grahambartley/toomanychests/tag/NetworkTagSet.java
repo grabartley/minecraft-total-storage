@@ -14,6 +14,8 @@ import java.util.TreeMap;
 import java.util.function.UnaryOperator;
 
 public record NetworkTagSet(List<NetworkTag> all) {
+  public static final int MAX_CUSTOM = 64;
+
   private static final NetworkTagSet DEFAULTS = new NetworkTagSet(List.of());
 
   public NetworkTagSet {
@@ -69,6 +71,18 @@ public record NetworkTagSet(List<NetworkTag> all) {
     }
     final List<NetworkTag> next = new ArrayList<>(custom());
     next.removeIf(existing -> existing.id().equals(key));
+    return new NetworkTagSet(next);
+  }
+
+  public NetworkTagSet withRenamedTag(String tagId, String newName) {
+    final String key = FilterText.normalise(tagId);
+    final NetworkTag existing = byId(key).filter(tag -> !tag.immutable()).orElse(null);
+    if (existing == null || !TagNameRule.check(newName, this, key).isAccepted()) {
+      return this;
+    }
+    final List<NetworkTag> next = new ArrayList<>(custom());
+    next.removeIf(tag -> tag.id().equals(key));
+    next.add(NetworkTag.custom(TagNameRule.idFor(newName), newName.trim(), existing.items()));
     return new NetworkTagSet(next);
   }
 

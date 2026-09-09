@@ -173,6 +173,90 @@ public final class TerminalListingServiceGameTest implements FabricGameTest {
     finish(context, player);
   }
 
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void aCustomTagNarrowsTheNetworkToTheItemsFiledUnderIt(TestContext context) {
+    ServerPlayerEntity player = openTerminalStockedWith(context, Items.DIAMOND, Items.COBBLESTONE);
+    TerminalScreenHandler handler = handlerOf(player);
+    fileUnderCustomTag(context, "castle", "minecraft:cobblestone");
+
+    requestFiltered(player, handler, TagCombinationMode.AND, Set.of("castle"));
+
+    context.assertTrue(
+        itemsOf(listings.pageFor(player, handler)).equals(List.of(Items.COBBLESTONE)),
+        "A custom tag should narrow the network to what was filed under it, got "
+            + itemsOf(listings.pageFor(player, handler)));
+    finish(context, player);
+  }
+
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void twoTagsNarrowTogetherAndBroadenApart(TestContext context) {
+    ServerPlayerEntity player = openTerminalStockedWith(context, Items.DIAMOND, Items.COBBLESTONE);
+    TerminalScreenHandler handler = handlerOf(player);
+    fileUnderCustomTag(context, "castle", "minecraft:cobblestone");
+    fileUnderCustomTag(context, "shiny", "minecraft:diamond");
+
+    requestFiltered(player, handler, TagCombinationMode.AND, Set.of("castle", "shiny"));
+    context.assertTrue(
+        listings.pageFor(player, handler).rows().isEmpty(),
+        "Nothing carries both tags, so narrowing should find nothing");
+
+    requestFiltered(player, handler, TagCombinationMode.OR, Set.of("castle", "shiny"));
+    context.assertTrue(
+        itemsOf(listings.pageFor(player, handler)).size() == 2,
+        "Broadening should find everything either tag holds");
+    finish(context, player);
+  }
+
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void aTagAndSomeTypedTextNarrowTogetherRatherThanOverriding(TestContext context) {
+    ServerPlayerEntity player =
+        openTerminalStockedWith(context, Items.DIAMOND, Items.COBBLESTONE, Items.COBBLESTONE_SLAB);
+    TerminalScreenHandler handler = handlerOf(player);
+    fileUnderCustomTag(context, "castle", "minecraft:cobblestone");
+    fileUnderCustomTag(context, "castle", "minecraft:diamond");
+
+    listings.request(
+        player,
+        new ListingRequestPayload(
+            handler.syncId, 0, 10, "cobblestone", TagCombinationMode.AND, Set.of("castle")));
+
+    context.assertTrue(
+        itemsOf(listings.pageFor(player, handler)).equals(List.of(Items.COBBLESTONE)),
+        "The search and the tag should both apply, got "
+            + itemsOf(listings.pageFor(player, handler)));
+    finish(context, player);
+  }
+
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void aTagNothingIsFiledUnderFindsNothingRatherThanEverything(TestContext context) {
+    ServerPlayerEntity player = openTerminalStockedWith(context, Items.DIAMOND);
+    TerminalScreenHandler handler = handlerOf(player);
+    fileUnderCustomTag(context, "castle", "minecraft:cobblestone");
+
+    requestFiltered(player, handler, TagCombinationMode.AND, Set.of("castle"));
+
+    context.assertTrue(
+        listings.pageFor(player, handler).rows().isEmpty(),
+        "A tag holding nothing here should match nothing");
+    finish(context, player);
+  }
+
+  private void requestFiltered(
+      ServerPlayerEntity player,
+      TerminalScreenHandler handler,
+      TagCombinationMode mode,
+      Set<String> tags) {
+    listings.request(player, new ListingRequestPayload(handler.syncId, 0, 10, "", mode, tags));
+  }
+
+  private static void fileUnderCustomTag(TestContext context, String tag, String itemId) {
+    context
+        .<TerminalBlockEntity>getBlockEntity(TERMINAL)
+        .updateSettings(
+            settings ->
+                settings.withTags(settings.tags().withCustomTag(tag).withItem(tag, itemId)));
+  }
+
   private void request(
       ServerPlayerEntity player,
       TerminalScreenHandler handler,

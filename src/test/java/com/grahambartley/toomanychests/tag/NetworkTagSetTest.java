@@ -151,4 +151,72 @@ class NetworkTagSetTest {
     assertFalse(mine.contains("crops"));
     assertEquals(Set.of(), base.tagIdsFor("minecraft:coal"));
   }
+
+  @Test
+  void renamingATagKeepsEveryItemItHeld() {
+    NetworkTagSet tags =
+        NetworkTagSet.defaults()
+            .withCustomTag("base build")
+            .withItem("base build", "minecraft:cobblestone")
+            .withItem("base build", "minecraft:oak_planks");
+
+    NetworkTagSet renamed = tags.withRenamedTag("base build", "Castle");
+
+    assertFalse(renamed.contains("base build"));
+    assertTrue(renamed.contains("castle"));
+    assertEquals(
+        Set.of("minecraft:cobblestone", "minecraft:oak_planks"),
+        renamed.byId("castle").orElseThrow().items());
+    assertEquals(Set.of("castle"), renamed.tagIdsFor("minecraft:cobblestone"));
+  }
+
+  @Test
+  void renamingATagKeepsTheNameAsItWasWritten() {
+    NetworkTagSet renamed =
+        NetworkTagSet.defaults().withCustomTag("castle").withRenamedTag("castle", "  The Keep  ");
+
+    assertEquals("The Keep", renamed.byId("the keep").orElseThrow().displayName());
+  }
+
+  @Test
+  void renamingATagOntoANameAlreadyTakenChangesNothing() {
+    NetworkTagSet tags = NetworkTagSet.defaults().withCustomTag("castle").withCustomTag("keep");
+
+    assertSame(tags, tags.withRenamedTag("castle", "keep"));
+  }
+
+  @Test
+  void renamingATagToAPresetNameChangesNothing() {
+    NetworkTagSet tags = NetworkTagSet.defaults().withCustomTag("castle");
+
+    assertSame(tags, tags.withRenamedTag("castle", PresetTag.WOOD.id()));
+  }
+
+  @Test
+  void renamingAPresetOrAnUnknownTagChangesNothing() {
+    NetworkTagSet tags = NetworkTagSet.defaults().withCustomTag("castle");
+
+    assertSame(tags, tags.withRenamedTag(PresetTag.WOOD.id(), "timber"));
+    assertSame(tags, tags.withRenamedTag("nonexistent", "castle keep"));
+  }
+
+  @Test
+  void renamingATagToABlankNameChangesNothing() {
+    NetworkTagSet tags = NetworkTagSet.defaults().withCustomTag("castle");
+
+    assertSame(tags, tags.withRenamedTag("castle", "   "));
+  }
+
+  @Test
+  void deletingATagTakesItOffEveryItemThatCarriedIt() {
+    NetworkTagSet tags =
+        NetworkTagSet.defaults()
+            .withCustomTag("castle")
+            .withItem("castle", "minecraft:cobblestone");
+
+    NetworkTagSet deleted = tags.withoutTag("castle");
+
+    assertFalse(deleted.contains("castle"));
+    assertEquals(Set.of(), deleted.tagIdsFor("minecraft:cobblestone"));
+  }
 }

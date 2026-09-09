@@ -249,7 +249,7 @@ class TerminalScreenLayoutTest {
   @Test
   void theToolbarIsGivenRoomWithoutUnbalancingTheWindow() {
     assertEquals(
-        TerminalScreenLayout.INSET_X,
+        TerminalScreenLayout.EDGE,
         TerminalScreenLayout.WINDOW_WIDTH
             - (TerminalScreenLayout.TOOLBAR_X + TerminalScreenLayout.BUTTON_SIZE));
   }

@@ -119,6 +119,9 @@ public final class TerminalSettingsPanel {
       int mouseX,
       int mouseY) {
     drawSectionTabs(context, textRenderer, originX, originY, mouseX, mouseY);
+    if (section == SettingsSection.TAGS) {
+      return;
+    }
     if (section == SettingsSection.TERMINAL) {
       drawTerminalSection(context, textRenderer, view, originX, originY, mouseX, mouseY);
       return;

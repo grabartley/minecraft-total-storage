@@ -1,33 +1,29 @@
 package com.grahambartley.toomanychests.screen;
 
-import com.grahambartley.toomanychests.filter.TagCombinationMode;
+import com.grahambartley.toomanychests.filter.FilterSelection;
 import com.grahambartley.toomanychests.listing.ListingRow;
 import com.grahambartley.toomanychests.listing.ListingStatus;
 import com.grahambartley.toomanychests.listing.ListingWindow;
 import com.grahambartley.toomanychests.listing.TerminalListingMirror;
 import com.grahambartley.toomanychests.network.DepositRequestPayload;
 import com.grahambartley.toomanychests.network.ModNetworkingClient;
-import com.grahambartley.toomanychests.operation.WithdrawAmount;
-import com.grahambartley.toomanychests.operation.WithdrawDestination;
+import com.grahambartley.toomanychests.screenhandler.FilterColumnLayout;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenHandler;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
 import com.grahambartley.toomanychests.screenhandler.TerminalSettingsLayout;
-import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
+import com.grahambartley.toomanychests.terminal.NetworkTagEntry;
+import com.grahambartley.toomanychests.terminal.NetworkTagView;
 import com.grahambartley.toomanychests.terminal.TerminalAction;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
@@ -44,7 +40,12 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   private final TerminalItemsPanel items = new TerminalItemsPanel();
   private final TerminalSettingsPanel settings = new TerminalSettingsPanel();
-  private final WithdrawAmountPrompt prompt = new WithdrawAmountPrompt();
+  private final TerminalTagsPanel tagsPanel = new TerminalTagsPanel();
+  private final TerminalFilterColumn filters = new TerminalFilterColumn();
+  private final FilterSelection selection = new FilterSelection();
+
+  private final TerminalPrompts prompts;
+  private final TerminalSettingsClicks settingsClicks;
 
   private final ListingCriteria requested = new ListingCriteria();
 
@@ -55,6 +56,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   private TerminalIconButton highlight;
 
   private NetworkSettingsView settingsThisFrame = NetworkSettingsView.pending();
+  private NetworkTagView tagsThisFrame = NetworkTagView.pending();
 
   private ListingWindow requestedContainers = ListingWindow.EMPTY;
 
@@ -71,6 +73,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     this.titleY = TerminalScreenLayout.TITLE_Y;
     this.playerInventoryTitleX = TerminalScreenLayout.INVENTORY_LABEL_X;
     this.playerInventoryTitleY = TerminalScreenLayout.INVENTORY_LABEL_Y;
+    this.prompts = new TerminalPrompts(handler.syncId);
+    this.settingsClicks = new TerminalSettingsClicks(settings, tagsPanel, prompts.naming());
   }
 
   @Override
@@ -88,6 +92,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     }
     TerminalListingMirror.opened(handler.syncId);
     NetworkSettingsMirror.opened(handler.syncId);
+    NetworkTagMirror.opened(handler.syncId);
+    TerminalTagRequests.openPanel(handler.syncId);
     requestVisibleRows();
   }
 
@@ -108,17 +114,26 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     super.removed();
     TerminalListingMirror.closed();
     NetworkSettingsMirror.closed();
+    NetworkTagMirror.closed();
   }
 
   @Override
   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
     items.beginFrame(TerminalListingMirror.page());
     settingsThisFrame = NetworkSettingsMirror.view();
+    tagsThisFrame = NetworkTagMirror.view();
     settings.fit(settingsThisFrame);
-    if (requested.isNewQuery(search.text())) {
+    tagsPanel.fit(tagsThisFrame);
+    filters.fit(tagsThisFrame);
+    prompts.fit(tagsThisFrame);
+    selection.retainAll(knownTagIds());
+    if (requested.isNewQuery(search.text())
+        || requested.isNewFilter(selection.active(), selection.mode())) {
       items.scroll().scrollTo(0);
     }
-    if (!tab.isSettings() && requested.needsRequest(items.scroll().window(), search.text())) {
+    if (!tab.isSettings()
+        && requested.needsRequest(
+            items.scroll().window(), search.text(), selection.active(), selection.mode())) {
       requestVisibleRows();
     }
     if (tab.isSettings() && !settings.scroll().window().equals(requestedContainers)) {
@@ -127,26 +142,54 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     updateWidgets(items.page().status());
     updateHovered(mouseX, mouseY);
     super.render(context, mouseX, mouseY, delta);
-    if (prompt.isOpen()) {
-      prompt.draw(context, textRenderer, x, y);
+    if (prompts.draw(
+        context,
+        textRenderer,
+        tagsThisFrame,
+        items.page().totalMatching(),
+        x,
+        y,
+        hoveredWindowX,
+        hoveredWindowY)) {
       return;
     }
     drawMouseoverTooltip(context, mouseX, mouseY);
-    drawCellTooltip(context, mouseX, mouseY);
-    drawContainerTooltip(context, mouseX, mouseY);
-    drawTabTooltip(context, mouseX, mouseY);
-  }
-
-  private void drawTabTooltip(DrawContext context, int mouseX, int mouseY) {
-    if (hoveredTab != null) {
-      context.drawTooltip(textRenderer, TerminalScreenText.of(hoveredTab.label()), mouseX, mouseY);
+    TerminalTooltips.cell(
+        context,
+        textRenderer,
+        client,
+        hoveredCell == TerminalScreenLayout.NO_CELL ? null : items.rowAt(hoveredCell),
+        tagsThisFrame.mayAdminister(),
+        mouseX,
+        mouseY);
+    if (tab.isSettings()) {
+      TerminalTooltips.container(
+          context,
+          textRenderer,
+          settingsThisFrame,
+          settings,
+          hoveredWindowX,
+          hoveredWindowY,
+          mouseX,
+          mouseY);
+    } else {
+      TerminalTooltips.filterTag(
+          context,
+          textRenderer,
+          tagsThisFrame,
+          filters,
+          hoveredWindowX,
+          hoveredWindowY,
+          mouseX,
+          mouseY);
     }
+    TerminalTooltips.tab(context, textRenderer, hoveredTab, mouseX, mouseY);
   }
 
   private void updateHovered(int mouseX, int mouseY) {
     final int windowX = windowX(mouseX);
     final int windowY = windowY(mouseY);
-    if (prompt.isOpen()) {
+    if (prompts.ownsTheKeyboard()) {
       hoveredTab = null;
       hoveredCell = TerminalScreenLayout.NO_CELL;
       hoveredWindowX = Integer.MIN_VALUE;
@@ -214,15 +257,20 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     super.drawForeground(context, mouseX, mouseY);
     if (tab.isSettings()) {
       settings.draw(context, textRenderer, settingsThisFrame, 0, 0, hoveredWindowX, hoveredWindowY);
+      if (settings.section() == SettingsSection.TAGS) {
+        tagsPanel.draw(context, textRenderer, tagsThisFrame, 0, 0, hoveredWindowX, hoveredWindowY);
+      }
       return;
     }
+    filters.draw(
+        context, textRenderer, tagsThisFrame, selection, 0, 0, hoveredWindowX, hoveredWindowY);
     items.drawRows(context, textRenderer);
   }
 
   @Override
   public boolean mouseScrolled(
       double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-    if (prompt.isOpen()) {
+    if (prompts.scrolled(verticalAmount)) {
       return true;
     }
     if (verticalAmount == 0.0) {
@@ -230,6 +278,15 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     }
     final int notches = verticalAmount > 0.0 ? -1 : 1;
     if (tab.isSettings()) {
+      if (settings.section() == SettingsSection.TAGS) {
+        if (tagsPanel.scroll().overflows()
+            && TerminalSettingsLayout.rowAt(windowX(mouseX), windowY(mouseY))
+                != TerminalSettingsLayout.NO_ROW) {
+          tagsPanel.scroll().scrollBy(notches);
+          return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+      }
       if (settings.scrolls()
           && settings.scroll().overflows()
           && (TerminalSettingsLayout.rowAt(windowX(mouseX), windowY(mouseY))
@@ -239,6 +296,11 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
         return true;
       }
       return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+    }
+    if (filters.scroll().overflows()
+        && FilterColumnLayout.isOverColumn(windowX(mouseX), windowY(mouseY))) {
+      filters.scroll().scrollBy(notches);
+      return true;
     }
     if (items.scroll().overflows()
         && TerminalScreenLayout.isOverListing(windowX(mouseX), windowY(mouseY))) {
@@ -250,12 +312,11 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   @Override
   public boolean mouseClicked(double mouseX, double mouseY, int button) {
-    if (prompt.isOpen()) {
-      prompt.close();
-      return true;
-    }
     final int windowX = windowX(mouseX);
     final int windowY = windowY(mouseY);
+    if (prompts.isAnyOpen()) {
+      return prompts.mouseClicked(tagsThisFrame, hasShiftDown(), windowX, windowY, button);
+    }
     final TerminalTab clicked = TerminalTab.at(windowX, windowY);
     if (clicked != null) {
       showTab(clicked);
@@ -267,8 +328,28 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
           && settings.grabScrollbar(windowY)) {
         return true;
       }
-      return handleSettingsClick(windowX, windowY, button)
-          || super.mouseClicked(mouseX, mouseY, button);
+      final SettingsSection clickedSection = SettingsSection.at(windowX, windowY);
+      if (clickedSection != null) {
+        showSection(clickedSection);
+        return true;
+      }
+      final SettingsSection before = settings.section();
+      final boolean handled =
+          settingsClicks.handle(
+              handler.syncId, settingsThisFrame, tagsThisFrame, windowX, windowY, button);
+      if (settings.section() != before) {
+        tagsPanel.disarm();
+      }
+      return handled || super.mouseClicked(mouseX, mouseY, button);
+    }
+    final FilterColumnClick filtered =
+        filters.click(tagsThisFrame, selection, windowX, windowY, button);
+    if (filtered.changedFilter()) {
+      requestVisibleRows();
+      return true;
+    }
+    if (filtered.isHandled()) {
+      return true;
     }
     if (button == GridClick.LEFT_BUTTON && TerminalScreenLayout.isOverSearch(windowX, windowY)) {
       setFocused(search.widget());
@@ -301,93 +382,43 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     requestVisibleRows();
   }
 
+  private void showSection(SettingsSection shown) {
+    if (settings.section() == shown) {
+      return;
+    }
+    tagsPanel.disarm();
+    settings.show(shown);
+    if (shown == SettingsSection.TAGS) {
+      stopAskingForContainers();
+      return;
+    }
+    requestVisibleContainers();
+  }
+
   private boolean handleGridClick(int windowX, int windowY, int button) {
     final int cell = TerminalScreenLayout.cellAt(windowX, windowY);
     if (cell == TerminalScreenLayout.NO_CELL) {
       return false;
     }
     final ListingRow<ItemVariant> row = items.page().status().hasRows() ? items.rowAt(cell) : null;
+    if (row != null
+        && button == GridClick.LEFT_BUTTON
+        && hasControlDown()
+        && tagsThisFrame.mayAdminister()) {
+      prompts.openTagging(row.variant());
+      return true;
+    }
     final GridAction action =
         GridClick.of(button, hasShiftDown(), !handler.getCursorStack().isEmpty(), row != null);
     if (action == GridAction.NONE) {
       return false;
     }
     if (action == GridAction.PROMPT_FOR_AMOUNT) {
-      prompt.open(row.variant(), promptCeiling(row));
+      prompts.openAmount(row);
       return true;
     }
     TerminalGridRequests.send(action, handler.syncId, row == null ? null : row.variant());
     return true;
-  }
-
-  private boolean handleSettingsClick(int windowX, int windowY, int button) {
-    final SettingsSection clicked = SettingsSection.at(windowX, windowY);
-    if (clicked != null) {
-      showSection(clicked);
-      return true;
-    }
-    final boolean mayAdminister = settingsThisFrame.mayAdminister();
-    if (settings.section() == SettingsSection.TERMINAL) {
-      final SettingsControl control = SettingsControl.at(windowX, windowY);
-      if (control.isSomething()) {
-        if (mayAdminister && button == GridClick.LEFT_BUTTON) {
-          stepRadius(control);
-        }
-        return true;
-      }
-      return handleSettingClick(windowX, windowY, button, mayAdminister);
-    }
-    return handleContainerClick(windowX, windowY, button, mayAdminister);
-  }
-
-  private boolean handleSettingClick(int windowX, int windowY, int button, boolean mayAdminister) {
-    final TerminalSetting setting = settings.settingAt(windowX, windowY);
-    final SettingsAction action =
-        SettingsClick.of(button, setting != null && setting.cyclesOnRowClick(), mayAdminister);
-    if (action == SettingsAction.NONE) {
-      return setting != null;
-    }
-    if (action != SettingsAction.REFUSED) {
-      ModNetworkingClient.sendAccessEdit(
-          handler.syncId,
-          action == SettingsAction.CYCLE_BACK
-              ? AccessModeCycle.previous(settingsThisFrame.accessMode())
-              : AccessModeCycle.next(settingsThisFrame.accessMode()));
-    }
-    return true;
-  }
-
-  private boolean handleContainerClick(
-      int windowX, int windowY, int button, boolean mayAdminister) {
-    final int index = settings.containerRowAt(windowX, windowY);
-    final ContainerRoleEntry entry =
-        index == TerminalSettingsLayout.NO_ROW ? null : settingsThisFrame.at(index);
-    final SettingsAction action = SettingsClick.of(button, entry != null, mayAdminister);
-    if (action == SettingsAction.NONE) {
-      return false;
-    }
-    if (action != SettingsAction.REFUSED) {
-      ModNetworkingClient.sendRoleEdit(
-          handler.syncId,
-          entry.container(),
-          action == SettingsAction.CYCLE_BACK
-              ? ContainerRoleCycle.previous(entry.role())
-              : ContainerRoleCycle.next(entry.role()));
-    }
-    return true;
-  }
-
-  private void showSection(SettingsSection shown) {
-    if (settings.section() != shown) {
-      settings.show(shown);
-      requestVisibleContainers();
-    }
-  }
-
-  private void stepRadius(SettingsControl control) {
-    ModNetworkingClient.sendRadiusEdit(
-        handler.syncId,
-        settingsThisFrame.radius() + (control == SettingsControl.RADIUS_UP ? 1 : -1));
   }
 
   @Override
@@ -406,8 +437,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   private void updateWidgets(ListingStatus status) {
     final boolean settingsShowing = tab.isSettings();
     depositAll.active = status != ListingStatus.OFFLINE;
-    depositAll.visible = !prompt.isOpen() && !settingsShowing;
-    rescan.visible = !prompt.isOpen() && settingsShowing;
+    depositAll.visible = !prompts.isAnyOpen() && !settingsShowing;
+    rescan.visible = !prompts.isAnyOpen() && settingsShowing;
     highlight.visible = rescan.visible;
     rescan.active = settingsThisFrame.powered() && settingsThisFrame.mayAdminister();
     highlight.active = settingsThisFrame.powered();
@@ -417,6 +448,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   private boolean isDepositAllKey(int keyCode, int scanCode) {
     return TerminalKeyBindings.isDepositAll(keyCode, scanCode)
         && !tab.isSettings()
+        && !prompts.isTagging()
         && !search.isFocused();
   }
 
@@ -428,22 +460,18 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     ModNetworkingClient.sendTerminalAction(handler.syncId, action);
   }
 
-  private static int promptCeiling(ListingRow<ItemVariant> row) {
-    return (int)
-        Math.min(
-            row.count(),
-            WithdrawAmount.ceilingFor(
-                row.variant().toStack().getMaxCount(), WithdrawDestination.INVENTORY));
-  }
-
   @Override
   public boolean mouseDragged(
       double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-    if (prompt.isOpen()) {
+    if (prompts.isAnyOpen()) {
       return true;
     }
     if (settings.isDraggingScrollbar()) {
       settings.dragScrollbarTo(windowY(mouseY));
+      return true;
+    }
+    if (filters.isDraggingScrollbar()) {
+      filters.dragScrollbarTo(windowY(mouseY));
       return true;
     }
     if (items.scrollbar().isDragging()) {
@@ -455,8 +483,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   @Override
   public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-    if (prompt.isOpen()) {
-      return handlePromptKey(prompt.keyPressed(keyCode));
+    if (prompts.keyPressed(keyCode)) {
+      return true;
     }
     if (isDepositAllKey(keyCode, scanCode)) {
       depositEverything();
@@ -481,27 +509,20 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   @Override
   public boolean charTyped(char typed, int modifiers) {
-    if (prompt.isOpen()) {
-      return handlePromptKey(prompt.charTyped(typed));
+    if (prompts.charTyped(typed)) {
+      return true;
     }
     return !tab.isSettings() && super.charTyped(typed, modifiers);
-  }
-
-  private boolean handlePromptKey(PromptKey outcome) {
-    if (outcome == PromptKey.CONFIRM) {
-      ModNetworkingClient.sendWithdrawRequest(
-          handler.syncId, prompt.variant(), prompt.amount(), WithdrawDestination.INVENTORY);
-    }
-    if (outcome == PromptKey.CONFIRM || outcome == PromptKey.CANCEL) {
-      prompt.close();
-    }
-    return true;
   }
 
   @Override
   public boolean mouseReleased(double mouseX, double mouseY, int button) {
     if (button == GridClick.LEFT_BUTTON && settings.isDraggingScrollbar()) {
       settings.releaseScrollbar();
+      return true;
+    }
+    if (button == GridClick.LEFT_BUTTON && filters.isDraggingScrollbar()) {
+      filters.releaseScrollbar();
       return true;
     }
     if (button == GridClick.LEFT_BUTTON && items.scrollbar().isDragging()) {
@@ -512,13 +533,18 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   }
 
   private void requestVisibleRows() {
-    requested.requested(items.scroll().window(), search.text());
+    requested.requested(
+        items.scroll().window(), search.text(), selection.active(), selection.mode());
     ModNetworkingClient.sendListingRequest(
-        handler.syncId,
-        requested.window(),
-        requested.search(),
-        TagCombinationMode.DEFAULT,
-        Set.of());
+        handler.syncId, requested.window(), requested.search(), requested.mode(), requested.tags());
+  }
+
+  private Set<String> knownTagIds() {
+    final Set<String> known = new HashSet<>();
+    for (final NetworkTagEntry tag : tagsThisFrame.tags()) {
+      known.add(tag.id());
+    }
+    return known;
   }
 
   private void requestVisibleContainers() {
@@ -530,35 +556,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   private void stopAskingForContainers() {
     requestedContainers = ListingWindow.EMPTY;
     ModNetworkingClient.sendSettingsRequest(handler.syncId, 0, 0);
-  }
-
-  private void drawContainerTooltip(DrawContext context, int mouseX, int mouseY) {
-    if (!tab.isSettings()) {
-      return;
-    }
-    final int index = settings.containerRowAt(hoveredWindowX, hoveredWindowY);
-    final ContainerRoleEntry entry =
-        index == TerminalSettingsLayout.NO_ROW ? null : settingsThisFrame.at(index);
-    if (entry == null) {
-      return;
-    }
-    final List<Text> lines = new ArrayList<>();
-    lines.add(ContainerRowText.position(entry));
-    if (settingsThisFrame.mayAdminister()) {
-      lines.add(TerminalScreenText.of("settings.role.hint").formatted(Formatting.GRAY));
-    }
-    context.drawTooltip(textRenderer, lines, mouseX, mouseY);
-  }
-
-  private void drawCellTooltip(DrawContext context, int mouseX, int mouseY) {
-    if (hoveredCell == TerminalScreenLayout.NO_CELL) {
-      return;
-    }
-    final ListingRow<ItemVariant> row = items.rowAt(hoveredCell);
-    final ItemStack stack = row.variant().toStack();
-    final List<Text> lines = new ArrayList<>(Screen.getTooltipFromItem(client, stack));
-    lines.addAll(ListingTooltip.extraLines(row));
-    context.drawTooltip(textRenderer, lines, mouseX, mouseY);
   }
 
   private int windowX(double mouseX) {
