@@ -8,12 +8,6 @@ import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 
-/**
- * Somewhere items live, independent of what kind of block or item holds them.
- *
- * <p>Cheap and short-lived. The wrapped storage must not be held across ticks without being
- * re-resolved, because whatever backs it may be gone.
- */
 public record StorageProvider(
     StorageOrigin origin, Storage<ItemVariant> storage, ContainerRole role) {
   public StorageProvider {
@@ -30,14 +24,12 @@ public record StorageProvider(
     return storage instanceof SlottedStorage;
   }
 
-  /** Empty when the backing storage exposes no slots, which third-party storages need not do. */
   public OptionalInt slotCount() {
     return storage instanceof SlottedStorage<ItemVariant> slotted
         ? OptionalInt.of(slotted.getSlotCount())
         : OptionalInt.empty();
   }
 
-  /** Empty when the backing storage exposes no slots, or the index is out of bounds. */
   public Optional<SingleSlotStorage<ItemVariant>> slot(int index) {
     if (!(storage instanceof SlottedStorage<ItemVariant> slotted)) {
       return Optional.empty();

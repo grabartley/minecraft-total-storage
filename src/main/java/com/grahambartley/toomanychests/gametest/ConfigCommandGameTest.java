@@ -16,21 +16,6 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.Identifier;
 
-/**
- * Proves the command tree configures a server from a console with no player involved, and that the
- * gate on its mutating branches holds.
- *
- * <p>Every command here runs from {@link MinecraftServer#getCommandSource()}, which is the console
- * a server owner types into over SSH, so passing is evidence that headless configuration works
- * rather than only that the handlers do.
- *
- * <p>Nothing below can be a unit test: a Brigadier tree only exists once a server has built its
- * dispatcher, and a permission level only means anything against a real command source.
- *
- * <p>Shares the {@code server-config} batch with {@link ServerConfigServiceGameTest} and {@link
- * ConfigSyncGameTest} because all three move the one live configuration, and tests in a batch run
- * one at a time.
- */
 public final class ConfigCommandGameTest implements FabricGameTest {
   private static final String BATCH = "server-config";
   private static final int TICK_LIMIT = 20;
@@ -235,10 +220,6 @@ public final class ConfigCommandGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /**
-   * The alias parses into a redirected child context, so a suggestion provider reading the outer
-   * one finds no arguments and silently offers nothing. Only reachable through {@code /tmc}.
-   */
   @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void theAliasSuggestsValuesForTheSettingAlreadyNamed(TestContext context) {
     List<String> suggested = suggestionsFor(context, "tmc config set quickStackRadius ");
@@ -269,15 +250,10 @@ public final class ConfigCommandGameTest implements FabricGameTest {
     return run(context, server(context).getCommandSource(), command);
   }
 
-  /** A source with the permission level a plain connected player has, and nothing above it. */
   private static int runAsPlayer(TestContext context, String command) {
     return run(context, server(context).getCommandSource().withLevel(0), command);
   }
 
-  /**
-   * Brigadier refuses a gated branch during parsing rather than at execution, so a source without
-   * the permission gets a syntax error instead of a return code, and that refusal is the point.
-   */
   private static int run(TestContext context, ServerCommandSource source, String command) {
     try {
       return server(context).getCommandManager().getDispatcher().execute(command, source);

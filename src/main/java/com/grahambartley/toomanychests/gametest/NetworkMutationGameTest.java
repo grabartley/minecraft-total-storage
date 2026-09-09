@@ -15,21 +15,11 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 
-/**
- * The contract every mutating path in the mod runs through: watch, run, tell, and always stop
- * watching.
- *
- * <p>Only the last of those can fail quietly. A witness left registered keeps hearing about
- * containers for the rest of the server's life and keeps the operation that opened it alive with
- * them, and nothing about the operation's own result would say so. Both endings are checked for it,
- * including the one the runner produces on its own when an operation throws.
- */
 public final class NetworkMutationGameTest implements FabricGameTest {
   private static final String BATCH = "network-mutation";
   private static final int TICK_LIMIT = 60;
   private static final int STACK = 64;
 
-  /** A committed operation still leaves the registry exactly as it found it. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -62,10 +52,6 @@ public final class NetworkMutationGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * An operation that threw is rolled back by the runner rather than propagating, so the fan-out
-   * still runs afterwards and the witness still has to come off the registry.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -88,7 +74,6 @@ public final class NetworkMutationGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** An operation that rolled back on its own terms leaves the registry alone as well. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,

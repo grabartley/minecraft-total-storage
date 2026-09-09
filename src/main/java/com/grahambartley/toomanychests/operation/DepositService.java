@@ -20,21 +20,6 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 
-/**
- * Puts items into a network, and is the only path a client request may take.
- *
- * <p>What is deposited is read from the player's own inventory at the moment of the move rather
- * than taken from the request, so a client cannot claim to be handing over something it does not
- * hold. Where each item lands is {@link DepositRouting}'s decision, evaluated per variant against
- * live containers.
- *
- * <p>Locked slots are never a source. They are absent from {@link PlayerSlots} rather than filtered
- * out later, so a forged deposit-all naming one has nothing to name: the server builds the eligible
- * set itself and the payload carries no slots at all. Armour and the offhand fall out with them.
- *
- * <p>Nothing is ever dropped. Every move inserts before it extracts, so an item the network will
- * not take stays exactly where it was and is reported rather than lost.
- */
 public final class DepositService {
   private final DepositDestinations destinations;
 
@@ -58,14 +43,6 @@ public final class DepositService {
     return report(player, take(context, payload));
   }
 
-  /**
-   * The player's whole inventory, minus everything a lock, a role, or the operator's hotbar setting
-   * puts out of reach.
-   *
-   * <p>Rate limited, because it is the one gesture that reads every container in the network at
-   * once. The limit is spent only once the request has proven itself real: a packet naming a screen
-   * the sender never opened is refused before it can put a legitimate click on cooldown.
-   */
   public DepositOutcome depositAll(ServerPlayerEntity player, int syncId) {
     final TerminalOperationContext context =
         TerminalOperationGate.open(player, syncId).orElse(null);
@@ -83,11 +60,6 @@ public final class DepositService {
             ItemStackLimits.MAX_STACK_SIZE));
   }
 
-  /**
-   * Moves what the given slots hold, up to {@code perSlot} from each, in one transaction. Storing
-   * some of it is a success: the rest stays in the player's inventory and is reported, which is
-   * what stops a network filling up from becoming a refusal to store anything at all.
-   */
   private DepositOutcome give(
       TerminalOperationContext context,
       List<? extends SingleSlotStorage<ItemVariant>> sources,
@@ -106,13 +78,6 @@ public final class DepositService {
     return DepositOutcome.stored(offered, stored.moved(), stored.leftovers());
   }
 
-  /**
-   * What every offer holds, for the case where the network took none of it.
-   *
-   * <p>Gathered even though the no-space line does not read it. The outcome has to account for its
-   * whole shortfall, and a caller that wants to say which items were turned away has them without
-   * asking the inventory again.
-   */
   private static List<DepositLeftover> leftoversOf(List<Offer> offers) {
     final Map<ItemVariant, Long> byVariant = new LinkedHashMap<>();
     for (final Offer offer : offers) {
@@ -121,11 +86,6 @@ public final class DepositService {
     return listed(byVariant);
   }
 
-  /**
-   * Largest first, so a report that has to be shortened keeps the item a player most wants to hear
-   * about. Ties keep the order the inventory listed them in, so the same inventory reports the same
-   * way twice.
-   */
   private static List<DepositLeftover> listed(Map<ItemVariant, Long> byVariant) {
     return byVariant.entrySet().stream()
         .filter(entry -> entry.getValue() > 0L)
@@ -135,10 +95,6 @@ public final class DepositService {
         .toList();
   }
 
-  /**
-   * Routing is worked out for every variant at once, before anything moves, so emptying a full
-   * inventory reads the terminal and its containers once rather than once per kind of item.
-   */
   private OperationResult<Stored> store(
       TerminalOperationContext context, List<Offer> offers, TransactionContext transaction) {
     final Map<ItemVariant, List<Storage<ItemVariant>>> routed =
@@ -178,12 +134,6 @@ public final class DepositService {
     return List.copyOf(offers);
   }
 
-  /**
-   * A slot that is locked and a slot that does not exist are answered differently. The first is a
-   * lock doing its job and the player is told so; the second could only have come from a forged
-   * request, and telling its sender that a slot they invented is locked would be asserting
-   * something untrue about the player's inventory.
-   */
   private DepositOutcome take(TerminalOperationContext context, DepositRequestPayload payload) {
     if (payload.source() == DepositSource.CURSOR) {
       return give(context, List.of(new CursorStorage(context.handler())), payload.amount());
@@ -199,11 +149,6 @@ public final class DepositService {
         context, List.of(PlayerSlots.slotAt(context.player(), payload.slot())), payload.amount());
   }
 
-  /**
-   * A deposit that stored something says so with a sound rather than a line of text. Items leaving
-   * the inventory is the visible half, and a chime is what tells a player it landed somewhere
-   * without a message they have to read on every click.
-   */
   private static DepositOutcome report(ServerPlayerEntity player, DepositOutcome outcome) {
     if (player == null) {
       return outcome;
@@ -224,10 +169,8 @@ public final class DepositService {
     return outcome;
   }
 
-  /** One slot's worth of a deposit, read before the transaction so the total can be reported. */
   private record Offer(SingleSlotStorage<ItemVariant> source, ItemVariant variant, long amount) {}
 
-  /** What one transaction managed, and what it could not take, gathered per item. */
   private record Stored(long moved, List<DepositLeftover> leftovers) {
     static Stored nothing() {
       return new Stored(0L, List.of());

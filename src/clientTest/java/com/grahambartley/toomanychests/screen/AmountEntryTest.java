@@ -10,7 +10,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.lwjgl.glfw.GLFW;
 
 class AmountEntryTest {
-
   private static AmountEntry typing(int ceiling, String digits) {
     AmountEntry entry = new AmountEntry(ceiling);
     for (final char digit : digits.toCharArray()) {
@@ -43,7 +42,6 @@ class AmountEntryTest {
     assertEquals("", entry.text());
   }
 
-  /** A field that accepts a number it will then quietly shrink has lied about what will happen. */
   @Test
   void aDigitThatWouldPushTheNumberPastWhatExistsIsRefused() {
     AmountEntry entry = typing(64, "6");
@@ -97,7 +95,6 @@ class AmountEntryTest {
     assertEquals(PromptKey.CONFIRM, typing(500, "12").keyPressed(enterKey));
   }
 
-  /** The prompt is modal, so nothing behind it hears a key whatever the key turned out to mean. */
   @ParameterizedTest
   @ValueSource(
       ints = {GLFW.GLFW_KEY_TAB, GLFW.GLFW_KEY_LEFT, GLFW.GLFW_KEY_F3, GLFW.GLFW_KEY_BACKSPACE})
@@ -118,7 +115,6 @@ class AmountEntryTest {
     assertEquals("", letter.text());
   }
 
-  /** Swallowing a key and acting on it are different things, and both have to happen. */
   @Test
   void aSwallowedKeyStillReachesTheNumber() {
     AmountEntry entry = typing(500, "12");
@@ -128,7 +124,6 @@ class AmountEntryTest {
     assertEquals("1", entry.text());
   }
 
-  /** A leading zero leaves the number where it was, so it is not an edit. */
   @Test
   void aDigitThatLeavesTheNumberUnchangedIsNotAnEdit() {
     assertFalse(new AmountEntry(500).append('0'));

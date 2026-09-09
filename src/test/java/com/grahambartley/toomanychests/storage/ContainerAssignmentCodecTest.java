@@ -69,7 +69,6 @@ class ContainerAssignmentCodecTest {
     assertEquals(1, decode(tampered).size());
   }
 
-  /** The shape older builds wrote, before a filtered container had anything to store. */
   @Test
   void aSaveWrittenBeforeFiltersExistedStillReadsItsRoles() {
     JsonObject legacy = new JsonObject();

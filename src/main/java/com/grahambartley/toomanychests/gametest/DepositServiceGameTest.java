@@ -22,33 +22,18 @@ import net.minecraft.test.BeforeBatch;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 
-/**
- * Putting items into a network, against real containers.
- *
- * <p>The routing order is exhausted in JUnit against plain data. What only a world can show is that
- * the roles a terminal really holds reach that decision, that the stack really leaves the player's
- * hands, and that the promises made when it cannot are kept: nothing on the floor, locked slots
- * untouched, and a full network leaving the inventory exactly as it was.
- */
 public final class DepositServiceGameTest implements FabricGameTest {
   private static final String BATCH = "terminal-deposit";
 
   private static final int TICK_LIMIT = 60;
   private static final int STACK = 64;
 
-  /** Armour and the offhand sit above the lockable range and are never deposited. */
   private static final int HELMET_SLOT = 39;
 
   private static final int OFFHAND_SLOT = 40;
 
   private final DepositService deposits = new DepositService();
 
-  /**
-   * Cooldowns are JVM-global, so one left over from an earlier batch would refuse a deposit here
-   * for a reason that has nothing to do with what is being tested. Within this batch the tests
-   * overlap but each uses its own player, so they do not put each other on cooldown. Anything that
-   * changes the cooldown setting itself lives in {@code OperationGuardsGameTest}, a batch per test.
-   */
   @BeforeBatch(batchId = BATCH)
   public void clearCooldowns(ServerWorld world) {
     OperationGuards.cooldowns().clear();
@@ -132,10 +117,6 @@ public final class DepositServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * The headline gesture. ADR 0010 and the locking epic make the exclusions the point of it: a
-   * deposit all that emptied a locked slot would make every lock in the mod worthless.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -169,7 +150,6 @@ public final class DepositServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** A forged deposit all cannot name a locked slot, because the payload names no slots at all. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -194,7 +174,6 @@ public final class DepositServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** ADR 0004: an excluded container is never written to, under any configuration. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -224,7 +203,6 @@ public final class DepositServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** A container that has declared what it accepts has already said where those items belong. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -254,7 +232,6 @@ public final class DepositServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** #54: a full filtered container falls through rather than rejecting an item outright. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -309,7 +286,6 @@ public final class DepositServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** What fits is stored, what does not stays with the player, and the world keeps its total. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -361,11 +337,6 @@ public final class DepositServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * A forged index is refused rather than clamped onto a real slot. Armour and the offhand are
-   * named by their own inventory indices here, because those are the ones a client would reach for
-   * if the range check were the only thing keeping them out.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -399,7 +370,6 @@ public final class DepositServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** Per ADR 0009 a request naming another screen reaches no network at all. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,

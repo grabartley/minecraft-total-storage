@@ -14,15 +14,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 
-/**
- * The one door every request to move items through a terminal comes in by.
- *
- * <p>Per ADR 0009 nothing a client sends is trusted, so what is proven here is what the gate
- * refuses: a sync id naming another screen, a player with no terminal open, a terminal that has
- * lost power, and a player whose access was taken away while they were looking at it. Each of those
- * is a way a modified client, or an ordinary one that has simply fallen behind, reaches a network
- * it should not.
- */
 public final class TerminalOperationGateGameTest implements FabricGameTest {
   private static final String BATCH = "terminal-operation-gate";
   private static final int TICK_LIMIT = 60;
@@ -48,7 +39,6 @@ public final class TerminalOperationGateGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** ADR 0009: the sync id is checked against the screen the server holds, never trusted. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -82,10 +72,6 @@ public final class TerminalOperationGateGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * A terminal losing power under an open screen has to refuse the next click rather than the next
-   * time the screen is redrawn, or a player keeps operating a network that is no longer running.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -105,10 +91,6 @@ public final class TerminalOperationGateGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * ADR 0008 makes permission a per-operation check rather than a per-screen one, so a trust list
-   * edited while a screen is up binds the very next click.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,

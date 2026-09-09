@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-/** Stands in for live containers, recording every read so laziness can be measured. */
 final class FakeContainers implements Function<StorageOrigin, Map<String, Long>> {
   private final Map<StorageOrigin, Map<String, Long>> held = new LinkedHashMap<>();
   private final List<StorageOrigin> reads = new ArrayList<>();

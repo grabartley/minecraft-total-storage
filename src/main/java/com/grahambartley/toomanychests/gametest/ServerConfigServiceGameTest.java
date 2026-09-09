@@ -15,10 +15,6 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.WorldSavePath;
 
-/**
- * Proves the config reaches the world that owns it. Only a running server resolves a real save
- * directory, so the wiring between the save session and the config file cannot be checked off-game.
- */
 public final class ServerConfigServiceGameTest implements FabricGameTest {
   private static final String BATCH = "server-config";
   private static final int TICK_LIMIT = 20;

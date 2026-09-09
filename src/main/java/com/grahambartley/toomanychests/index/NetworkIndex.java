@@ -6,15 +6,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * The aggregated view of everything a terminal can reach: one row per variant, already ordered.
- *
- * <p>Immutable and read-only. Every write goes through the transaction layer against the live
- * containers, never through here, so an index can be handed around and read from freely. It is a
- * snapshot, so an index outlives the truth it describes and callers revalidate before acting.
- *
- * @param <V> the variant type, {@code ItemVariant} in production
- */
 public final class NetworkIndex<V> {
   private static final NetworkIndex<?> EMPTY = new NetworkIndex<>(List.of());
 
@@ -40,7 +31,6 @@ public final class NetworkIndex<V> {
     return (NetworkIndex<V>) EMPTY;
   }
 
-  /** Every row, in the order the index was built with. */
   public List<NetworkIndexEntry<V>> entries() {
     return entries;
   }
@@ -49,7 +39,6 @@ public final class NetworkIndex<V> {
     return variant == null ? Optional.empty() : Optional.ofNullable(byVariant.get(variant));
   }
 
-  /** How much of a variant the network holds, zero when it holds none. */
   public long countOf(V variant) {
     return entry(variant).map(NetworkIndexEntry::totalCount).orElse(0L);
   }
@@ -58,7 +47,6 @@ public final class NetworkIndex<V> {
     return variant != null && byVariant.containsKey(variant);
   }
 
-  /** Distinct variants, which is the number of cells the terminal grid draws. */
   public int variantCount() {
     return entries.size();
   }

@@ -32,10 +32,6 @@ class SettingsClickTest {
     assertEquals(SettingsAction.NONE, SettingsClick.of(button, OVER_NOTHING, MAY));
   }
 
-  /**
-   * A refused click is still a click on the panel. Reporting it as nothing would let it fall
-   * through to whatever sits underneath, which for a container row is the player's own inventory.
-   */
   @ParameterizedTest
   @ValueSource(ints = {GridClick.LEFT_BUTTON, GridClick.RIGHT_BUTTON})
   void aPlayerWhoMayNotChangeAnythingStillSwallowsTheClick(int button) {

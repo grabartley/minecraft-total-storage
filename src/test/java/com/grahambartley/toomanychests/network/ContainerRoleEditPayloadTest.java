@@ -12,7 +12,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 class ContainerRoleEditPayloadTest {
-
   @ParameterizedTest
   @EnumSource(ContainerRole.class)
   void everyRoleReachesTheContainerItNames(ContainerRole role) {
@@ -39,9 +38,6 @@ class ContainerRoleEditPayloadTest {
         () -> new ContainerRoleEditPayload(1, null, ContainerRole.GENERAL));
   }
 
-  /**
-   * Discovery scans reuse a mutable position, so one kept by a payload would drift as they walk.
-   */
   @Test
   void aMutablePositionIsCopiedRatherThanHeld() {
     BlockPos.Mutable moving = new BlockPos.Mutable(1, 2, 3);

@@ -15,14 +15,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 
-/**
- * Proves the server decides every configuration edit, including the ones a modified client could
- * invent. Permission levels and the connected player list only exist on a running server, so the
- * gate cannot be checked off-game.
- *
- * <p>Shares the {@code server-config} batch with {@link ServerConfigServiceGameTest} because both
- * move the one live configuration the whole server reads, and tests in a batch run one at a time.
- */
 public final class ConfigSyncGameTest implements FabricGameTest {
   private static final String BATCH = "server-config";
   private static final int TICK_LIMIT = 20;
@@ -94,11 +86,6 @@ public final class ConfigSyncGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /**
-   * Adds the operator entry by hand rather than through {@code addToOperators}, which stamps the
-   * entry with the server's own op level. A test server reports that level as zero, so the
-   * convenient call would produce an operator who fails every permission check.
-   */
   private static void grantOperator(MinecraftServer server, ServerPlayerEntity player) {
     server
         .getPlayerManager()

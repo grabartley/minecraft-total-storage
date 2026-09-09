@@ -12,7 +12,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class SettingsControlTest {
-
   static Stream<Arguments> bothSteppers() {
     return Stream.of(
         Arguments.of(SettingsControl.RADIUS_DOWN, SettingsControl.radiusDownX()),
@@ -41,10 +40,6 @@ class SettingsControlTest {
     assertFalse(SettingsControl.at(left, top + size) == control);
   }
 
-  /**
-   * The two sit at opposite ends of their row rather than side by side, so hitting the wrong one
-   * takes a deliberate mistake rather than a slightly loose aim.
-   */
   @Test
   void theSteppersSitAtOppositeEndsOfTheirRow() {
     assertEquals(
@@ -61,7 +56,6 @@ class SettingsControlTest {
         "the steppers are close enough to be hit by mistake");
   }
 
-  /** A control has to be big enough to aim at without care, which the old ten pixels were not. */
   @Test
   void aStepperIsBigEnoughToAimAt() {
     assertTrue(
@@ -78,7 +72,6 @@ class SettingsControlTest {
             <= rowTop + TerminalSettingsLayout.ROW_HEIGHT);
   }
 
-  /** A settings row has no scrollbar, so it owns the whole panel and leaves no empty channel. */
   @Test
   void aStepperReachesTheEdgeOfThePanelRatherThanTheGutter() {
     assertEquals(
@@ -99,13 +92,6 @@ class SettingsControlTest {
     assertTrue(SettingsControl.RADIUS_UP.isSomething());
   }
 
-  /**
-   * The stepper that raises the radius reaches into the band the container list keeps for its
-   * scrollbar, because a settings row spans the whole panel and that list's does not.
-   *
-   * <p>Recorded here because it is the reason the scrollbar has to be offered a click only on the
-   * section that has one: it is asked first, and six of these sixteen pixels are inside its band.
-   */
   @Test
   void theStepperThatRaisesTheRadiusReachesIntoTheScrollbarsBand() {
     int rightmost = SettingsControl.radiusUpX() + SettingsControl.size() - 1;
@@ -117,7 +103,6 @@ class SettingsControlTest {
         SettingsControl.RADIUS_UP, SettingsControl.at(rightmost, SettingsControl.radiusY()));
   }
 
-  /** The other rows carry no steppers, so a click on one must not reach the radius. */
   @Test
   void aClickOnAnotherSettingsRowIsNotAStepper() {
     assertEquals(

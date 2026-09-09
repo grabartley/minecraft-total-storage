@@ -9,10 +9,6 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Every server-wide setting, per world. Out-of-range values are clamped rather than rejected, so a
- * bad hand edit never stops a server starting.
- */
 public record TooManyChestsConfig(
     int maxTerminalRadius,
     TerminalAccessMode defaultTerminalAccessMode,
@@ -25,7 +21,6 @@ public record TooManyChestsConfig(
     int expensiveOperationCooldownTicks,
     int movesPerTickBudget,
     Map<String, Boolean> containerEligibilityOverrides) {
-
   private static final Logger LOGGER = LoggerFactory.getLogger(TooManyChestsConfig.class);
 
   public static final int MAX_TERMINAL_RADIUS_MIN = 1;
@@ -88,7 +83,6 @@ public record TooManyChestsConfig(
         Map.of());
   }
 
-  /** The same configuration with a different set of operator eligibility overrides. */
   public TooManyChestsConfig withContainerEligibilityOverrides(Map<String, Boolean> overrides) {
     return new TooManyChestsConfig(
         maxTerminalRadius,
@@ -104,7 +98,6 @@ public record TooManyChestsConfig(
         overrides);
   }
 
-  /** Whether an operator has forced this block's eligibility either way, if they have. */
   public Optional<Boolean> containerEligibilityOverrideFor(Identifier blockId) {
     return blockId == null
         ? Optional.empty()

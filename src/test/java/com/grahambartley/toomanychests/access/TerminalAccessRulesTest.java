@@ -83,7 +83,6 @@ class TerminalAccessRulesTest {
     assertEquals(TerminalAccess.OPERATOR, TerminalAccessRules.decide(settings, STRANGER, true));
   }
 
-  /** An operator who is let in on the ordinary rules has bypassed nothing worth logging. */
   @Test
   void anOperatorWhoOwnsTheTerminalIsNotTreatedAsABypass() {
     TerminalSettings settings = owned().withAccessMode(TerminalAccessMode.OWNER);
@@ -99,10 +98,6 @@ class TerminalAccessRulesTest {
     assertEquals(TerminalAccess.TRUSTED, TerminalAccessRules.decide(settings, FRIEND, true));
   }
 
-  /**
-   * Placement records an owner, so a terminal without one came from a command or a dispenser.
-   * Treating it as owner-locked would make it permanently unusable rather than secure.
-   */
   @DisplayName("a terminal nobody owns has nobody to lock out")
   @ParameterizedTest(name = "{0} access")
   @EnumSource(TerminalAccessMode.class)
@@ -127,7 +122,6 @@ class TerminalAccessRulesTest {
     assertFalse(TerminalAccessRules.mayAdminister(settings, STRANGER, false));
   }
 
-  /** Being let into an open terminal is not the same as being allowed to lock it again. */
   @Test
   void anOpenTerminalIsStillOnlyConfigurableByItsOwner() {
     TerminalSettings settings = owned().withAccessMode(TerminalAccessMode.OPEN);
@@ -136,7 +130,6 @@ class TerminalAccessRulesTest {
     assertFalse(TerminalAccessRules.mayAdminister(settings, STRANGER, false));
   }
 
-  /** Usable by anybody is not a way to claim a terminal nobody owns. */
   @Test
   void anUnownedTerminalIsConfigurableOnlyByOperators() {
     TerminalSettings settings = TerminalSettings.defaults();

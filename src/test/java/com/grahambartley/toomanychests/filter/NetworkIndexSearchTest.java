@@ -63,7 +63,6 @@ class NetworkIndexSearchTest {
         .build(NetworkIndexOrdering.byKey(Function.identity()));
   }
 
-  /** Named so what ranking rearranged is visible against the order the index built. */
   private static NetworkIndex<String> chests() {
     return new NetworkIndexBuilder<String>()
         .add("cherry_chest_boat", 1L, ORIGIN)
@@ -86,7 +85,6 @@ class NetworkIndexSearchTest {
         .toList();
   }
 
-  /** Exact, then prefix, then the two substring matches in the order the index gave them. */
   @Test
   void theClosestAnswersComeFirstAndEqualOnesKeepIndexOrder() {
     assertEquals(
@@ -94,7 +92,6 @@ class NetworkIndexSearchTest {
         chestsMatching("chest"));
   }
 
-  /** A tag or a mod says whether a row belongs, not how well it fits, so nothing is reordered. */
   @Test
   void aQueryWithNoTextToRankLeavesTheIndexOrderAlone() {
     assertEquals(List.of("cherry_chest_boat", "chest"), chestsMatching("#wood @minecraft"));
@@ -182,11 +179,6 @@ class NetworkIndexSearchTest {
     return candidates::get;
   }
 
-  /**
-   * The terminal searches on the server thread while the player types, and narrowing, grading and
-   * ordering all happen in that one pass, so the whole of it has to fit inside a tick with room to
-   * spare for everything else happening in one.
-   */
   @Test
   void searchingAWholeNetworkFitsInsideATick() {
     final NetworkIndex<String> network = largeNetwork();

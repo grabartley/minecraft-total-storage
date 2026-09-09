@@ -17,15 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-/**
- * What a settings answer looks like once it has been across the wire.
- *
- * <p>Every row here is sent without an icon, because building an {@code ItemVariant} needs the
- * registries a plain JVM does not have. What an iconed row does on the wire is proven in {@code
- * NetworkSettingsPayloadGameTest} instead.
- */
 class NetworkSettingsPayloadTest {
-
   private static RegistryByteBuf buffer() {
     return new RegistryByteBuf(Unpooled.buffer(), null);
   }
@@ -92,11 +84,6 @@ class NetworkSettingsPayloadTest {
     assertEquals(168L, received.itemCount());
   }
 
-  /**
-   * The distance orders the list on the server, and the slot counts are summed into the network's
-   * capacity before the answer is built. Neither has a use on the client, so neither is sent, and a
-   * row arriving with either filled in would mean the wire had grown a field nothing reads.
-   */
   @Test
   void whatOnlyTheServerNeedsIsNotCarried() {
     NetworkSettingsPayload sent =
@@ -110,11 +97,6 @@ class NetworkSettingsPayloadTest {
     assertEquals(0, received.totalSlots());
   }
 
-  /**
-   * A used count above the total could only be forged, and a record that refused to hold one would
-   * drop the connection over a number nobody draws. The bytes are written by hand because a payload
-   * built through the record cannot carry the case: its own constructor refuses it first.
-   */
   @Test
   void aForgedCapacityIsClampedRatherThanTakingTheConnectionDown() {
     RegistryByteBuf buffer = buffer();
@@ -131,7 +113,6 @@ class NetworkSettingsPayloadTest {
     assertEquals(27, received.usedSlots(), "A forged used count should be clamped to the total");
   }
 
-  /** A negative count is the other way the numbers could arrive impossible. */
   @Test
   void aForgedNegativeCapacityBecomesNothingRatherThanThrowing() {
     RegistryByteBuf buffer = buffer();
@@ -148,7 +129,6 @@ class NetworkSettingsPayloadTest {
     assertEquals(0, received.totalSlots());
   }
 
-  /** Everything a settings answer carries before its capacity, so a case can start from there. */
   private static void writeHeader(RegistryByteBuf buffer) {
     buffer.writeVarInt(1);
     buffer.writeVarInt(16);

@@ -5,13 +5,11 @@ import net.minecraft.registry.RegistryKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-/** Which terminal, in which world. */
 public record TerminalAddress(RegistryKey<World> worldKey, BlockPos pos) {
   public TerminalAddress {
     Objects.requireNonNull(worldKey, "worldKey");
     Objects.requireNonNull(pos, "pos");
-    // Block callbacks hand out positions they go on to mutate, which would corrupt any map keyed
-    // by this address.
+
     pos = pos.toImmutable();
   }
 

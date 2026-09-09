@@ -16,14 +16,6 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * The {@code /tmc terminal <pos>} subtree, where one terminal rather than the whole server is
- * configured.
- *
- * <p>The terminal is named by position rather than taken from what the caller is looking at,
- * because the console a server owner works from is looking at nothing. Reading is open, since a
- * radius is not a secret; moving one is gated like every other change this mod accepts.
- */
 public final class TerminalCommand {
   private static final String POS = "pos";
   private static final String BLOCKS = "blocks";
@@ -56,9 +48,6 @@ public final class TerminalCommand {
                 .then(TerminalNetworkCommand.highlightNode()));
   }
 
-  /**
-   * The terminal every branch of this subtree is aimed at, refused when its chunk is not loaded.
-   */
   static BlockPos terminalPos(CommandContext<ServerCommandSource> context)
       throws CommandSyntaxException {
     return BlockPosArgumentType.getLoadedBlockPos(context, POS);

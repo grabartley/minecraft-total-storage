@@ -74,10 +74,6 @@ class SearchRankingTest {
     assertThrows(NullPointerException.class, () -> SearchRanking.ofTerm(null, "chest"));
   }
 
-  /**
-   * A gate the row fails answers {@link MatchStrength#NONE} rather than the grade its text earned,
-   * so a row kept out by a tag or a mod cannot be ordered as though it were in.
-   */
   @Test
   void aRowKeptOutByAGateIsNotGradedByItsText() {
     final ItemFilter gated = ItemFilter.ofSearch("#storage @create ch");

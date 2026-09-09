@@ -3,24 +3,6 @@ package com.grahambartley.toomanychests.operation;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * What one deposit did: how much the player offered, and how much the network took.
- *
- * <p>What was not taken is still in the player's inventory, never on the floor, so the difference
- * between these two numbers is a report rather than a loss.
- *
- * <p>What stayed behind is listed by item as well as counted, because "sixty left over" and "sixty
- * cobblestone left over" answer different questions and only the second one is actionable.
- *
- * <p>The list has to add up to what was not stored. Nothing is allowed to report a shortfall it
- * cannot account for, which is what stops a path quietly reverting to a bare total: an empty list
- * beside a partial deposit is refused here rather than drawn.
- *
- * @param result how the deposit ended
- * @param offered how much the player put forward
- * @param moved how much the network really took
- * @param leftovers what stayed in the player's inventory, by item, largest first
- */
 public record DepositOutcome(
     DepositResult result, long offered, long moved, List<DepositLeftover> leftovers) {
   public DepositOutcome {
@@ -61,12 +43,10 @@ public record DepositOutcome(
     return new DepositOutcome(DepositResult.NO_SPACE, offered, 0L, leftovers);
   }
 
-  /** A player asking faster than the server will answer, which changed nothing. */
   public static DepositOutcome rateLimited() {
     return new DepositOutcome(DepositResult.RATE_LIMITED, 0L, 0L, List.of());
   }
 
-  /** Decides between a whole and a partial deposit from the amounts themselves. */
   public static DepositOutcome stored(long offered, long moved, List<DepositLeftover> leftovers) {
     if (moved <= 0L) {
       throw new IllegalArgumentException("a deposit that stored nothing needs a reason");
@@ -78,12 +58,10 @@ public record DepositOutcome(
         leftovers);
   }
 
-  /** What the player is still holding, which is the half of the report that matters to them. */
   public long remaining() {
     return offered - moved;
   }
 
-  /** How many kinds of item stayed behind, which decides whether they can all be named. */
   public int leftoverKinds() {
     return leftovers.size();
   }

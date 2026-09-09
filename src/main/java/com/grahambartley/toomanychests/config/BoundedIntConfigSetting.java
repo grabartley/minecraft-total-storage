@@ -7,7 +7,6 @@ import java.util.function.BiFunction;
 import java.util.function.ToIntFunction;
 import java.util.stream.Stream;
 
-/** A whole-number setting with a range it may not leave. */
 final class BoundedIntConfigSetting implements ConfigSetting {
   private final String name;
   private final int min;

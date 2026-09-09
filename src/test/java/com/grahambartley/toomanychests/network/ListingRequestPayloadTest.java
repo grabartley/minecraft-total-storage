@@ -63,10 +63,6 @@ class ListingRequestPayloadTest {
     assertSame(mode, roundTrip(sent).mode());
   }
 
-  /**
-   * Reordering the enum on one side must not quietly turn one mode into the other, so an unknown
-   * name falls back rather than indexing into whatever happens to sit at that position.
-   */
   @Test
   void aModeThisBuildHasNeverHeardOfFallsBackRatherThanBeingGuessed() {
     RegistryByteBuf buffer = buffer();
@@ -106,10 +102,6 @@ class ListingRequestPayloadTest {
     assertEquals(Set.of(), payload.tags());
   }
 
-  /**
-   * A count is a promise about how much follows it, and a promise a client makes about the size of
-   * its own packet is the one thing that has to be checked before any of it is allocated.
-   */
   @DisplayName("a tag count larger than a filter column could hold is refused while decoding")
   @ParameterizedTest(name = "{0} tags claimed")
   @ValueSource(ints = {65, 4096, Integer.MAX_VALUE})

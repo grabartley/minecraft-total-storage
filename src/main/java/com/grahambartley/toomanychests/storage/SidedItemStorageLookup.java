@@ -7,10 +7,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * Queries {@link ItemStorage#SIDED} with a null direction, which yields the whole inventory rather
- * than one face's view, and pre-combines both halves of a double chest into one storage.
- */
 public final class SidedItemStorageLookup implements ItemStorageLookup {
   public static final SidedItemStorageLookup INSTANCE = new SidedItemStorageLookup();
 

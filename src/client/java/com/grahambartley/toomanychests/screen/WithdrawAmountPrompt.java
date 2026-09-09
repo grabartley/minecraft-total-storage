@@ -10,25 +10,6 @@ import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
-/**
- * Asks how much of one item to take, for the amounts no click can express.
- *
- * <p>A panel drawn over the grid rather than a widget added to the screen, because Minecraft
- * rebuilds every widget on a resize and a prompt that vanished when a player changed their GUI
- * scale would lose what they had typed. Nothing here is focusable, so the search box keeps its
- * focus and gets it back untouched when the prompt closes.
- *
- * <p>The panel wears the recess sprite rather than the chassis, because its words are drawn in the
- * palette's glyph colours and those are meant to be read against the dark screen. On the chassis
- * they are pale grey on pale grey.
- *
- * <p>Every line is wrapped and the panel is sized around the result rather than the other way
- * round. English happens to fit a fixed panel; a translation does not, and an unwrapped line runs
- * out past both edges of the panel it is supposed to be inside.
- *
- * <p>The number itself lives in {@link AmountEntry}, which is where the rule about what may be
- * typed is decided and tested. This class draws it and nothing else.
- */
 public final class WithdrawAmountPrompt {
   private static final Identifier PANEL = TerminalSprites.of("panel/inset");
   private static final Identifier FIELD = TerminalSprites.of("search/box_focused");
@@ -38,13 +19,11 @@ public final class WithdrawAmountPrompt {
   private static final int FIELD_HEIGHT = 12;
   private static final int GAP = 4;
 
-  /** Narrow enough to leave the grid readable around it, wide enough not to wrap "Up to 64". */
   private static final int MIN_WIDTH = 120;
 
   private static final int LABEL_COLOUR = 0xE4E9F2;
   private static final int HINT_COLOUR = 0x9AA3B3;
 
-  /** Far enough forward to sit over the cells and the items drawn in them. */
   private static final float ELEVATION = 300.0F;
 
   private ItemVariant variant;
@@ -123,7 +102,6 @@ public final class WithdrawAmountPrompt {
     context.getMatrices().pop();
   }
 
-  /** Draws a wrapped block centred in the panel, and answers where the next one starts. */
   private static int drawLines(
       DrawContext context,
       TextRenderer textRenderer,

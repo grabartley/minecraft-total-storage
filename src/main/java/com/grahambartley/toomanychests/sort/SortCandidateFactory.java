@@ -6,13 +6,6 @@ import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 
-/**
- * Flattens an item variant and its count into the plain data the comparator sorts.
- *
- * <p>Per ADR 0012 this is the only class in the sort package that names {@code ItemVariant}. It
- * holds no ordering logic of its own, so a mistake here is a mistake in reading the registry rather
- * than in the rule, and it is covered by a gametest instead of a unit test.
- */
 public final class SortCandidateFactory {
   private final PresetTagResolver presetTags;
 

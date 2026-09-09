@@ -17,7 +17,6 @@ class WithdrawShortfallTest {
   private static final String DIAMOND = "diamond";
   private static final long A_STACK = 64L;
 
-  /** Any room at all means the item had gone; none of it means there was nowhere to put it. */
   @ParameterizedTest
   @CsvSource({
     "64, NOTHING_AVAILABLE",
@@ -65,7 +64,6 @@ class WithdrawShortfallTest {
     }
   }
 
-  /** A destination that takes a fixed amount and no more, which is all the decision reads. */
   private record FixedRoom(long room) implements Storage<String> {
     @Override
     public long insert(String resource, long maxAmount, TransactionContext transaction) {

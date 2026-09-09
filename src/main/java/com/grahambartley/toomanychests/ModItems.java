@@ -9,7 +9,6 @@ import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
 
 public class ModItems {
-
   public static final Item TERMINAL =
       Registry.register(
           Registries.ITEM,

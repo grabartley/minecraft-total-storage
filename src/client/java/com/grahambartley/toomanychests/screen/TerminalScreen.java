@@ -31,25 +31,6 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
-/**
- * The terminal's window: its chassis, whichever of its two views is showing, and the player's own
- * inventory.
- *
- * <p>Each view owns its own recess full of content, so this class owns the frame around them: the
- * chassis, the tab strip, the toolbar, and deciding which view a click was meant for. See {@link
- * TerminalItemsPanel} and {@link TerminalSettingsPanel} for the views themselves.
- *
- * <p>Both views are drawn into the same recess because the window is already as tall as vanilla
- * will draw one on a 320x240 screen, so there is no room for a second. That is also why the tabs
- * sit in the toolbar column rather than above the window, where vanilla puts them.
- *
- * <p>Every piece of chassis is a nine-sliced sprite rather than one background image, per ADR 0017,
- * so the window can change size as the filter column grows without a new texture.
- *
- * <p>The search box takes focus as the screen opens and keeps it, so typing narrows the grid
- * without a click first. That is also why this screen has to say what a key press means rather than
- * leaving it to its parent: see {@link SearchKeyOutcome}.
- */
 public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   private static final Identifier PANEL = TerminalSprites.of("panel/background");
   private static final Identifier INSET = TerminalSprites.of("panel/inset");
@@ -65,7 +46,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   private final TerminalSettingsPanel settings = new TerminalSettingsPanel();
   private final WithdrawAmountPrompt prompt = new WithdrawAmountPrompt();
 
-  /** What the server was last told this screen wants, so a scroll or a keystroke is noticed. */
   private final ListingCriteria requested = new ListingCriteria();
 
   private TerminalTab tab = TerminalTab.ITEMS;
@@ -76,9 +56,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   private NetworkSettingsView settingsThisFrame = NetworkSettingsView.pending();
 
-  /**
-   * What the settings panel last asked for, so a wheel spun hard costs one request rather than ten.
-   */
   private ListingWindow requestedContainers = ListingWindow.EMPTY;
 
   private TerminalTab hoveredTab;
@@ -96,16 +73,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     this.playerInventoryTitleY = TerminalScreenLayout.INVENTORY_LABEL_Y;
   }
 
-  /**
-   * Opening the screen asks for the first page. Nothing arrives unprompted: the server answers the
-   * window a screen has told it about, so a screen that never asks is never sent anything.
-   *
-   * <p>Laying the window out again is not opening it. Minecraft runs this on every resize and every
-   * change of GUI scale, and treating those as a fresh screen would throw away the page being shown
-   * and ask for the first one again, wherever the player had scrolled to. The search box is built
-   * again either way, because a resize clears the widgets, and it is handed back what was typed
-   * rather than reopened empty.
-   */
   @Override
   protected void init() {
     super.init();
@@ -143,11 +110,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     NetworkSettingsMirror.closed();
   }
 
-  /**
-   * Scrolling asks the server for the rows the grid is now showing, once a frame rather than once a
-   * notch. A wheel spun hard is several notches in one frame and one window at the end of them, so
-   * the requests a player generates are bounded by their frame rate rather than by their wrist.
-   */
   @Override
   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
     items.beginFrame(TerminalListingMirror.page());
@@ -175,7 +137,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     drawTabTooltip(context, mouseX, mouseY);
   }
 
-  /** The tabs are two glyphs, so what each one opens has to be readable somewhere. */
   private void drawTabTooltip(DrawContext context, int mouseX, int mouseY) {
     if (hoveredTab != null) {
       context.drawTooltip(textRenderer, TerminalScreenText.of(hoveredTab.label()), mouseX, mouseY);
@@ -287,11 +248,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
   }
 
-  /**
-   * A click anywhere on the search box reaches the field, which covers only the text inside it. The
-   * field still sees the click, so one landing on the text puts the cursor where it was aimed
-   * rather than merely taking focus.
-   */
   @Override
   public boolean mouseClicked(double mouseX, double mouseY, int button) {
     if (prompt.isOpen()) {
@@ -330,7 +286,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     return super.mouseClicked(mouseX, mouseY, button);
   }
 
-  /** Switching view asks for whatever the new one draws, since neither is sent unprompted. */
   private void showTab(TerminalTab shown) {
     if (tab == shown) {
       return;
@@ -346,11 +301,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     requestVisibleRows();
   }
 
-  /**
-   * A click over the grid, decided by {@link GridClick} rather than by vanilla's slot handling. The
-   * grid holds no slots per ADR 0025, so every button and modifier over it means what this screen
-   * says it means and nothing is moved until the server answers.
-   */
   private boolean handleGridClick(int windowX, int windowY, int button) {
     final int cell = TerminalScreenLayout.cellAt(windowX, windowY);
     if (cell == TerminalScreenLayout.NO_CELL) {
@@ -370,14 +320,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     return true;
   }
 
-  /**
-   * A click on the settings view, which has four things it could have landed on: a section tab, a
-   * stepper, a setting that cycles, or a container row. Each is asked in the order it is drawn.
-   *
-   * <p>Nothing is applied here. Every control sends what the player asked for and waits, because
-   * per ADR 0008 whether they may is the server's answer and this end only knows what it was last
-   * told.
-   */
   private boolean handleSettingsClick(int windowX, int windowY, int button) {
     final SettingsSection clicked = SettingsSection.at(windowX, windowY);
     if (clicked != null) {
@@ -398,7 +340,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     return handleContainerClick(windowX, windowY, button, mayAdminister);
   }
 
-  /** A setting a click can change, which today is the access mode and nothing else. */
   private boolean handleSettingClick(int windowX, int windowY, int button, boolean mayAdminister) {
     final TerminalSetting setting = settings.settingAt(windowX, windowY);
     final SettingsAction action =
@@ -436,7 +377,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     return true;
   }
 
-  /** Switching section resets the scroll, so a list is never opened part way down. */
   private void showSection(SettingsSection shown) {
     if (settings.section() != shown) {
       settings.show(shown);
@@ -444,21 +384,12 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     }
   }
 
-  /**
-   * The radius steps by one. The two steppers carry their direction in the glyph they wear, so
-   * neither needs a cycle and a right click on one means nothing.
-   */
   private void stepRadius(SettingsControl control) {
     ModNetworkingClient.sendRadiusEdit(
         handler.syncId,
         settingsThisFrame.radius() + (control == SettingsControl.RADIUS_UP ? 1 : -1));
   }
 
-  /**
-   * Shift-clicking a stack out of the player's own inventory hands it to the network, which is what
-   * a player expects the gesture to do in front of a container. It becomes a request rather than a
-   * vanilla quick move, because there is no slot on this screen for the stack to move into.
-   */
   @Override
   protected void onMouseClick(Slot slot, int slotId, int button, SlotActionType actionType) {
     if (actionType == SlotActionType.QUICK_MOVE
@@ -472,11 +403,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     super.onMouseClick(slot, slotId, button, actionType);
   }
 
-  /**
-   * Each view brings its own actions. Deposit all belongs to the items view because it is about
-   * what the network holds; rescan and highlight belong to the settings view because they are about
-   * what it reaches.
-   */
   private void updateWidgets(ListingStatus status) {
     final boolean settingsShowing = tab.isSettings();
     depositAll.active = status != ListingStatus.OFFLINE;
@@ -488,16 +414,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     search.setVisible(!settingsShowing);
   }
 
-  /**
-   * Whether this press is the deposit-all key, which a focused search box outranks.
-   *
-   * <p>A key bound to a letter is a letter first while somebody is typing one, which is how vanilla
-   * treats its own inventory key inside the creative search field. Yielding is what stops searching
-   * for "redstone" from emptying an inventory on the r.
-   *
-   * <p>It follows its button onto the items view and off the settings one. A key that worked where
-   * the button is deliberately hidden would be a second, invisible way to empty an inventory.
-   */
   private boolean isDepositAllKey(int keyCode, int scanCode) {
     return TerminalKeyBindings.isDepositAll(keyCode, scanCode)
         && !tab.isSettings()
@@ -512,11 +428,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     ModNetworkingClient.sendTerminalAction(handler.syncId, action);
   }
 
-  /**
-   * The most a custom amount could really deliver, which is the smaller of what the network holds
-   * and what the player's own slots could carry. Offering the network's total instead would print a
-   * number the server is about to clamp, which is the one thing the prompt promises not to do.
-   */
   private static int promptCeiling(ListingRow<ItemVariant> row) {
     return (int)
         Math.min(
@@ -542,11 +453,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
   }
 
-  /**
-   * A key press while the search box has focus is the player typing into it, so the screen behind
-   * it never sees one. Without this the inventory key would close the terminal rather than write a
-   * letter, and a digit would swap a hotbar slot rather than be typed.
-   */
   @Override
   public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
     if (prompt.isOpen()) {
@@ -581,7 +487,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     return !tab.isSettings() && super.charTyped(typed, modifiers);
   }
 
-  /** The prompt swallows every key while it is up, so nothing behind it hears the number. */
   private boolean handlePromptKey(PromptKey outcome) {
     if (outcome == PromptKey.CONFIRM) {
       ModNetworkingClient.sendWithdrawRequest(
@@ -622,22 +527,11 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
         handler.syncId, requestedContainers.offset(), requestedContainers.length());
   }
 
-  /**
-   * Leaving the settings view tells the server, so an edit by somebody else stops pushing panels to
-   * a screen that has gone back to the grid. A window of no rows is what closes it.
-   */
   private void stopAskingForContainers() {
     requestedContainers = ListingWindow.EMPTY;
     ModNetworkingClient.sendSettingsRequest(handler.syncId, 0, 0);
   }
 
-  /**
-   * Where a container is, and what clicking it does.
-   *
-   * <p>A row leads with what is inside it because that is what picks it out of a list, so its
-   * coordinates go here: wanted once, when a player has found the row and now has to walk to the
-   * chest. The hint is only shown to somebody the change would work for.
-   */
   private void drawContainerTooltip(DrawContext context, int mouseX, int mouseY) {
     if (!tab.isSettings()) {
       return;

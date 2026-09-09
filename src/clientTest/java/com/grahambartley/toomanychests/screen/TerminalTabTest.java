@@ -11,7 +11,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 class TerminalTabTest {
-
   @ParameterizedTest
   @EnumSource(TerminalTab.class)
   void aClickAnywhereOnATabReachesIt(TerminalTab tab) {
@@ -34,7 +33,6 @@ class TerminalTabTest {
     assertNull(TerminalTab.at(TerminalScreenLayout.GRID_X, TerminalScreenLayout.GRID_Y));
   }
 
-  /** The actions sit under the strip, so a click on one must not switch view. */
   @Test
   void aClickOnTheActionsBelowTheStripIsNoTab() {
     assertNull(TerminalTab.at(TerminalScreenLayout.TOOLBAR_X, TerminalScreenLayout.actionY(0)));
@@ -46,7 +44,6 @@ class TerminalTabTest {
     assertEquals(1, TerminalTab.SETTINGS.index());
   }
 
-  /** The tabs are two glyphs, so each has to name itself somewhere a player can read it. */
   @ParameterizedTest
   @EnumSource(TerminalTab.class)
   void everyTabIsNamedUnderItsOwnKey(TerminalTab tab) {

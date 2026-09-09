@@ -9,7 +9,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 
 class ContainerRoleCycleTest {
-
   @ParameterizedTest
   @CsvSource({"GENERAL, FILTERED", "FILTERED, EXCLUDED", "EXCLUDED, GENERAL"})
   void clickingTightensWhatTheNetworkMayDo(ContainerRole from, ContainerRole to) {
@@ -22,7 +21,6 @@ class ContainerRoleCycleTest {
     assertEquals(to, ContainerRoleCycle.previous(from));
   }
 
-  /** Overshooting by one click costs one click back, which is the whole point of a reverse. */
   @ParameterizedTest
   @EnumSource(ContainerRole.class)
   void goingForwardsThenBackReturnsToWhereItStarted(ContainerRole role) {

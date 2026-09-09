@@ -20,19 +20,6 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Reads and moves the role one terminal has given one container. See ADR 0004.
- *
- * <p>A role may only be given to a container the terminal's network actually reaches. That check is
- * the reason this is a service rather than a setter: without it a request could write an assignment
- * for any position in the world, and a save would slowly fill with opinions about containers that
- * were never part of anything.
- *
- * <p>Naming a container by position is not the thing ADR 0009 forbids. That rule is about item
- * movement, where a supplied position would decide where items come from; here the position is the
- * subject of the change rather than a shortcut to one, and it is validated against the live network
- * before anything is written.
- */
 public final class ContainerRoleService {
   private final StorageProviderResolver resolver;
 
@@ -44,17 +31,12 @@ public final class ContainerRoleService {
     this.resolver = Objects.requireNonNull(resolver, "resolver");
   }
 
-  /** What this terminal has decided about a container, defaulting for one it has never seen. */
   public ContainerRole roleOf(ServerWorld world, BlockPos terminal, BlockPos container) {
     return TerminalLookup.settingsAt(world, terminal)
         .map(settings -> settings.roleFor(container))
         .orElse(ContainerRole.DEFAULT);
   }
 
-  /**
-   * Gives a container a role, if the caller may configure the terminal and the terminal can see the
-   * container.
-   */
   public RoleChangeOutcome assign(
       ServerWorld world,
       BlockPos terminal,
@@ -84,12 +66,6 @@ public final class ContainerRoleService {
     return RoleChangeOutcome.CHANGED;
   }
 
-  /**
-   * Every container this terminal can see right now, nearest first, with what it holds.
-   *
-   * <p>Ordered by distance because that is the order a player walked past them in, and a list of
-   * fifty coordinates in any other order is a list nobody can find anything in.
-   */
   public List<ContainerRoleEntry> containers(ServerWorld world, BlockPos terminal) {
     final TerminalSettings settings = TerminalLookup.settingsAt(world, terminal).orElse(null);
     final NetworkMembership network =
@@ -143,10 +119,6 @@ public final class ContainerRoleService {
         terminal.getSquaredDistance(container));
   }
 
-  /**
-   * The variant a container holds most of, which is what the row draws to be recognisable. Ties go
-   * to whichever the container listed first, so the same chest draws the same icon twice running.
-   */
   private static Optional<ItemVariant> commonest(Map<ItemVariant, Long> held) {
     return held.entrySet().stream()
         .max(Comparator.comparingLong(Map.Entry::getValue))

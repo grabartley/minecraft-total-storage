@@ -20,15 +20,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
-/**
- * Which container a click on the settings list landed on.
- *
- * <p>Rows are addressed by their place in the whole list rather than in the page, so a panel
- * scrolled down has to turn a screen position into the row a player is actually pointing at. Get it
- * wrong and a click excludes the wrong chest, which is the one mistake this panel must not make.
- */
 class TerminalSettingsPanelTest {
-
   private static NetworkSettingsView viewOf(int total) {
     return new NetworkSettingsView(
         16,
@@ -56,7 +48,6 @@ class TerminalSettingsPanelTest {
             .toList());
   }
 
-  /** The list only exists on the containers section, so every case here opens it first. */
   private static TerminalSettingsPanel containers() {
     TerminalSettingsPanel panel = new TerminalSettingsPanel();
     panel.show(SettingsSection.CONTAINERS);
@@ -77,7 +68,6 @@ class TerminalSettingsPanelTest {
         panel.containerRowAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(row)));
   }
 
-  /** Scrolled down, the same screen row is a different container, which is the whole hazard. */
   @Test
   void aClickOnARowFollowsWhereTheListIsScrolledTo() {
     TerminalSettingsPanel panel = containers();
@@ -100,7 +90,6 @@ class TerminalSettingsPanelTest {
             < 0);
   }
 
-  /** The gutter belongs to the scrollbar, so a click there must not land on the row behind it. */
   @Test
   void aClickOnTheScrollbarIsNotAContainerRow() {
     assertTrue(
@@ -109,7 +98,6 @@ class TerminalSettingsPanelTest {
             < 0);
   }
 
-  /** A settings row has no gutter, so the same point there is a row like any other. */
   @Test
   void aClickAtTheSamePointOnTheTerminalSectionIsStillASetting() {
     assertEquals(
@@ -118,7 +106,6 @@ class TerminalSettingsPanelTest {
             .settingAt(TerminalScreenLayout.SCROLLBAR_X, TerminalSettingsLayout.CONTENT_Y));
   }
 
-  /** The terminal section holds no list, so a click there is never a container row. */
   @Test
   void theTerminalSectionHasNoContainerRows() {
     TerminalSettingsPanel panel = new TerminalSettingsPanel();
@@ -128,7 +115,6 @@ class TerminalSettingsPanelTest {
     assertEquals(SettingsSection.TERMINAL, panel.section());
   }
 
-  /** And the containers section holds no settings, so a click there is never a setting row. */
   @Test
   void theContainersSectionHasNoSettingRows() {
     assertEquals(
@@ -147,7 +133,6 @@ class TerminalSettingsPanelTest {
             TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(setting.row())));
   }
 
-  /** Opening a section starts it at the top, so a list is never opened part way down. */
   @Test
   void switchingSectionReturnsTheListToItsTop() {
     TerminalSettingsPanel panel = containers();
@@ -160,12 +145,6 @@ class TerminalSettingsPanelTest {
     assertEquals(0, panel.scroll().firstIndex());
   }
 
-  /**
-   * Only the container list scrolls, and the panel says so rather than leaving the scrollbar to
-   * refuse on its own. It refuses by asking whether it overflows, which is the other section's
-   * count until the next answer arrives, so for those frames a click on the radius stepper would be
-   * taken as a grab on a scrollbar that is not drawn.
-   */
   @Test
   void onlyTheContainerListScrolls() {
     TerminalSettingsPanel panel = containers();
@@ -179,10 +158,6 @@ class TerminalSettingsPanelTest {
         "with a stale count still overflowing, the section is the only thing refusing the grab");
   }
 
-  /**
-   * Every way in agrees about which section has a scrollbar, so no one of them can be the one that
-   * forgets. A drag begun on the list and carried into the terminal section stops there.
-   */
   @Test
   void noWayInReachesAScrollbarTheOpenSectionIsNotShowing() {
     TerminalSettingsPanel panel = containers();
@@ -200,7 +175,6 @@ class TerminalSettingsPanelTest {
     assertFalse(panel.isDraggingScrollbar());
   }
 
-  /** The stepper that raises the radius sits in the gutter, and must not be taken for a grab. */
   @Test
   void aClickOnTheRadiusStepperIsNotAGrabOnTheScrollbar() {
     TerminalSettingsPanel panel = new TerminalSettingsPanel();
@@ -211,7 +185,6 @@ class TerminalSettingsPanelTest {
     assertFalse(panel.grabScrollbar(SettingsControl.radiusY()));
   }
 
-  /** A settings row is not a container row, however far along the panel the click landed. */
   @Test
   void aClickOnTheRadiusStepperIsOverNoContainerRow() {
     TerminalSettingsPanel panel = new TerminalSettingsPanel();
@@ -222,7 +195,6 @@ class TerminalSettingsPanelTest {
             SettingsControl.radiusUpX() + SettingsControl.size() - 1, SettingsControl.radiusY()));
   }
 
-  /** A list that shrank under a scrolled panel must not leave it pointing past the end. */
   @Test
   void theScrollIsBroughtBackInsideAListThatShrank() {
     TerminalSettingsPanel panel = containers();

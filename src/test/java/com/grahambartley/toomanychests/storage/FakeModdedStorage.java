@@ -7,10 +7,6 @@ import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
-/**
- * A third-party container that exposes item storage without slots. The Transfer API permits this,
- * so the abstraction has to survive it rather than assume every storage is slotted.
- */
 final class FakeModdedStorage implements Storage<ItemVariant> {
   @Override
   public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {

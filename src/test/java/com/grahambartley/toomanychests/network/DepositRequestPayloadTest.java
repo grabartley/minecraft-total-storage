@@ -11,7 +11,6 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class DepositRequestPayloadTest {
-
   private static RegistryByteBuf buffer() {
     return new RegistryByteBuf(Unpooled.buffer(), null);
   }
@@ -54,10 +53,6 @@ class DepositRequestPayloadTest {
     assertEquals(0, new DepositRequestPayload(1, DepositSource.SLOT, 0, wrong).amount());
   }
 
-  /**
-   * An index no slot has is carried as it arrived, so the server refuses it. Clamping would turn a
-   * forged request into one acting on the player's first hotbar slot.
-   */
   @ParameterizedTest
   @ValueSource(ints = {-1, Integer.MIN_VALUE, 36, 40})
   void anIndexOutsideTheLockableRangeIsCarriedRatherThanClampedIntoIt(int outside) {
@@ -69,7 +64,6 @@ class DepositRequestPayloadTest {
     assertEquals(DepositSource.CURSOR, new DepositRequestPayload(1, null, 0, 1).source());
   }
 
-  /** A whole-stack deposit asks for the ceiling rather than a count the client read off a stack. */
   @Test
   void aWholeStackRequestAsksForMoreThanAnySlotCouldHold() {
     assertEquals(DepositRequestPayload.MAX_AMOUNT, DepositRequestPayload.wholeSlot(1, 4).amount());

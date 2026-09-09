@@ -74,7 +74,6 @@ class ListingScrollTest {
     assertEquals(expectedTopRow, scroll.topRow());
   }
 
-  /** Only a scroll that actually moved is worth a request, so nothing asks twice for one window. */
   @Test
   void aScrollThatChangesNothingReportsThatItChangedNothing() {
     scroll.fit(500);
@@ -84,10 +83,6 @@ class ListingScrollTest {
     assertTrue(scroll.scrollTo(5));
   }
 
-  /**
-   * A network shrinking under a player sitting at the bottom of it would otherwise leave the grid
-   * scrolled past the end, showing nothing until they scrolled back up.
-   */
   @Test
   void aListingThatShrinksPullsTheViewBackInsideIt() {
     scroll.fit(500);
@@ -110,7 +105,6 @@ class ListingScrollTest {
     assertFalse(scroll.overflows());
   }
 
-  /** A total arriving from the wire is clamped rather than trusted, per ADR 0009. */
   @DisplayName("a total that could not have been counted leaves nothing to scroll through")
   @ParameterizedTest(name = "total {0}")
   @CsvSource({"-1", "-500", "-2147483648"})
@@ -121,7 +115,6 @@ class ListingScrollTest {
     assertFalse(scroll.overflows());
   }
 
-  /** A total near the top of an int must not wrap the row arithmetic into a negative count. */
   @Test
   void anAbsurdlyLargeTotalStillCountsARealNumberOfRows() {
     scroll.fit(Integer.MAX_VALUE);

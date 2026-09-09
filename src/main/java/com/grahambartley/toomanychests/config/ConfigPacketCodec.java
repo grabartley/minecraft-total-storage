@@ -4,16 +4,6 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 
-/**
- * The wire form of the server configuration, shared by the sync and edit payloads.
- *
- * <p>Enums travel as their string ids rather than their ordinals, so reordering a constant cannot
- * quietly turn one setting into another for a client on a different build.
- *
- * <p>Decoding runs every value back through the record's own constructor, which clamps. A client
- * that forges a wildly out-of-range setting therefore hands the server a value inside the
- * documented bounds, and the server still has to decide whether to accept it at all.
- */
 public final class ConfigPacketCodec {
   public static final PacketCodec<RegistryByteBuf, TooManyChestsConfig> INSTANCE =
       PacketCodec.of(ConfigPacketCodec::write, ConfigPacketCodec::read);

@@ -22,11 +22,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 
-/**
- * Proves the provider abstraction against real containers, which no unit test can do: the slot
- * counts and the single-provider-per-double-chest guarantee come from the Transfer API's own
- * fallback rather than from this mod's code.
- */
 public final class StorageProviderResolverGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
   private static final int SINGLE_CONTAINER_SLOTS = 27;

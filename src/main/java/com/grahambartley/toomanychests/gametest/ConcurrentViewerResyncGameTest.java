@@ -19,22 +19,6 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Whether everybody looking at a network hears about a move, and only the people who should.
- *
- * <p>A commit is the moment a listing on somebody else's screen becomes wrong, and it is the moment
- * this proves they are told. Every assertion here is made in the same tick as the withdrawal that
- * caused it, because a resync that waits for the next tick sweep leaves a window in which the
- * bystander's next click is a request the server has to refuse.
- *
- * <p>A page reaching a client cannot be seen from a gametest, because a mock player never declares
- * the mod's channels and the send goes nowhere. Every page built is stamped with a new revision
- * though, and the stamp advancing is the same evidence a packet would have been.
- *
- * <p>The other audience, a player with a container open by hand, is counted rather than stamped: a
- * vanilla screen carries no revision of its own, so what is asserted is how many screens the
- * fan-out reached.
- */
 public final class ConcurrentViewerResyncGameTest implements FabricGameTest {
   private static final String BATCH = "concurrent-viewer-resync";
   private static final int TICK_LIMIT = 60;
@@ -42,7 +26,6 @@ public final class ConcurrentViewerResyncGameTest implements FabricGameTest {
 
   private final WithdrawService withdrawals = new WithdrawService();
 
-  /** The case the standards call the test case: two players doing one thing at one object. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -64,7 +47,6 @@ public final class ConcurrentViewerResyncGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, acting, bystander);
   }
 
-  /** Two radii over one barrel: a move through either is a move the other is wrong about. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -86,7 +68,6 @@ public final class ConcurrentViewerResyncGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, south, north);
   }
 
-  /** A terminal whose network holds none of what moved hears nothing at all. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -109,7 +90,6 @@ public final class ConcurrentViewerResyncGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, south, north);
   }
 
-  /** The player who acted is answered by their own operation, not a second time by the fan-out. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -132,7 +112,6 @@ public final class ConcurrentViewerResyncGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, acting);
   }
 
-  /** A chest somebody opened by hand is a screen the terminal has just written behind. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -157,7 +136,6 @@ public final class ConcurrentViewerResyncGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, acting, byHand);
   }
 
-  /** A screen open on something else is none of the fan-out's business. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -181,7 +159,6 @@ public final class ConcurrentViewerResyncGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, acting, byHand);
   }
 
-  /** Every viewer leaving by the ordinary route empties the register they were written into. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -209,10 +186,6 @@ public final class ConcurrentViewerResyncGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, first, second);
   }
 
-  /**
-   * A viewer who left without their screen saying so, which is what a disconnect looks like from
-   * here. The register heals on the next walk of it rather than holding the entry for ever.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,

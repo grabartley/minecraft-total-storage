@@ -14,25 +14,6 @@ import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
-/**
- * Draws how a network is configured, and says what a click landed on.
- *
- * <p>Two sections behind a strip along the top, because the recess is a hundred pixels tall and the
- * window cannot grow: sharing that between the terminal's own settings and its container list makes
- * both unusable, where splitting it costs fourteen pixels once and leaves each section room to
- * breathe. See {@link TerminalSettingsLayout#SECTION_COUNT}.
- *
- * <p>Every row is twenty pixels, which is what lets a container row carry a real item icon and a
- * setting row carry a control big enough to aim at. A container is recognised by what is in it far
- * sooner than by its coordinates, so the icon leads and the position is left to the tooltip.
- *
- * <p>Everything shown comes from the server's answer rather than from anything worked out here. The
- * client does not know the server's radius cap, cannot turn a trust list into names, and never sees
- * the block entity the roles live on.
- *
- * <p>Controls a player may not use are drawn flat rather than hidden. A missing button reads as a
- * broken screen; a disabled one reads as somebody else's terminal, which is the truth.
- */
 public final class TerminalSettingsPanel {
   private static final Identifier TAB_SELECTED = TerminalSprites.of("filter/row_active");
   private static final Identifier TAB_HOVER = TerminalSprites.of("filter/row_hover");
@@ -51,14 +32,12 @@ public final class TerminalSettingsPanel {
   private static final int LABEL_COLOUR = 0xE4E9F2;
   private static final int MUTED_COLOUR = 0x9AA3B3;
 
-  /** The colour a network close to full is written in, matching the excluded role's warning red. */
   private static final int WARNING_COLOUR = 0xED6353;
 
   private static final int TEXT_INSET = 4;
   private static final int ICON_SIZE = 16;
   private static final int LINE_HEIGHT = 9;
 
-  /** How much of a row's right edge the role chip is given, measured from the row's end. */
   private static final int CHIP_WIDTH = 52;
 
   private final ListingScroll scroll = new ListingScroll(1, TerminalSettingsLayout.ROWS);
@@ -72,13 +51,6 @@ public final class TerminalSettingsPanel {
     return section;
   }
 
-  /**
-   * Whether the open section has a list to scroll, which only the container one does.
-   *
-   * <p>Asked before the scrollbar is offered a click or a wheel notch. The scrollbar refusing on
-   * its own is not enough: it refuses by asking whether it overflows, and between switching section
-   * and the next answer from the server that is still the other section's count.
-   */
   public boolean scrolls() {
     return section == SettingsSection.CONTAINERS;
   }
@@ -93,24 +65,14 @@ public final class TerminalSettingsPanel {
     return scroll;
   }
 
-  /**
-   * Whether a point is over a scrollbar this panel is actually showing.
-   *
-   * <p>The section is folded in here rather than asked beside every call, because a settings row
-   * spans the whole panel and the stepper that raises the radius reaches into the band the
-   * container list keeps for its own scrollbar. Every way in has to agree about that, and a rule
-   * spelled out at four call sites is a rule three of them will keep and one will not.
-   */
   public boolean isOverScrollbar(int windowX, int windowY) {
     return scrolls() && TerminalSettingsLayout.isOverScrollbar(windowX, windowY);
   }
 
-  /** Takes hold of the thumb, measured from the top of the window rather than of the track. */
   public boolean grabScrollbar(int windowY) {
     return scrolls() && scrollbar.grab(windowY - TerminalSettingsLayout.CONTENT_Y);
   }
 
-  /** Whether a drag begun on this panel's scrollbar is still running. */
   public boolean isDraggingScrollbar() {
     return scrolls() && scrollbar.isDragging();
   }
@@ -127,15 +89,10 @@ public final class TerminalSettingsPanel {
     return scrollbar;
   }
 
-  /** Keeps the scroll inside a list that may have changed size since the last answer. */
   public void fit(NetworkSettingsView view) {
     scroll.fit(section == SettingsSection.CONTAINERS ? view.containerTotal() : 0);
   }
 
-  /**
-   * The row of the whole container list a screen position is over, or {@link
-   * TerminalSettingsLayout#NO_ROW} for none.
-   */
   public int containerRowAt(int windowX, int windowY) {
     if (section != SettingsSection.CONTAINERS
         || TerminalSettingsLayout.isOverScrollbar(windowX, windowY)) {
@@ -145,7 +102,6 @@ public final class TerminalSettingsPanel {
     return row == TerminalSettingsLayout.NO_ROW ? row : scroll.firstIndex() + row;
   }
 
-  /** The terminal setting a screen position is over, or null for none. */
   public TerminalSetting settingAt(int windowX, int windowY) {
     if (section != SettingsSection.TERMINAL) {
       return null;
@@ -274,10 +230,6 @@ public final class TerminalSettingsPanel {
         originY + TerminalSettingsLayout.rowY(TerminalSetting.CAPACITY.row()));
   }
 
-  /**
-   * How much room is left, in slots, turning warning-coloured once the network is as full as the
-   * server's threshold. Slots rather than items, because slots are what a deposit runs out of.
-   */
   private static void capacity(
       DrawContext context,
       TextRenderer textRenderer,
@@ -398,7 +350,6 @@ public final class TerminalSettingsPanel {
         TerminalSettingsLayout.ROW_HEIGHT - 1);
   }
 
-  /** A row reading as a name on the left and its value on the right, which is what a setting is. */
   private static void labelled(
       DrawContext context,
       TextRenderer textRenderer,
@@ -428,7 +379,6 @@ public final class TerminalSettingsPanel {
         false);
   }
 
-  /** Centred between the two controls that flank it, which is where the radius reads best. */
   private static void centred(
       DrawContext context,
       TextRenderer textRenderer,
@@ -450,10 +400,6 @@ public final class TerminalSettingsPanel {
         false);
   }
 
-  /**
-   * A square button carrying one glyph, sized so it can be aimed at rather than hunted for. Drawn
-   * rather than added as a widget so it tracks the row it belongs to and leaves with its section.
-   */
   private static void stepper(
       DrawContext context,
       TextRenderer textRenderer,
@@ -474,7 +420,6 @@ public final class TerminalSettingsPanel {
         false);
   }
 
-  /** The list's own scrollbar, drawn in the gutter the rows leave for it. */
   private void drawScrollbar(DrawContext context, int originX, int originY) {
     context.drawGuiTexture(
         SCROLL_TRACK,

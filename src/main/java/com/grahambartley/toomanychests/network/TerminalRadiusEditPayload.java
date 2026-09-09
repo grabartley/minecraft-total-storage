@@ -7,13 +7,6 @@ import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
 
-/**
- * A player moving one terminal's reach from its settings panel.
- *
- * <p>Bounded to the range a radius can take while decoding, and clamped again server-side against
- * the live server maximum per ADR 0021. This bound only stops a packet naming a number that would
- * be absurd to walk at all; the maximum that really applies is the server's, not this one.
- */
 public record TerminalRadiusEditPayload(int syncId, int blocks) implements CustomPayload {
   public static final CustomPayload.Id<TerminalRadiusEditPayload> ID =
       new CustomPayload.Id<>(Identifier.of(TooManyChests.MOD_ID, "terminal_radius_edit"));

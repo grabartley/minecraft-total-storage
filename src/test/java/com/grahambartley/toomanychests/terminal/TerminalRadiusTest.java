@@ -11,7 +11,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class TerminalRadiusTest {
-
   @DisplayName("a radius the server permits is left exactly as it was asked for")
   @ParameterizedTest(name = "{0} blocks under a maximum of {1}")
   @CsvSource({"1, 16", "8, 16", "16, 16", "64, 64"})

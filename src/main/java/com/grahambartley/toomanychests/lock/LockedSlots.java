@@ -7,17 +7,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-/**
- * The inventory slots a player has pinned against automated movement.
- *
- * <p>Locks are slot-based, so an index stays locked whatever occupies it. Only the main inventory
- * and hotbar are covered, because armour and the offhand are already excluded from deposit and
- * sorting.
- *
- * <p>Indices outside that range are dropped rather than stored. The set arrives from a client that
- * can send any integer, and a set able to hold index 9999 would push a range check into every
- * consumer that reads it.
- */
 public record LockedSlots(Set<Integer> indices) {
   public static final int FIRST_SLOT = 0;
   public static final int SLOT_COUNT = 36;
@@ -53,7 +42,6 @@ public record LockedSlots(Set<Integer> indices) {
     return indices.size();
   }
 
-  /** Ascending order, so the persisted and synced forms of an equal set are byte identical. */
   public List<Integer> sortedIndices() {
     return List.copyOf(indices);
   }

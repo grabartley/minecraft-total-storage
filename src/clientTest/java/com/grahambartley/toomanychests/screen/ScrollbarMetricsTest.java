@@ -31,7 +31,6 @@ class ScrollbarMetricsTest {
     assertEquals(expected, ScrollbarMetrics.thumbHeight(TRACK, visibleRows, totalRows));
   }
 
-  /** Past this the art has no bevel left, and a thumb nobody can grab is not a scrollbar. */
   @Test
   void theThumbStopsShrinkingWhereItStopsBeingGrabbable() {
     assertEquals(
@@ -62,11 +61,6 @@ class ScrollbarMetricsTest {
     assertTrue(top >= 0 && top + height <= TRACK, "thumb top was " + top);
   }
 
-  /**
-   * A thumb dragged to the bottom of its travel has to reach the last row. Truncating leaves it one
-   * row short at almost every track height, which reads as a scrollbar that will not go all the way
-   * down.
-   */
   @Test
   void aThumbDraggedToTheEndOfItsTravelReachesTheLastRow() {
     int height = ScrollbarMetrics.thumbHeight(TRACK, VISIBLE_ROWS, 56);
@@ -75,10 +69,6 @@ class ScrollbarMetricsTest {
     assertEquals(0, ScrollbarMetrics.rowAt(TRACK, height, 0, 51));
   }
 
-  /**
-   * A listing with no more rows than the track has pixels of travel has a pixel for every row, so
-   * grabbing a thumb without moving it must not shift the grid a row.
-   */
   @DisplayName("dragging the thumb to where a row put it lands back on that row")
   @ParameterizedTest(name = "row {0}")
   @MethodSource("everyRowOfALongListing")
@@ -89,10 +79,6 @@ class ScrollbarMetricsTest {
     assertEquals(topRow, ScrollbarMetrics.rowAt(TRACK, height, top, 51));
   }
 
-  /**
-   * Past a row per pixel the mapping is genuinely lossy, and the honest contract is that the
-   * position stays near where the thumb is drawn rather than exact.
-   */
   @Test
   void aListingWithMoreRowsThanPixelsStaysNearWhereTheThumbIsDrawn() {
     int maxTopRow = 5_000;
@@ -108,7 +94,6 @@ class ScrollbarMetricsTest {
     }
   }
 
-  /** A listing far larger than a track must not wrap the pixel arithmetic into a negative. */
   @Test
   void anAbsurdlyLongListingStillMapsOntoItsTrack() {
     int maxTopRow = Integer.MAX_VALUE / 8;

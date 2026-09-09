@@ -8,14 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-/**
- * The bound a request is held to before anything acts on it.
- *
- * <p>Building a whole payload needs an {@code ItemVariant} and therefore a registry, so what
- * survives the wire is proven in {@code WithdrawServiceGameTest} instead.
- */
 class WithdrawRequestPayloadTest {
-
   @ParameterizedTest
   @ValueSource(ints = {Integer.MAX_VALUE, 100_000})
   void anAmountLargerThanAnyoneCouldCarryIsClampedRatherThanRefused(int amount) {

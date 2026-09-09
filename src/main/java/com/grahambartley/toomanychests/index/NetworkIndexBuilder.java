@@ -10,20 +10,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Accumulates what containers hold into an index, merging identical variants across them.
- *
- * <p>Single use and not thread safe: build one, feed it a scan, order it, discard it.
- *
- * @param <V> the variant type, {@code ItemVariant} in production
- */
 public final class NetworkIndexBuilder<V> {
   private final Map<V, Accumulator> accumulators = new LinkedHashMap<>();
 
-  /**
-   * Records a variant held at an origin. Zero amounts are ignored, so an empty slot never invents a
-   * row and never claims a container holds something it does not.
-   */
   public NetworkIndexBuilder<V> add(V variant, long amount, StorageOrigin origin) {
     Objects.requireNonNull(variant, "variant");
     Objects.requireNonNull(origin, "origin");
@@ -46,8 +35,7 @@ public final class NetworkIndexBuilder<V> {
           new NetworkIndexEntry<>(
               accumulated.getKey(), accumulator.total, List.copyOf(accumulator.origins)));
     }
-    // A stable sort over insertion order, which discovery already fixed, is what keeps entries the
-    // comparator cannot separate in the same place between openings.
+
     entries.sort(ordering);
     return NetworkIndex.ordered(entries);
   }

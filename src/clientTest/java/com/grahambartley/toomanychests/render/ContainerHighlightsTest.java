@@ -12,7 +12,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 class ContainerHighlightsTest {
-
   private static List<HighlightedContainer> one() {
     return List.of(new HighlightedContainer(BlockPos.ORIGIN, ContainerRole.GENERAL));
   }
@@ -30,7 +29,6 @@ class ContainerHighlightsTest {
     assertEquals(one(), ContainerHighlights.showing());
   }
 
-  /** Feedback rather than an overlay: it goes away on its own and stops with the game. */
   @Test
   void theOutlinesRunOutAfterTheTicksTheyWereGiven() {
     ContainerHighlights.show(one(), 2);
@@ -50,7 +48,6 @@ class ContainerHighlightsTest {
     assertFalse(ContainerHighlights.isShowing());
   }
 
-  /** A newer answer supersedes an older one rather than adding to it. */
   @Test
   void aSecondAnswerReplacesTheFirst() {
     ContainerHighlights.show(one(), 5);

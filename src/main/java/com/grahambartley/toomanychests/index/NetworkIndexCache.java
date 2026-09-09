@@ -12,20 +12,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 
-/**
- * Keeps an index current without ever looking for changes.
- *
- * <p>A mutation marks exactly one container stale. Nothing is recomputed at that moment: the work
- * happens on the next read, so a network nobody is looking at does none, and a container hammered a
- * hundred times between two reads costs one re-read rather than a hundred. That collapsing is the
- * whole debounce, and it holds for any burst within a tick or across many.
- *
- * <p>Recomputation re-reads only the stale containers and re-merges the snapshots it already has,
- * so a hopper trickling into one chest never re-reads the rest of the network and never triggers a
- * discovery scan.
- *
- * @param <V> the variant type, {@code ItemVariant} in production
- */
 public final class NetworkIndexCache<V> {
   private final Function<StorageOrigin, Map<V, Long>> contentsReader;
   private final Comparator<NetworkIndexEntry<V>> ordering;
@@ -45,10 +31,6 @@ public final class NetworkIndexCache<V> {
     this.ordering = Objects.requireNonNull(ordering, "ordering");
   }
 
-  /**
-   * Replaces the tracked containers wholesale, which is what a discovery scan produces. Discovery
-   * order is kept, so entries the ordering cannot separate stay put between openings.
-   */
   public void track(Collection<StorageOrigin> origins) {
     Objects.requireNonNull(origins, "origins");
     contents.clear();
@@ -62,17 +44,12 @@ public final class NetworkIndexCache<V> {
     }
   }
 
-  /** Marks one container stale. Origins outside the network are ignored rather than adopted. */
   public void invalidate(StorageOrigin origin) {
     if (contents.containsKey(origin)) {
       stale.add(origin);
     }
   }
 
-  /**
-   * Adds one container to the tracked set, unread, which is what a chunk load produces. Already
-   * tracked containers keep the snapshot they have rather than being re-read for nothing.
-   */
   public void adopt(StorageOrigin origin) {
     Objects.requireNonNull(origin, "origin");
     if (contents.containsKey(origin)) {
@@ -82,11 +59,6 @@ public final class NetworkIndexCache<V> {
     stale.add(origin);
   }
 
-  /**
-   * Removes one container and everything it contributed. Unlike invalidation this cannot wait for a
-   * re-read to correct it: the container is gone, so the next read must not include it, and the
-   * merge is forced even though nothing is stale.
-   */
   public void forget(StorageOrigin origin) {
     stale.remove(origin);
     if (contents.remove(origin) != null) {
@@ -102,8 +74,7 @@ public final class NetworkIndexCache<V> {
     if (stale.isEmpty() && !remerge) {
       return index;
     }
-    // Drained before reading, so a storage that marks itself dirty as it is read is picked up by
-    // the next read rather than corrupting this one.
+
     final List<StorageOrigin> reading = List.copyOf(stale);
     stale.clear();
     remerge = false;
@@ -124,12 +95,10 @@ public final class NetworkIndexCache<V> {
     return contents.size();
   }
 
-  /** How many times the index has been rebuilt from snapshots, which idle work would inflate. */
   public int recomputeCount() {
     return recomputeCount;
   }
 
-  /** How many container reads have happened, which a full rebuild would inflate. */
   public int containerReadCount() {
     return containerReadCount;
   }

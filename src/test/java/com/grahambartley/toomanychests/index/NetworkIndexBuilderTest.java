@@ -19,7 +19,6 @@ class NetworkIndexBuilderTest {
   private static final StorageOrigin SECOND = TestOrigins.at(1);
   private static final StorageOrigin THIRD = TestOrigins.at(2);
 
-  /** One tick, which is the ceiling a terminal opening must stay under. */
   private static final long TICK_NANOS = 50_000_000L;
 
   @Test

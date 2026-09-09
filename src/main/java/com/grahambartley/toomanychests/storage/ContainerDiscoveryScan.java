@@ -14,15 +14,6 @@ import net.minecraft.world.chunk.WorldChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Finds every eligible container a terminal can reach.
- *
- * <p>The scan walks the block entities of the chunks the region touches rather than testing every
- * position in it, which is the difference between a handful of lookups and tens of thousands. It
- * only ever reads chunks that are already loaded, per ADR 0002, and never asks for one that is not.
- *
- * <p>This is the most expensive operation in the mod and is not safe to run on a tick timer.
- */
 public final class ContainerDiscoveryScan {
   private static final Logger LOGGER = LoggerFactory.getLogger(ContainerDiscoveryScan.class);
 
@@ -86,8 +77,7 @@ public final class ContainerDiscoveryScan {
 
   private List<StorageProvider> collectProviders(World world, List<BlockPos> candidates) {
     final List<StorageProvider> providers = new ArrayList<>();
-    // A double chest is two block entities over one storage, and both halves hand back the same
-    // slot objects, so slot identity collapses them without naming chests here.
+
     final Set<Object> claimedSlots = Collections.newSetFromMap(new IdentityHashMap<>());
     for (final BlockPos pos : candidates) {
       if (!eligibility.isEligible(world, pos)) {

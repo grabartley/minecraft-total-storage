@@ -30,10 +30,6 @@ class ListingPlaceholderTest {
     assertTrue(ListingPlaceholder.forStatus(status).isPresent());
   }
 
-  /**
-   * A player who cannot separate the accent from the chassis still has to tell these apart, so the
-   * two states differ by silhouette rather than only by the line under them.
-   */
   @Test
   void anEmptyNetworkAndAnEmptySearchAreDifferentPictures() {
     assertNotEquals(
@@ -41,10 +37,6 @@ class ListingPlaceholderTest {
         ListingPlaceholder.forStatus(ListingStatus.NO_RESULTS).orElseThrow().sprite());
   }
 
-  /**
-   * A terminal whose network was torn down under an open screen is not an empty network: the view
-   * is out of date rather than accurate and empty, and the words are the whole difference.
-   */
   @Test
   void aTornDownNetworkReadsDifferentlyFromAnEmptyOne() {
     assertNotEquals(

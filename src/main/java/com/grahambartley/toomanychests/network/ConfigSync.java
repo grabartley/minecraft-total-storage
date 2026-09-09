@@ -8,14 +8,6 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-/**
- * Keeps each connected client's copy of the server configuration in step with the server's own.
- *
- * <p>What a client holds is for drawing screens and predicting keybinds. Nothing here reads back
- * from a client to decide anything: a rejected edit is answered with the true configuration, so a
- * client that tried to change a setting it may not change ends up displaying reality rather than
- * what it asked for.
- */
 public final class ConfigSync {
   private ConfigSync() {}
 
@@ -24,7 +16,6 @@ public final class ConfigSync {
     ServerConfigChanges.subscribe(ConfigSync::broadcast);
   }
 
-  /** Sends the live configuration to one player, skipping clients that cannot receive it. */
   public static void sendTo(ServerPlayerEntity player) {
     send(player, ServerConfigService.current());
   }
@@ -38,10 +29,6 @@ public final class ConfigSync {
     }
   }
 
-  /**
-   * Adopts an edit only from a sender who still holds operator permission at the moment it lands,
-   * rather than at the moment the screen that sent it was opened.
-   */
   public static void handleEdit(ServerPlayerEntity player, TooManyChestsConfig requested) {
     if (player == null) {
       return;

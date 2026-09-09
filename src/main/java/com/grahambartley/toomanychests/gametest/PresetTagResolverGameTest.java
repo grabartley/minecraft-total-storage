@@ -16,11 +16,6 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.test.TestFunction;
 
-/**
- * Preset membership is decided by datapack tags, which only exist on a running server, so the
- * classification is proven here. The decision made once the matches are known is covered off-game
- * by {@code PresetTagRulesTest}.
- */
 public final class PresetTagResolverGameTest implements FabricGameTest {
   private static final String BATCH = "preset-tags";
   private static final int TICK_LIMIT = 100;
@@ -58,11 +53,6 @@ public final class PresetTagResolverGameTest implements FabricGameTest {
           new Expectation(Items.POTION, PresetTag.BREWING),
           new Expectation(Items.GLASS_BOTTLE, PresetTag.BREWING));
 
-  /**
-   * Items no vanilla tag covers, so reaching the right preset is only possible through the
-   * convention tags the presets are composed from. These stand in for the modded items that reach
-   * the same presets the same way.
-   */
   private static final List<Expectation> CONVENTION_ONLY =
       List.of(
           new Expectation(Items.COPPER_INGOT, PresetTag.ORES_AND_MINERALS),

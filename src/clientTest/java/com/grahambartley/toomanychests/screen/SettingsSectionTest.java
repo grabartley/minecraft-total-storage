@@ -10,7 +10,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 class SettingsSectionTest {
-
   @ParameterizedTest
   @EnumSource(SettingsSection.class)
   void aClickAnywhereOnASectionTabReachesIt(SettingsSection section) {

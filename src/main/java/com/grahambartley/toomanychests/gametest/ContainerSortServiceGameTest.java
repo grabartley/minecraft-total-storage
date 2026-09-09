@@ -19,18 +19,6 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Sorting a real container a real player has open.
- *
- * <p>The arrangement itself is unit tested, so what is proven here is everything the arithmetic
- * cannot see: that the sync id check actually refuses a screen the player does not have open, that
- * the transaction writes back through a live inventory without losing anything, and that a locked
- * slot survives a sort of the inventory around it.
- *
- * <p>Conservation is asserted on every test that moves items, per the testing standard. A storage
- * mod's worst failure is duplicating items and its second worst is destroying them, and both look
- * exactly like a successful sort until someone counts.
- */
 public final class ContainerSortServiceGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
   private static final String BATCH = "container-sort";

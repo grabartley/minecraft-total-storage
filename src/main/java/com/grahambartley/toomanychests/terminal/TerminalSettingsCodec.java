@@ -14,13 +14,6 @@ import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.util.Uuids;
 
-/**
- * Persists a terminal's settings.
- *
- * <p>Every field is optional on read and decoding routes through {@link TerminalSettings}, so a
- * save written by an older build, or edited by hand, loses only the values it cannot supply rather
- * than the whole block entity.
- */
 public final class TerminalSettingsCodec {
   private static final Codec<TerminalAccessMode> ACCESS_MODE =
       Codec.STRING.xmap(

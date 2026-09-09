@@ -16,23 +16,6 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.ChunkPos;
 
-/**
- * Adversarial proof that taking items out of a network can neither create nor destroy them.
- *
- * <p>This is the property that decides whether the mod is safe to put in a modpack, so it is proven
- * against the world rather than inferred from the pieces. Every test here counts every one of an
- * item in the test's patch of world before and after: in containers, carried by players, and lying
- * on the floor. A total that only counted containers could not tell an item that moved from one
- * that was made, and one that ignored the floor would score a duplication bug as a pass whenever
- * the extra copy happened to be dropped.
- *
- * <p>What is attacked here is the gap between what a client believes and what the network holds.
- * Per ADR 0009 that gap is permanent and ordinary, so each case widens it as far as it will go and
- * then clicks: the container is gone, its chunk has been forgotten, another player emptied it a
- * moment ago, or the request was never honest to begin with.
- *
- * <p>Any future change to a mutating code path adds a case here.
- */
 public final class DuplicationSafetyGameTest implements FabricGameTest {
   private static final String BATCH = "duplication-safety";
   private static final int TICK_LIMIT = 60;
@@ -41,7 +24,6 @@ public final class DuplicationSafetyGameTest implements FabricGameTest {
 
   private final WithdrawService withdrawals = new WithdrawService();
 
-  /** Two players reaching for the last stack together: one stack in, one stack out. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -63,11 +45,6 @@ public final class DuplicationSafetyGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, first, second);
   }
 
-  /**
-   * A container broken in the same tick scatters its contents on the floor, and the withdrawal that
-   * arrives afterwards must find nothing to take. The items are still in the world either way,
-   * which is exactly what makes the total the assertion worth making.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -89,11 +66,6 @@ public final class DuplicationSafetyGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * A chunk unload is published rather than performed, because the network's whole answer to one is
-   * to forget the containers it named. The barrel keeps its items and the network stops offering
-   * them, so a request against it must come back empty handed.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -118,11 +90,6 @@ public final class DuplicationSafetyGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * Two terminals whose radii overlap on one barrel, both taking from it in the same tick. Each
-   * holds its own index and neither knows about the other, so nothing but the transaction stands
-   * between them and the same stack twice.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -146,7 +113,6 @@ public final class DuplicationSafetyGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, south, north);
   }
 
-  /** A request naming an item no container in the network holds must conjure nothing. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -173,7 +139,6 @@ public final class DuplicationSafetyGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** A request for more than the network holds grants what exists and invents nothing. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -191,7 +156,6 @@ public final class DuplicationSafetyGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** Clicking a listing that has gone stale over and over must never accumulate anything. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,

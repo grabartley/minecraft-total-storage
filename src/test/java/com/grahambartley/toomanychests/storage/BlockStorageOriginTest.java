@@ -77,10 +77,10 @@ class BlockStorageOriginTest {
 
   @ParameterizedTest
   @CsvSource({
-    "0, 0, 0, 0", // the origin chunk
-    "15, 15, 0, 0", // the far corner of it
+    "0, 0, 0, 0",
+    "15, 15, 0, 0",
     "16, 0, 1, 0",
-    "-1, -1, -1, -1", // negative coordinates floor rather than truncate
+    "-1, -1, -1, -1",
     "-16, -16, -1, -1",
     "-17, 0, -2, 0",
   })

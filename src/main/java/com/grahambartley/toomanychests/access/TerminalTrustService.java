@@ -10,16 +10,6 @@ import java.util.UUID;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Moves one terminal's access mode and trust list.
- *
- * <p>Every write ends by sweeping the terminal's viewers, because an edit that only binds the next
- * click leaves whoever it excluded still holding an open screen. That sweep is the difference
- * between a trust list and a suggestion.
- *
- * <p>A write that changes nothing reports so and sweeps nothing, so re-trusting a player already
- * trusted costs neither a save nor a screen.
- */
 public final class TerminalTrustService {
   private final TerminalAccessService access;
 
@@ -27,7 +17,6 @@ public final class TerminalTrustService {
     this.access = Objects.requireNonNull(access, "access");
   }
 
-  /** Empty when the position holds no terminal, which every caller has to report differently. */
   public Optional<TerminalSettings> settingsAt(ServerWorld world, BlockPos pos) {
     return TerminalLookup.settingsAt(world, pos);
   }

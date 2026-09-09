@@ -10,11 +10,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 
-/**
- * Proves the server decides every lock toggle, including the ones a modified client could invent.
- * The attachment write is what syncs the set back, so these also cover what the sender's own screen
- * will be told.
- */
 public final class LockToggleServiceGameTest implements FabricGameTest {
   private static final String BATCH = "lock-toggle";
   private static final int TICK_LIMIT = 20;

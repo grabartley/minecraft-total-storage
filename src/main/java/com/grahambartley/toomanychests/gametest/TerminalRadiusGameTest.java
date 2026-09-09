@@ -23,18 +23,6 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * What a terminal's radius does to the volume it actually walks, and what the server maximum does
- * to that in turn.
- *
- * <p>Only a real world proves any of this. A scan is the most expensive thing the mod does, so the
- * assertions here are as much about the scans that must not happen as the containers that must be
- * found.
- *
- * <p>Shares the {@code server-config} batch with the other tests that move the one live
- * configuration, because tests in a batch run one at a time and a maximum radius left in place for
- * a parallel test to read is a flake nobody would diagnose twice.
- */
 public final class TerminalRadiusGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
   private static final String BATCH = "server-config";
@@ -100,10 +88,6 @@ public final class TerminalRadiusGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /**
-   * A radius that moves is worth exactly one scan and a radius that does not is worth none, which
-   * is the whole reason the radius is not simply read fresh on every listing.
-   */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void changingTheRadiusCostsExactlyOneScan(TestContext context) {
     stock(context, NEAR_BARREL, new ItemStack(Items.DIAMOND, 8));
@@ -175,10 +159,6 @@ public final class TerminalRadiusGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /**
-   * The clamp is applied where a scan reads the radius rather than by rewriting the terminal, so an
-   * operator who lowers the maximum and thinks better of it has not cost every player their reach.
-   */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void raisingTheServerMaximumAgainGivesTheReachBack(TestContext context) {
     stock(context, FAR_BARREL, new ItemStack(Items.EMERALD, 5));
@@ -326,7 +306,6 @@ public final class TerminalRadiusGameTest implements FabricGameTest {
     return run(context, server(context).getCommandSource().withLevel(0), command);
   }
 
-  /** A gated branch is refused during parsing, so a source without the gate never executes. */
   private static int run(TestContext context, ServerCommandSource source, String command) {
     try {
       return server(context).getCommandManager().getDispatcher().execute(command, source);
@@ -339,7 +318,6 @@ public final class TerminalRadiusGameTest implements FabricGameTest {
     return context.getWorld().getServer();
   }
 
-  /** Tests that end with a terminal still powered hand the registry back the way they found it. */
   private static void tearDown(TestContext context) {
     TerminalNetworks.power().unloaded(context.getWorld(), absolute(context));
   }

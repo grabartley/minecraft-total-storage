@@ -55,7 +55,6 @@ class NetworkListingTest {
     return Map.copyOf(byVariant);
   }
 
-  /** Ordered by variant name, so every expectation below reads in a fixed order. */
   private static NetworkIndex<String> index() {
     return new NetworkIndexBuilder<String>()
         .add("cobblestone", 300L, ORIGIN)
@@ -90,10 +89,6 @@ class NetworkListingTest {
     assertEquals(new ListingRow<>("cobblestone", 300L, 1), page.rows().get(0));
   }
 
-  /**
-   * A tooltip says how many containers hold a variant, and the index is the only place that is
-   * known. Counting them on the client would mean sending the positions ADR 0009 keeps back.
-   */
   @Test
   void everyRowCarriesHowManyContainersHoldIt() {
     ListingPage<String> page =
@@ -111,7 +106,6 @@ class NetworkListingTest {
     assertEquals(2, page.rows().get(0).providerCount());
   }
 
-  /** The scrollbar is drawn from the total, so it counts matches rather than rows on the page. */
   @Test
   void theTotalCountsEveryMatchRatherThanTheRowsOnThePage() {
     ListingPage<String> page = page(ItemFilter.NONE, ListingWindow.of(0, 2), 1L);
@@ -179,10 +173,6 @@ class NetworkListingTest {
     assertEquals(ListingStatus.LIVE, page(ItemFilter.NONE, ListingWindow.of(0, 10), 1L).status());
   }
 
-  /**
-   * Both of these are a page of no rows, and a screen holding only the rows could not tell a player
-   * whether to put something in the network or to clear what they typed.
-   */
   @Test
   void criteriaThatMatchedNothingReadDifferentlyFromANetworkHoldingNothing() {
     assertEquals(
@@ -195,10 +185,6 @@ class NetworkListingTest {
             .status());
   }
 
-  /**
-   * Scrolling past the end of the results is a page of no rows that is not an empty listing, and
-   * treating it as one would replace the grid with an empty state the moment a slow answer landed.
-   */
   @Test
   void scrollingPastTheEndIsStillALiveListing() {
     assertEquals(ListingStatus.LIVE, page(ItemFilter.NONE, ListingWindow.of(50, 10), 2L).status());

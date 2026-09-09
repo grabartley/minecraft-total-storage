@@ -3,14 +3,6 @@ package com.grahambartley.toomanychests.config;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * A configuration part way through an edit.
- *
- * <p>Exists so moving one setting does not mean restating the ten beside it. Every caller that
- * spells out all eleven fields to change one is a caller that will silently drop a field the day a
- * twelfth is added, and the compiler cannot tell the difference between a field left alone and a
- * field left behind.
- */
 public final class ConfigBuilder {
   private int maxTerminalRadius;
   private TerminalAccessMode defaultTerminalAccessMode;

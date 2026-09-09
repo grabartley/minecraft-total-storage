@@ -15,7 +15,6 @@ import net.minecraft.util.math.BlockPos;
 import org.junit.jupiter.api.Test;
 
 class NetworkSettingsViewTest {
-
   private static ContainerRoleEntry row(int index) {
     return new ContainerRoleEntry(
         new BlockPos(index, 64, 0), ContainerRole.GENERAL, Optional.empty(), 1, 1L, 1, 27, index);
@@ -37,19 +36,12 @@ class NetworkSettingsViewTest {
         IntStream.range(0, rows).mapToObj(NetworkSettingsViewTest::row).toList());
   }
 
-  /**
-   * A terminal running at less than it was set to is worth saying, and is not obvious otherwise.
-   */
   @Test
   void aTerminalHeldUnderItsOwnSettingIsClamped() {
     assertTrue(view(24, 16, 0, 0, 0).isClamped());
     assertFalse(view(16, 16, 0, 0, 0).isClamped());
   }
 
-  /**
-   * Rows are addressed by their place in the whole list rather than in the page, so a panel
-   * scrolled past the rows it holds draws blanks rather than the wrong containers.
-   */
   @Test
   void aRowIsFoundByItsPlaceInTheWholeListRatherThanInThePage() {
     NetworkSettingsView view = view(16, 16, 10, 40, 4);

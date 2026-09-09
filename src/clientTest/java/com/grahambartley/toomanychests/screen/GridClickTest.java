@@ -75,9 +75,6 @@ class GridClickTest {
     assertEquals(expected, GridClick.of(button, shiftDown, cursorHoldsStack, cellHoldsRow));
   }
 
-  /**
-   * A network has no slot to drop into, so where over the grid a full cursor lands means nothing.
-   */
   @ParameterizedTest
   @ValueSource(ints = {GridClick.LEFT_BUTTON, GridClick.RIGHT_BUTTON})
   void depositingDoesNotDependOnTheCellUnderThePointer(int button) {
@@ -92,7 +89,6 @@ class GridClickTest {
     assertEquals(GridAction.NONE, GridClick.of(button, NO_SHIFT, EMPTY_HANDED, OVER_NOTHING));
   }
 
-  /** Shift is the inventory modifier; it must not turn a deposit into something else. */
   @Test
   void shiftDoesNotChangeWhatAFullCursorDoes() {
     assertEquals(
@@ -107,7 +103,6 @@ class GridClickTest {
     assertEquals(GridAction.NONE, GridClick.of(button, NO_SHIFT, HOLDING, OVER_AN_ITEM));
   }
 
-  /** A full cursor deposits with the two buttons that put things down, and with nothing else. */
   @Test
   void middleClickWhileHoldingSomethingIsNotADeposit() {
     assertEquals(

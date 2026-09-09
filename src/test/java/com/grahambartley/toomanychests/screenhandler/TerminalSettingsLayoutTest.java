@@ -14,9 +14,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class TerminalSettingsLayoutTest {
 
-  /**
-   * The settings panel and the grid share one recess, so it must cover exactly what the grid does.
-   */
   @Test
   void theSettingsPanelFillsTheRecessTheGridUses() {
     assertEquals(TerminalScreenLayout.GRID_X, TerminalSettingsLayout.PANEL_X);
@@ -82,7 +79,6 @@ class TerminalSettingsLayoutTest {
         IndexOutOfBoundsException.class, () -> TerminalSettingsLayout.sectionTabX(section));
   }
 
-  /** Enough rows to be a list rather than a peephole, which is what splitting the panel bought. */
   @Test
   void thereIsRoomForEnoughRowsToBeAList() {
     assertTrue(
@@ -90,7 +86,6 @@ class TerminalSettingsLayoutTest {
         "a list of " + TerminalSettingsLayout.ROWS + " rows is not navigable");
   }
 
-  /** A row has to hold a sixteen pixel item icon and a control, with air around them. */
   @Test
   void aRowIsTallEnoughToHoldAnIconAndAControl() {
     assertTrue(
@@ -144,11 +139,6 @@ class TerminalSettingsLayoutTest {
             TerminalSettingsLayout.PANEL_X - 1, TerminalSettingsLayout.CONTENT_Y));
   }
 
-  /**
-   * A row spans the whole panel, because only the section that scrolls has a gutter. Which section
-   * that is belongs to the panel, so rejecting the gutter is proven in {@code
-   * TerminalSettingsPanelTest} rather than here.
-   */
   @Test
   void aSettingsRowSpansThePanelAndTheGutterIsStillTheScrollbars() {
     assertEquals(TerminalSettingsLayout.PANEL_WIDTH, TerminalSettingsLayout.FULL_ROW_WIDTH);

@@ -10,13 +10,6 @@ import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.util.Identifier;
 
-/**
- * Binds a player's locked slots to the player, so the set saves with the world, follows them
- * through respawn, and reaches only their own client.
- *
- * <p>The locks survive death while the items themselves drop per vanilla rules: a lock preserves
- * layout, it is not a keep-inventory mechanic.
- */
 public final class LockedSlotsAttachment {
   public static final Identifier ID = Identifier.of(TooManyChests.MOD_ID, "locked_slots");
 
@@ -39,11 +32,6 @@ public final class LockedSlotsAttachment {
 
   private LockedSlotsAttachment() {}
 
-  /**
-   * Forces this class to initialise, which is what performs the registration. Without an explicit
-   * call during mod init, the first read of {@link #TYPE} could land after a save has already been
-   * parsed, and the stored locks would be discarded as an unknown attachment.
-   */
   public static void register() {}
 
   public static LockedSlots get(PlayerEntity player) {

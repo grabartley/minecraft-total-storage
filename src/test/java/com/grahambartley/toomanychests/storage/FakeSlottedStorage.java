@@ -10,7 +10,6 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
-/** Stands in for what the Transfer API hands back for an {@code Inventory}-backed block entity. */
 final class FakeSlottedStorage implements SlottedStorage<ItemVariant> {
   private final List<SingleSlotStorage<ItemVariant>> slots;
 

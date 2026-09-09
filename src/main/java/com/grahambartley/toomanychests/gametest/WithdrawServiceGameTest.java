@@ -21,18 +21,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 
-/**
- * Taking items out of a network, against real containers.
- *
- * <p>The arithmetic of how much a gesture asks for is exhausted in JUnit. What only a world can
- * show is that the amount really arrives, that it comes out of the containers rather than out of
- * nowhere, and above all that the ways a request can be wrong cost a shortfall rather than an item
- * that never existed: a stale listing, a container broken in the same tick, and two players
- * reaching for the last stack together.
- *
- * <p>Every test that could lose or duplicate items asserts conservation, per the repository's
- * testing standards: what the player gained is exactly what the barrel lost.
- */
 public final class WithdrawServiceGameTest implements FabricGameTest {
   private static final String BATCH = "terminal-withdraw";
   private static final int TICK_LIMIT = 60;
@@ -97,7 +85,6 @@ public final class WithdrawServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** Per ADR 0009 asking for more than exists is an ordinary race, not an error. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -119,11 +106,6 @@ public final class WithdrawServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * A withdrawal for something the network does not hold grants nothing, whatever the client's list
-   * claims. This is the case a stale listing produces constantly and the one that must never
-   * fabricate an item.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -150,11 +132,6 @@ public final class WithdrawServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * The duplication-safety case #34 calls out by name. Per ADR 0002 a container that has gone
-   * leaves the network the moment it goes, and a withdrawal aimed at it has to come back empty
-   * handed rather than extracting from a hole.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -175,7 +152,6 @@ public final class WithdrawServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** Two players reaching for the last stack in the same tick: exactly one of them gets it. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -203,10 +179,6 @@ public final class WithdrawServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, first, second);
   }
 
-  /**
-   * ADR 0010: a lock one automated path ignores is worse than no lock. A shift-click withdrawal is
-   * an automated path, so a locked slot is not somewhere it may put things.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -227,7 +199,6 @@ public final class WithdrawServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** Nothing is dropped on the floor: what will not fit stays in the network. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -254,10 +225,6 @@ public final class WithdrawServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * The one part of the request a plain JUnit test cannot reach, because a variant needs a
-   * registry.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,

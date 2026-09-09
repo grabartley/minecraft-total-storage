@@ -14,14 +14,6 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Which screens the server will rearrange, decided against screens a running server actually built.
- *
- * <p>The deny list is unit tested against identifiers, so what is proven here is the half that
- * cannot be: that a real chest handler exposes the slots this expects, that a real furnace handler
- * is turned away, and that the player's own inventory resolves to the thirty six slots a lock can
- * cover and nothing above them.
- */
 public final class SortableSlotsGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
   private static final String BATCH = "sortable-slots";

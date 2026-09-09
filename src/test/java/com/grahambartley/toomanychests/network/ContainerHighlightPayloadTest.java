@@ -17,7 +17,6 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class ContainerHighlightPayloadTest {
-
   private static RegistryByteBuf buffer() {
     return new RegistryByteBuf(Unpooled.buffer(), null);
   }
@@ -51,7 +50,6 @@ class ContainerHighlightPayloadTest {
     assertEquals(0, buffer.readableBytes());
   }
 
-  /** A highlight of nothing is the true answer for an unpowered terminal, not a missing one. */
   @Test
   void anEmptyHighlightIsCarriedRatherThanRefused() {
     ContainerHighlightPayload empty = new ContainerHighlightPayload(100, List.of());

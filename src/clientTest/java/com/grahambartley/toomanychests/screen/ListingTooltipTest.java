@@ -23,10 +23,6 @@ class ListingTooltipTest {
     return ((TranslatableTextContent) line.getContent()).getKey();
   }
 
-  /**
-   * The number on the cell is compacted the moment it stops fitting, so the tooltip is the only
-   * place a player can read what they actually have.
-   */
   @Test
   void theTooltipCarriesTheRealFigureRatherThanTheCompactedOne() {
     List<Text> lines = ListingTooltip.extraLines(new ListingRow<>("cobblestone", 12_399L, 1));

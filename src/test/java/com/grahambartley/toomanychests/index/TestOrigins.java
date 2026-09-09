@@ -8,7 +8,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-/** Block origins for index tests, which care only that origins are distinct value types. */
 final class TestOrigins {
   static final RegistryKey<World> OVERWORLD =
       RegistryKey.of(RegistryKeys.WORLD, Identifier.of("minecraft", "overworld"));

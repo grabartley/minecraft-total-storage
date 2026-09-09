@@ -7,13 +7,6 @@ import java.util.Optional;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Reads and moves one terminal's radius.
- *
- * <p>A value above the server maximum is clamped as it is written rather than refused, so the
- * terminal ends up at a radius the server permits and the caller is handed the clamp to report. A
- * write that leaves the region a scan would walk unchanged costs no scan at all.
- */
 public final class TerminalRadiusService {
   private final TerminalPower power;
 
@@ -21,7 +14,6 @@ public final class TerminalRadiusService {
     this.power = Objects.requireNonNull(power, "power");
   }
 
-  /** Empty when there is no terminal there at all. */
   public Optional<TerminalRadius> current(ServerWorld world, BlockPos pos) {
     return TerminalLookup.at(world, pos)
         .map(terminal -> TerminalRadius.of(terminal.settings().radius(), serverMaximum()));

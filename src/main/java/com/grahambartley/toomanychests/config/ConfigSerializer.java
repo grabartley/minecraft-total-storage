@@ -7,7 +7,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Translates between the config record and its on-disk JSON shape. */
 public final class ConfigSerializer {
   static final String KEY_MAX_TERMINAL_RADIUS = "maxTerminalRadius";
   static final String KEY_DEFAULT_TERMINAL_ACCESS_MODE = "defaultTerminalAccessMode";

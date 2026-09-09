@@ -9,20 +9,6 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.WorldChunk;
 
-/**
- * The one registry the world publishes container comings and goings to.
- *
- * <p>Block removal and chunk unload are separate Fabric events for a reason: unloading a chunk does
- * not unload its block entities one by one, and removing a block entity says nothing about its
- * chunk. Both have to be listened for or one of the two ways a container can leave the network goes
- * unnoticed, which is the stale-provider case ADR 0002 exists to rule out.
- *
- * <p>Departures are published where they are announced and arrivals are not, per ADR 0026. A
- * departure reads nothing, while an arrival re-scans, and a scan asks the chunk manager questions
- * that must not be asked from inside a chunk load.
- *
- * <p>Server side and single threaded, like the world events that feed it.
- */
 public final class ContainerLifecycle {
   private static final ContainerLifecycleRegistry REGISTRY = new ContainerLifecycleRegistry();
 
@@ -64,6 +50,5 @@ public final class ContainerLifecycle {
             new ChunkArrival(worldKey, chunkPos), () -> REGISTRY.chunkLoaded(worldKey, chunkPos));
   }
 
-  /** One chunk's arrival, so a chunk that comes and goes before the tick costs no scan at all. */
   private record ChunkArrival(RegistryKey<World> worldKey, ChunkPos chunkPos) {}
 }

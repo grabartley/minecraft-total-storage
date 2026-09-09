@@ -12,14 +12,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 
-/**
- * Which of a player's own slots an automated operation is allowed to reach.
- *
- * <p>This is where ADR 0010 is enforced by construction rather than by remembering: a locked slot
- * is absent from what the mod is handed, so no path built on it can forget to check. Proving that
- * needs a real {@code PlayerInventory}, because the whole point is which index maps to which slot,
- * and armour and the offhand only sit above the lockable range in a real one.
- */
 public final class PlayerSlotsGameTest implements FabricGameTest {
   private static final String BATCH = "player-slots";
   private static final int TICK_LIMIT = 40;
@@ -69,10 +61,6 @@ public final class PlayerSlotsGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /**
-   * Armour and the offhand sit above the lockable range, so an operation cannot reach them even by
-   * naming their real inventory indices.
-   */
   @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void anIndexOutsideTheRangeIsRefusedRatherThanResolved(TestContext context) {
     ServerPlayerEntity player = context.createMockCreativeServerPlayerInWorld();
@@ -84,11 +72,6 @@ public final class PlayerSlotsGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /**
-   * The hotbar setting, taken as an argument rather than read from server config, so this says what
-   * the rule is without a value another batch could change underneath it. That a deposit really
-   * reads the operator's setting is proven in {@code DepositServiceGameTest}.
-   */
   @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void keepingTheHotbarLeavesExactlyTheFirstNineSlotsBehind(TestContext context) {
     ServerPlayerEntity player = context.createMockCreativeServerPlayerInWorld();
@@ -106,7 +89,6 @@ public final class PlayerSlotsGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /** Off by default, so the gesture reaches the whole inventory unless a server says otherwise. */
   @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void notKeepingTheHotbarOffersTheWholeInventory(TestContext context) {
     ServerPlayerEntity player = context.createMockCreativeServerPlayerInWorld();
@@ -120,10 +102,6 @@ public final class PlayerSlotsGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /**
-   * The hotbar rule and a lock are both subtractions, and applying one must not undo the other. A
-   * slot locked inside the kept hotbar is kept once, not offered because it was already excluded.
-   */
   @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void keepingTheHotbarStillHonoursLocksInTheRestOfTheInventory(TestContext context) {
     ServerPlayerEntity player = context.createMockCreativeServerPlayerInWorld();
@@ -137,7 +115,6 @@ public final class PlayerSlotsGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /** What is kept is the front of the inventory, which is what a player sees as their hotbar. */
   @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void theSlotsKeptAreTheHotbarRatherThanTheEndOfTheInventory(TestContext context) {
     ServerPlayerEntity player = context.createMockCreativeServerPlayerInWorld();

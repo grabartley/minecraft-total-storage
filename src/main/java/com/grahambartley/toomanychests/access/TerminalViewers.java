@@ -8,17 +8,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Who currently has a terminal open.
- *
- * <p>Access is checked on every operation rather than only on opening, per ADR 0008, but a player
- * who has lost access should not be left staring at a screen that refuses everything either. This
- * is the record that lets a revoked player be shut out of the interface at the moment it happens
- * rather than at their next click.
- *
- * <p>Players are held by UUID rather than by entity so a viewer who logs out mid-operation cannot
- * keep a player object alive, and a terminal nobody is looking at holds no entry at all.
- */
 public final class TerminalViewers {
   private final Map<TerminalAddress, Set<UUID>> viewers = new ConcurrentHashMap<>();
 
@@ -41,7 +30,6 @@ public final class TerminalViewers {
         });
   }
 
-  /** What a player logging out closes, since no screen will tell us about it afterwards. */
   public void closedEverything(UUID player) {
     if (player == null) {
       return;

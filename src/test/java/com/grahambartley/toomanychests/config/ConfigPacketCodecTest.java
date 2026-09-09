@@ -89,7 +89,6 @@ class ConfigPacketCodecTest {
     return forged(maxTerminalRadius, accessMode, ordering, Map.of());
   }
 
-  /** A packet built by hand, the way a modified client would build one. */
   private static RegistryByteBuf forged(
       int maxTerminalRadius, String accessMode, String ordering, Map<String, Boolean> overrides) {
     RegistryByteBuf buffer = buffer();

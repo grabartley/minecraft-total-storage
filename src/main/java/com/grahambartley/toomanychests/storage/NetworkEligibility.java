@@ -9,10 +9,6 @@ import net.minecraft.registry.Registries;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-/**
- * Answers whether the container at a position may join a storage network. Read fresh on every call
- * rather than cached, so an operator's change takes effect on the next scan without a restart.
- */
 public final class NetworkEligibility {
   private final StorageProviderResolver resolver;
   private final Supplier<TooManyChestsConfig> config;

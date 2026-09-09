@@ -9,13 +9,6 @@ import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
 
-/**
- * Backs each preset with one mod item tag, composed in data out of vanilla and convention tags.
- * Composing in data rather than in Java is what keeps the presets current as the game adds items,
- * lets convention tags carry modded items into a sensible preset, and lets a pack extend a preset
- * without a code change. {@link PresetTag#FALLBACK} has no tag because it is derived from the
- * absence of every other match.
- */
 public final class PresetTagDefinitions {
   private static final String TAG_PREFIX = "preset/";
 
@@ -23,7 +16,6 @@ public final class PresetTagDefinitions {
 
   private PresetTagDefinitions() {}
 
-  /** Every tag-backed preset, in filter column order. */
   public static Map<PresetTag, TagKey<Item>> all() {
     return TAGS;
   }

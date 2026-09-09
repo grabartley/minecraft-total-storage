@@ -13,11 +13,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 
-/**
- * Proves the locked-slot attachment behaves the way a real player session needs it to. Persistence,
- * respawn transfer, and sync targeting are all wiring that only exists once a server is running, so
- * none of it can be shown off-game.
- */
 public final class LockedSlotsAttachmentGameTest implements FabricGameTest {
   private static final String BATCH = "locked-slots";
   private static final int TICK_LIMIT = 20;
@@ -172,10 +167,6 @@ public final class LockedSlotsAttachmentGameTest implements FabricGameTest {
     ServerPlayerEvents.AFTER_RESPAWN.invoker().afterRespawn(died, respawned, false);
   }
 
-  /**
-   * A mock player left in the player manager holds its chunk tickets for the rest of the run, and
-   * batches running in other structures then measure a world this test loaded.
-   */
   private static void disconnectAndComplete(TestContext context, ServerPlayerEntity... players) {
     PlayerManager manager = context.getWorld().getServer().getPlayerManager();
     for (ServerPlayerEntity player : players) {

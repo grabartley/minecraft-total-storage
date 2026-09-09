@@ -53,7 +53,6 @@ class ListingPageTest {
         () -> new ListingPage<String>(1L, ListingStatus.LIVE, 0, 0, null));
   }
 
-  /** A page with no reason on it could not tell a screen which kind of empty it was showing. */
   @Test
   void aPageRefusesToBeBuiltWithoutSayingWhyItHoldsWhatItHolds() {
     assertThrows(NullPointerException.class, () -> new ListingPage<>(1L, null, 0, 0, ROWS));
@@ -89,10 +88,6 @@ class ListingPageTest {
     assertEquals(2, page.size());
   }
 
-  /**
-   * A grid draws from where the player scrolled to, which is a position in the whole result rather
-   * than a position in whichever page happens to be in hand.
-   */
   @Test
   void aRowIsFoundByWhereItSitsInTheWholeResultRatherThanInThePage() {
     ListingPage<String> page = new ListingPage<>(1L, ListingStatus.LIVE, 20, 500, ROWS);

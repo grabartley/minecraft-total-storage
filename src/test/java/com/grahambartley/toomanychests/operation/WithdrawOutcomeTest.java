@@ -8,7 +8,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 class WithdrawOutcomeTest {
-
   @ParameterizedTest
   @CsvSource({"64, 64, WITHDRAWN", "64, 9, PARTIAL", "1, 1, WITHDRAWN"})
   void whatMovedDecidesWhetherTheWithdrawalWasWhole(
@@ -48,9 +47,6 @@ class WithdrawOutcomeTest {
     assertEquals(requested, outcome.shortfall());
   }
 
-  /**
-   * A result and its amounts that disagree would let a caller report a move that never happened.
-   */
   @Test
   void aResultThatContradictsItsAmountsIsRefused() {
     assertThrows(

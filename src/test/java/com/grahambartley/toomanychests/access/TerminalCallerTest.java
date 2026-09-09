@@ -8,12 +8,6 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
-/**
- * Who a terminal will let configure it, asked the same way whatever the question arrived through.
- *
- * <p>The point of the type is that a screen and a console reach one rule rather than two, so what
- * is proven here is that both shapes of caller land on ADR 0008's answer.
- */
 class TerminalCallerTest {
   private static final UUID OWNER = UUID.nameUUIDFromBytes("owner".getBytes());
   private static final UUID SOMEBODY_ELSE = UUID.nameUUIDFromBytes("else".getBytes());
@@ -33,15 +27,11 @@ class TerminalCallerTest {
         new TerminalCaller(Optional.of(SOMEBODY_ELSE), false).mayAdminister(ownedTerminal()));
   }
 
-  /**
-   * ADR 0008 accepts the operator bypass, and logging it is the mitigation rather than refusing.
-   */
   @Test
   void anOperatorMayConfigureATerminalThatIsNotTheirs() {
     assertTrue(new TerminalCaller(Optional.of(SOMEBODY_ELSE), true).mayAdminister(ownedTerminal()));
   }
 
-  /** A console has no ownership to appeal to, so it stands on its operator level alone. */
   @Test
   void theConsoleMayConfigureAnyTerminal() {
     assertTrue(TerminalCaller.of(null, true).mayAdminister(ownedTerminal()));
@@ -65,7 +55,6 @@ class TerminalCallerTest {
     assertTrue(new TerminalCaller(null, true).mayAdminister(ownedTerminal()));
   }
 
-  /** A terminal nobody owns cannot be locked, so configuring one is operators only. */
   @Test
   void anUnownedTerminalIsConfigurableOnlyByAnOperator() {
     assertFalse(

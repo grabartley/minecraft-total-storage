@@ -24,9 +24,6 @@ class DepositTargetTest {
     assertTrue(target.accepts("minecraft:diamond", Set.of("ores_and_minerals")));
   }
 
-  /**
-   * ADR 0004: excluded exists so a curated container is never written to, under any configuration.
-   */
   @Test
   void anExcludedContainerTakesNothingHoweverItIsFiltered() {
     DepositTarget target =
@@ -56,7 +53,6 @@ class DepositTargetTest {
     assertFalse(target.accepts("minecraft:oak_log", Set.of("wood")));
   }
 
-  /** A filtered container that has named nothing is not a fallback for everything. */
   @Test
   void aFilteredContainerWithAnEmptyFilterTakesNothing() {
     DepositTarget target =

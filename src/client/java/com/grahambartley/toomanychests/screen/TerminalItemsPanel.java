@@ -11,22 +11,6 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.OrderedText;
 import net.minecraft.util.Identifier;
 
-/**
- * Draws what the network holds, and says which cell a click landed on.
- *
- * <p>Split from the screen so the two views the terminal offers are the same shape: the screen owns
- * the chassis, the tabs and the clicks, and each panel owns one recess full of content. Without the
- * split the screen would be the items view with a settings view bolted to the side of it.
- *
- * <p>The grid is not made of slots and cannot be. Per ADR 0025 the network is not an inventory, so
- * a cell is drawn from a row of the page the server last sent rather than from anything the handler
- * addresses, and a cell holds a variant and a total rather than a stack.
- *
- * <p>Cells are addressed by their position in the whole listing rather than by their position in
- * the page in hand. A scroll and the page answering it are a round trip apart, and drawing by page
- * position would slide every cell sideways for that round trip instead of leaving the rows that
- * still overlap exactly where they were.
- */
 public final class TerminalItemsPanel {
   private static final Identifier CELL = TerminalSprites.of("slot/cell");
   private static final Identifier CELL_HOVER = TerminalSprites.of("slot/cell_hover");
@@ -38,12 +22,10 @@ public final class TerminalItemsPanel {
   private static final int ITEM_SIZE = 16;
   private static final int LINE_HEIGHT = 9;
 
-  /** Far enough forward to clear the item model the count is written across. */
   private static final float COUNT_ELEVATION = 200.0F;
 
   private static final int COUNT_COLOUR = 0xFFFFFF;
 
-  /** The palette's mid glyph, which is what reads on the recess floor behind an empty grid. */
   private static final int PLACEHOLDER_COLOUR = 0x9AA3B3;
 
   private final ListingScroll scroll =
@@ -52,14 +34,8 @@ public final class TerminalItemsPanel {
   private final TerminalScrollbar scrollbar =
       new TerminalScrollbar(scroll, TerminalScreenLayout.SCROLLBAR_HEIGHT);
 
-  /**
-   * The page every part of one frame draws from, taken once at the top of it. Reading the mirror
-   * again partway through would let the chassis, the cells and the tooltip disagree about what is
-   * on screen.
-   */
   private ListingPage<ItemVariant> page = ListingPage.pending(0L);
 
-  /** What the grid is showing instead of rows, taken with the page so the two cannot disagree. */
   private Optional<ListingPlaceholder> placeholder = Optional.empty();
 
   public ListingScroll scroll() {
@@ -74,14 +50,12 @@ public final class TerminalItemsPanel {
     return page;
   }
 
-  /** Takes the page this frame draws from, so nothing later in it reads the mirror again. */
   public void beginFrame(ListingPage<ItemVariant> shown) {
     page = shown;
     placeholder = ListingPlaceholder.forStatus(page.status());
     scroll.fit(page.totalMatching());
   }
 
-  /** The cell under the pointer, or {@link TerminalScreenLayout#NO_CELL} when it holds no row. */
   public int hoveredCell(int windowX, int windowY) {
     if (!page.status().hasRows()) {
       return TerminalScreenLayout.NO_CELL;
@@ -93,23 +67,10 @@ public final class TerminalItemsPanel {
     return cell;
   }
 
-  /**
-   * The row drawn in a cell, addressed by its place in the whole listing.
-   *
-   * <p>A page that really holds rows needs an {@code ItemVariant} and therefore a registry, so the
-   * arithmetic over a populated page is left to the terminal's automated QA run and to {@code
-   * ListingPageTest}, which exhausts it against a page built by hand. What is testable without one,
-   * and is tested, is every way this answers nothing.
-   */
   public ListingRow<ItemVariant> rowAt(int cell) {
     return page.at(scroll.firstIndex() + cell);
   }
 
-  /**
-   * A grid explaining why it has no rows draws no cells. The empty-state art was drawn against the
-   * recess floor, and forty-five cells behind it leave the illustration showing through the gutters
-   * between them rather than reading as a picture.
-   */
   public void drawCells(DrawContext context, int originX, int originY, int hovered) {
     if (placeholder.isPresent()) {
       return;
@@ -139,7 +100,6 @@ public final class TerminalItemsPanel {
         scrollbar.thumbHeight());
   }
 
-  /** Drawn in the window's own coordinates, which is what the foreground pass is translated to. */
   public void drawRows(DrawContext context, TextRenderer textRenderer) {
     placeholder.ifPresent(shown -> drawPlaceholder(context, textRenderer, shown));
     if (!page.status().hasRows()) {
@@ -157,12 +117,6 @@ public final class TerminalItemsPanel {
     }
   }
 
-  /**
-   * The count sits in the item's bottom right corner as a stack size does, shrunk only as far as
-   * the cell demands. A network total can be several times wider than the two digits vanilla ever
-   * has to fit there, but most cells hold a count that fits at full size, and shrinking those too
-   * turns the common case to mush at the smallest GUI scale for the sake of the rare one.
-   */
   private static void drawCount(
       DrawContext context, TextRenderer textRenderer, String label, int itemX, int itemY) {
     final int width = textRenderer.getWidth(label);
@@ -180,11 +134,6 @@ public final class TerminalItemsPanel {
     context.getMatrices().pop();
   }
 
-  /**
-   * The message is wrapped to the grid rather than trusted to fit it. English happens to be short
-   * enough, but a translation is not, and one long line runs off both sides of the chassis and off
-   * the screen with it.
-   */
   private static void drawPlaceholder(
       DrawContext context, TextRenderer textRenderer, ListingPlaceholder shown) {
     final int centreX = TerminalScreenLayout.GRID_X + TerminalScreenLayout.GRID_WIDTH / 2;

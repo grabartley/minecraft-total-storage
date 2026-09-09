@@ -4,10 +4,6 @@ import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
-/**
- * An always-empty slot. Exists so slot arithmetic can be exercised without a running game; it moves
- * no items, because nothing in the provider abstraction does.
- */
 final class FakeSingleSlotStorage implements SingleSlotStorage<ItemVariant> {
   @Override
   public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {

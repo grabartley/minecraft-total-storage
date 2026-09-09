@@ -4,7 +4,6 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 
-/** Where a world's Too Many Chests configuration lives inside its save directory. */
 public final class ConfigPaths {
   private static final String MOD_DIR = "too-many-chests";
   private static final String SERVER_CONFIG_FILE = "server-config.json";

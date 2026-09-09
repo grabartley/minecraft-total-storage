@@ -10,7 +10,6 @@ import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.util.Identifier;
 
 public class ModBlocks {
-
   public static final Block TERMINAL =
       Registry.register(
           Registries.BLOCK,

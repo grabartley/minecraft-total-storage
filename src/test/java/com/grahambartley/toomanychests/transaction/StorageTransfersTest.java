@@ -240,7 +240,6 @@ class StorageTransfersTest {
     assertEquals(44L, second.amountOf(DIAMOND));
   }
 
-  /** The order given is the routing decision, so a later destination must never be preferred. */
   @Test
   void aDistributeRespectsTheOrderItWasGiven() {
     FakeContainer from = FakeContainer.withSlots(1, 64).holding(DIAMOND, 10);

@@ -21,11 +21,6 @@ import net.minecraft.test.TestFunction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 
-/**
- * Eligibility depends on a data-driven block tag and on live server config, neither of which exists
- * outside a running server, so the per-block classification is proven here rather than in a unit
- * test. The decision itself is covered off-game by {@code NetworkEligibilityRulesTest}.
- */
 public final class NetworkEligibilityGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
   private static final String CLASSIFY_BATCH = "eligibility-classify";

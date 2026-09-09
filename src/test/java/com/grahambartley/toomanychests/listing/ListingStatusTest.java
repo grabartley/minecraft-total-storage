@@ -23,10 +23,6 @@ class ListingStatusTest {
     assertEquals(expected, ListingStatus.of(networkEmpty, anyMatches));
   }
 
-  /**
-   * A network holding something that a player has not narrowed always matches that something, so
-   * anything that did match is a live listing whatever the index looked like.
-   */
   @Test
   void aMatchIsALiveListingEvenWhenTheIndexClaimsToBeEmpty() {
     assertEquals(ListingStatus.LIVE, ListingStatus.of(true, true));

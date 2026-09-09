@@ -5,11 +5,6 @@ import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 
-/**
- * One slot of a container, holding named resources instead of item variants so the transfer rules
- * can be exercised without a running game. Participates in transactions exactly as the real thing
- * does, which is what makes rollback assertions meaningful.
- */
 final class FakeSlot extends SnapshotParticipant<ResourceAmount<String>>
     implements SingleSlotStorage<String> {
   static final String BLANK = "";

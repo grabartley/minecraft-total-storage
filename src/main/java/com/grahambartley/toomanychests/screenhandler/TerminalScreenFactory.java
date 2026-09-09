@@ -17,17 +17,8 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Builds one player's view of one terminal, twice: once for the handler the server keeps and once
- * for the payload the client is sent.
- *
- * <p>Both are computed from the terminal's settings as they stand at that instant rather than
- * cached between the two calls, because the settings are the record and a copy taken a moment
- * earlier is one more thing that can be stale.
- */
 public record TerminalScreenFactory(ServerWorld world, BlockPos pos)
     implements ExtendedScreenHandlerFactory<TerminalOpenData> {
-
   public TerminalScreenFactory {
     Objects.requireNonNull(world, "world");
     Objects.requireNonNull(pos, "pos");

@@ -53,10 +53,6 @@ class TerminalOpenDataCodecTest {
     assertEquals(0, buffer.readableBytes());
   }
 
-  /**
-   * A client one build behind must get a terminal it can use rather than no terminal at all, and
-   * the only safe direction to fail in is the lesser permission.
-   */
   @Test
   void aPermissionThisBuildDoesNotKnowDecodesAsTheLesserOne() {
     RegistryByteBuf buffer = forged("superuser");
@@ -74,11 +70,6 @@ class TerminalOpenDataCodecTest {
         TerminalOpenDataCodec.INSTANCE.decode(buffer).radius());
   }
 
-  /**
-   * The whole point of ADR 0009's paginated listing: opening a terminal costs the same whether it
-   * reaches an empty chest or a warehouse, because no part of the network's contents is in here.
-   * What the payload does grow with is the network's own configuration, which is bounded.
-   */
   @Test
   void theOpenPayloadIsTheSameSizeForEveryTerminalConfiguredTheSameWay() {
     RegistryByteBuf near = buffer();
@@ -100,7 +91,6 @@ class TerminalOpenDataCodecTest {
     return forged(permission, 8);
   }
 
-  /** A packet built by hand, the way a client on another build would build one. */
   private static RegistryByteBuf forged(String permission, int radius) {
     RegistryByteBuf buffer = buffer();
     buffer.writeBlockPos(SOMEWHERE);

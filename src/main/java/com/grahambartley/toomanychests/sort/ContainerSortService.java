@@ -21,20 +21,6 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-/**
- * Sorts whatever container a player currently has open, and is the only path a client request may
- * take.
- *
- * <p>Per ADR 0009 the request names a screen and nothing else. The sync id is checked against the
- * handler the server already holds for that player, so a client naming someone else's chest, a
- * chest it closed a tick ago, or a position it invented gets nowhere: the server never resolves a
- * container the player is not already standing in front of.
- *
- * <p>Everything moves inside one transaction per ADR 0015. A sort empties every slot before it
- * refills them, which is the one moment a container's contents exist only in a list, so a failure
- * part way through has to put back exactly what it took. The conservation check is what makes that
- * a guarantee rather than a hope.
- */
 public final class ContainerSortService {
   private final SortCandidateFactory candidates;
 
@@ -62,12 +48,6 @@ public final class ContainerSortService {
     return apply(player, target.get());
   }
 
-  /**
-   * The containers that really moved are heard from rather than named, because a screen over a
-   * double chest is one inventory spanning two block entities and the sorting player's instance of
-   * it is not the one anybody else is holding. What the mutations name is the block entities
-   * themselves, which every viewer's screen can be matched against.
-   */
   private SortOutcome apply(ServerPlayerEntity player, SortTarget target) {
     final List<SingleSlotStorage<ItemVariant>> slots = slotsOf(target);
     if (slots.stream().allMatch(SingleSlotStorage::isResourceBlank)) {
@@ -91,16 +71,6 @@ public final class ContainerSortService {
     return SortOutcome.SORTED;
   }
 
-  /**
-   * The containers that spoke up plus the one that was asked for, which is what reaches a viewer
-   * holding their own screen over the same double chest without ever leaving out the player who
-   * pressed the button. A sort of the player's own inventory announces nothing, because no block
-   * entity backs it, and is answered by the target alone.
-   *
-   * <p>Only container screens. A sort rearranges a container without changing what the network
-   * holds, and a listing is aggregated counts, so every terminal viewer would be sent a page
-   * identical to the one already in front of them.
-   */
   private static void resync(
       ServerPlayerEntity player, SortTarget target, List<StorageOrigin> changed) {
     final List<Inventory> showing =

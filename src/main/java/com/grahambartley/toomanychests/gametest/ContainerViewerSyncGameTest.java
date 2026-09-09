@@ -18,19 +18,6 @@ import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 
-/**
- * Reaching everybody who has a container open by hand, which only exists on a running server.
- *
- * <p>Two players at one chest hold two separate screen handlers over one inventory, and a terminal
- * moving items through the network is a third writer neither of them can see. What is proven here
- * is that everybody looking at the container is told, and that a player at a different one is left
- * alone.
- *
- * <p>A double chest is the case worth its own tests. A change names one block entity while the
- * player who opened the chest by hand is looking at one inventory spanning both halves, and every
- * player who opens it gets their own spanning inventory, so neither end of the match can be taken
- * at face value.
- */
 public final class ContainerViewerSyncGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
   private static final String BATCH = "container-viewers";
@@ -39,7 +26,6 @@ public final class ContainerViewerSyncGameTest implements FabricGameTest {
   private static final BlockPos SHARED_CHEST = new BlockPos(3, 1, 3);
   private static final BlockPos OTHER_CHEST = new BlockPos(1, 1, 1);
 
-  /** A chest facing north pairs its left half with the block to its east. */
   private static final BlockPos DOUBLE_LEFT = new BlockPos(1, 1, 5);
 
   private static final BlockPos DOUBLE_RIGHT = new BlockPos(2, 1, 5);
@@ -107,7 +93,6 @@ public final class ContainerViewerSyncGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /** One half changing is the whole screen going stale, because the screen spans both. */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void aViewerOfADoubleChestIsResyncedByEitherHalfOfIt(TestContext context) {
     placeDoubleChest(context, DOUBLE_LEFT, DOUBLE_RIGHT);
@@ -125,7 +110,6 @@ public final class ContainerViewerSyncGameTest implements FabricGameTest {
     finish(context, watcher);
   }
 
-  /** Halves of one double chest are not halves of another. */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void aViewerOfADifferentDoubleChestIsLeftAlone(TestContext context) {
     placeDoubleChest(context, DOUBLE_LEFT, DOUBLE_RIGHT);
@@ -140,11 +124,6 @@ public final class ContainerViewerSyncGameTest implements FabricGameTest {
     finish(context, watcher);
   }
 
-  /**
-   * Sorting a double chest, which is the case a screen instance cannot answer. Every player who
-   * opens one gets their own inventory spanning the two halves, so the sorter's own instance is not
-   * the one the bystander is holding and only the block entities are common to both.
-   */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void bothPlayersAtOneDoubleChestAreResyncedByASort(TestContext context) {
     placeDoubleChest(context, DOUBLE_LEFT, DOUBLE_RIGHT);

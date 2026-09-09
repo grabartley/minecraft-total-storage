@@ -9,7 +9,6 @@ import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.util.Identifier;
 
 public class ModScreenHandlers {
-
   public static final ScreenHandlerType<TerminalScreenHandler> TERMINAL =
       Registry.register(
           Registries.SCREEN_HANDLER,

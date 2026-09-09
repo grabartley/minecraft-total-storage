@@ -20,12 +20,6 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * The half of invalidation that unit tests cannot reach: that real containers actually announce
- * their changes. Aggregation and laziness are proven in JUnit, so what is proven here is that
- * vanilla's {@code markDirty} reaches the registry from hand placement and from a ticking hopper,
- * and that a powered network nobody touches does nothing at all.
- */
 public final class NetworkIndexInvalidationGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
   private static final String BATCH = "index-invalidation";

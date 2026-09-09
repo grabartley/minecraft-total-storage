@@ -17,7 +17,6 @@ class TerminalScrollbarTest {
   private final ListingScroll scroll = new ListingScroll(COLUMNS, VISIBLE_ROWS);
   private final TerminalScrollbar scrollbar = new TerminalScrollbar(scroll, TRACK);
 
-  /** Fifty rows of nine, which is well past the five the grid shows. */
   private void aLongListing() {
     scroll.fit(50 * COLUMNS);
   }
@@ -48,10 +47,6 @@ class TerminalScrollbarTest {
     assertEquals(0, scrollbar.thumbTop());
   }
 
-  /**
-   * Taking hold of a thumb without moving the pointer must not move the grid. Snapping the thumb's
-   * centre to the pointer would jump the listing the instant a player touched it.
-   */
   @Test
   void grabbingTheThumbWithoutMovingItLeavesTheGridWhereItWas() {
     aLongListing();
@@ -74,7 +69,6 @@ class TerminalScrollbarTest {
     assertEquals(scroll.maxTopRow(), scroll.topRow());
   }
 
-  /** Clicking the track beside the thumb is a jump to there, not the start of a no-op drag. */
   @Test
   void clickingTheTrackBesideTheThumbJumpsItUnderThePointer() {
     aLongListing();

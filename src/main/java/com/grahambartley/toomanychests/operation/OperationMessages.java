@@ -6,27 +6,9 @@ import java.util.Optional;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 
-/**
- * What the terminal tells a player about the items they just moved, in one place.
- *
- * <p>An outcome nobody is told about is indistinguishable from a mod that ignored the click, which
- * is the failure mode a stale listing makes most likely. Each line carries its English alongside
- * its translation key, so a server whose resource pack has not caught up still says words.
- *
- * <p>A whole withdrawal and a whole deposit say nothing. The items appearing is the feedback, and a
- * line for every successful click would be noise a player learns to ignore before the one line that
- * mattered arrives.
- */
 public final class OperationMessages {
   private static final String PREFIX = "operation." + TooManyChests.MOD_ID + ".";
 
-  /**
-   * How many kinds of leftover are named before the line summarises instead.
-   *
-   * <p>A partial deposit-all can leave a dozen kinds behind, and a line naming all of them is one
-   * nobody finishes reading. Naming the largest two and counting the rest keeps the sentence the
-   * length of a sentence while still leading with what a player most wants to hear.
-   */
   private static final int NAMED_LEFTOVERS = 2;
 
   private OperationMessages() {}
@@ -67,11 +49,6 @@ public final class OperationMessages {
     };
   }
 
-  /**
-   * What a player is told when they asked again too soon. Says the operation by name, so somebody
-   * running two of them in quick succession learns which one is waiting rather than that "an"
-   * operation is.
-   */
   public static Text rateLimited(ExpensiveOperation operation, long ticksLeft) {
     return line(
         "cooldown." + operation.id(),
@@ -81,16 +58,6 @@ public final class OperationMessages {
         Math.max(1L, (ticksLeft + 19L) / 20L));
   }
 
-  /**
-   * Names what stayed behind, because a bare total does not say which chest filled up.
-   *
-   * <p>Only ever called for a partial deposit, whose shortfall {@link DepositOutcome} requires to
-   * be accounted for, so there is always at least one kind to name.
-   *
-   * <p>Exactly one unnamed kind gets its own line rather than "1 other kinds". Three kinds left
-   * behind is an ordinary outcome, not an edge, and a Minecraft translation carries no plural rule
-   * to fix the reading afterwards.
-   */
   private static Text leftovers(List<DepositLeftover> leftovers) {
     final MutableText named = Text.empty();
     for (int index = 0; index < Math.min(NAMED_LEFTOVERS, leftovers.size()); index++) {

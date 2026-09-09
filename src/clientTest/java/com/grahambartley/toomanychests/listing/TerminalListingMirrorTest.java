@@ -13,7 +13,6 @@ class TerminalListingMirrorTest {
   private static final int SYNC_ID = 7;
   private static final int OTHER_SYNC_ID = 8;
 
-  /** Empty pages, because what is under test is which page is kept rather than what is in it. */
   private static ListingPage<ItemVariant> page(long revision) {
     return ListingPage.pending(revision);
   }
@@ -39,10 +38,6 @@ class TerminalListingMirrorTest {
     assertEquals(1L, TerminalListingMirror.page().revision());
   }
 
-  /**
-   * A page can still be in flight when a screen closes and another opens. Without the sync id it
-   * would be drawn into the new screen, which is showing a different terminal entirely.
-   */
   @Test
   void aPageMeantForAnotherScreenIsNeverDrawnIntoThisOne() {
     TerminalListingMirror.opened(SYNC_ID);

@@ -13,16 +13,6 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Looking up the containers a network remembers, in a world where they may no longer be there.
- *
- * <p>Per ADR 0009 a recorded origin is a hint, and this is the class that decides what a stale one
- * costs. What matters is that a container which has gone drops out silently rather than resolving
- * to something empty: an operation handed a phantom storage would report a shortfall it could not
- * explain, and one handed an exception would fail a click that should simply have found less.
- *
- * <p>Only a world can show this, because a resolution is a block lookup.
- */
 public final class LiveStoragesGameTest implements FabricGameTest {
   private static final String BATCH = "live-storages";
   private static final int TICK_LIMIT = 40;
@@ -50,7 +40,6 @@ public final class LiveStoragesGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /** The duplication-safety case: a container that has gone must not resolve to anything. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,

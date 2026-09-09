@@ -13,14 +13,12 @@ import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Reads and writes the server config file, treating any unreadable file as recoverable. */
 public final class ConfigFile {
   private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
   private static final Logger LOGGER = LoggerFactory.getLogger(ConfigFile.class);
 
   private ConfigFile() {}
 
-  /** Loads the config, writing defaults out when no file exists yet. */
   public static TooManyChestsConfig loadOrCreate(Path path) {
     final boolean missing = path == null || !Files.exists(path);
     final TooManyChestsConfig config = load(path);

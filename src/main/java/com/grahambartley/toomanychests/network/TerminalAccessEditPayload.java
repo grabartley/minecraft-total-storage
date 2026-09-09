@@ -7,13 +7,6 @@ import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
 
-/**
- * A player moving one terminal's access mode from its settings panel.
- *
- * <p>Per ADR 0008 only the owner and operators may do this, whatever mode the terminal is in. An
- * open terminal letting everybody in is not a way for any of them to lock it again, so the check
- * happens where the packet lands rather than being inferred from the fact that the screen opened.
- */
 public record TerminalAccessEditPayload(int syncId, TerminalAccessMode mode)
     implements CustomPayload {
   public static final CustomPayload.Id<TerminalAccessEditPayload> ID =

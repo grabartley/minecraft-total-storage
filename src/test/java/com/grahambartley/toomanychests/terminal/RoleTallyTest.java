@@ -12,7 +12,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 class RoleTallyTest {
-
   @Test
   void aRunOfRolesIsCountedIntoItsThreeKinds() {
     RoleTally tally =
@@ -40,7 +39,6 @@ class RoleTallyTest {
     assertEquals(role == ContainerRole.EXCLUDED ? 1 : 0, tally.excluded());
   }
 
-  /** A container the network has never been told about holds the default role rather than none. */
   @Test
   void aRoleThatIsMissingCountsAsTheDefaultOne() {
     RoleTally tally = RoleTally.of(Arrays.asList(null, null));

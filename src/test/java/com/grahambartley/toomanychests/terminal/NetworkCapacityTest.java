@@ -14,15 +14,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-/**
- * How full a network reads as being.
- *
- * <p>The number is the one thing standing between a player and finding out they are full on a
- * failed deposit, so the cases that matter are the edges: a network with a single slot left must
- * not read as full, and one nobody can write to must not read as either.
- */
 class NetworkCapacityTest {
-
   @Test
   void whatIsFreeIsWhatIsNotUsed() {
     NetworkCapacity capacity = new NetworkCapacity(20, 54);
@@ -32,7 +24,6 @@ class NetworkCapacityTest {
     assertEquals(54, capacity.totalSlots());
   }
 
-  /** Rounded up, so the one case the number warns about is never announced early. */
   @ParameterizedTest
   @CsvSource({"0,54,0", "1,54,2", "27,54,50", "53,54,99", "54,54,100", "1,1000,1"})
   void howFullItReadsRoundsUpSoAFreeSlotNeverReadsAsFull(int used, int total, int percent) {
@@ -52,7 +43,6 @@ class NetworkCapacityTest {
     assertTrue(new NetworkCapacity(54, 54).isFull());
   }
 
-  /** No containers is not the same as no room, and a player can do something about only one. */
   @Test
   void aNetworkWithNoWritableContainersIsUnknownRatherThanFull() {
     NetworkCapacity nothing = NetworkCapacity.EMPTY;
@@ -69,7 +59,6 @@ class NetworkCapacityTest {
     assertFalse(new NetworkCapacity(89, 100).isNearCapacity(90));
   }
 
-  /** A threshold of nothing is a warning switched off, not one that fires on an empty network. */
   @ParameterizedTest
   @ValueSource(ints = {0, -1})
   void aThresholdOfNothingNeverWarns(int threshold) {
@@ -111,10 +100,6 @@ class NetworkCapacityTest {
     assertEquals(93, capacity.freeSlots());
   }
 
-  /**
-   * A container the network may not write to is not room, in either total. Counting it would make
-   * the readout drift further from the truth with every chest deliberately protected.
-   */
   @Test
   void anExcludedContainerIsCountedInNeitherTotal() {
     NetworkCapacity capacity =
@@ -125,7 +110,6 @@ class NetworkCapacityTest {
     assertEquals(27, capacity.totalSlots());
   }
 
-  /** A container whose storage could not be read has no slots to offer, and is not room either. */
   @Test
   void aContainerThatCouldNotBeReadContributesNothing() {
     NetworkCapacity capacity =
@@ -141,7 +125,6 @@ class NetworkCapacityTest {
     assertTrue(NetworkCapacity.of(List.of()).isUnknown());
   }
 
-  /** Every row excluded is not the same as a full network: there is nowhere to put anything. */
   @Test
   void aNetworkWhoseEveryContainerIsExcludedKnowsNoRoom() {
     NetworkCapacity capacity = NetworkCapacity.of(List.of(row(ContainerRole.EXCLUDED, 20, 27)));

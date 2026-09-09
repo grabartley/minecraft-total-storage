@@ -12,15 +12,6 @@ import net.minecraft.registry.RegistryKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-/**
- * Who wants to hear about which container.
- *
- * <p>Every container mutation in the world is published here, so the idle path has to be nothing:
- * with no watchers registered a publish is one {@code isEmpty} check and a return, which is what
- * lets an unpowered terminal cost literally zero.
- *
- * <p>Server side and single threaded, like the block entities that feed it.
- */
 public final class ContainerMutationRegistry {
   private final Map<StorageOrigin, Set<ContainerMutationListener>> watchers = new HashMap<>();
   private final Set<ContainerMutationListener> everywhere = new LinkedHashSet<>();
@@ -42,15 +33,6 @@ public final class ContainerMutationRegistry {
     }
   }
 
-  /**
-   * Listens to every container in the world rather than to named ones, for a caller that knows
-   * something is about to change and cannot name where. Sorting a double chest is the case: the
-   * screen names one inventory spanning two block entities, and only the mutations themselves say
-   * which those were.
-   *
-   * <p>Meant for the length of one operation and no longer. A listener left here hears about every
-   * container on the server for ever, which is the cost the per-origin map exists to avoid.
-   */
   public void watchEverywhere(ContainerMutationListener listener) {
     Objects.requireNonNull(listener, "listener");
     everywhere.add(listener);
@@ -60,7 +42,6 @@ public final class ContainerMutationRegistry {
     everywhere.remove(listener);
   }
 
-  /** Drops a listener from every container it watches, which is what powering off amounts to. */
   public void unwatchAll(ContainerMutationListener listener) {
     watchers
         .values()
@@ -76,7 +57,7 @@ public final class ContainerMutationRegistry {
       return;
     }
     final StorageOrigin origin = new BlockStorageOrigin(worldKey, pos);
-    // Copied because a listener is entitled to stop watching the container it is being told about.
+
     if (!everywhere.isEmpty()) {
       for (final ContainerMutationListener listener : List.copyOf(everywhere)) {
         listener.containerChanged(origin);
@@ -99,10 +80,6 @@ public final class ContainerMutationRegistry {
     return watchers.size();
   }
 
-  /**
-   * How many listeners are hearing about every container rather than about named ones. Kept
-   * separate from the per-origin count because a leak here is the expensive one.
-   */
   public int watchedEverywhereCount() {
     return everywhere.size();
   }

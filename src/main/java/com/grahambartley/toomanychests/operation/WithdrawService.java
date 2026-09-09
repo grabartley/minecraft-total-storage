@@ -11,25 +11,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Takes items out of a network, and is the only path a client request may take.
- *
- * <p>Per ADR 0009 the request names an item and an amount, never a place, so everything positional
- * is worked out here against live containers inside one transaction. A container broken in the same
- * tick therefore grants nothing rather than granting a phantom stack, and two players racing for
- * the last stack resolve as one success and one shortfall.
- *
- * <p>Nothing is ever dropped on the floor. What will not fit is left in the network, which is why
- * the destination is inserted into before anything is extracted; see {@link StorageTransfers}.
- *
- * <p>A request the network cannot meet is an ordinary race rather than a fault, so it is logged at
- * debug and answered with a resync. Raising it any higher would fill an operator's log with the
- * normal consequence of a listing that is always a little behind the network it describes.
- *
- * <p>Every ending tells the player something, and every ending that moved less than it was asked
- * for also puts their screen back in step, because the reason it moved less is almost always that
- * their listing had gone stale.
- */
 public final class WithdrawService {
   private static final Logger LOGGER = LoggerFactory.getLogger(WithdrawService.class);
 
@@ -80,16 +61,6 @@ public final class WithdrawService {
     return outcome;
   }
 
-  /**
-   * The outcome is settled inside the transaction because deciding why nothing moved needs the
-   * destination as it stood at that moment, and a rolled back result carries a reason rather than a
-   * value.
-   *
-   * <p>It is seeded rather than left empty because the runner also rolls back an operation that
-   * threw, and that path never reaches the settling. The seed is the ending that asks nothing of
-   * the player: an operation that threw has already been logged as an error, and telling somebody
-   * their inventory is full would send them to fix a slot that was never the problem.
-   */
   private WithdrawOutcome gather(
       TerminalOperationContext context,
       ItemVariant variant,
@@ -118,11 +89,6 @@ public final class WithdrawService {
         : PlayerSlots.unlockedStorage(context.player());
   }
 
-  /**
-   * Every ending resyncs, not only the refusals. A withdrawal that succeeded has changed both the
-   * cursor and the counts on the grid, and one that did not was almost certainly asked for by a
-   * client looking at something out of date.
-   */
   private static WithdrawOutcome report(ServerPlayerEntity player, WithdrawOutcome outcome) {
     if (player == null) {
       return outcome;

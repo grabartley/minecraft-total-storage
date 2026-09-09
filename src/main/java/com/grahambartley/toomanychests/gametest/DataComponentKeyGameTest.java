@@ -10,11 +10,6 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.text.Text;
 
-/**
- * Component changes only exist on a real stack, so the encoding is proven here. What matters is
- * that two stacks a player would call identical always key identically, because an unstable key
- * makes the sort shuffle variants of one item on every press.
- */
 public final class DataComponentKeyGameTest implements FabricGameTest {
   private static final String BATCH = "sort-candidates";
   private static final int TICK_LIMIT = 20;

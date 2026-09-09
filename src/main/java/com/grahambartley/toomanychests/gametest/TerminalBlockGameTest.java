@@ -30,14 +30,6 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.GameMode;
 
-/**
- * What the terminal block only does inside a running world: what placing it produces, what breaking
- * it costs and leaves behind, and that its settings outlive both a power change and a chunk load.
- *
- * <p>The settings themselves are proven in JUnit. What is proven here is the plumbing around them:
- * that the block entity is created at all, that it reaches NBT, and that vanilla's own chunk-load
- * deserialization brings back what was configured.
- */
 public final class TerminalBlockGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
   private static final String BATCH = "terminal-block";
@@ -150,11 +142,6 @@ public final class TerminalBlockGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /**
-   * A gametest cannot unload the chunk it is standing in, so the reload is driven through {@link
-   * BlockEntity#createFromNbt}, the same call vanilla makes for every block entity in a chunk it
-   * loads from disk.
-   */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = 40)
   public void everySettingSurvivesAWorldReload(TestContext context) {
     placeTerminal(context);

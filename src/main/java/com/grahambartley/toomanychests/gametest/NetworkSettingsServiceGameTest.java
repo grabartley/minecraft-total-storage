@@ -19,18 +19,9 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * What the settings panel is told about a terminal.
- *
- * <p>Everything here is decided on the server because the client holds none of it: the radius cap
- * lives in the server config, the roles live on a block entity, and a trust list of UUIDs can only
- * be turned into names by the server that has seen those players. What a world proves is that each
- * of those really reaches the panel rather than being defaulted quietly.
- */
 public final class NetworkSettingsServiceGameTest implements FabricGameTest {
   private static final String BATCH = "network-settings";
 
-  /** A vanilla barrel, which every count here is a multiple of. */
   private static final int BARREL_SLOTS = 27;
 
   private static final int TICK_LIMIT = 60;
@@ -56,10 +47,6 @@ public final class NetworkSettingsServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, owner);
   }
 
-  /**
-   * The room the panel draws, end to end. Counted from the same pass that builds the rows, so what
-   * is proven here is that the sum reaches the view rather than that a container has slots.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -89,10 +76,6 @@ public final class NetworkSettingsServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, owner);
   }
 
-  /**
-   * A container the network may not write to is not room. Counting it would make the readout drift
-   * further from the truth with every chest a player deliberately protected.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -112,7 +95,6 @@ public final class NetworkSettingsServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, owner);
   }
 
-  /** A terminal reaching nothing knows no capacity, which is not the same as having none. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -127,7 +109,6 @@ public final class NetworkSettingsServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, owner);
   }
 
-  /** ADR 0008: the flag decides what is drawn, and the owner is the one it is true for. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -145,7 +126,6 @@ public final class NetworkSettingsServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, owner, guest);
   }
 
-  /** A trust list names players who are not the one reading it, so a guest is sent none of it. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -187,7 +167,6 @@ public final class NetworkSettingsServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, owner);
   }
 
-  /** A page is a slice of the list, so a panel scrolled down is sent the rows it is drawing. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -223,7 +202,6 @@ public final class NetworkSettingsServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, owner);
   }
 
-  /** The access mode the panel shows has to be the one the terminal is really in. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,

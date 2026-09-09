@@ -5,21 +5,12 @@ import com.grahambartley.toomanychests.screenhandler.TerminalSettingsService;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
-/**
- * The settings panel's own channel: the request that draws it, the edits it sends, and the answers
- * that come back.
- *
- * <p>Registered apart from the rest so {@link ModNetworking} stays a list of what the mod speaks
- * rather than a list of everything it does. Every receiver here hops onto the server thread first,
- * because each of them reads or writes a block entity.
- */
 public final class TerminalSettingsNetworking {
   private static final TerminalSettingsService PANELS = new TerminalSettingsService();
   private static final TerminalSettingsEdits EDITS = new TerminalSettingsEdits(PANELS);
 
   private TerminalSettingsNetworking() {}
 
-  /** The one panel service, so whatever pushes an update answers with the same one. */
   public static TerminalSettingsService panels() {
     return PANELS;
   }

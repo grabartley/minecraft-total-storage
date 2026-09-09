@@ -28,28 +28,12 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Adversarial proof that an operation which cannot finish leaves the world exactly as it found it.
- *
- * <p>The companion to {@link DuplicationSafetyGameTest}, which attacks the gap between a client's
- * view and the network. What is attacked here is the operation itself: a network that fills up half
- * way through a deposit, a container removed while items are being spread across it, a sort that
- * cannot put back what it took out, and a terminal that stops being a terminal mid-request.
- *
- * <p>Every case counts every one of an item in the test's patch of world before and after. Absence
- * of an exception proves nothing on its own, because the worst failures a storage mod has are the
- * quiet ones: a rollback that put back most of what it took, or a refusal that had already moved
- * something before it refused.
- *
- * <p>Any future change to a mutating code path adds a case here.
- */
 public final class RollbackSafetyGameTest implements FabricGameTest {
   private static final String BATCH = "rollback-safety";
   private static final int TICK_LIMIT = 60;
   private static final int STACK = 64;
   private static final Item TRACKED = Items.DIAMOND;
 
-  /** Well clear of the terminal's radius, so sorting it is not also a change to the network. */
   private static final BlockPos LONE_SHULKER = new BlockPos(0, 1, 0);
 
   private static final int DEPOSIT_SLOT = 3;
@@ -58,16 +42,11 @@ public final class RollbackSafetyGameTest implements FabricGameTest {
   private final DepositService deposits = new DepositService();
   private final ContainerSortService sorts = new ContainerSortService();
 
-  /** Cooldowns are JVM-global, and one left over would refuse a deposit for an unrelated reason. */
   @BeforeBatch(batchId = BATCH)
   public void clearCooldowns(ServerWorld world) {
     OperationGuards.cooldowns().clear();
   }
 
-  /**
-   * A network with room for four of the sixty-four offered. What fits is stored and the rest stays
-   * in the player's hands, because a deposit that cannot be taken whole is still a deposit.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -94,7 +73,6 @@ public final class RollbackSafetyGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** A network with no room at all leaves the player's inventory exactly as it was. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -119,11 +97,6 @@ public final class RollbackSafetyGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * Spreading a stack across two containers when one of them has just been broken. The routing was
-   * decided against an index that still named it, so what stops the items vanishing into a hole is
-   * that every origin is looked up in the world again before anything moves.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -150,11 +123,6 @@ public final class RollbackSafetyGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * A sort empties every slot before it refills them, which is the one moment a container's
-   * contents exist only in a list. A shulker box refuses to take a shulker box back, so refilling
-   * it fails part way and every item has to return to where it started.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -177,7 +145,6 @@ public final class RollbackSafetyGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** A terminal that loses power between the click and the packet moves nothing. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -203,7 +170,6 @@ public final class RollbackSafetyGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** A terminal broken between the click and the packet moves nothing. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -243,11 +209,6 @@ public final class RollbackSafetyGameTest implements FabricGameTest {
     return barrel;
   }
 
-  /**
-   * Placed slot by slot rather than inserted, because a shulker box will not accept a shulker box
-   * through any honest route. That is exactly the point: the sort takes it out and then cannot put
-   * it back.
-   */
   private static ShulkerBoxBlockEntity shulkerBoxRefusingItsOwnContents(TestContext context) {
     context.setBlockState(LONE_SHULKER, Blocks.SHULKER_BOX.getDefaultState());
     final ShulkerBoxBlockEntity box = context.getBlockEntity(LONE_SHULKER);

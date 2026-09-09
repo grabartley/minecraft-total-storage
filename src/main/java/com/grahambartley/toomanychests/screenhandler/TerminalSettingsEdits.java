@@ -26,18 +26,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Applies what a settings panel asked to change, and is the only path those requests may take.
- *
- * <p>Every edit is checked against the terminal rather than against the panel that sent it. Per ADR
- * 0008 a client claiming it may administer gains nothing here: the flag it was sent decides what
- * was drawn, and this decides what happens.
- *
- * <p>Every edit ends by pushing a fresh panel to everyone looking at the terminal, not only to the
- * player who made it. Two people configuring one base is the case ADR 0025 already forces the mod
- * to handle for the item listing, and a role changed under someone else's cursor is the same
- * problem.
- */
 public final class TerminalSettingsEdits {
   private final TerminalSettingsService panels;
   private final ContainerRoleService roles;
@@ -120,16 +108,6 @@ public final class TerminalSettingsEdits {
     return pushed(context);
   }
 
-  /**
-   * A highlight is open to anyone who may use the terminal, because refusing a player the answer to
-   * "which chests is this reaching" would make the radius harder to understand rather than the base
-   * harder to reach. A rescan is not: per ADR 0007 it tears the network down and builds it again,
-   * which is both work and a change to what everyone else at the terminal is looking at.
-   *
-   * <p>The outlines are drawn after the rescan rather than before it. Showing them first would
-   * describe the network the walk was about to replace, which is exactly the case a player asks for
-   * a rescan in.
-   */
   public boolean act(ServerPlayerEntity player, TerminalActionPayload payload) {
     if (payload == null) {
       return false;
@@ -157,18 +135,12 @@ public final class TerminalSettingsEdits {
     return pushed(context);
   }
 
-  /** Everyone looking at this terminal is shown the change, not only whoever made it. */
   private boolean pushed(TerminalOperationContext context) {
     final TerminalAddress terminal = TerminalAddress.of(context.world(), context.terminal());
     TerminalViewerSync.playersOn(context.world().getServer(), terminal).forEach(panels::refresh);
     return true;
   }
 
-  /**
-   * The screen, resolved and checked for the permission every setting needs. A player who may use
-   * the terminal but not configure it is told so rather than ignored, because a control that does
-   * nothing is indistinguishable from a broken one.
-   */
   private TerminalOperationContext administrable(ServerPlayerEntity player, int syncId) {
     final TerminalOperationContext context =
         TerminalOperationGate.open(player, syncId).orElse(null);

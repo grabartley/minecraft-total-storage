@@ -9,13 +9,6 @@ import java.util.function.Function;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 
-/**
- * Reads what discovered containers currently hold and hands back an index of it.
- *
- * <p>Reading only, so it runs outside a transaction. The counts are true as of this call and no
- * longer: a container may change the moment the scan moves on, which is why withdrawal revalidates
- * rather than trusting the index.
- */
 public final class NetworkIndexScan {
   private final Comparator<NetworkIndexEntry<ItemVariant>> ordering;
 

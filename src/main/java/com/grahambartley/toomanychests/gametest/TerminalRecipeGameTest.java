@@ -21,14 +21,6 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.Identifier;
 
-/**
- * What the terminal recipe only does once a server has loaded it: which grid it accepts, what that
- * grid yields, and when the recipe book is allowed to show it.
- *
- * <p>The recipe is a data file with no Java behind it, so nothing here can be proven in JUnit. The
- * server parsing the file, matching a grid against it, and the advancement handing the recipe to a
- * player are the whole of what could break.
- */
 public final class TerminalRecipeGameTest implements FabricGameTest {
   private static final String BATCH = "terminal-recipe";
 

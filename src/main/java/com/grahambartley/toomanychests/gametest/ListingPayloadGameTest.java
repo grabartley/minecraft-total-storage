@@ -15,12 +15,6 @@ import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 
-/**
- * What a page looks like once it has been across the wire.
- *
- * <p>A gametest rather than a unit test because a page carries item variants, and encoding one
- * needs the registries a plain JVM does not have.
- */
 public final class ListingPayloadGameTest implements FabricGameTest {
   private static final String BATCH = "listing-payload";
   private static final int SYNC_ID = 4;
@@ -70,11 +64,6 @@ public final class ListingPayloadGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /**
-   * The status is the only thing separating the several ways a grid comes up empty, and every one
-   * of them travels as a page carrying no rows at all. Losing it on the wire would leave a screen
-   * unable to say which of them it is showing.
-   */
   @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = 20)
   public void aRowlessPageStillSaysWhyItHasNoRows(TestContext context) {
     ListingPage<ItemVariant> received =
@@ -111,10 +100,6 @@ public final class ListingPayloadGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /**
-   * The cap is what keeps a response bounded however much the network holds, so a packet claiming
-   * more rows than a page may carry is refused before any of them are read.
-   */
   @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = 20)
   public void aPacketClaimingMoreRowsThanAPageMayCarryIsRefused(TestContext context) {
     RegistryByteBuf buffer = buffer(context);
@@ -144,7 +129,6 @@ public final class ListingPayloadGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /** A page longer than the cap cannot be built, so one can never be written either. */
   @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = 20)
   public void aPageOverTheCapCannotBeBuiltInTheFirstPlace(TestContext context) {
     final List<ListingRow<ItemVariant>> tooMany = new ArrayList<>();

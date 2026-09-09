@@ -7,17 +7,6 @@ import java.util.List;
 import java.util.Map;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Persists what a network has decided about its containers.
- *
- * <p>Only the position is required. A role that a build no longer recognises, or a filter an older
- * build never wrote, reads back as the default rather than costing the terminal every other
- * setting, and an entry that decodes to the default is dropped on the way into {@link
- * ContainerAssignments}.
- *
- * <p>The accepted tags and items are written only for the role that can use them, because {@link
- * ContainerAssignment} has already dropped them from every other role.
- */
 public final class ContainerAssignmentCodec {
   private static final Codec<ContainerRole> ROLE =
       Codec.STRING.xmap(

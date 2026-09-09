@@ -18,24 +18,11 @@ import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 
-/**
- * What happens when the client's picture of the network has already stopped being true.
- *
- * <p>Per ADR 0009 that gap is permanent: a page is built, sent, drawn, and clicked, and the network
- * is free to change throughout. Every case here is an ordinary race with a defined answer rather
- * than a fault, so what is proven is that each one is answered quietly, correctly, and with the
- * right reason, and that none of them ever fabricates an item to satisfy the request.
- *
- * <p>The reason matters as much as the amount. A player told their inventory is full when the item
- * had simply gone will go and empty a slot that was never the problem, so the two empty-handed
- * endings are told apart here against real containers.
- */
 public final class StaleIndexGameTest implements FabricGameTest {
   private static final String BATCH = "stale-index";
   private static final int TICK_LIMIT = 60;
   private static final int STACK = 64;
 
-  /** Enough for a hopper to still be draining while the clicks are landing. */
   private static final int DRAINABLE = 16;
 
   private static final int RACE_TICK_LIMIT = 120;
@@ -49,7 +36,6 @@ public final class StaleIndexGameTest implements FabricGameTest {
 
   private final WithdrawService withdrawals = new WithdrawService();
 
-  /** Ten left where the listing offered sixty-four: take the ten and say so. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -72,7 +58,6 @@ public final class StaleIndexGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** An entry the network can no longer honour is answered with nothing and a fresh page. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -98,11 +83,6 @@ public final class StaleIndexGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * The index still names a container that no longer holds the item, which is what a mutation
-   * nobody announced leaves behind. The request must read as an item that has gone rather than as
-   * an inventory with no room, because those send the player to fix two different things.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -123,7 +103,6 @@ public final class StaleIndexGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** The other empty-handed ending: the network has it and the player has nowhere to put it. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -142,7 +121,6 @@ public final class StaleIndexGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** A container broken between the page and the click grants nothing and resyncs. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -166,11 +144,6 @@ public final class StaleIndexGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * A player clicking one item per tick while a hopper empties the same container out of the
-   * network underneath them. Whatever order the two land in, what leaves the barrel has to arrive
-   * somewhere exactly once.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -200,10 +173,6 @@ public final class StaleIndexGameTest implements FabricGameTest {
         });
   }
 
-  /**
-   * A barrel inside the network with a hopper under it pushing into a chest outside, so the network
-   * really loses items rather than shuffling them between its own containers.
-   */
   private static void drainingBarrel(TestContext context) {
     NetworkOperationFixture.stockedBarrel(context, RAISED_BARREL, Items.DIAMOND, DRAINABLE);
     context.setBlockState(
@@ -215,7 +184,6 @@ public final class StaleIndexGameTest implements FabricGameTest {
     return take(player, amount, WithdrawDestination.INVENTORY);
   }
 
-  /** The pointer holds one stack and nothing else, which is how a destination is made full. */
   private WithdrawOutcome takeOntoPointer(ServerPlayerEntity player, int amount) {
     return take(player, amount, WithdrawDestination.CURSOR);
   }

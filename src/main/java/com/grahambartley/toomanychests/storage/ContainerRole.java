@@ -3,7 +3,6 @@ package com.grahambartley.toomanychests.storage;
 import java.util.Locale;
 import java.util.Optional;
 
-/** What a connected container is allowed to have done to it. See ADR 0004. */
 public enum ContainerRole {
   GENERAL,
   FILTERED,

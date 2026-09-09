@@ -9,7 +9,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class WithdrawAmountTest {
-
   @ParameterizedTest
   @CsvSource({"64, 32", "16, 8", "1, 1", "3, 2", "99, 50"})
   void halfAStackRoundsUpAsVanillaSplitsOne(int maxStackSize, int expected) {
@@ -36,7 +35,6 @@ class WithdrawAmountTest {
         WithdrawAmount.resolve(Long.MAX_VALUE, 64, WithdrawDestination.INVENTORY));
   }
 
-  /** A forged request is bounded before anything is read, not after items have moved. */
   @ParameterizedTest
   @ValueSource(longs = {Long.MAX_VALUE, 1_000_000L, 4096L})
   void anAbsurdRequestIsClampedRatherThanRefused(long requested) {

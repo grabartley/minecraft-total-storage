@@ -49,10 +49,6 @@ class TerminalOpenDataTest {
         () -> new TerminalOpenData(null, 8, TerminalPermission.USE, NetworkTagSet.defaults()));
   }
 
-  /**
-   * Block callbacks hand out positions they go on to move, and this one is held for as long as the
-   * screen is open.
-   */
   @Test
   void theTerminalPositionIsCopiedSoItCannotBeMovedUnderTheScreen() {
     BlockPos.Mutable moving = new BlockPos.Mutable(1, 2, 3);
