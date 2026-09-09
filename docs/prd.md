@@ -98,7 +98,7 @@ The vocabulary the rest of this document uses.
 | **Terminal** | The block. Owns the network's radius, access rules, container roles, and tag set. Settings live in its block entity and survive power loss. |
 | **Network** | The set of eligible containers within a powered terminal's radius, in loaded chunks. Not an inventory (ADR 0025). |
 | **Radius** | The half-extent of a cuboid centred on the terminal, not a sphere. A cuboid maps onto whole chunk columns without a per-position distance test. |
-| **Container** | Any block exposing `ItemStorage.SIDED`. A double chest is one container, not two. |
+| **Container** | A block exposing `ItemStorage.SIDED` and admitted by the eligibility rules in §4.1. A double chest is one container, not two. |
 | **Index** | The live aggregated view of the network's contents, keyed by `ItemVariant`. A read-only cache; every write goes through a transaction. |
 | **Origin** | The identity of where a container's items live. A recorded origin is a hint, never a promise (ADR 0009). |
 | **Role** | How the network may treat one container: `General`, `Filtered`, or `Excluded`. Per network, so an overlapped chest may hold a different role in each. |
@@ -120,8 +120,9 @@ The vocabulary the rest of this document uses.
 |---|---|
 | ELIG-1 | Eligibility is decided in one place and consumed everywhere |
 | ELIG-2 | A modded container not on the deny list is eligible by default |
-| ELIG-3 | Defaults ship as a data-driven block tag so packs can override them |
-| ELIG-4 | An operator can change eligibility without a restart; the change takes effect on the next index rebuild |
+| ELIG-3 | Defaults ship as a data-driven block tag a pack can add denials to; removing a shipped denial means replacing the tag or using a config override |
+| ELIG-4 | An operator can change eligibility without a restart |
+| ELIG-5 | Eligibility is read at discovery, so a change triggers a fresh discovery scan on every affected network rather than waiting for one |
 
 ---
 
@@ -143,14 +144,15 @@ A player crafts a terminal, places it near their chests, and powers it with reds
 | TERM-4 | Powering on triggers exactly one discovery scan, not one per neighbour update |
 | TERM-5 | A terminal powered when its chunk loads becomes active without needing a neighbour update |
 | TERM-6 | Radius is per terminal, 16 on a fresh one, minimum 1, clamped to the server maximum on write with the clamp reported |
-| TERM-7 | Lowering the server maximum clamps existing terminals without rewriting their configured value (ADR 0021) |
-| TERM-8 | Changing the radius triggers exactly one rescan |
-| TERM-9 | Settings survive power loss, chunk unload, and world reload |
-| TERM-10 | Losing power with the screen open completes any in-flight transaction, then closes the screen for every viewer |
-| TERM-11 | Containers in range are highlighted on placement, on radius change, and on demand |
-| TERM-12 | The highlight distinguishes container roles by more than colour alone, and fades rather than persisting |
-| TERM-13 | Breaking a terminal never affects the contents of any connected container |
-| TERM-14 | A terminal's powered state is readable from the block itself at distance and in low light, by shape or emissive detail rather than colour alone |
+| TERM-7 | Lowering the server maximum clamps existing terminals without rewriting their configured value, and rebuilds the affected networks rather than waiting for a power cycle (ADR 0021) |
+| TERM-8 | Anything reporting a radius reports both the configured value and the effective one whenever they differ |
+| TERM-9 | Changing the radius triggers exactly one rescan |
+| TERM-10 | Settings survive power loss, chunk unload, and world reload |
+| TERM-11 | Losing power with the screen open completes any in-flight transaction, then closes the screen for every viewer |
+| TERM-12 | Containers in range are highlighted on placement, on radius change, and on demand |
+| TERM-13 | The highlight distinguishes container roles by more than colour alone, and fades rather than persisting |
+| TERM-14 | Breaking a terminal never affects the contents of any connected container |
+| TERM-15 | A terminal's powered state is readable from the block itself at distance and in low light, by shape or emissive detail rather than colour alone |
 
 **Not supported:** forcing chunks to keep a container in the network; indexing containers in unloaded chunks; a network spanning dimensions.
 
@@ -169,7 +171,7 @@ The player opens a terminal, types, and the item is on screen. Clicking takes it
 | Left click | One full stack, up to the item's max stack size |
 | Right click | Half a stack |
 | Shift + left click | Straight to the player's inventory rather than the cursor |
-| Middle click | Prompt for a custom amount |
+| Middle click | Prompt for a custom amount, which lands in the inventory rather than on the cursor |
 
 With a stack already on the cursor the same grid takes clicks the other way, depositing rather than withdrawing: left click hands over the whole stack, right click hands over one (ADR 0029).
 
@@ -177,7 +179,7 @@ With a stack already on the cursor the same grid takes clicks the other way, dep
 |---|---|
 | FIND-1 | The search box takes keyboard focus the moment the terminal opens; no click required |
 | FIND-2 | Matching is ranked exact, then prefix, then substring, then fuzzy, over the display name and the identifier path; a term carrying a namespace separator is matched literally against the full identifier (ADR 0013, ADR 0028) |
-| FIND-3 | `#tag` searches tags and `@modid` filters by source mod, both combining with free text. Name and tag terms narrow each other; mod identifier terms broaden, so `@create @quarry` matches either (ADR 0013) |
+| FIND-3 | `#tag` searches tags and `@modid` filters by source mod, both combining with free text. Name and tag terms narrow each other; mod identifier terms broaden, so `@create @ae2` matches either (ADR 0013) |
 | FIND-4 | Counts are aggregated across the network and formatted for readability at scale |
 | FIND-5 | Items differing only by data components are separate entries with individual counts |
 | FIND-6 | An empty network and an empty search result read differently |
@@ -246,8 +248,8 @@ The owner assigns roles to containers, creates tags, and files items under them,
 | Role | Receives deposits | Reordered by sorting | Listed | Withdrawable |
 |---|---|---|---|---|
 | `General` (default) | Yes | Yes | Yes | Yes |
-| `Filtered` | Only matching items, preferred first | Yes | Yes | Yes |
-| `Excluded` | Never | Never | Yes | Yes |
+| `Filtered` | Only matching items, preferred first; nothing at all while its filter is empty | Yes | Yes | Yes |
+| `Excluded` | Never | Never by a network operation | Yes | Yes |
 
 `Excluded` is the trust mechanism. A curated potion chest stays exactly as its owner arranged it while remaining searchable. Without it, an automatic storage network is something players are afraid to turn on (ADR 0004).
 
@@ -255,7 +257,7 @@ The owner assigns roles to containers, creates tags, and files items under them,
 |---|---|
 | ROLE-1 | Every discovered container defaults to `General` |
 | ROLE-2 | Roles persist across reload, power loss, and chunk unload |
-| ROLE-3 | A container broken and replaced at the same position is new and defaults to `General`, except where its terminal was unpowered throughout, since nothing was running to hear it go (ADR 0024) |
+| ROLE-3 | A container broken and replaced at the same position is new and defaults to `General`, except where its terminal was unpowered or its own chunk unloaded throughout, since nothing was running to hear it go (ADR 0024) |
 | ROLE-4 | Roles are per network; an overlapped chest may hold a different role in each |
 | ROLE-5 | Role changes take effect immediately with no rescan |
 | ROLE-6 | A `Filtered` container stores the tags or filters it accepts |
@@ -303,7 +305,7 @@ Default order: category by preset tag grouping, then registry identifier, then d
 | SORT-10 | Consolidation gathers each variant into the fewest containers, then sorts them |
 | SORT-11 | `Excluded` containers are never written to or reordered by any network-initiated operation, and stay readable and withdrawable throughout (ADR 0004) |
 | SORT-12 | `Filtered` containers receive only matching items during consolidation |
-| SORT-13 | Network sort and consolidate are explicit terminal actions, with confirmation above a configurable size, progress, and a summary naming containers touched and `Excluded` ones skipped |
+| SORT-13 | Network sort and consolidate are explicit terminal actions, with confirmation above a size threshold, progress, and a summary naming containers touched and `Excluded` ones skipped |
 | SORT-14 | A long operation is budgeted per tick and continues across ticks rather than blocking the server |
 | SORT-15 | An in-progress operation can be cancelled, rolling back cleanly |
 | SORT-16 | The terminal stays responsive while a large operation runs |
@@ -384,7 +386,7 @@ An operator configures every behaviour from the console, with no client mod and 
 | CFG-8 | Every per-network setting reachable from the interface is also reachable by command, targeting a terminal by position |
 | CFG-9 | Every server-wide setting described in the settings model is editable from a Mod Menu screen, read-only for non-operators rather than hidden; container eligibility overrides stay command-only, being a set keyed by block rather than one value (ADR 0019) |
 | CFG-10 | Expensive operations are rate limited per player and per operation, with feedback naming the operation (ADR 0031) |
-| CFG-11 | Every server-to-client list payload is capped and split across packets rather than built unbounded |
+| CFG-11 | Every server-to-client list payload is capped, and either paged or truncated, rather than built unbounded |
 | CFG-12 | Hitting a cap or budget logs once, not once per occurrence |
 
 **Not supported:** a client-side value influencing a server enforcement decision; a setting reachable from the screen but not the command tree; a rate limit that moves some items before refusing.
@@ -393,16 +395,16 @@ An operator configures every behaviour from the console, with no client mod and 
 
 | Setting | Default | Bound |
 |---|---|---|
-| Maximum terminal radius | 16 | 1 to 64. An effective ceiling applied where a scan reads a radius; a terminal's configured value is never rewritten (ADR 0021) |
+| Maximum terminal radius | 16 | 1 to 64. An effective ceiling applied where a scan reads a radius; lowering it never rewrites a terminal's configured value (ADR 0021) |
 | Default terminal access mode | `Owner` | Applies to newly placed terminals only |
 | Sort ordering strategy | Registry identifier | Display-name ordering is the alternative |
 | Sort button enabled | On | |
 | Middle-click sort gesture enabled | On | |
-| Quick-stack radius | 8 | 1 to 32 |
+| Quick-stack radius | 8 | 1 to 64 |
 | Deposit all skips hotbar | Off | |
-| Near-capacity warning threshold | 90% | 1 to 100 |
-| Expensive operation cooldown | 10 ticks | `0` disables |
-| Per-tick move budget | 64 | Applies to sorting and consolidation |
+| Near-capacity warning threshold | 90% | 0 to 100 |
+| Expensive operation cooldown | 10 ticks | 0 to 200, where `0` disables |
+| Per-tick move budget | 64 | 1 to 1024, applied to sorting and consolidation |
 | Container eligibility overrides | Empty | |
 
 ---
@@ -419,7 +421,7 @@ Permission is the difference between a storage mod and a griefing tool. Without 
 | `Trusted` | The owner plus players on that terminal's trust list |
 | `Open` | Anyone |
 
-The server config sets the default mode for newly placed terminals, owner-locked out of the box (ADR 0008). Changing that default never retroactively changes existing terminals.
+The server config sets the default mode for newly placed terminals, owner-locked out of the box (ADR 0008). A terminal with no recorded owner, which is one placed by something other than a player, is open to everyone whatever its mode, because there is nobody for the modes to be relative to. Changing that default never retroactively changes existing terminals.
 
 ### 6.2 Capability matrix
 
@@ -428,15 +430,15 @@ The server config sets the default mode for newly placed terminals, owner-locked
 | Open an `Owner` terminal | No | No | Yes | Yes, logged |
 | Open a `Trusted` terminal | No | Yes | Yes | Yes, logged |
 | Open an `Open` terminal | Yes | Yes | Yes | Yes |
-| Withdraw and deposit | Only if they may open it | Yes | Yes | Yes |
+| Withdraw and deposit | Only if they may open it | Only if they may open it | Yes | Yes |
 | Change radius, access mode, trust list | No | No | Yes | Yes |
 | Change container roles | No | No | Yes | Yes |
 | Create, assign, delete custom tags | No | No | Yes | Yes |
 | Copy or import a tag set | No | No | Yes, on both terminals | Yes |
 | Network sort and consolidate | No | No | Yes | Yes |
 | Rescan | No | No | Yes | Yes |
-| Re-highlight | Only if they may open it | Yes | Yes | Yes |
-| Read a network's settings by command | Yes | Yes | Yes | Yes |
+| Re-highlight | Only if they may open it | Only if they may open it | Yes | Yes |
+| Read a network's settings by command | Yes, excluding the trust list | Yes, excluding the trust list | Yes | Yes |
 | Change a network's settings by command | No | No | Own terminals | Any terminal |
 | Read server config, by command or screen | Yes | Yes | Yes | Yes |
 | Change server config, by command or screen | No | No | No | Yes, level 2 |
@@ -549,7 +551,7 @@ The property that decides whether the mod is safe in a modpack. How the suite is
 |---|---|
 | PERF-1 | An unpowered terminal registers no listeners and does no per-tick work |
 | PERF-2 | The index is never polled; it reacts to container mutations and recomputes lazily on read |
-| PERF-3 | A full discovery scan runs only on power-on, radius change, and explicit rescan |
+| PERF-3 | A full discovery scan runs only on power-on, radius change, explicit rescan, and a chunk load touching the network's region (ADR 0014) |
 | PERF-4 | Discovery iterates loaded chunk block-entity maps rather than testing every position in the volume |
 | PERF-5 | A world callback never queries the chunk manager; scans defer to the next tick (ADR 0026) |
 | PERF-6 | The listing is narrowed server-side and paged, never sent whole (ADR 0027) |
