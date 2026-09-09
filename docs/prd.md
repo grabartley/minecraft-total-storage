@@ -552,7 +552,7 @@ The property that decides whether the mod is safe in a modpack. How the suite is
 |---|---|
 | PERF-1 | An unpowered terminal registers no listeners and does no per-tick work |
 | PERF-2 | The index is never polled; it reacts to container mutations and recomputes lazily on read |
-| PERF-3 | A full discovery scan runs only on power-on, radius change, explicit rescan, and a chunk load touching the network's region (ADR 0014) |
+| PERF-3 | A full discovery scan runs on power-on, radius change, explicit rescan, a change to container eligibility, and a chunk load touching the network's region (ADR 0014), and on nothing else |
 | PERF-4 | Discovery iterates loaded chunk block-entity maps rather than testing every position in the volume |
 | PERF-5 | A world callback never queries the chunk manager; scans defer to the next tick (ADR 0026) |
 | PERF-6 | The listing is narrowed server-side and paged, never sent whole (ADR 0027) |
