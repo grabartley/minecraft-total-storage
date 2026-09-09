@@ -1,6 +1,7 @@
 package com.grahambartley.toomanychests.screen;
 
 import com.grahambartley.toomanychests.config.ClientConfigMirror;
+import com.grahambartley.toomanychests.screenhandler.TagsSectionLayout;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
 import com.grahambartley.toomanychests.screenhandler.TerminalSettingsLayout;
 import com.grahambartley.toomanychests.storage.ContainerRole;
@@ -52,7 +53,7 @@ public final class TerminalSettingsPanel {
   }
 
   public boolean scrolls() {
-    return section == SettingsSection.CONTAINERS;
+    return section != SettingsSection.TERMINAL;
   }
 
   public void show(SettingsSection shown) {
@@ -89,8 +90,13 @@ public final class TerminalSettingsPanel {
     return scrollbar;
   }
 
-  public void fit(NetworkSettingsView view) {
-    scroll.fit(section == SettingsSection.CONTAINERS ? view.containerTotal() : 0);
+  public void fit(NetworkSettingsView view, int customTags) {
+    scroll.fit(
+        switch (section) {
+          case TERMINAL -> 0;
+          case CONTAINERS -> view.containerTotal();
+          case TAGS -> customTags + TagsSectionLayout.FIRST_TAG_ROW;
+        });
   }
 
   public int containerRowAt(int windowX, int windowY) {
@@ -119,6 +125,10 @@ public final class TerminalSettingsPanel {
       int mouseX,
       int mouseY) {
     drawSectionTabs(context, textRenderer, originX, originY, mouseX, mouseY);
+    if (section == SettingsSection.TAGS) {
+      drawScrollbar(context, originX, originY);
+      return;
+    }
     if (section == SettingsSection.TERMINAL) {
       drawTerminalSection(context, textRenderer, view, originX, originY, mouseX, mouseY);
       return;

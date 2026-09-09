@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests.screenhandler;
 
 import com.grahambartley.toomanychests.filter.FilterCandidateFactory;
 import com.grahambartley.toomanychests.filter.ItemFilter;
+import com.grahambartley.toomanychests.filter.NetworkFilterCandidates;
 import com.grahambartley.toomanychests.filter.SearchQueryParser;
 import com.grahambartley.toomanychests.lifecycle.NetworkMembership;
 import com.grahambartley.toomanychests.listing.ListingPage;
@@ -9,6 +10,9 @@ import com.grahambartley.toomanychests.listing.NetworkListing;
 import com.grahambartley.toomanychests.listing.TerminalListingState;
 import com.grahambartley.toomanychests.network.ListingPayload;
 import com.grahambartley.toomanychests.network.ListingRequestPayload;
+import com.grahambartley.toomanychests.tag.NetworkTagLookup;
+import com.grahambartley.toomanychests.tag.NetworkTagSet;
+import com.grahambartley.toomanychests.terminal.TerminalLookup;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import java.util.Objects;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -65,7 +69,17 @@ public final class TerminalListingService {
       return ListingPage.offline(revision);
     }
     return NetworkListing.page(
-        network.index(), candidates::of, state.filter(), state.window(), revision);
+        network.index(),
+        new NetworkFilterCandidates(candidates, new NetworkTagLookup(tagsOf(world, handler))),
+        state.filter(),
+        state.window(),
+        revision);
+  }
+
+  private static NetworkTagSet tagsOf(ServerWorld world, TerminalScreenHandler handler) {
+    return TerminalLookup.settingsAt(world, handler.terminal())
+        .map(settings -> settings.tags())
+        .orElseGet(NetworkTagSet::defaults);
   }
 
   private void send(ServerPlayerEntity player, TerminalScreenHandler handler) {

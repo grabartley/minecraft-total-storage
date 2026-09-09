@@ -14,6 +14,10 @@ import java.util.TreeMap;
 import java.util.function.UnaryOperator;
 
 public record NetworkTagSet(List<NetworkTag> all) {
+  public static final int MAX_CUSTOM = 64;
+
+  public static final int MAX_TOTAL = PresetTag.all().size() + MAX_CUSTOM;
+
   private static final NetworkTagSet DEFAULTS = new NetworkTagSet(List.of());
 
   public NetworkTagSet {
@@ -72,8 +76,35 @@ public record NetworkTagSet(List<NetworkTag> all) {
     return new NetworkTagSet(next);
   }
 
+  public NetworkTagSet withRenamedTag(String tagId, String newName) {
+    final String key = FilterText.normalise(tagId);
+    final NetworkTag existing = byId(key).filter(tag -> !tag.immutable()).orElse(null);
+    if (existing == null || !TagNameRule.check(newName, this, key).isAccepted()) {
+      return this;
+    }
+    final List<NetworkTag> next = new ArrayList<>(custom());
+    next.removeIf(tag -> tag.id().equals(key));
+    next.add(NetworkTag.custom(TagNameRule.idFor(newName), newName.trim(), existing.items()));
+    return new NetworkTagSet(next);
+  }
+
   public NetworkTagSet withItem(String tagId, String itemId) {
     return replace(tagId, tag -> tag.withItem(itemId));
+  }
+
+  public NetworkTagSet withItems(String tagId, Collection<String> itemIds) {
+    if (itemIds == null || itemIds.isEmpty()) {
+      return this;
+    }
+    return replace(
+        tagId,
+        tag -> {
+          NetworkTag grown = tag;
+          for (final String itemId : itemIds) {
+            grown = grown.withItem(itemId);
+          }
+          return grown;
+        });
   }
 
   public NetworkTagSet withoutItem(String tagId, String itemId) {

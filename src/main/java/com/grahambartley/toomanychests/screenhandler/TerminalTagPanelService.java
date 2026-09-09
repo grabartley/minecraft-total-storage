@@ -1,0 +1,71 @@
+package com.grahambartley.toomanychests.screenhandler;
+
+import com.grahambartley.toomanychests.network.TagPanelPayload;
+import com.grahambartley.toomanychests.network.TagPanelRequestPayload;
+import com.grahambartley.toomanychests.operation.TerminalOperationContext;
+import com.grahambartley.toomanychests.operation.TerminalOperationGate;
+import com.grahambartley.toomanychests.terminal.NetworkTagView;
+import com.grahambartley.toomanychests.terminal.NetworkTagViewService;
+import java.util.Objects;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.server.network.ServerPlayerEntity;
+
+public final class TerminalTagPanelService {
+  private final NetworkTagViewService views;
+
+  public TerminalTagPanelService() {
+    this(new NetworkTagViewService());
+  }
+
+  public TerminalTagPanelService(NetworkTagViewService views) {
+    this.views = Objects.requireNonNull(views, "views");
+  }
+
+  public boolean request(ServerPlayerEntity player, TagPanelRequestPayload payload) {
+    if (payload == null) {
+      return false;
+    }
+    if (!payload.open()) {
+      return closed(player, payload.syncId());
+    }
+    final TerminalOperationContext context =
+        TerminalOperationGate.open(player, payload.syncId()).orElse(null);
+    if (context == null) {
+      return false;
+    }
+    context.handler().tags().requested(true, payload.subject());
+    send(player, context.handler());
+    return true;
+  }
+
+  public boolean refresh(ServerPlayerEntity player) {
+    if (player == null
+        || !(player.currentScreenHandler instanceof TerminalScreenHandler handler)
+        || !handler.tags().isOpen()) {
+      return false;
+    }
+    send(player, handler);
+    return true;
+  }
+
+  public NetworkTagView viewFor(ServerPlayerEntity player, TerminalScreenHandler handler) {
+    Objects.requireNonNull(player, "player");
+    Objects.requireNonNull(handler, "handler");
+    return views.viewFor(player, handler.terminal(), handler.tags().subject());
+  }
+
+  private void send(ServerPlayerEntity player, TerminalScreenHandler handler) {
+    ServerPlayNetworking.send(
+        player, new TagPanelPayload(handler.syncId, viewFor(player, handler)));
+  }
+
+  private static boolean closed(ServerPlayerEntity player, int syncId) {
+    if (player == null
+        || !(player.currentScreenHandler instanceof TerminalScreenHandler handler)
+        || handler.syncId != syncId) {
+      return false;
+    }
+    handler.tags().closed();
+    return true;
+  }
+}

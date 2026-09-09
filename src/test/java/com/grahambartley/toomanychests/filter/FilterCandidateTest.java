@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests.filter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -91,5 +92,33 @@ class FilterCandidateTest {
     source.add("tools");
 
     assertEquals(Set.of("stone"), stone.tags());
+  }
+
+  @Test
+  void aNetworksOwnTagsJoinTheOnesTheItemAlreadyCarried() {
+    FilterCandidate candidate =
+        new FilterCandidate("minecraft:oak_log", "Oak Log", Set.of("wood"))
+            .plusTags(Set.of("castle", "keep"));
+
+    assertEquals(Set.of("wood", "castle", "keep"), candidate.tags());
+  }
+
+  @Test
+  void anExtraTagTheItemAlreadyCarriedDoesNotDuplicateIt() {
+    FilterCandidate original = new FilterCandidate("minecraft:oak_log", "Oak Log", Set.of("wood"));
+
+    assertSame(original, original.plusTags(Set.of("WOOD")));
+    assertSame(original, original.plusTags(Set.of()));
+    assertSame(original, original.plusTags(null));
+  }
+
+  @Test
+  void addingTagsLeavesTheItemItselfAlone() {
+    FilterCandidate candidate =
+        new FilterCandidate("minecraft:oak_log", "Oak Log", Set.of("wood"))
+            .plusTags(Set.of("castle"));
+
+    assertEquals("minecraft:oak_log", candidate.identifier());
+    assertEquals("oak log", candidate.displayName());
   }
 }

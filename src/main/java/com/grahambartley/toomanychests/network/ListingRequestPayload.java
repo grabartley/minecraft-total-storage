@@ -3,6 +3,7 @@ package com.grahambartley.toomanychests.network;
 import com.grahambartley.toomanychests.TooManyChests;
 import com.grahambartley.toomanychests.filter.TagCombinationMode;
 import com.grahambartley.toomanychests.listing.ListingWindow;
+import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import java.util.HashSet;
 import java.util.Set;
 import net.minecraft.network.RegistryByteBuf;
@@ -14,7 +15,7 @@ public record ListingRequestPayload(
     int syncId, int offset, int length, String search, TagCombinationMode mode, Set<String> tags)
     implements CustomPayload {
 
-  public static final int MAX_TAGS = 64;
+  public static final int MAX_TAGS = NetworkTagSet.MAX_TOTAL;
 
   public static final int MAX_SEARCH_LENGTH = 256;
   public static final int MAX_TAG_LENGTH = 64;
@@ -32,6 +33,9 @@ public record ListingRequestPayload(
     search = search == null ? "" : search;
     mode = mode == null ? TagCombinationMode.DEFAULT : mode;
     tags = tags == null ? Set.of() : Set.copyOf(tags);
+    if (tags.size() > MAX_TAGS) {
+      throw new IllegalArgumentException("a listing request may not name " + tags.size() + " tags");
+    }
   }
 
   public ListingWindow window() {

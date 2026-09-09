@@ -73,7 +73,7 @@ class TerminalSettingsLayoutTest {
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {-1, 2, 100})
+  @ValueSource(ints = {-1, TerminalSettingsLayout.SECTION_COUNT, 100})
   void anIndexThatIsNotASectionIsRefusedRatherThanGuessedAt(int section) {
     assertThrows(
         IndexOutOfBoundsException.class, () -> TerminalSettingsLayout.sectionTabX(section));

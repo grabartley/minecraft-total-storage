@@ -9,6 +9,7 @@ import com.grahambartley.toomanychests.listing.TerminalListingMirror;
 import com.grahambartley.toomanychests.operation.WithdrawDestination;
 import com.grahambartley.toomanychests.render.ContainerHighlights;
 import com.grahambartley.toomanychests.screen.NetworkSettingsMirror;
+import com.grahambartley.toomanychests.screen.NetworkTagMirror;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.TerminalAction;
 import java.util.Set;
@@ -43,11 +44,18 @@ public final class ModNetworkingClient {
             context
                 .client()
                 .execute(() -> ContainerHighlights.show(payload.containers(), payload.ticks())));
+    ClientPlayNetworking.registerGlobalReceiver(
+        TagPanelPayload.ID,
+        (payload, context) ->
+            context
+                .client()
+                .execute(() -> NetworkTagMirror.accept(payload.syncId(), payload.view())));
     ClientPlayConnectionEvents.DISCONNECT.register(
         (handler, client) -> {
           ClientConfigMirror.clear();
           TerminalListingMirror.closed();
           NetworkSettingsMirror.closed();
+          NetworkTagMirror.closed();
           ContainerHighlights.clear();
         });
   }
@@ -91,6 +99,33 @@ public final class ModNetworkingClient {
 
   public static void sendTerminalAction(int syncId, TerminalAction action) {
     ClientPlayNetworking.send(new TerminalActionPayload(syncId, action));
+  }
+
+  public static void sendTagPanelRequest(int syncId, boolean open, ItemVariant subject) {
+    ClientPlayNetworking.send(
+        open
+            ? TagPanelRequestPayload.forItem(syncId, subject)
+            : TagPanelRequestPayload.closed(syncId));
+  }
+
+  public static void sendTagCreate(int syncId, String name) {
+    ClientPlayNetworking.send(TagEditPayload.create(syncId, name));
+  }
+
+  public static void sendTagRename(int syncId, String tagId, String name) {
+    ClientPlayNetworking.send(TagEditPayload.rename(syncId, tagId, name));
+  }
+
+  public static void sendTagDelete(int syncId, String tagId) {
+    ClientPlayNetworking.send(TagEditPayload.delete(syncId, tagId));
+  }
+
+  public static void sendTagAssign(int syncId, String tagId, ItemVariant item, boolean assigned) {
+    ClientPlayNetworking.send(TagEditPayload.assign(syncId, tagId, item, assigned));
+  }
+
+  public static void sendTagAssignMatching(int syncId, String tagId) {
+    ClientPlayNetworking.send(TagEditPayload.assignMatching(syncId, tagId));
   }
 
   public static void sendListingRequest(

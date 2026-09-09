@@ -3,7 +3,6 @@ package com.grahambartley.toomanychests.screenhandler;
 import com.grahambartley.toomanychests.ModScreenHandlers;
 import com.grahambartley.toomanychests.access.TerminalAccessControl;
 import com.grahambartley.toomanychests.listing.TerminalListingState;
-import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import com.grahambartley.toomanychests.terminal.TerminalAddress;
 import java.util.Objects;
 import net.minecraft.entity.player.PlayerEntity;
@@ -20,6 +19,7 @@ public class TerminalScreenHandler extends ScreenHandler {
   private final TerminalOpenData data;
   private final TerminalListingState listing = new TerminalListingState();
   private final TerminalSettingsState settings = new TerminalSettingsState();
+  private final TerminalTagState tagPanel = new TerminalTagState();
 
   public TerminalScreenHandler(int syncId, PlayerInventory playerInventory, TerminalOpenData data) {
     super(ModScreenHandlers.TERMINAL, syncId);
@@ -46,16 +46,16 @@ public class TerminalScreenHandler extends ScreenHandler {
     return settings;
   }
 
+  public TerminalTagState tags() {
+    return tagPanel;
+  }
+
   public int radius() {
     return data.radius();
   }
 
   public TerminalPermission permission() {
     return data.permission();
-  }
-
-  public NetworkTagSet tags() {
-    return data.tags();
   }
 
   @Override

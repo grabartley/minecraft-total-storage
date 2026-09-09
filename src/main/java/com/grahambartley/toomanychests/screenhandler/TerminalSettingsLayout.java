@@ -14,7 +14,7 @@ public final class TerminalSettingsLayout {
 
   public static final int PANEL_HEIGHT = TerminalScreenLayout.GRID_HEIGHT;
 
-  public static final int SECTION_COUNT = 2;
+  public static final int SECTION_COUNT = 3;
 
   public static final int SECTION_TAB_HEIGHT = 14;
 

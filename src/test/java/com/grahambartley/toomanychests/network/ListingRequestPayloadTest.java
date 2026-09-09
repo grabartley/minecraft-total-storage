@@ -7,7 +7,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.toomanychests.filter.TagCombinationMode;
 import com.grahambartley.toomanychests.listing.ListingWindow;
+import com.grahambartley.toomanychests.tag.NetworkTagSet;
+import com.grahambartley.toomanychests.tag.PresetTag;
 import io.netty.buffer.Unpooled;
+import java.util.HashSet;
 import java.util.Set;
 import net.minecraft.network.RegistryByteBuf;
 import org.junit.jupiter.api.DisplayName;
@@ -104,7 +107,7 @@ class ListingRequestPayloadTest {
 
   @DisplayName("a tag count larger than a filter column could hold is refused while decoding")
   @ParameterizedTest(name = "{0} tags claimed")
-  @ValueSource(ints = {65, 4096, Integer.MAX_VALUE})
+  @ValueSource(ints = {4096, Integer.MAX_VALUE})
   void refusesAPacketClaimingMoreTagsThanMayBeNamed(int claimed) {
     RegistryByteBuf buffer = buffer();
     buffer.writeVarInt(1);
@@ -115,6 +118,30 @@ class ListingRequestPayloadTest {
     buffer.writeVarInt(claimed);
 
     assertThrows(IllegalArgumentException.class, () -> ListingRequestPayload.CODEC.decode(buffer));
+  }
+
+  @Test
+  void aRequestNamingEveryTagAColumnCanOfferSurvivesTheWire() {
+    final Set<String> tags = new HashSet<>();
+    for (int tag = 0; tag < PresetTag.all().size() + NetworkTagSet.MAX_CUSTOM; tag++) {
+      tags.add("tag" + tag);
+    }
+    final ListingRequestPayload sent =
+        new ListingRequestPayload(1, 0, 8, "", TagCombinationMode.DEFAULT, tags);
+
+    assertEquals(tags, roundTrip(sent).tags());
+  }
+
+  @Test
+  void aRequestNamingMoreTagsThanAColumnCouldOfferIsRefusedBeforeItIsSent() {
+    final Set<String> tags = new HashSet<>();
+    for (int tag = 0; tag <= ListingRequestPayload.MAX_TAGS; tag++) {
+      tags.add("tag" + tag);
+    }
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ListingRequestPayload(1, 0, 8, "", TagCombinationMode.DEFAULT, tags));
   }
 
   @Test

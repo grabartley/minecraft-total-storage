@@ -1,10 +1,12 @@
 package com.grahambartley.toomanychests.screen;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.toomanychests.screenhandler.TerminalSettingsLayout;
+import java.util.HashSet;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -37,6 +39,7 @@ class SettingsSectionTest {
   void theSectionsAreNumberedInTheOrderTheyAreDrawn() {
     assertEquals(0, SettingsSection.TERMINAL.index());
     assertEquals(1, SettingsSection.CONTAINERS.index());
+    assertEquals(2, SettingsSection.TAGS.index());
   }
 
   @ParameterizedTest
@@ -47,6 +50,14 @@ class SettingsSectionTest {
 
   @Test
   void noTwoSectionsShareAName() {
-    assertFalse(SettingsSection.TERMINAL.label().equals(SettingsSection.CONTAINERS.label()));
+    final Set<String> labels = new HashSet<>();
+    for (SettingsSection section : SettingsSection.values()) {
+      assertTrue(labels.add(section.label()), section + " reuses another section's name");
+    }
+  }
+
+  @Test
+  void everySectionOnTheStripHasATabToReachItBy() {
+    assertEquals(TerminalSettingsLayout.SECTION_COUNT, SettingsSection.values().length);
   }
 }

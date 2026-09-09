@@ -151,4 +151,143 @@ class NetworkTagSetTest {
     assertFalse(mine.contains("crops"));
     assertEquals(Set.of(), base.tagIdsFor("minecraft:coal"));
   }
+
+  @Test
+  void renamingATagKeepsEveryItemItHeld() {
+    NetworkTagSet tags =
+        NetworkTagSet.defaults()
+            .withCustomTag("base build")
+            .withItem("base build", "minecraft:cobblestone")
+            .withItem("base build", "minecraft:oak_planks");
+
+    NetworkTagSet renamed = tags.withRenamedTag("base build", "Castle");
+
+    assertFalse(renamed.contains("base build"));
+    assertTrue(renamed.contains("castle"));
+    assertEquals(
+        Set.of("minecraft:cobblestone", "minecraft:oak_planks"),
+        renamed.byId("castle").orElseThrow().items());
+    assertEquals(Set.of("castle"), renamed.tagIdsFor("minecraft:cobblestone"));
+  }
+
+  @Test
+  void renamingATagKeepsTheNameAsItWasWritten() {
+    NetworkTagSet renamed =
+        NetworkTagSet.defaults().withCustomTag("castle").withRenamedTag("castle", "  The Keep  ");
+
+    assertEquals("The Keep", renamed.byId("the keep").orElseThrow().displayName());
+  }
+
+  @Test
+  void renamingATagOntoANameAlreadyTakenChangesNothing() {
+    NetworkTagSet tags = NetworkTagSet.defaults().withCustomTag("castle").withCustomTag("keep");
+
+    assertSame(tags, tags.withRenamedTag("castle", "keep"));
+  }
+
+  @Test
+  void renamingATagToAPresetNameChangesNothing() {
+    NetworkTagSet tags = NetworkTagSet.defaults().withCustomTag("castle");
+
+    assertSame(tags, tags.withRenamedTag("castle", PresetTag.WOOD.id()));
+  }
+
+  @Test
+  void renamingAPresetOrAnUnknownTagChangesNothing() {
+    NetworkTagSet tags = NetworkTagSet.defaults().withCustomTag("castle");
+
+    assertSame(tags, tags.withRenamedTag(PresetTag.WOOD.id(), "timber"));
+    assertSame(tags, tags.withRenamedTag("nonexistent", "castle keep"));
+  }
+
+  @Test
+  void renamingATagToABlankNameChangesNothing() {
+    NetworkTagSet tags = NetworkTagSet.defaults().withCustomTag("castle");
+
+    assertSame(tags, tags.withRenamedTag("castle", "   "));
+  }
+
+  @Test
+  void deletingATagTakesItOffEveryItemThatCarriedIt() {
+    NetworkTagSet tags =
+        NetworkTagSet.defaults()
+            .withCustomTag("castle")
+            .withItem("castle", "minecraft:cobblestone");
+
+    NetworkTagSet deleted = tags.withoutTag("castle");
+
+    assertFalse(deleted.contains("castle"));
+    assertEquals(Set.of(), deleted.tagIdsFor("minecraft:cobblestone"));
+  }
+
+  @Test
+  void filingSeveralItemsAtOnceFilesEveryOneOfThem() {
+    NetworkTagSet tags =
+        NetworkTagSet.defaults()
+            .withCustomTag("castle")
+            .withItems("castle", List.of("minecraft:cobblestone", "minecraft:oak_planks"));
+
+    assertEquals(
+        Set.of("minecraft:cobblestone", "minecraft:oak_planks"),
+        tags.byId("castle").orElseThrow().items());
+  }
+
+  @Test
+  void filingSeveralItemsKeepsWhatTheTagAlreadyHeld() {
+    NetworkTagSet tags =
+        NetworkTagSet.defaults()
+            .withCustomTag("castle")
+            .withItem("castle", "minecraft:diamond")
+            .withItems("castle", List.of("minecraft:cobblestone"));
+
+    assertEquals(
+        Set.of("minecraft:diamond", "minecraft:cobblestone"),
+        tags.byId("castle").orElseThrow().items());
+  }
+
+  @Test
+  void theSameItemNamedTwiceIsFiledOnce() {
+    NetworkTagSet tags =
+        NetworkTagSet.defaults()
+            .withCustomTag("castle")
+            .withItems(
+                "castle",
+                List.of("minecraft:cobblestone", "MINECRAFT:COBBLESTONE", "minecraft:cobblestone"));
+
+    assertEquals(Set.of("minecraft:cobblestone"), tags.byId("castle").orElseThrow().items());
+  }
+
+  @Test
+  void filingNothingAtAllChangesNothing() {
+    NetworkTagSet tags = NetworkTagSet.defaults().withCustomTag("castle");
+
+    assertSame(tags, tags.withItems("castle", List.of()));
+    assertSame(tags, tags.withItems("castle", null));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"nonexistent", "", "   "})
+  void filingIntoATagThatIsNotThereChangesNothing(String tagId) {
+    NetworkTagSet tags = NetworkTagSet.defaults().withCustomTag("castle");
+
+    assertSame(tags, tags.withItems(tagId, List.of("minecraft:cobblestone")));
+  }
+
+  @ParameterizedTest
+  @EnumSource(PresetTag.class)
+  void filingIntoAPresetChangesNothingBecausePresetsAreWorkedOut(PresetTag preset) {
+    NetworkTagSet tags = NetworkTagSet.defaults().withCustomTag("castle");
+
+    assertSame(tags, tags.withItems(preset.id(), List.of("minecraft:cobblestone")));
+  }
+
+  @Test
+  void filingOnlyItemsATagAlreadyHeldLeavesTheSetAsItWas() {
+    NetworkTagSet tags =
+        NetworkTagSet.defaults()
+            .withCustomTag("castle")
+            .withItem("castle", "minecraft:cobblestone");
+
+    assertSame(tags, tags.withItems("castle", List.of("minecraft:cobblestone")));
+  }
 }

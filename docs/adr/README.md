@@ -40,6 +40,7 @@ Shared engineering standards across all the mods in this family live in [`../sta
 | [0030](0030-a-role-names-a-container-and-the-network-validates-it.md) | A role names a container, and the network validates it |
 | [0031](0031-expensive-operations-are-paced-per-player-and-per-operation.md) | Expensive operations are paced per player and per operation |
 | [0032](0032-a-commit-resyncs-everyone-who-can-see-it.md) | A commit resyncs everyone who can see what it moved |
+| [0033](0033-renaming-a-tag-moves-its-id.md) | Renaming a tag moves its id |
 
 ## Writing A New Record
 

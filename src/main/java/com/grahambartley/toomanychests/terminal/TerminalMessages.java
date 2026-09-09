@@ -1,5 +1,7 @@
 package com.grahambartley.toomanychests.terminal;
 
+import com.grahambartley.toomanychests.tag.TagNameOutcome;
+import com.grahambartley.toomanychests.tag.TagNameRule;
 import net.minecraft.text.Text;
 
 public final class TerminalMessages {
@@ -34,6 +36,44 @@ public final class TerminalMessages {
 
   public static Text nothingNewToFind() {
     return line("rescan-unchanged", "This terminal had nothing new to find");
+  }
+
+  public static Text tagNameRejected(TagNameOutcome why) {
+    return switch (why) {
+      case BLANK -> line("tag-blank", "A tag needs a name");
+      case TOO_LONG ->
+          Text.translatableWithFallback(
+              PREFIX + "tag-too-long",
+              "A tag name may be at most %s characters",
+              TagNameRule.MAX_LENGTH);
+      case ILLEGAL_CHARACTER ->
+          line("tag-illegal", "A tag name takes letters, digits, spaces, dashes and underscores");
+      case DUPLICATE -> line("tag-duplicate", "This network already has a tag by that name");
+      case PRESET_COLLISION -> line("tag-preset", "That name belongs to a preset tag");
+      case OK -> line("tag-blank", "A tag needs a name");
+    };
+  }
+
+  public static Text tagLimitReached(int limit) {
+    return Text.translatableWithFallback(
+        PREFIX + "tag-limit", "This network already holds its %s custom tags", limit);
+  }
+
+  public static Text tagUnknown() {
+    return line("tag-unknown", "That tag is not on this network");
+  }
+
+  public static Text tagIsPreset() {
+    return line("tag-immutable", "Preset tags are worked out from the item, not assigned");
+  }
+
+  public static Text tagAssignedTo(int items) {
+    return Text.translatableWithFallback(PREFIX + "tag-assigned", "Tagged %s items", items);
+  }
+
+  public static Text tagDeleted(int items) {
+    return Text.translatableWithFallback(
+        PREFIX + "tag-deleted", "Deleted the tag and cleared it from %s items", items);
   }
 
   private static Text line(String key, String english) {
