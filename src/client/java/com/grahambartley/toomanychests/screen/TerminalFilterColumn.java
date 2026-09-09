@@ -72,30 +72,28 @@ public final class TerminalFilterColumn {
     scrollbar.release();
   }
 
-  public FilterColumnClick click(
+  public boolean click(
       NetworkTagView view, FilterSelection selection, int windowX, int windowY, int button) {
     if (button != GridClick.LEFT_BUTTON || !FilterColumnLayout.isOverColumn(windowX, windowY)) {
-      return FilterColumnClick.IGNORED;
+      return false;
     }
     if (FilterColumnLayout.isOverClear(windowX, windowY)) {
-      return selection.clear() ? FilterColumnClick.FILTER_CHANGED : FilterColumnClick.HANDLED;
+      selection.clear();
+      return true;
     }
     if (FilterColumnLayout.isOverMode(windowX, windowY)) {
       selection.cycleMode();
-      return selection.isFiltering() ? FilterColumnClick.FILTER_CHANGED : FilterColumnClick.HANDLED;
+      return true;
     }
     if (FilterColumnLayout.isOverScrollbar(windowX, windowY)) {
-      return grabScrollbar(windowY)
-          ? FilterColumnClick.SCROLLBAR_GRABBED
-          : FilterColumnClick.HANDLED;
+      grabScrollbar(windowY);
+      return true;
     }
     final NetworkTagEntry tag = tagAt(view, windowX, windowY);
-    if (tag == null) {
-      return FilterColumnClick.HANDLED;
+    if (tag != null) {
+      selection.toggle(tag.id());
     }
-    return selection.toggle(tag.id())
-        ? FilterColumnClick.FILTER_CHANGED
-        : FilterColumnClick.HANDLED;
+    return true;
   }
 
   public void draw(

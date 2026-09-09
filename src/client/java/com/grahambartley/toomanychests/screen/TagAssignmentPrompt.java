@@ -58,7 +58,7 @@ public final class TagAssignmentPrompt {
     if (row == TagPromptLayout.NO_ROW) {
       return null;
     }
-    final List<NetworkTagEntry> tags = view.tags();
+    final List<NetworkTagEntry> tags = view.editableFirst();
     final int index = scroll.firstIndex() + row;
     return index >= tags.size() ? null : tags.get(index);
   }
@@ -107,7 +107,7 @@ public final class TagAssignmentPrompt {
       int originY,
       int mouseX,
       int mouseY) {
-    final List<NetworkTagEntry> all = view.tags();
+    final List<NetworkTagEntry> all = view.editableFirst();
     final NetworkTagEntry hovered = tagAt(view, mouseX, mouseY);
     for (int row = 0; row < TagPromptLayout.VISIBLE_ROWS; row++) {
       final int index = scroll.firstIndex() + row;

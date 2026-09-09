@@ -120,9 +120,15 @@ class ListingRequestPayloadTest {
   }
 
   @Test
-  void everyTagAColumnCanOfferFitsInOneRequest() {
-    assertEquals(NetworkTagSet.MAX_TOTAL, ListingRequestPayload.MAX_TAGS);
-    assertTrue(ListingRequestPayload.MAX_TAGS >= PresetTag.all().size() + NetworkTagSet.MAX_CUSTOM);
+  void aRequestNamingEveryTagAColumnCanOfferSurvivesTheWire() {
+    final Set<String> tags = new java.util.HashSet<>();
+    for (int tag = 0; tag < PresetTag.all().size() + NetworkTagSet.MAX_CUSTOM; tag++) {
+      tags.add("tag" + tag);
+    }
+    final ListingRequestPayload sent =
+        new ListingRequestPayload(1, 0, 8, "", TagCombinationMode.DEFAULT, tags);
+
+    assertEquals(tags, roundTrip(sent).tags());
   }
 
   @Test

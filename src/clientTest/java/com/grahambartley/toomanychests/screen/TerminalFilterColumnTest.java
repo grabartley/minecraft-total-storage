@@ -31,7 +31,7 @@ class TerminalFilterColumnTest {
     return FilterColumnLayout.X + 1;
   }
 
-  private FilterColumnClick clickRow(NetworkTagView view, int row) {
+  private boolean clickRow(NetworkTagView view, int row) {
     return column.click(
         view, selection, rowX(), FilterColumnLayout.rowY(row), GridClick.LEFT_BUTTON);
   }
@@ -41,9 +41,9 @@ class TerminalFilterColumnTest {
     final NetworkTagView view = viewOf(3);
     column.fit(view);
 
-    assertEquals(FilterColumnClick.FILTER_CHANGED, clickRow(view, 0));
+    assertTrue(clickRow(view, 0));
     assertTrue(selection.isActive("tag0"));
-    assertEquals(FilterColumnClick.FILTER_CHANGED, clickRow(view, 0));
+    assertTrue(clickRow(view, 0));
     assertFalse(selection.isActive("tag0"));
   }
 
@@ -65,8 +65,7 @@ class TerminalFilterColumnTest {
     clickRow(view, 0);
     clickRow(view, 1);
 
-    assertEquals(
-        FilterColumnClick.FILTER_CHANGED,
+    assertTrue(
         column.click(
             view,
             selection,
@@ -77,44 +76,12 @@ class TerminalFilterColumnTest {
   }
 
   @Test
-  void clearingWhenNothingIsFilteredCostsNoRequest() {
-    final NetworkTagView view = viewOf(3);
-    column.fit(view);
-
-    assertEquals(
-        FilterColumnClick.HANDLED,
-        column.click(
-            view,
-            selection,
-            FilterColumnLayout.CLEAR_X + 1,
-            FilterColumnLayout.Y + 1,
-            GridClick.LEFT_BUTTON));
-  }
-
-  @Test
   void theModeControlSwapsBetweenNarrowingAndBroadening() {
     final NetworkTagView view = viewOf(3);
     column.fit(view);
     clickRow(view, 0);
 
-    assertEquals(
-        FilterColumnClick.FILTER_CHANGED,
-        column.click(
-            view,
-            selection,
-            FilterColumnLayout.X + 1,
-            FilterColumnLayout.Y + 1,
-            GridClick.LEFT_BUTTON));
-    assertEquals(TagCombinationMode.OR, selection.mode());
-  }
-
-  @Test
-  void changingTheModeWithNothingSelectedChangesNoResults() {
-    final NetworkTagView view = viewOf(3);
-    column.fit(view);
-
-    assertEquals(
-        FilterColumnClick.HANDLED,
+    assertTrue(
         column.click(
             view,
             selection,
@@ -129,8 +96,7 @@ class TerminalFilterColumnTest {
     final NetworkTagView view = viewOf(3);
     column.fit(view);
 
-    assertEquals(
-        FilterColumnClick.IGNORED,
+    assertFalse(
         column.click(
             view,
             selection,
@@ -144,8 +110,7 @@ class TerminalFilterColumnTest {
     final NetworkTagView view = viewOf(3);
     column.fit(view);
 
-    assertEquals(
-        FilterColumnClick.IGNORED,
+    assertFalse(
         column.click(view, selection, rowX(), FilterColumnLayout.rowY(0), GridClick.RIGHT_BUTTON));
     assertFalse(selection.isFiltering());
   }
@@ -155,7 +120,7 @@ class TerminalFilterColumnTest {
     final NetworkTagView view = viewOf(1);
     column.fit(view);
 
-    assertEquals(FilterColumnClick.HANDLED, clickRow(view, FilterColumnLayout.ROWS - 1));
+    assertTrue(clickRow(view, FilterColumnLayout.ROWS - 1));
     assertFalse(selection.isFiltering());
   }
 
@@ -184,8 +149,7 @@ class TerminalFilterColumnTest {
     final NetworkTagView view = viewOf(FilterColumnLayout.ROWS + 5);
     column.fit(view);
 
-    assertEquals(
-        FilterColumnClick.SCROLLBAR_GRABBED,
+    assertTrue(
         column.click(
             view,
             selection,

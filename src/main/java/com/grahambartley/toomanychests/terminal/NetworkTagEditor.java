@@ -12,9 +12,9 @@ import com.grahambartley.toomanychests.tag.TagEditOutcome;
 import com.grahambartley.toomanychests.tag.TagEditResult;
 import com.grahambartley.toomanychests.tag.TagNameOutcome;
 import com.grahambartley.toomanychests.tag.TagNameRule;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Optional;
+import java.util.Set;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 
@@ -94,6 +94,15 @@ public final class NetworkTagEditor {
     return store(block, updated, 1);
   }
 
+  public TagEditOutcome refusalFor(
+      ServerWorld world, BlockPos terminal, TerminalCaller caller, String tagId) {
+    final TerminalBlockEntity block = administrable(world, terminal, caller);
+    if (block == null) {
+      return refusalFor(world, terminal);
+    }
+    return editableTag(block.settings().tags(), tagId);
+  }
+
   public TagEditResult assignMatching(
       ServerWorld world,
       BlockPos terminal,
@@ -110,7 +119,7 @@ public final class NetworkTagEditor {
       return TagEditResult.of(editable);
     }
     final NetworkTag existing = tags.byId(tagId).orElseThrow();
-    final List<String> matching = new ArrayList<>();
+    final Set<String> matching = new LinkedHashSet<>();
     for (final FilterCandidate candidate : NetworkTagCandidates.of(world, terminal, tags)) {
       if (FilterEvaluator.strengthOf(candidate, filter == null ? ItemFilter.NONE : filter).isMatch()
           && !existing.contains(candidate.identifier())) {

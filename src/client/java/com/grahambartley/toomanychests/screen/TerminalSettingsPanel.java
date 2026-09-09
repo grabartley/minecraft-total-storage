@@ -1,13 +1,13 @@
 package com.grahambartley.toomanychests.screen;
 
 import com.grahambartley.toomanychests.config.ClientConfigMirror;
+import com.grahambartley.toomanychests.screenhandler.TagsSectionLayout;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
 import com.grahambartley.toomanychests.screenhandler.TerminalSettingsLayout;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
 import com.grahambartley.toomanychests.terminal.NetworkCapacity;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
-import com.grahambartley.toomanychests.terminal.NetworkTagView;
 import java.util.List;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -90,12 +90,12 @@ public final class TerminalSettingsPanel {
     return scrollbar;
   }
 
-  public void fit(NetworkSettingsView view, NetworkTagView tags) {
+  public void fit(NetworkSettingsView view, int customTags) {
     scroll.fit(
         switch (section) {
           case TERMINAL -> 0;
           case CONTAINERS -> view.containerTotal();
-          case TAGS -> tags.custom().size();
+          case TAGS -> customTags + TagsSectionLayout.FIRST_TAG_ROW;
         });
   }
 

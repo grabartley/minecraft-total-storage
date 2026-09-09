@@ -11,7 +11,6 @@ import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
 import com.grahambartley.toomanychests.terminal.NetworkCapacity;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
-import com.grahambartley.toomanychests.terminal.NetworkTagView;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -72,7 +71,7 @@ class TerminalSettingsPanelTest {
   @Test
   void aClickOnARowFollowsWhereTheListIsScrolledTo() {
     TerminalSettingsPanel panel = containers();
-    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 3), NetworkTagView.pending());
+    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 3), 0);
     panel.scroll().scrollBy(2);
 
     assertEquals(
@@ -137,7 +136,7 @@ class TerminalSettingsPanelTest {
   @Test
   void switchingSectionReturnsTheListToItsTop() {
     TerminalSettingsPanel panel = containers();
-    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 5), NetworkTagView.pending());
+    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 5), 0);
     panel.scroll().scrollBy(3);
 
     panel.show(SettingsSection.TERMINAL);
@@ -149,7 +148,7 @@ class TerminalSettingsPanelTest {
   @Test
   void onlyTheContainerListScrolls() {
     TerminalSettingsPanel panel = containers();
-    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 5), NetworkTagView.pending());
+    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 5), 0);
 
     assertTrue(panel.scrolls());
     panel.show(SettingsSection.TERMINAL);
@@ -162,7 +161,7 @@ class TerminalSettingsPanelTest {
   @Test
   void noWayInReachesAScrollbarTheOpenSectionIsNotShowing() {
     TerminalSettingsPanel panel = containers();
-    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 5), NetworkTagView.pending());
+    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 5), 0);
     int onTheThumb = TerminalSettingsLayout.CONTENT_Y + 1;
 
     assertTrue(panel.isOverScrollbar(TerminalScreenLayout.SCROLLBAR_X, onTheThumb));
@@ -179,7 +178,7 @@ class TerminalSettingsPanelTest {
   @Test
   void aClickOnTheRadiusStepperIsNotAGrabOnTheScrollbar() {
     TerminalSettingsPanel panel = new TerminalSettingsPanel();
-    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 5), NetworkTagView.pending());
+    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 5), 0);
     int rightmost = SettingsControl.radiusUpX() + SettingsControl.size() - 1;
 
     assertFalse(panel.isOverScrollbar(rightmost, SettingsControl.radiusY()));
@@ -199,10 +198,10 @@ class TerminalSettingsPanelTest {
   @Test
   void theScrollIsBroughtBackInsideAListThatShrank() {
     TerminalSettingsPanel panel = containers();
-    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 5), NetworkTagView.pending());
+    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 5), 0);
     panel.scroll().scrollBy(5);
 
-    panel.fit(viewOf(1), NetworkTagView.pending());
+    panel.fit(viewOf(1), 0);
 
     assertEquals(0, panel.scroll().firstIndex());
   }

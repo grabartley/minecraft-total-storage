@@ -73,6 +73,11 @@ public final class TerminalTagEdits {
 
   private TagEditResult assignMatching(
       TerminalOperationContext context, TerminalCaller caller, String tagId) {
+    final TagEditOutcome refusal =
+        tags.refusalFor(context.world(), context.terminal(), caller, tagId);
+    if (refusal != null) {
+      return TagEditResult.of(refusal);
+    }
     if (!OperationGuards.allows(context.player(), ExpensiveOperation.ASSIGN_MATCHING)) {
       return TagEditResult.of(TagEditOutcome.UNCHANGED);
     }

@@ -121,7 +121,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     items.beginFrame(TerminalListingMirror.page());
     settingsThisFrame = NetworkSettingsMirror.view();
     tagsThisFrame = NetworkTagMirror.view();
-    settings.fit(settingsThisFrame, tagsThisFrame);
+    settings.fit(settingsThisFrame, tagsThisFrame.custom().size());
     filters.fit(tagsThisFrame);
     prompts.fit(tagsThisFrame);
     if (tagsThisFrame.answered()) {
@@ -136,7 +136,9 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
             items.scroll().window(), search.text(), selection.active(), selection.mode())) {
       requestVisibleRows();
     }
-    if (tab.isSettings() && !settings.scroll().window().equals(requestedContainers)) {
+    if (tab.isSettings()
+        && settings.section() == SettingsSection.CONTAINERS
+        && !settings.scroll().window().equals(requestedContainers)) {
       requestVisibleContainers();
     }
     updateWidgets(items.page().status());
@@ -342,7 +344,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
               button)
           || super.mouseClicked(mouseX, mouseY, button);
     }
-    if (filters.click(tagsThisFrame, selection, windowX, windowY, button).isHandled()) {
+    if (filters.click(tagsThisFrame, selection, windowX, windowY, button)) {
       return true;
     }
     if (button == GridClick.LEFT_BUTTON && TerminalScreenLayout.isOverSearch(windowX, windowY)) {
