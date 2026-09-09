@@ -1,6 +1,5 @@
 package com.grahambartley.toomanychests.screen;
 
-import com.grahambartley.toomanychests.filter.FilterSelection;
 import com.grahambartley.toomanychests.screenhandler.FilterColumnLayout;
 import com.grahambartley.toomanychests.terminal.NetworkTagEntry;
 import com.grahambartley.toomanychests.terminal.NetworkTagView;

@@ -6,6 +6,7 @@ import java.util.Set;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 
 public record NetworkTagView(
+    boolean answered,
     boolean mayAdminister,
     List<NetworkTagEntry> tags,
     Optional<ItemVariant> subject,
@@ -14,7 +15,15 @@ public record NetworkTagView(
   public static final int MAX_TAGS = 128;
 
   private static final NetworkTagView PENDING =
-      new NetworkTagView(false, List.of(), Optional.empty(), Set.of());
+      new NetworkTagView(false, false, List.of(), Optional.empty(), Set.of());
+
+  public NetworkTagView(
+      boolean mayAdminister,
+      List<NetworkTagEntry> tags,
+      Optional<ItemVariant> subject,
+      Set<String> subjectTags) {
+    this(true, mayAdminister, tags, subject, subjectTags);
+  }
 
   public NetworkTagView {
     tags = tags == null ? List.of() : List.copyOf(tags);

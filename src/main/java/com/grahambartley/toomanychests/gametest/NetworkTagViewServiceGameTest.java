@@ -111,6 +111,25 @@ public final class NetworkTagViewServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, owner, guest);
   }
 
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void anItemReportsThePresetsItFallsUnderAsWellAsTheTagsItWasFiledIn(TestContext context) {
+    NetworkOperationFixture.stockedBarrel(
+        context, NetworkOperationFixture.EAST_BARREL, Items.COBBLESTONE, 8);
+    final ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    NetworkOperationFixture.fileUnderCustomTag(context, "castle", "minecraft:cobblestone");
+
+    final NetworkTagView view = viewFor(owner, Optional.of(ItemVariant.of(Items.COBBLESTONE)));
+
+    context.assertTrue(view.subjectCarries("castle"), "The item's own tag was not reported");
+    context.assertTrue(
+        view.subjectCarries(PresetTag.STONE.id()),
+        "The preset the item falls under was not reported, so the prompt cannot show it");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
   private NetworkTagView viewFor(ServerPlayerEntity player, Optional<ItemVariant> subject) {
     return views.viewFor(player, NetworkOperationFixture.handlerOf(player).terminal(), subject);
   }

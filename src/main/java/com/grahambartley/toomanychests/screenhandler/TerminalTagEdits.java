@@ -2,10 +2,13 @@ package com.grahambartley.toomanychests.screenhandler;
 
 import com.grahambartley.toomanychests.access.TerminalCaller;
 import com.grahambartley.toomanychests.network.TagEditPayload;
+import com.grahambartley.toomanychests.operation.ExpensiveOperation;
+import com.grahambartley.toomanychests.operation.OperationGuards;
 import com.grahambartley.toomanychests.operation.TerminalOperationContext;
 import com.grahambartley.toomanychests.operation.TerminalOperationGate;
 import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import com.grahambartley.toomanychests.tag.TagEdit;
+import com.grahambartley.toomanychests.tag.TagEditOutcome;
 import com.grahambartley.toomanychests.tag.TagEditResult;
 import com.grahambartley.toomanychests.terminal.NetworkTagCandidates;
 import com.grahambartley.toomanychests.terminal.NetworkTagEditor;
@@ -64,14 +67,17 @@ public final class TerminalTagEdits {
               payload.tagId(),
               NetworkTagCandidates.idOf(payload.item().orElse(null)),
               payload.action() == TagEdit.ASSIGN);
-      case ASSIGN_MATCHING ->
-          tags.assignMatching(
-              context.world(),
-              context.terminal(),
-              caller,
-              payload.tagId(),
-              context.handler().listing().filter());
+      case ASSIGN_MATCHING -> assignMatching(context, caller, payload.tagId());
     };
+  }
+
+  private TagEditResult assignMatching(
+      TerminalOperationContext context, TerminalCaller caller, String tagId) {
+    if (!OperationGuards.allows(context.player(), ExpensiveOperation.ASSIGN_MATCHING)) {
+      return TagEditResult.of(TagEditOutcome.UNCHANGED);
+    }
+    return tags.assignMatching(
+        context.world(), context.terminal(), caller, tagId, context.handler().listing().filter());
   }
 
   private static void report(ServerPlayerEntity player, TagEdit action, TagEditResult result) {

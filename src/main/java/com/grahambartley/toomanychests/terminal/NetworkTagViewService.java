@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests.terminal;
 
 import com.grahambartley.toomanychests.access.TerminalAccessRules;
 import com.grahambartley.toomanychests.access.TerminalAccessService;
+import com.grahambartley.toomanychests.filter.NetworkFilterCandidates;
 import com.grahambartley.toomanychests.network.PayloadCapLog;
 import com.grahambartley.toomanychests.tag.NetworkTag;
 import com.grahambartley.toomanychests.tag.NetworkTagSet;
@@ -60,6 +61,6 @@ public final class NetworkTagViewService {
     if (subject == null || subject.isEmpty()) {
       return Set.of();
     }
-    return new LinkedHashSet<>(tags.tagIdsFor(NetworkTagCandidates.idOf(subject.get())));
+    return new LinkedHashSet<>(new NetworkFilterCandidates(tags).of(subject.get()).tags());
   }
 }

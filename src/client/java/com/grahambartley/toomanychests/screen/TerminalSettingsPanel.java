@@ -7,6 +7,7 @@ import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
 import com.grahambartley.toomanychests.terminal.NetworkCapacity;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
+import com.grahambartley.toomanychests.terminal.NetworkTagView;
 import java.util.List;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -52,7 +53,7 @@ public final class TerminalSettingsPanel {
   }
 
   public boolean scrolls() {
-    return section == SettingsSection.CONTAINERS;
+    return section != SettingsSection.TERMINAL;
   }
 
   public void show(SettingsSection shown) {
@@ -89,8 +90,13 @@ public final class TerminalSettingsPanel {
     return scrollbar;
   }
 
-  public void fit(NetworkSettingsView view) {
-    scroll.fit(section == SettingsSection.CONTAINERS ? view.containerTotal() : 0);
+  public void fit(NetworkSettingsView view, NetworkTagView tags) {
+    scroll.fit(
+        switch (section) {
+          case TERMINAL -> 0;
+          case CONTAINERS -> view.containerTotal();
+          case TAGS -> tags.custom().size();
+        });
   }
 
   public int containerRowAt(int windowX, int windowY) {
@@ -120,6 +126,7 @@ public final class TerminalSettingsPanel {
       int mouseY) {
     drawSectionTabs(context, textRenderer, originX, originY, mouseX, mouseY);
     if (section == SettingsSection.TAGS) {
+      drawScrollbar(context, originX, originY);
       return;
     }
     if (section == SettingsSection.TERMINAL) {

@@ -12,6 +12,8 @@ import com.grahambartley.toomanychests.tag.TagEditOutcome;
 import com.grahambartley.toomanychests.tag.TagEditResult;
 import com.grahambartley.toomanychests.tag.TagNameOutcome;
 import com.grahambartley.toomanychests.tag.TagNameRule;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -107,20 +109,15 @@ public final class NetworkTagEditor {
     if (editable != null) {
       return TagEditResult.of(editable);
     }
-    NetworkTagSet updated = tags;
-    int affected = 0;
+    final NetworkTag existing = tags.byId(tagId).orElseThrow();
+    final List<String> matching = new ArrayList<>();
     for (final FilterCandidate candidate : NetworkTagCandidates.of(world, terminal, tags)) {
-      if (!FilterEvaluator.strengthOf(candidate, filter == null ? ItemFilter.NONE : filter)
-          .isMatch()) {
-        continue;
-      }
-      final NetworkTagSet next = updated.withItem(tagId, candidate.identifier());
-      if (!next.equals(updated)) {
-        affected++;
-        updated = next;
+      if (FilterEvaluator.strengthOf(candidate, filter == null ? ItemFilter.NONE : filter).isMatch()
+          && !existing.contains(candidate.identifier())) {
+        matching.add(candidate.identifier());
       }
     }
-    return store(block, updated, affected);
+    return store(block, tags.withItems(tagId, matching), matching.size());
   }
 
   private static TagEditOutcome editableTag(NetworkTagSet tags, String tagId) {

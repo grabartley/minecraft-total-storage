@@ -27,17 +27,7 @@ public final class TerminalTagsPanel {
   private static final int LINE_HEIGHT = 9;
   private static final int ICON_SIZE = 8;
 
-  private final ListingScroll scroll = new ListingScroll(1, TagsSectionLayout.TAG_ROWS);
-
   private String armedForDelete = "";
-
-  public ListingScroll scroll() {
-    return scroll;
-  }
-
-  public void fit(NetworkTagView view) {
-    scroll.fit(view.custom().size());
-  }
 
   public void disarm() {
     armedForDelete = "";
@@ -51,8 +41,8 @@ public final class TerminalTagsPanel {
     armedForDelete = tagId == null ? "" : tagId;
   }
 
-  public NetworkTagEntry tagAt(NetworkTagView view, int windowX, int windowY) {
-    final int index = TagsSectionLayout.tagIndexAt(windowX, windowY, scroll.firstIndex());
+  public NetworkTagEntry tagAt(NetworkTagView view, int firstVisible, int windowX, int windowY) {
+    final int index = TagsSectionLayout.tagIndexAt(windowX, windowY, firstVisible);
     final List<NetworkTagEntry> custom = view.custom();
     return index == TerminalSettingsLayout.NO_ROW || index >= custom.size()
         ? null
@@ -63,12 +53,13 @@ public final class TerminalTagsPanel {
       DrawContext context,
       TextRenderer textRenderer,
       NetworkTagView view,
+      int firstVisible,
       int originX,
       int originY,
       int mouseX,
       int mouseY) {
     drawNewTagRow(context, textRenderer, view, originX, originY, mouseX, mouseY);
-    drawTagRows(context, textRenderer, view, originX, originY, mouseX, mouseY);
+    drawTagRows(context, textRenderer, view, firstVisible, originX, originY, mouseX, mouseY);
   }
 
   private static void drawNewTagRow(
@@ -105,14 +96,15 @@ public final class TerminalTagsPanel {
       DrawContext context,
       TextRenderer textRenderer,
       NetworkTagView view,
+      int firstVisible,
       int originX,
       int originY,
       int mouseX,
       int mouseY) {
     final List<NetworkTagEntry> custom = view.custom();
-    final NetworkTagEntry hovered = tagAt(view, mouseX, mouseY);
+    final NetworkTagEntry hovered = tagAt(view, firstVisible, mouseX, mouseY);
     for (int row = 0; row < TagsSectionLayout.TAG_ROWS; row++) {
-      final int index = scroll.firstIndex() + row;
+      final int index = firstVisible + row;
       if (index >= custom.size()) {
         return;
       }

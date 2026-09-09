@@ -18,21 +18,4 @@ class TagEditOutcomeTest {
   void everyOtherOutcomeChangedNothing(TagEditOutcome outcome) {
     assertFalse(outcome.isChange());
   }
-
-  @ParameterizedTest
-  @EnumSource(
-      value = TagEditOutcome.class,
-      names = {"CHANGED", "UNCHANGED"})
-  void anEditThatWasAllowedIsNotARefusal(TagEditOutcome outcome) {
-    assertFalse(outcome.isRefusal());
-  }
-
-  @ParameterizedTest
-  @EnumSource(
-      value = TagEditOutcome.class,
-      names = {"CHANGED", "UNCHANGED"},
-      mode = EnumSource.Mode.EXCLUDE)
-  void everyOtherOutcomeIsARefusalWorthReporting(TagEditOutcome outcome) {
-    assertTrue(outcome.isRefusal());
-  }
 }

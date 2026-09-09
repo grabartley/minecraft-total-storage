@@ -177,7 +177,7 @@ public final class TerminalListingServiceGameTest implements FabricGameTest {
   public void aCustomTagNarrowsTheNetworkToTheItemsFiledUnderIt(TestContext context) {
     ServerPlayerEntity player = openTerminalStockedWith(context, Items.DIAMOND, Items.COBBLESTONE);
     TerminalScreenHandler handler = handlerOf(player);
-    fileUnderCustomTag(context, "castle", "minecraft:cobblestone");
+    NetworkOperationFixture.fileUnderCustomTag(context, "castle", "minecraft:cobblestone");
 
     requestFiltered(player, handler, TagCombinationMode.AND, Set.of("castle"));
 
@@ -192,8 +192,8 @@ public final class TerminalListingServiceGameTest implements FabricGameTest {
   public void twoTagsNarrowTogetherAndBroadenApart(TestContext context) {
     ServerPlayerEntity player = openTerminalStockedWith(context, Items.DIAMOND, Items.COBBLESTONE);
     TerminalScreenHandler handler = handlerOf(player);
-    fileUnderCustomTag(context, "castle", "minecraft:cobblestone");
-    fileUnderCustomTag(context, "shiny", "minecraft:diamond");
+    NetworkOperationFixture.fileUnderCustomTag(context, "castle", "minecraft:cobblestone");
+    NetworkOperationFixture.fileUnderCustomTag(context, "shiny", "minecraft:diamond");
 
     requestFiltered(player, handler, TagCombinationMode.AND, Set.of("castle", "shiny"));
     context.assertTrue(
@@ -212,8 +212,8 @@ public final class TerminalListingServiceGameTest implements FabricGameTest {
     ServerPlayerEntity player =
         openTerminalStockedWith(context, Items.DIAMOND, Items.COBBLESTONE, Items.COBBLESTONE_SLAB);
     TerminalScreenHandler handler = handlerOf(player);
-    fileUnderCustomTag(context, "castle", "minecraft:cobblestone");
-    fileUnderCustomTag(context, "castle", "minecraft:diamond");
+    NetworkOperationFixture.fileUnderCustomTag(context, "castle", "minecraft:cobblestone");
+    NetworkOperationFixture.fileUnderCustomTag(context, "castle", "minecraft:diamond");
 
     listings.request(
         player,
@@ -231,7 +231,7 @@ public final class TerminalListingServiceGameTest implements FabricGameTest {
   public void aTagNothingIsFiledUnderFindsNothingRatherThanEverything(TestContext context) {
     ServerPlayerEntity player = openTerminalStockedWith(context, Items.DIAMOND);
     TerminalScreenHandler handler = handlerOf(player);
-    fileUnderCustomTag(context, "castle", "minecraft:cobblestone");
+    NetworkOperationFixture.fileUnderCustomTag(context, "castle", "minecraft:cobblestone");
 
     requestFiltered(player, handler, TagCombinationMode.AND, Set.of("castle"));
 
@@ -247,14 +247,6 @@ public final class TerminalListingServiceGameTest implements FabricGameTest {
       TagCombinationMode mode,
       Set<String> tags) {
     listings.request(player, new ListingRequestPayload(handler.syncId, 0, 10, "", mode, tags));
-  }
-
-  private static void fileUnderCustomTag(TestContext context, String tag, String itemId) {
-    context
-        .<TerminalBlockEntity>getBlockEntity(TERMINAL)
-        .updateSettings(
-            settings ->
-                settings.withTags(settings.tags().withCustomTag(tag).withItem(tag, itemId)));
   }
 
   private void request(

@@ -1,6 +1,5 @@
 package com.grahambartley.toomanychests.screen;
 
-import com.grahambartley.toomanychests.filter.FilterSelection;
 import com.grahambartley.toomanychests.listing.ListingRow;
 import com.grahambartley.toomanychests.listing.ListingStatus;
 import com.grahambartley.toomanychests.listing.ListingWindow;
@@ -122,11 +121,12 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     items.beginFrame(TerminalListingMirror.page());
     settingsThisFrame = NetworkSettingsMirror.view();
     tagsThisFrame = NetworkTagMirror.view();
-    settings.fit(settingsThisFrame);
-    tagsPanel.fit(tagsThisFrame);
+    settings.fit(settingsThisFrame, tagsThisFrame);
     filters.fit(tagsThisFrame);
     prompts.fit(tagsThisFrame);
-    selection.retainAll(knownTagIds());
+    if (tagsThisFrame.answered()) {
+      selection.retainAll(knownTagIds());
+    }
     if (requested.isNewQuery(search.text())
         || requested.isNewFilter(selection.active(), selection.mode())) {
       items.scroll().scrollTo(0);
@@ -258,7 +258,15 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     if (tab.isSettings()) {
       settings.draw(context, textRenderer, settingsThisFrame, 0, 0, hoveredWindowX, hoveredWindowY);
       if (settings.section() == SettingsSection.TAGS) {
-        tagsPanel.draw(context, textRenderer, tagsThisFrame, 0, 0, hoveredWindowX, hoveredWindowY);
+        tagsPanel.draw(
+            context,
+            textRenderer,
+            tagsThisFrame,
+            settings.scroll().firstIndex(),
+            0,
+            0,
+            hoveredWindowX,
+            hoveredWindowY);
       }
       return;
     }
@@ -278,15 +286,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     }
     final int notches = verticalAmount > 0.0 ? -1 : 1;
     if (tab.isSettings()) {
-      if (settings.section() == SettingsSection.TAGS) {
-        if (tagsPanel.scroll().overflows()
-            && TerminalSettingsLayout.rowAt(windowX(mouseX), windowY(mouseY))
-                != TerminalSettingsLayout.NO_ROW) {
-          tagsPanel.scroll().scrollBy(notches);
-          return true;
-        }
-        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
-      }
       if (settings.scrolls()
           && settings.scroll().overflows()
           && (TerminalSettingsLayout.rowAt(windowX(mouseX), windowY(mouseY))
@@ -333,22 +332,17 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
         showSection(clickedSection);
         return true;
       }
-      final SettingsSection before = settings.section();
-      final boolean handled =
-          settingsClicks.handle(
-              handler.syncId, settingsThisFrame, tagsThisFrame, windowX, windowY, button);
-      if (settings.section() != before) {
-        tagsPanel.disarm();
-      }
-      return handled || super.mouseClicked(mouseX, mouseY, button);
+      return settingsClicks.handle(
+              handler.syncId,
+              settingsThisFrame,
+              tagsThisFrame,
+              settings.scroll().firstIndex(),
+              windowX,
+              windowY,
+              button)
+          || super.mouseClicked(mouseX, mouseY, button);
     }
-    final FilterColumnClick filtered =
-        filters.click(tagsThisFrame, selection, windowX, windowY, button);
-    if (filtered.changedFilter()) {
-      requestVisibleRows();
-      return true;
-    }
-    if (filtered.isHandled()) {
+    if (filters.click(tagsThisFrame, selection, windowX, windowY, button).isHandled()) {
       return true;
     }
     if (button == GridClick.LEFT_BUTTON && TerminalScreenLayout.isOverSearch(windowX, windowY)) {

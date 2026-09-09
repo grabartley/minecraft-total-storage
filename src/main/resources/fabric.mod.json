@@ -75,6 +75,7 @@
       "com.grahambartley.toomanychests.gametest.StaleIndexGameTest",
       "com.grahambartley.toomanychests.gametest.RollbackSafetyGameTest",
       "com.grahambartley.toomanychests.gametest.NetworkMutationGameTest",
+      "com.grahambartley.toomanychests.gametest.NetworkFilterCandidatesGameTest",
       "com.grahambartley.toomanychests.gametest.TerminalTagEditsGameTest",
       "com.grahambartley.toomanychests.gametest.NetworkTagViewServiceGameTest"
     ]

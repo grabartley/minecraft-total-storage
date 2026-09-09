@@ -1,5 +1,8 @@
-package com.grahambartley.toomanychests.filter;
+package com.grahambartley.toomanychests.screen;
 
+import com.grahambartley.toomanychests.filter.FilterText;
+import com.grahambartley.toomanychests.filter.TagCombinationMode;
+import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -30,9 +33,13 @@ public final class FilterSelection {
     if (id.isEmpty()) {
       return false;
     }
-    if (!active.remove(id)) {
-      active.add(id);
+    if (active.remove(id)) {
+      return true;
     }
+    if (active.size() >= NetworkTagSet.MAX_TOTAL) {
+      return false;
+    }
+    active.add(id);
     return true;
   }
 

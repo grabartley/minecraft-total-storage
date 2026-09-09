@@ -108,11 +108,13 @@ public final class TerminalPrompts {
     if (naming.isOpen()) {
       return handleNameKey(naming.keyPressed(keyCode));
     }
-    if (tagging.isOpen() && keyCode == GLFW.GLFW_KEY_ESCAPE) {
-      closeTagging();
-      return true;
+    if (!tagging.isOpen()) {
+      return false;
     }
-    return false;
+    if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+      closeTagging();
+    }
+    return true;
   }
 
   public boolean charTyped(char typed) {
@@ -122,7 +124,7 @@ public final class TerminalPrompts {
     if (naming.isOpen()) {
       return handleNameKey(naming.charTyped(typed));
     }
-    return false;
+    return tagging.isOpen();
   }
 
   private boolean taggingClicked(
@@ -132,7 +134,7 @@ public final class TerminalPrompts {
       return true;
     }
     final NetworkTagEntry tag = tagging.tagAt(tags, windowX, windowY);
-    if (tag == null) {
+    if (tag == null || tag.immutable()) {
       return true;
     }
     if (shiftDown) {

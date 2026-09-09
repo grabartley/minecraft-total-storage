@@ -26,6 +26,7 @@ public final class TerminalSettingsClicks {
       int syncId,
       NetworkSettingsView view,
       NetworkTagView tagView,
+      int firstVisibleTag,
       int windowX,
       int windowY,
       int button) {
@@ -33,7 +34,7 @@ public final class TerminalSettingsClicks {
     return switch (settings.section()) {
       case TERMINAL -> terminal(syncId, view, windowX, windowY, button, mayAdminister);
       case CONTAINERS -> container(syncId, view, windowX, windowY, button, mayAdminister);
-      case TAGS -> tag(syncId, tagView, windowX, windowY, button);
+      case TAGS -> tag(syncId, tagView, firstVisibleTag, windowX, windowY, button);
     };
   }
 
@@ -92,7 +93,8 @@ public final class TerminalSettingsClicks {
     return true;
   }
 
-  private boolean tag(int syncId, NetworkTagView view, int windowX, int windowY, int button) {
+  private boolean tag(
+      int syncId, NetworkTagView view, int firstVisibleTag, int windowX, int windowY, int button) {
     if (button != GridClick.LEFT_BUTTON) {
       return false;
     }
@@ -103,7 +105,7 @@ public final class TerminalSettingsClicks {
       return true;
     }
     final TagRowRegion region = TagsSectionLayout.regionAt(windowX, windowY);
-    final NetworkTagEntry tag = tags.tagAt(view, windowX, windowY);
+    final NetworkTagEntry tag = tags.tagAt(view, firstVisibleTag, windowX, windowY);
     if (!region.isSomething() || tag == null) {
       return false;
     }

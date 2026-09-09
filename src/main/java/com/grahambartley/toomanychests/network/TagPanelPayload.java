@@ -59,8 +59,9 @@ public record TagPanelPayload(int syncId, NetworkTagView view) implements Custom
     final List<NetworkTagEntry> tags = readTags(buf);
     final Optional<ItemVariant> subject =
         buf.readBoolean() ? Optional.of(ItemVariant.PACKET_CODEC.decode(buf)) : Optional.empty();
+    final Set<String> subjectTags = readSubjectTags(buf);
     return new TagPanelPayload(
-        syncId, new NetworkTagView(mayAdminister, tags, subject, readSubjectTags(buf)));
+        syncId, new NetworkTagView(mayAdminister, tags, subject, subjectTags));
   }
 
   private static List<NetworkTagEntry> readTags(RegistryByteBuf buf) {

@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.grahambartley.toomanychests.filter.FilterSelection;
 import com.grahambartley.toomanychests.filter.TagCombinationMode;
 import com.grahambartley.toomanychests.screenhandler.FilterColumnLayout;
 import com.grahambartley.toomanychests.terminal.NetworkTagEntry;

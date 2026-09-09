@@ -20,6 +20,7 @@ public final class TagAssignmentPrompt {
 
   private static final int LABEL_COLOUR = 0xE4E9F2;
   private static final int HINT_COLOUR = 0x9AA3B3;
+  private static final int PRESET_COLOUR = 0x6D7484;
 
   private static final float ELEVATION = 300.0F;
 
@@ -45,7 +46,7 @@ public final class TagAssignmentPrompt {
   }
 
   public void fit(NetworkTagView view) {
-    scroll.fit(view.custom().size());
+    scroll.fit(view.tags().size());
   }
 
   public boolean scrollBy(int notches) {
@@ -57,9 +58,9 @@ public final class TagAssignmentPrompt {
     if (row == TagPromptLayout.NO_ROW) {
       return null;
     }
-    final List<NetworkTagEntry> custom = view.custom();
+    final List<NetworkTagEntry> tags = view.tags();
     final int index = scroll.firstIndex() + row;
-    return index >= custom.size() ? null : custom.get(index);
+    return index >= tags.size() ? null : tags.get(index);
   }
 
   public void draw(
@@ -106,20 +107,20 @@ public final class TagAssignmentPrompt {
       int originY,
       int mouseX,
       int mouseY) {
-    final List<NetworkTagEntry> custom = view.custom();
+    final List<NetworkTagEntry> all = view.tags();
     final NetworkTagEntry hovered = tagAt(view, mouseX, mouseY);
     for (int row = 0; row < TagPromptLayout.VISIBLE_ROWS; row++) {
       final int index = scroll.firstIndex() + row;
-      if (index >= custom.size()) {
+      if (index >= all.size()) {
         return;
       }
-      final NetworkTagEntry tag = custom.get(index);
+      final NetworkTagEntry tag = all.get(index);
       drawRow(
           context,
           textRenderer,
           tag,
           view.subjectCarries(tag.id()),
-          tag.equals(hovered),
+          tag.equals(hovered) && !tag.immutable(),
           originX + TagPromptLayout.left() + TagPromptLayout.PADDING,
           originY + TagPromptLayout.rowY(row));
     }
@@ -158,7 +159,7 @@ public final class TagAssignmentPrompt {
         name,
         textLeft,
         top + (TagPromptLayout.ROW_HEIGHT - TagPromptLayout.LINE_HEIGHT) / 2 + 1,
-        carried ? LABEL_COLOUR : HINT_COLOUR,
+        tag.immutable() ? PRESET_COLOUR : carried ? LABEL_COLOUR : HINT_COLOUR,
         false);
   }
 

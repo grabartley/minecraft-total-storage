@@ -3,7 +3,6 @@ package com.grahambartley.toomanychests.screenhandler;
 import com.grahambartley.toomanychests.ModScreenHandlers;
 import com.grahambartley.toomanychests.access.TerminalAccessControl;
 import com.grahambartley.toomanychests.listing.TerminalListingState;
-import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import com.grahambartley.toomanychests.terminal.TerminalAddress;
 import java.util.Objects;
 import net.minecraft.entity.player.PlayerEntity;
@@ -57,10 +56,6 @@ public class TerminalScreenHandler extends ScreenHandler {
 
   public TerminalPermission permission() {
     return data.permission();
-  }
-
-  public NetworkTagSet tagSet() {
-    return data.tags();
   }
 
   @Override

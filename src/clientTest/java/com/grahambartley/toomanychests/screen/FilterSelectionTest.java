@@ -1,10 +1,12 @@
-package com.grahambartley.toomanychests.filter;
+package com.grahambartley.toomanychests.screen;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.grahambartley.toomanychests.filter.TagCombinationMode;
+import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -77,6 +79,40 @@ class FilterSelectionTest {
     selection.toggle("castle");
     selection.retainAll(Set.of("wood", "stone"));
     assertEquals(Set.of("wood"), selection.active());
+  }
+
+  @Test
+  void selectingEveryTagANetworkCanOfferIsAllowed() {
+    final FilterSelection selection = new FilterSelection();
+
+    for (int tag = 0; tag < NetworkTagSet.MAX_TOTAL; tag++) {
+      assertTrue(selection.toggle("tag" + tag), "tag " + tag + " should have been selectable");
+    }
+
+    assertEquals(NetworkTagSet.MAX_TOTAL, selection.active().size());
+  }
+
+  @Test
+  void aTagPastTheCapIsRefusedRatherThanSentInAPacketTheServerRejects() {
+    final FilterSelection selection = new FilterSelection();
+    for (int tag = 0; tag < NetworkTagSet.MAX_TOTAL; tag++) {
+      selection.toggle("tag" + tag);
+    }
+
+    assertFalse(selection.toggle("one too many"));
+    assertEquals(NetworkTagSet.MAX_TOTAL, selection.active().size());
+    assertFalse(selection.isActive("one too many"));
+  }
+
+  @Test
+  void clearingATagAtTheCapMakesRoomAgain() {
+    final FilterSelection selection = new FilterSelection();
+    for (int tag = 0; tag < NetworkTagSet.MAX_TOTAL; tag++) {
+      selection.toggle("tag" + tag);
+    }
+
+    assertTrue(selection.toggle("tag0"));
+    assertTrue(selection.toggle("one more"));
   }
 
   @Test

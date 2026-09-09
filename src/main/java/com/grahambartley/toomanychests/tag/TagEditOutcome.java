@@ -20,8 +20,4 @@ public enum TagEditOutcome {
   public boolean isChange() {
     return this == CHANGED;
   }
-
-  public boolean isRefusal() {
-    return this != CHANGED && this != UNCHANGED;
-  }
 }
