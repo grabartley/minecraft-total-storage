@@ -6,7 +6,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 class WithdrawResultTest {
-
   @ParameterizedTest
   @CsvSource({
     "WITHDRAWN, true",

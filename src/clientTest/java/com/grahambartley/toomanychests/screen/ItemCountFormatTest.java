@@ -11,7 +11,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class ItemCountFormatTest {
-  /** Five characters is what a twenty pixel cell holds at the half scale the count is drawn at. */
   private static final int CELL_CHARACTER_BUDGET = 5;
 
   static LongStream everyOrderOfMagnitude() {
@@ -65,10 +64,6 @@ class ItemCountFormatTest {
     assertEquals(expected, ItemCountFormat.cell(count));
   }
 
-  /**
-   * A storage display that rounds up promises items that are not there. Understating is the safe
-   * direction: a player who sees {@code 12.3k} and finds 12,399 is never caught short.
-   */
   @Test
   void compactionNeverClaimsMoreThanTheNetworkHolds() {
     assertEquals("12.3k", ItemCountFormat.cell(12_399L));
@@ -93,7 +88,6 @@ class ItemCountFormatTest {
     assertEquals("7", ItemCountFormat.exact(7L));
   }
 
-  /** The grouping has to read the same for every player, not follow whatever locale they run in. */
   @Test
   void groupingDoesNotChangeWithTheDefaultLocale() {
     java.util.Locale original = java.util.Locale.getDefault();

@@ -18,16 +18,11 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Direction;
 
-/**
- * Discovery only means anything against a real world: chunk load state, block entity maps, and the
- * double chest that is two block entities over one storage all come from the running server.
- */
 public final class ContainerDiscoveryScanGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
   private static final String BATCH = "discovery-scan";
   private static final int TICK_LIMIT = 20;
 
-  /** Radius 1 around the centre, so "outside the radius" still fits inside the template. */
   private static final BlockPos CENTRE = new BlockPos(3, 1, 3);
 
   private static final int RADIUS = 1;
@@ -121,11 +116,6 @@ public final class ContainerDiscoveryScanGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /**
-   * The count is taken over the scanned region rather than the world, because sibling batches tick
-   * in this same world and load chunks of their own while the scan runs. Their structures are
-   * millions of blocks from this one, so a region-scoped count moves only if the scan moved it.
-   */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void aScanReachingBeyondLoadedChunksLoadsNoneOfThem(TestContext context) {
     ServerWorld world = context.getWorld();

@@ -1,11 +1,5 @@
 package com.grahambartley.toomanychests.lock;
 
-/**
- * Decides what a lock toggle does to a set of locked slots.
- *
- * <p>Kept free of any player or packet type so the rule that governs a forged index is checked
- * without a running server.
- */
 public final class LockToggle {
   private LockToggle() {}
 

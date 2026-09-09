@@ -7,7 +7,6 @@ import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
 
 public class ModBlockEntities {
-
   public static final BlockEntityType<TerminalBlockEntity> TERMINAL =
       Registry.register(
           Registries.BLOCK_ENTITY_TYPE,

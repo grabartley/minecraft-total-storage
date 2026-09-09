@@ -3,13 +3,6 @@ package com.grahambartley.toomanychests.config;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Every server setting an operator can reach, in the order they are worth reading.
- *
- * <p>This is the one list. The command tree, its tab completion, and any settings screen all read
- * it, so a setting added to the config record and left out here is visibly absent from all three
- * rather than quietly missing from one.
- */
 public final class ConfigSettings {
   private static final List<ConfigSetting> ALL =
       List.of(

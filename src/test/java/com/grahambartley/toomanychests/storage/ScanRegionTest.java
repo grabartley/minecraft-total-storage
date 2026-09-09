@@ -18,14 +18,14 @@ class ScanRegionTest {
 
   @ParameterizedTest
   @CsvSource({
-    "100, 64, -200", // the centre itself
-    "104, 64, -200", // on the x face
+    "100, 64, -200",
+    "104, 64, -200",
     "96, 64, -200",
-    "100, 68, -200", // on the y face
+    "100, 68, -200",
     "100, 60, -200",
-    "100, 64, -196", // on the z face
+    "100, 64, -196",
     "100, 64, -204",
-    "104, 68, -196", // the far corner is still inside a cuboid
+    "104, 68, -196",
   })
   void positionsWithinTheHalfExtentAreInside(int x, int y, int z) {
     assertTrue(new ScanRegion(CENTER, 4).contains(new BlockPos(x, y, z)));
@@ -146,9 +146,7 @@ class ScanRegionTest {
 
   @ParameterizedTest
   @CsvSource({
-    "6, -13", // the centre's own chunk
-    "5, -13", // the chunks the radius spills into
-    "7, -13", "6, -12", "6, -14",
+    "6, -13", "5, -13", "7, -13", "6, -12", "6, -14",
   })
   void aRegionReachesIntoEveryChunkItsRadiusSpillsInto(int chunkX, int chunkZ) {
     ScanRegion region = new ScanRegion(CENTER, 16);

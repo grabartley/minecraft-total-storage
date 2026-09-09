@@ -10,20 +10,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
-/**
- * Turns an index and what a player has narrowed it to into the one page they are looking at.
- *
- * <p>Searching and filtering happen here, on the whole index, rather than on the client against a
- * page it already holds. A client can only filter what it was sent, so filtering there would mean
- * sending everything, which is the cost this whole mechanism exists to avoid. It also means a page
- * is always drawn from the network as it stands rather than from whatever the client last cached.
- *
- * <p>The results arrive ranked, per ADR 0028. A page is a slice of the order, so ranking after the
- * slice was taken would only ever sort one screenful against itself.
- *
- * <p>Per ADR 0012 the mapping from variant to candidate is supplied, so nothing here needs a
- * registry and the whole computation is testable without a world.
- */
 public final class NetworkListing {
   private NetworkListing() {}
 

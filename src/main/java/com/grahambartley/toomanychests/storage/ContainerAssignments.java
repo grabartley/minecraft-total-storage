@@ -6,20 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Every decision one network has made about the containers it can see. See ADR 0004.
- *
- * <p>Assignments are keyed by position rather than by container identity, because a chest has no
- * identity that survives being broken. A container that is removed has its assignment forgotten as
- * it goes, which is what stops the next container placed there inheriting decisions made about a
- * different one; see ADR 0014 for why removal is the only event that can be trusted for this.
- *
- * <p>A container holding the default assignment is forgotten rather than recorded, so a network
- * nobody has configured costs nothing to store. Order is by position rather than by the order edits
- * arrived in, so two networks configured the same way compare equal and encode identically.
- *
- * @param byPosition the containers this network has an opinion about, in canonical position order
- */
 public record ContainerAssignments(Map<BlockPos, ContainerAssignment> byPosition) {
   private static final ContainerAssignments EMPTY = new ContainerAssignments(Map.of());
 
@@ -79,7 +65,6 @@ public record ContainerAssignments(Map<BlockPos, ContainerAssignment> byPosition
     return with(container, forContainer(container).withFilter(filter));
   }
 
-  /** Drops a container entirely, which is what a container leaving the world for good earns. */
   public ContainerAssignments without(BlockPos container) {
     return with(container, ContainerAssignment.DEFAULT);
   }

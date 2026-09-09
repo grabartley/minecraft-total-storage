@@ -16,17 +16,6 @@ import java.util.TreeSet;
 import java.util.UUID;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Everything a storage network remembers about itself: its reach, the roles it has given the
- * containers it can see, its tag set, and who may operate it. See ADR 0004, ADR 0006 and ADR 0008.
- *
- * <p>These live on the terminal's block entity rather than in world state, which is what makes
- * cutting a terminal's power an off switch rather than a factory reset.
- *
- * <p>Every value is sanitized on construction rather than at each reader, so a hand-edited save
- * cannot put a radius or a role in front of code that assumes neither can happen. The tag set and
- * the container assignments sanitize themselves, presets included.
- */
 public record TerminalSettings(
     int radius,
     TerminalAccessMode accessMode,
@@ -34,14 +23,9 @@ public record TerminalSettings(
     Set<UUID> trusted,
     ContainerAssignments containers,
     NetworkTagSet tags) {
-
   public static final int MIN_RADIUS = TooManyChestsConfig.MAX_TERMINAL_RADIUS_MIN;
   public static final int MAX_RADIUS = TooManyChestsConfig.MAX_TERMINAL_RADIUS_MAX;
 
-  /**
-   * A fresh terminal reaches as far as a default server permits. The live server maximum is a clamp
-   * applied on top rather than a starting value, so this stays a plain constant.
-   */
   public static final int DEFAULT_RADIUS = TooManyChestsConfig.DEFAULT_MAX_TERMINAL_RADIUS;
 
   private static final TerminalSettings DEFAULTS =
@@ -134,7 +118,6 @@ public record TerminalSettings(
     return withContainers(containers.withFilter(container, filter));
   }
 
-  /** What a container leaving the world for good costs it: every decision made about it. */
   public TerminalSettings forgetContainer(BlockPos container) {
     return withContainers(containers.without(container));
   }

@@ -6,14 +6,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-/**
- * Finding the terminal a position is supposed to hold, if it still holds one.
- *
- * <p>Every service reaching a terminal is answering a request that named a position rather than a
- * block entity, so all of them have to survive being pointed at a hole.
- */
 public final class TerminalLookup {
-
   private TerminalLookup() {}
 
   public static Optional<TerminalBlockEntity> at(World world, BlockPos pos) {

@@ -8,7 +8,6 @@ import com.grahambartley.toomanychests.listing.ListingWindow;
 import org.junit.jupiter.api.Test;
 
 class TerminalSettingsStateTest {
-
   @Test
   void aPanelNobodyHasOpenedIsNotPushedTo() {
     assertFalse(new TerminalSettingsState().isOpen());
@@ -25,7 +24,6 @@ class TerminalSettingsStateTest {
     assertEquals(8, state.window().length());
   }
 
-  /** An edit by somebody else must not push to a screen that has gone back to the item grid. */
   @Test
   void closingThePanelStopsItBeingSentAnything() {
     TerminalSettingsState state = new TerminalSettingsState();

@@ -11,7 +11,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 class TerminalAccessTest {
-
   @DisplayName("every reason but refusal lets the player through")
   @ParameterizedTest(name = "{0}")
   @EnumSource(
@@ -27,7 +26,6 @@ class TerminalAccessTest {
     assertFalse(TerminalAccess.DENIED.allowed());
   }
 
-  /** Only the bypass is logged, so exactly one reason may answer to it. */
   @Test
   void onlyTheOperatorBypassCountsAsABypass() {
     assertEquals(

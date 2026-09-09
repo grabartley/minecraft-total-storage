@@ -11,7 +11,7 @@ public record BlockStorageOrigin(RegistryKey<World> worldKey, BlockPos pos)
   public BlockStorageOrigin {
     Objects.requireNonNull(worldKey, "worldKey");
     Objects.requireNonNull(pos, "pos");
-    // Discovery scans reuse a BlockPos.Mutable, which would corrupt any map keyed by this origin.
+
     pos = pos.toImmutable();
   }
 
@@ -20,7 +20,6 @@ public record BlockStorageOrigin(RegistryKey<World> worldKey, BlockPos pos)
     return new BlockStorageOrigin(world.getRegistryKey(), pos);
   }
 
-  /** Whether this container lives in one particular chunk, which decides what an unload takes. */
   public boolean isIn(RegistryKey<World> otherWorldKey, ChunkPos chunkPos) {
     return worldKey.equals(otherWorldKey) && new ChunkPos(pos).equals(chunkPos);
   }

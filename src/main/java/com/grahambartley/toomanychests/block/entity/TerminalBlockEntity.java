@@ -14,13 +14,6 @@ import net.minecraft.util.math.BlockPos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * The terminal's memory: the settings its storage network is configured with.
- *
- * <p>Nothing here is synced to clients. The trust list names players who are not the one looking,
- * and the only part of a terminal's state a client has to render is its power, which the block
- * state already carries.
- */
 public class TerminalBlockEntity extends BlockEntity {
   private static final String NBT_SETTINGS = "Settings";
   private static final Logger LOGGER = LoggerFactory.getLogger(TerminalBlockEntity.class);

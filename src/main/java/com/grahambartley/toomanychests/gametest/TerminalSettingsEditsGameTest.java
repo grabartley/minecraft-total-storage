@@ -21,14 +21,6 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * What the settings panel is allowed to change, checked where the packet lands rather than where
- * the button was drawn.
- *
- * <p>Every refusal here is sent as the real payload rather than by driving a screen, because that
- * is the shape a modified client would use. Per ADR 0008 a client that decided for itself that it
- * may administer must gain nothing by it, and hiding the control is not what stops it.
- */
 public final class TerminalSettingsEditsGameTest implements FabricGameTest {
   private static final String BATCH = "terminal-settings-edits";
   private static final int TICK_LIMIT = 60;
@@ -37,11 +29,6 @@ public final class TerminalSettingsEditsGameTest implements FabricGameTest {
   private final TerminalSettingsEdits edits = new TerminalSettingsEdits(panels);
   private final ContainerRoleService roles = new ContainerRoleService();
 
-  /**
-   * Cooldowns are JVM-global, so one left over from an earlier batch would refuse a rescan here for
-   * a reason that has nothing to do with what is being tested. Within this batch the tests overlap
-   * but each uses its own player, so they do not put each other on cooldown.
-   */
   @BeforeBatch(batchId = BATCH)
   public void clearCooldowns(ServerWorld world) {
     OperationGuards.cooldowns().clear();
@@ -142,7 +129,6 @@ public final class TerminalSettingsEditsGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, owner);
   }
 
-  /** Per ADR 0009 a request naming a screen the sender does not have open reaches nothing. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -159,10 +145,6 @@ public final class TerminalSettingsEditsGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, owner);
   }
 
-  /**
-   * A highlight answers "which chests is this reaching", which is a question anyone allowed to use
-   * the terminal is entitled to an answer to.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -178,9 +160,6 @@ public final class TerminalSettingsEditsGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, owner, guest);
   }
 
-  /**
-   * A rescan tears the network down and builds it again, so it is gated like every other change.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -196,11 +175,6 @@ public final class TerminalSettingsEditsGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, owner, guest);
   }
 
-  /**
-   * Proven by what the walk found rather than by the call returning. A count that was already true
-   * before the rescan would be just as true if the rescan never ran, so the region is widened first
-   * and the second barrel is what shows the network really walked it again.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -221,7 +195,6 @@ public final class TerminalSettingsEditsGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, owner);
   }
 
-  /** A rescan that changes nothing says so, rather than reading as a button that did nothing. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -242,12 +215,6 @@ public final class TerminalSettingsEditsGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, owner);
   }
 
-  /**
-   * Rescanning walks the terminal's whole region block by block, so it is rate limited like the
-   * other expensive gestures. The second ask must change nothing rather than half-work, and it must
-   * be told apart from a refusal about permission: one is about pace, the other about ownership,
-   * and a player who reads the wrong one goes looking for the wrong problem.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,

@@ -14,18 +14,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 
-/**
- * Which containers a terminal's network currently holds, kept true as the world changes under it.
- *
- * <p>The session keeps the contents of its containers current; this keeps the set of containers
- * itself current, which is the half a mutation can never report. A broken chest never marks itself
- * dirty, and an unloaded chunk announces nothing at all, so both have to be heard from the world.
- *
- * <p>Departures are immediate and arrivals are not. A container that has gone is dropped the moment
- * it goes, because a listing that offers what is not there is the duplication bug ADR 0002 exists
- * to prevent; a container that has arrived is only picked up when its chunk loads, which is the one
- * moment a re-scan is both cheap and necessary.
- */
 public final class NetworkMembership implements ContainerLifecycleListener {
   private final ServerWorld world;
   private final ScanRegion region;
@@ -57,7 +45,6 @@ public final class NetworkMembership implements ContainerLifecycleListener {
         ContainerLifecycle.registry());
   }
 
-  /** Powering on: one discovery scan, and from then on the world reports its own changes. */
   public void powerOn() {
     session.begin(discovery.scan(world, region));
     lifecycle.subscribe(this);
@@ -84,10 +71,6 @@ public final class NetworkMembership implements ContainerLifecycleListener {
     return session.watchedContainers();
   }
 
-  /**
-   * A container that has gone leaves the network and takes the role it was given with it, so the
-   * next container placed there starts as a container nobody has vouched for.
-   */
   @Override
   public void containerRemoved(StorageOrigin origin) {
     session.drop(origin);
@@ -99,12 +82,6 @@ public final class NetworkMembership implements ContainerLifecycleListener {
     session.dropChunk(worldKey, chunkPos);
   }
 
-  /**
-   * A chunk arriving is the only event that can add containers, and the only one whose containers
-   * cannot be named without looking, so it re-scans rather than guessing. Re-scanning also
-   * collapses double chests the same way the first scan did, which admitting one block entity at a
-   * time could not.
-   */
   @Override
   public void chunkLoaded(RegistryKey<World> worldKey, ChunkPos chunkPos) {
     if (!session.isActive() || !world.getRegistryKey().equals(worldKey)) {

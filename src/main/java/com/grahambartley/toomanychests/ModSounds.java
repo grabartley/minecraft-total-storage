@@ -6,7 +6,6 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 
 public class ModSounds {
-
   public static final SoundEvent TERMINAL_POWER_ON = registerSound("block.terminal.power_on");
   public static final SoundEvent TERMINAL_POWER_OFF = registerSound("block.terminal.power_off");
   public static final SoundEvent TERMINAL_SCREEN_OPEN = registerSound("block.terminal.screen_open");

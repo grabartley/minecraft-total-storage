@@ -12,7 +12,6 @@ import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class TerminalPermissionTest {
-
   @ParameterizedTest
   @EnumSource(TerminalPermission.class)
   void everyPermissionSurvivesBeingNamedAndReadBack(TerminalPermission permission) {

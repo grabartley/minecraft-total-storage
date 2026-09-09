@@ -8,23 +8,12 @@ import com.grahambartley.toomanychests.sort.ContainerSortService;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
-/**
- * Registers the mod's packets and the server-side handlers that resolve them.
- *
- * <p>Payload types register here rather than in the client initialiser because both sides must
- * agree on the codec before a channel is usable, and a client running this same entrypoint gets the
- * registration for free.
- */
 public final class ModNetworking {
   private static final ContainerSortService SORTING = new ContainerSortService();
   private static final TerminalListingService LISTINGS = new TerminalListingService();
   private static final WithdrawService WITHDRAWALS = new WithdrawService();
   private static final DepositService DEPOSITS = new DepositService();
 
-  /**
-   * The one listing service, so whatever pushes pages answers with the same one that resolves
-   * requests.
-   */
   public static TerminalListingService listings() {
     return LISTINGS;
   }

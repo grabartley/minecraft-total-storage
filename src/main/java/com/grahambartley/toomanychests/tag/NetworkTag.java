@@ -6,21 +6,6 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
 
-/**
- * One category a network files items under, preset or custom alike. See ADR 0006.
- *
- * <p>Presets and custom tags share this one record so the filter column and the filter engine never
- * have to ask which kind they are holding. {@code immutable} is the only difference, and it is what
- * stops a preset being renamed, deleted, or hand-assigned.
- *
- * <p>Membership is by item identifier rather than by {@code ItemVariant}, so an enchanted diamond
- * sword carries the tags of a diamond sword. Component-level tagging is deliberately out of scope.
- *
- * @param id the stable identifier the network stores and the filter matches on, normalised
- * @param displayName literal text for a custom tag, a translation key for a preset
- * @param immutable true for the presets compiled into the mod, false for tags a player made
- * @param items the item identifiers filed under this tag, empty for a preset
- */
 public record NetworkTag(String id, String displayName, boolean immutable, Set<String> items) {
   public NetworkTag {
     id = FilterText.normalise(id);
@@ -31,10 +16,6 @@ public record NetworkTag(String id, String displayName, boolean immutable, Set<S
     items = sanitizeItems(items);
   }
 
-  /**
-   * A preset carries no stored items because {@link PresetTagResolver} computes its membership from
-   * item tags every time it is asked. See ADR 0011.
-   */
   public static NetworkTag preset(PresetTag preset) {
     return new NetworkTag(preset.id(), preset.translationKey(), true, Set.of());
   }

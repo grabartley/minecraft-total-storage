@@ -14,20 +14,6 @@ import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
 
-/**
- * One page of the listing on its way to the screen that asked for it.
- *
- * <p>A page is bounded by {@link ListingWindow#MAX_LENGTH} on both sides of the wire, so no
- * response is ever larger than one grid's worth of rows however much the network holds. That bound
- * is the reason a terminal reaching thousands of variants costs the same to open as one reaching a
- * handful.
- *
- * <p>The sync id lets a client drop a page meant for a screen it has since closed, and the revision
- * lets it drop one that a newer page has already overtaken.
- *
- * <p>The status travels with the page because a page of no rows is not self-explaining, and the
- * client holds none of the facts that would tell it apart. See {@link ListingStatus}.
- */
 public record ListingPayload(int syncId, ListingPage<ItemVariant> page) implements CustomPayload {
   public static final CustomPayload.Id<ListingPayload> ID =
       new CustomPayload.Id<>(Identifier.of(TooManyChests.MOD_ID, "listing"));

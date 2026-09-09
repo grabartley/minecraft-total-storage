@@ -3,7 +3,6 @@ package com.grahambartley.toomanychests.filter;
 import java.util.List;
 import java.util.Set;
 
-/** The handful of items filter tests reason about, kept in one place so cases stay comparable. */
 final class TestCandidates {
   static final FilterCandidate COBBLESTONE =
       new FilterCandidate(

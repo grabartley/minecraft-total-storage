@@ -10,13 +10,6 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-/**
- * The {@code /tmc sort} command, which is not gated because it reaches nothing the player is not
- * already standing in front of.
- *
- * <p>The screen is read from the server's own record of what the player has open, so this command
- * is the same server-resolved request a sort button sends and cannot be aimed anywhere else.
- */
 public final class SortCommand {
   private static final ContainerSortService SORTING = new ContainerSortService();
 

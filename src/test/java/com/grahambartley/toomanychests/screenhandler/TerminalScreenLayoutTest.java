@@ -58,11 +58,6 @@ class TerminalScreenLayoutTest {
         inventorySlots);
   }
 
-  /**
-   * Vanilla orders a player's inventory hotbar first, and every screen draws it last. Getting this
-   * backwards puts a player's hotbar where their backpack should be, which no test of the geometry
-   * alone would notice.
-   */
   @ParameterizedTest
   @ValueSource(ints = {27, 31, 35})
   void theHotbarMapsToTheFirstNineInventorySlots(int handlerIndex) {
@@ -119,11 +114,6 @@ class TerminalScreenLayoutTest {
         TerminalScreenLayout.y(TerminalScreenLayout.HOTBAR_START));
   }
 
-  /**
-   * Under the grid rather than under the recess or the window. Both of those are wider than the
-   * grid by chrome, so centring on either leaves the inventory off to one side of the nine columns
-   * directly above it.
-   */
   @Test
   void theInventoryIsCentredUnderTheGrid() {
     int inventoryWidth = TerminalScreenLayout.COLUMNS * TerminalScreenLayout.SLOT_SIZE;
@@ -136,7 +126,6 @@ class TerminalScreenLayoutTest {
     assertEquals(leftMargin, rightMargin);
   }
 
-  /** The recess the listing is drawn into must not run over the label under it. */
   @Test
   void theRecessedAreaClearsThePlayerInventoryLabel() {
     assertTrue(
@@ -172,11 +161,6 @@ class TerminalScreenLayoutTest {
         TerminalScreenLayout.isHotbar(handlerIndex));
   }
 
-  /**
-   * The chassis sprite's border is fixed at any window size and is drawn over everything under it.
-   * A hotbar that merely fits inside the window has its bottom row of pixels, and the stack counts
-   * hanging below it, drawn behind the frame.
-   */
   @ParameterizedTest
   @MethodSource("everySlot")
   void everySlotClearsTheChassisFrameRatherThanMerelyFittingInTheWindow(int handlerIndex) {
@@ -210,7 +194,6 @@ class TerminalScreenLayoutTest {
             <= TerminalScreenLayout.WINDOW_WIDTH - TerminalScreenLayout.PANEL_BORDER);
   }
 
-  /** Vanilla drops to a smaller scale rather than clipping, so the window has to fit the floor. */
   @Test
   void theWindowFitsTheSmallestScreenVanillaWillDrawItAt() {
     assertTrue(TerminalScreenLayout.WINDOW_WIDTH <= 320, "wider than a 320x240 screen");
@@ -263,7 +246,6 @@ class TerminalScreenLayoutTest {
         "the button runs under the chassis frame");
   }
 
-  /** A column added by widening the window keeps the margins either side of it equal. */
   @Test
   void theToolbarIsGivenRoomWithoutUnbalancingTheWindow() {
     assertEquals(
@@ -272,7 +254,6 @@ class TerminalScreenLayoutTest {
             - (TerminalScreenLayout.TOOLBAR_X + TerminalScreenLayout.BUTTON_SIZE));
   }
 
-  /** An icon that merely fits its button reads as pinned to a corner rather than centred in it. */
   @Test
   void anIconCentresInTheButtonAroundIt() {
     assertEquals(
@@ -280,9 +261,6 @@ class TerminalScreenLayoutTest {
         2 * TerminalScreenLayout.ICON_INSET + TerminalScreenLayout.ICON_SIZE);
   }
 
-  /**
-   * The text is a widget of its own, so what it covers has to stay inside the box drawn behind it.
-   */
   @Test
   void theSearchTextClearsTheBoxItIsWrittenInto() {
     assertTrue(TerminalScreenLayout.SEARCH_TEXT_X >= TerminalScreenLayout.SEARCH_X);
@@ -313,9 +291,6 @@ class TerminalScreenLayoutTest {
     assertFalse(TerminalScreenLayout.isOverSearch(windowX, windowY));
   }
 
-  /**
-   * The border counts, so a click that visibly lands on the control reaches the field inside it.
-   */
   @Test
   void aClickAnywhereOnTheSearchBoxIsOverIt() {
     assertTrue(
@@ -358,7 +333,6 @@ class TerminalScreenLayoutTest {
     assertThrows(IndexOutOfBoundsException.class, () -> TerminalScreenLayout.tabY(tab));
   }
 
-  /** The toolbar has to hold both actions a view needs without running past the recess. */
   @Test
   void theToolbarHasRoomForTheActionsBesideTheStrip() {
     int last = TerminalScreenLayout.actionY(1) + TerminalScreenLayout.BUTTON_SIZE;
@@ -388,11 +362,6 @@ class TerminalScreenLayoutTest {
         TerminalScreenLayout.tabAt(TerminalScreenLayout.GRID_X, TerminalScreenLayout.GRID_Y));
   }
 
-  /**
-   * A page is asked for one recess at a time, and a request for more rows than a page may carry is
-   * clamped rather than refused. A recess grown past the cap would therefore ask for cells it is
-   * never sent, and draw the difference as blanks.
-   */
   @Test
   void aRecessNeverAsksForMoreRowsThanAPageMayCarry() {
     assertTrue(
@@ -416,10 +385,6 @@ class TerminalScreenLayoutTest {
         TerminalScreenLayout.GRID_HEIGHT);
   }
 
-  /**
-   * The recess sprite's border is fixed at any size and is drawn over its own contents, so a grid
-   * that merely fits inside the recess has its outermost cells drawn behind the frame.
-   */
   @Test
   void theGridAndItsScrollbarClearTheRecessFrame() {
     assertTrue(
@@ -444,7 +409,6 @@ class TerminalScreenLayoutTest {
         "The grid ends under the recess frame");
   }
 
-  /** A window sized around the grid has no strip of dead space beside it. */
   @Test
   void theRecessIsExactlyAsWideAsWhatItHolds() {
     assertEquals(
@@ -496,10 +460,6 @@ class TerminalScreenLayoutTest {
     assertEquals(TerminalScreenLayout.LISTING_PAGE_SIZE, positions.size());
   }
 
-  /**
-   * The hit test is the drawing arithmetic run backwards, so proving it against every cell's own
-   * corners is what stops a cell a player can see but cannot click.
-   */
   @ParameterizedTest
   @MethodSource("everyCell")
   void everyCellIsFoundAtItsOwnCorners(int cell) {
@@ -550,10 +510,6 @@ class TerminalScreenLayoutTest {
     assertThrows(IndexOutOfBoundsException.class, () -> TerminalScreenLayout.cellY(cell));
   }
 
-  /**
-   * The gap between the grid and the track is two pixels of nothing, and a wheel ignored over it
-   * would be a strip of the listing that does not scroll.
-   */
   @Test
   void theGapBetweenTheGridAndItsScrollbarIsStillTheListing() {
     int gap = TerminalScreenLayout.GRID_X + TerminalScreenLayout.GRID_WIDTH;
@@ -590,7 +546,6 @@ class TerminalScreenLayoutTest {
             TerminalScreenLayout.GRID_Y + TerminalScreenLayout.GRID_HEIGHT));
   }
 
-  /** Every cell of the grid is part of the listing the wheel scrolls. */
   @ParameterizedTest
   @MethodSource("everyCell")
   void everyCellIsPartOfTheListing(int cell) {
@@ -599,7 +554,6 @@ class TerminalScreenLayoutTest {
             TerminalScreenLayout.cellX(cell), TerminalScreenLayout.cellY(cell)));
   }
 
-  /** A 16x16 item plus its two pixel bevel and gutter is exactly what a cell was sized for. */
   @Test
   void anItemDrawnAtTheCellOffsetSitsInsideItsCell() {
     assertEquals(

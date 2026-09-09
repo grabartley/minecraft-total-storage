@@ -11,7 +11,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 class HighlightColourTest {
-
   @ParameterizedTest
   @EnumSource(ContainerRole.class)
   void everyRoleIsDrawnFullyOpaque(ContainerRole role) {
@@ -28,10 +27,6 @@ class HighlightColourTest {
         HighlightColour.of(ContainerRole.GENERAL), HighlightColour.of(ContainerRole.EXCLUDED));
   }
 
-  /**
-   * The one distinction the highlight exists to make has to survive a player who cannot separate
-   * the red from the green, so excluded is drawn as a doubled outline as well as a different hue.
-   */
   @Test
   void theRoleThatMattersIsToldApartByShapeAndNotOnlyByColour() {
     assertTrue(HighlightColour.isDoubled(ContainerRole.EXCLUDED));

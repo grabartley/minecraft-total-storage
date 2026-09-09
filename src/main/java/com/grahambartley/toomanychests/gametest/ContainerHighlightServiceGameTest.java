@@ -14,18 +14,10 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Which containers a terminal says it is holding, which is the answer the world outlines.
- *
- * <p>This is the mod's answer to the one question a radius always produces. It has to name exactly
- * what the network holds: a container just outside the reach that lit up would teach a player the
- * wrong radius, and one inside it that did not would send them looking for a bug.
- */
 public final class ContainerHighlightServiceGameTest implements FabricGameTest {
   private static final String BATCH = "container-highlight";
   private static final int TICK_LIMIT = 60;
 
-  /** Outside the terminal's radius of one, so the network never sees it. */
   private static final BlockPos DISTANT = new BlockPos(6, 1, 6);
 
   private final ContainerRoleService roles = new ContainerRoleService();
@@ -50,7 +42,6 @@ public final class ContainerHighlightServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** ADR 0007: an unpowered terminal is holding nothing, so the empty answer is the true one. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -67,10 +58,6 @@ public final class ContainerHighlightServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * The role travels with the position because seeing which chests are excluded is the reassurance
-   * the highlight exists to give, and it cannot be read off a position.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,

@@ -6,15 +6,6 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Persists a network's tag set.
- *
- * <p>Per ADR 0023 only custom tags are written. Presets are compiled in and re-seeded on read, so a
- * save carries what the player actually authored and stays correct across a build that adds one.
- *
- * <p>Decoding routes through a plain record first and drops entries it cannot make a tag out of,
- * because throwing here would cost the terminal every other setting rather than one bad tag.
- */
 public final class NetworkTagCodec {
   private record StoredTag(String id, String displayName, List<String> items) {
     static final Codec<StoredTag> CODEC =

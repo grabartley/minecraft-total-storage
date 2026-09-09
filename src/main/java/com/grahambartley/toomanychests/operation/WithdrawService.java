@@ -1,7 +1,6 @@
 package com.grahambartley.toomanychests.operation;
 
 import com.grahambartley.toomanychests.network.WithdrawRequestPayload;
-import com.grahambartley.toomanychests.transaction.NetworkTransactions;
 import com.grahambartley.toomanychests.transaction.OperationResult;
 import com.grahambartley.toomanychests.transaction.StorageTransfers;
 import java.util.List;
@@ -9,23 +8,12 @@ import java.util.Objects;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.server.network.ServerPlayerEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- * Takes items out of a network, and is the only path a client request may take.
- *
- * <p>Per ADR 0009 the request names an item and an amount, never a place, so everything positional
- * is worked out here against live containers inside one transaction. A container broken in the same
- * tick therefore grants nothing rather than granting a phantom stack, and two players racing for
- * the last stack resolve as one success and one shortfall.
- *
- * <p>Nothing is ever dropped on the floor. What will not fit is left in the network, which is why
- * the destination is inserted into before anything is extracted; see {@link StorageTransfers}.
- *
- * <p>Every ending tells the player something, and every ending that moved less than it was asked
- * for also puts their screen back in step, because the reason it moved less is almost always that
- * their listing had gone stale.
- */
 public final class WithdrawService {
+  private static final Logger LOGGER = LoggerFactory.getLogger(WithdrawService.class);
+
   private final WithdrawSources sources;
 
   public WithdrawService() {
@@ -58,24 +46,40 @@ public final class WithdrawService {
     }
     final List<Storage<ItemVariant>> from =
         sources.holding(context.world(), context.network(), variant);
-    if (from.isEmpty()) {
-      return WithdrawOutcome.nothingAvailable(wanted);
+    final WithdrawOutcome outcome =
+        from.isEmpty()
+            ? WithdrawOutcome.nothingAvailable(wanted)
+            : gather(
+                context, variant, wanted, destinationFor(context, payload.destination()), from);
+    if (outcome.result() == WithdrawResult.NOTHING_AVAILABLE) {
+      LOGGER.debug(
+          "The network at {} offered {} but held none of it when asked for {}",
+          context.terminal(),
+          variant,
+          wanted);
     }
-    final Storage<ItemVariant> to = destinationFor(context, payload.destination());
-    final OperationResult<Long> result =
-        NetworkTransactions.runner()
-            .run(
-                transaction -> {
-                  final long moved =
-                      StorageTransfers.gather(from, to, variant, wanted, transaction);
-                  return moved > 0L
-                      ? OperationResult.committed(moved)
-                      : OperationResult.rolledBack("nothing could be taken");
-                });
-    if (result.rolledBack()) {
-      return WithdrawOutcome.noRoom(wanted);
-    }
-    return WithdrawOutcome.moved(wanted, result.orElse(0L));
+    return outcome;
+  }
+
+  private WithdrawOutcome gather(
+      TerminalOperationContext context,
+      ItemVariant variant,
+      long wanted,
+      Storage<ItemVariant> to,
+      List<Storage<ItemVariant>> from) {
+    final WithdrawOutcome[] settled = {WithdrawOutcome.nothingAvailable(wanted)};
+    NetworkMutation.run(
+        context,
+        transaction -> {
+          final long moved = StorageTransfers.gather(from, to, variant, wanted, transaction);
+          if (moved > 0L) {
+            settled[0] = WithdrawOutcome.moved(wanted, moved);
+            return OperationResult.committed(moved);
+          }
+          settled[0] = WithdrawShortfall.of(to, variant, wanted, transaction);
+          return OperationResult.rolledBack("nothing could be taken");
+        });
+    return settled[0];
   }
 
   private static Storage<ItemVariant> destinationFor(
@@ -85,11 +89,6 @@ public final class WithdrawService {
         : PlayerSlots.unlockedStorage(context.player());
   }
 
-  /**
-   * Every ending resyncs, not only the refusals. A withdrawal that succeeded has changed both the
-   * cursor and the counts on the grid, and one that did not was almost certainly asked for by a
-   * client looking at something out of date.
-   */
   private static WithdrawOutcome report(ServerPlayerEntity player, WithdrawOutcome outcome) {
     if (player == null) {
       return outcome;

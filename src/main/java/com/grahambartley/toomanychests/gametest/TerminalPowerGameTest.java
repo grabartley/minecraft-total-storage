@@ -8,7 +8,6 @@ import com.grahambartley.toomanychests.lifecycle.ContainerLifecycle;
 import com.grahambartley.toomanychests.lifecycle.NetworkMembership;
 import com.grahambartley.toomanychests.terminal.TerminalLifecycle;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
-import com.grahambartley.toomanychests.terminal.TerminalPower;
 import java.util.ArrayList;
 import java.util.List;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
@@ -23,18 +22,6 @@ import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 
-/**
- * What redstone does to a terminal, driven through real blocks so the neighbour updates arrive the
- * way the world delivers them rather than being called directly.
- *
- * <p>Per ADR 0007 an unpowered terminal is absent rather than idle, so most of what is proven here
- * is negative: that nothing is listening, nothing is indexed, and nothing rescans.
- *
- * <p>Each terminal is given a radius of one before it is powered, so a scan cannot wander into a
- * neighbouring test's structure. Chunk loading is driven through {@link TerminalPower} directly
- * here, which is what makes these power tests readable; that a real chunk load reaches the same
- * place is proven by {@code TerminalLifecycleGameTest}, out in a chunk it is allowed to unload.
- */
 public final class TerminalPowerGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
   private static final String BATCH = "terminal-power";
@@ -160,11 +147,6 @@ public final class TerminalPowerGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /**
-   * Redstone reaching a terminal from a second direction is a neighbour update against a terminal
-   * that is already on. The scan is the most expensive thing the mod does, so it must not happen
-   * again: a fresh scan would re-track every container and re-read them all on the next listing.
-   */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = 40)
   public void furtherRedstoneDoesNotMakeAPoweredTerminalScanAgain(TestContext context) {
     stockBarrel(context, new ItemStack(Items.DIAMOND, 8));
@@ -209,8 +191,7 @@ public final class TerminalPowerGameTest implements FabricGameTest {
     context.assertTrue(
         context.getBlockState(TERMINAL).get(TerminalBlock.POWERED),
         "A terminal placed where redstone already reaches should place powered");
-    // Placement reaches the terminal as a block entity load, which per ADR 0026 is owed a start
-    // on the next tick rather than given one where it is announced.
+
     context.runAtTick(
         2L,
         () -> {
@@ -314,11 +295,6 @@ public final class TerminalPowerGameTest implements FabricGameTest {
         .orElse(null);
   }
 
-  /**
-   * Tests that end with a terminal still powered hand the registry back the way they found it,
-   * through the lifecycle rather than through {@link TerminalPower}, so a start still owed for the
-   * terminal is withdrawn as well as the network torn down.
-   */
   private void tearDown(TestContext context) {
     TerminalLifecycle.unloaded(context.getWorld(), context.getAbsolutePos(TERMINAL));
   }

@@ -24,19 +24,6 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Who a terminal lets in, proven against a running server rather than against the rule in
- * isolation.
- *
- * <p>{@link com.grahambartley.toomanychests.access.TerminalAccessRules} already decides every
- * combination of mode, owner and trust list in JUnit. What only a world can show is that the
- * decision is taken from the terminal's settings as they stand at that instant, that an edit binds
- * without a restart, and that a player who loses access loses the screen they already had open.
- *
- * <p>The two tests that move the server-wide default share the {@code server-config} batch with
- * every other test that touches the one live configuration, because a default left in place for a
- * parallel test to read is a flake nobody would diagnose twice.
- */
 public final class TerminalAccessGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
   private static final String BATCH = "terminal-access";
@@ -83,7 +70,6 @@ public final class TerminalAccessGameTest implements FabricGameTest {
     finish(context, owner, stranger);
   }
 
-  /** The whole point of the trust list: it binds the very next check, with nothing restarted. */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void trustingAPlayerLetsThemInStraightAway(TestContext context) {
     ServerPlayerEntity owner = player(context);
@@ -118,11 +104,6 @@ public final class TerminalAccessGameTest implements FabricGameTest {
     finish(context, owner, friend);
   }
 
-  /**
-   * ADR 0008 accepts the operator bypass as a deliberate hole and makes logging it the mitigation,
-   * so what is asserted here is that the bypass is reported as a bypass rather than as ordinary
-   * access. A caller that could not tell them apart could not log it.
-   */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void anOperatorReachesPastAnOwnerLock(TestContext context) {
     ServerPlayerEntity owner = player(context);
@@ -140,7 +121,6 @@ public final class TerminalAccessGameTest implements FabricGameTest {
     finish(context, owner, moderator);
   }
 
-  /** A terminal broken out from under a request fails closed rather than open. */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void aPositionHoldingNoTerminalRefusesEverybody(TestContext context) {
     ServerPlayerEntity owner = player(context);
@@ -154,11 +134,6 @@ public final class TerminalAccessGameTest implements FabricGameTest {
     finish(context, owner);
   }
 
-  /**
-   * The revoke-while-open case. A player who keeps a screen open while their access is taken away
-   * must not be left holding it, since a per-operation check alone would leave them clicking at an
-   * interface that refuses everything.
-   */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void revokingTrustClosesTheScreenTheyStillHaveOpen(TestContext context) {
     ServerPlayerEntity owner = player(context);
@@ -303,7 +278,6 @@ public final class TerminalAccessGameTest implements FabricGameTest {
     finish(context, owner);
   }
 
-  /** A server owner changing their mind must not silently unlock every base already built. */
   @GameTest(templateName = CONTAINER_PAD, batchId = CONFIG_BATCH, tickLimit = TICK_LIMIT)
   public void changingTheServerDefaultLeavesExistingTerminalsAlone(TestContext context) {
     TooManyChestsConfig original = ServerConfigService.current();
@@ -335,10 +309,6 @@ public final class TerminalAccessGameTest implements FabricGameTest {
     return context.createMockCreativeServerPlayerInWorld();
   }
 
-  /**
-   * Writes the operator entry directly rather than going through {@code addToOperators}, which
-   * grants the server's configured operator level and the test server's is zero.
-   */
   private static void op(TestContext context, ServerPlayerEntity player) {
     server(context)
         .getPlayerManager()
@@ -374,7 +344,6 @@ public final class TerminalAccessGameTest implements FabricGameTest {
     return server(context).getCommandSource().withEntity(player).withLevel(0);
   }
 
-  /** A gated branch is refused during parsing, so a source without the gate never executes. */
   private static int run(TestContext context, ServerCommandSource source, String command) {
     try {
       return server(context).getCommandManager().getDispatcher().execute(command, source);
@@ -421,7 +390,6 @@ public final class TerminalAccessGameTest implements FabricGameTest {
     return TerminalAccessControl.viewers();
   }
 
-  /** Every test hands the shared viewer list and the server's player list back empty. */
   private static void finish(TestContext context, ServerPlayerEntity... players) {
     for (final ServerPlayerEntity player : players) {
       viewers().closedEverything(player.getUuid());

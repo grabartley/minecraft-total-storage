@@ -63,10 +63,6 @@ class ListingWindowTest {
     assertEquals(List.of("i", "j"), ListingWindow.of(8, 50).sliceOf(TEN));
   }
 
-  /**
-   * The results can shrink between a player scrolling and the request that scroll produced, so an
-   * offset past the end is an ordinary empty page rather than a broken request.
-   */
   @Test
   void slicingWhollyPastTheEndIsAnEmptyPage() {
     assertEquals(List.of(), ListingWindow.of(10, 8).sliceOf(TEN));

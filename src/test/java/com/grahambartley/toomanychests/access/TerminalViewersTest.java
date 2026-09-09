@@ -89,7 +89,6 @@ class TerminalViewersTest {
     assertEquals(Set.of(ALICE), viewers.viewing(BASE));
   }
 
-  /** Two terminals at the same coordinates in different worlds are different terminals. */
   @Test
   void viewersAreKeptPerTerminalRatherThanPerPosition() {
     viewers.opened(BASE, ALICE);
@@ -134,7 +133,6 @@ class TerminalViewersTest {
     assertEquals(Set.of(), viewers.viewing(null));
   }
 
-  /** Handing out the live set would let a caller quietly evict a viewer the sweep still owns. */
   @Test
   void theViewerListHandedOutCannotBeEdited() {
     viewers.opened(BASE, ALICE);

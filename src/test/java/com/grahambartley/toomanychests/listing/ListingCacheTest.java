@@ -43,11 +43,6 @@ class ListingCacheTest {
     assertEquals("oak_log", cache.page().rows().get(0).variant());
   }
 
-  /**
-   * Several requests are in flight whenever a player scrolls, so a slower answer routinely lands
-   * after a faster one that came later. Drawing it would flick the grid back to a page the player
-   * has already scrolled past.
-   */
   @DisplayName("a page no newer than the one being shown is dropped rather than drawn")
   @ParameterizedTest(name = "revision {0} arriving after revision 5")
   @ValueSource(longs = {1L, 4L, 5L})
@@ -69,10 +64,6 @@ class ListingCacheTest {
     assertEquals(500, cache.page().totalMatching());
   }
 
-  /**
-   * The next screen's revisions start from the beginning, so keeping the old high water mark would
-   * make every page it is sent look stale.
-   */
   @Test
   void clearingLetsAFreshScreenStartFromTheBeginningAgain() {
     cache.accept(page(9L, "cobblestone"));

@@ -11,18 +11,6 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Configuring one network from the command line, which is what makes a container role reachable on
- * a server with no client mod at all.
- *
- * <p>The mod's standards require every setting to be reachable from a console over SSH. Until these
- * branches existed a role was a decision the model could hold and nothing could give, so ADR 0004's
- * whole promise was unavailable from a headless server.
- *
- * <p>Permission is the point of most of what follows. An operator may configure any terminal, an
- * owner may configure their own, and a third party may configure neither, and all three are checked
- * against a real command source rather than inferred.
- */
 public final class TerminalNetworkCommandGameTest implements FabricGameTest {
   private static final String BATCH = "terminal-network-command";
   private static final int TICK_LIMIT = 60;
@@ -69,7 +57,6 @@ public final class TerminalNetworkCommandGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, owner);
   }
 
-  /** Reading is open, because a player refused a container deserves to learn why. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -139,15 +126,6 @@ public final class TerminalNetworkCommandGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /**
-   * A rescan tears the network down and builds it again per ADR 0007, so the command door is gated
-   * exactly as the panel door is.
-   *
-   * <p>The refusal is proven by what did not happen rather than by a return code. A rescan that
-   * finds nothing new also returns zero, so a test asserting only on the code would pass with the
-   * gate deleted; widening the reach first gives a permitted rescan something to find, and the
-   * container count is what tells the two apart.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -185,10 +163,6 @@ public final class TerminalNetworkCommandGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, owner);
   }
 
-  /**
-   * A terminal running a region narrower than it is now configured for, which is the only state in
-   * which a rescan does anything at all.
-   */
   private static ServerPlayerEntity openTerminalWithAWiderRegionToFind(TestContext context) {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.FAR_BARREL);
@@ -201,7 +175,6 @@ public final class TerminalNetworkCommandGameTest implements FabricGameTest {
     return roles.containers(context.getWorld(), terminal(context)).size();
   }
 
-  /** A highlight has to be shown to somebody, and the console is nobody. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,

@@ -6,11 +6,6 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-/**
- * A setting chosen from a fixed set of alternatives, named by their stable ids.
- *
- * @param <E> the alternatives this setting picks between
- */
 final class EnumConfigSetting<E extends Enum<E> & ConfigEnum> implements ConfigSetting {
   private final String name;
   private final List<E> alternatives;

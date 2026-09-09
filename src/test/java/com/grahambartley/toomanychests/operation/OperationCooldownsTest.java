@@ -11,13 +11,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-/**
- * Whether an expensive operation may run yet.
- *
- * <p>Every boundary is checked here rather than against a running server, because the failure this
- * guards against is a cooldown one tick out: a limit that eats every other legitimate click reads
- * to a player as the mod having broken, and it is invisible in anything but an exact test.
- */
 class OperationCooldownsTest {
   private static final UUID PLAYER = UUID.nameUUIDFromBytes("player".getBytes());
   private static final UUID SOMEBODY_ELSE = UUID.nameUUIDFromBytes("other".getBytes());
@@ -36,7 +29,6 @@ class OperationCooldownsTest {
     assertFalse(cooldowns.claim(PLAYER, ExpensiveOperation.RESCAN, 109L, COOLDOWN));
   }
 
-  /** The tick the cooldown expires on is allowed, or a ten tick limit really lasts eleven. */
   @Test
   void theTickTheCooldownExpiresOnIsAllowed() {
     OperationCooldowns cooldowns = new OperationCooldowns();
@@ -45,7 +37,6 @@ class OperationCooldownsTest {
     assertTrue(cooldowns.claim(PLAYER, ExpensiveOperation.RESCAN, 110L, COOLDOWN));
   }
 
-  /** A refused ask must not restart the wait, or holding the key down would never let go. */
   @Test
   void beingRefusedDoesNotPushTheCooldownFurtherOut() {
     OperationCooldowns cooldowns = new OperationCooldowns();
@@ -57,7 +48,6 @@ class OperationCooldownsTest {
     assertTrue(cooldowns.claim(PLAYER, ExpensiveOperation.RESCAN, 110L, COOLDOWN));
   }
 
-  /** One player's pace is not another's, or a busy server would rate limit everyone at once. */
   @Test
   void onePlayersCooldownDoesNotBindAnother() {
     OperationCooldowns cooldowns = new OperationCooldowns();
@@ -66,7 +56,6 @@ class OperationCooldownsTest {
     assertTrue(cooldowns.claim(SOMEBODY_ELSE, ExpensiveOperation.RESCAN, 100L, COOLDOWN));
   }
 
-  /** Emptying an inventory must not spend a rescan, or one button appears to break the other. */
   @Test
   void oneOperationsCooldownDoesNotBindAnother() {
     OperationCooldowns cooldowns = new OperationCooldowns();
@@ -75,7 +64,6 @@ class OperationCooldownsTest {
     assertTrue(cooldowns.claim(PLAYER, ExpensiveOperation.RESCAN, 100L, COOLDOWN));
   }
 
-  /** The floor of the setting means off rather than one per tick. */
   @ParameterizedTest
   @ValueSource(ints = {0, -1, Integer.MIN_VALUE})
   void aCooldownOfNothingNeverRefuses(int cooldown) {
@@ -102,10 +90,6 @@ class OperationCooldownsTest {
         0L, new OperationCooldowns().remaining(PLAYER, ExpensiveOperation.RESCAN, 50L, COOLDOWN));
   }
 
-  /**
-   * A world whose clock ran backwards, which a rollback or a re-hosted save can produce. Waiting
-   * out a cooldown that expires in the past would take until the clock caught up.
-   */
   @Test
   void aClockThatWentBackwardsDoesNotStrandAPlayerOnCooldown() {
     OperationCooldowns cooldowns = new OperationCooldowns();

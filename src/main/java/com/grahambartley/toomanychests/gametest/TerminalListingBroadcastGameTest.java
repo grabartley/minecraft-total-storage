@@ -20,15 +20,6 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Whether a listing keeps itself current while nobody touches it.
- *
- * <p>Driven through the broadcast the mod really registers rather than by calling it, so what is
- * proven is that the tick hook exists and fires. A page reaching a client cannot be seen from here:
- * a gametest's mock player never declares the mod's channels, so the send goes nowhere. Every page
- * built is stamped with a new revision though, and the stamp advancing is the same evidence a
- * packet would have been.
- */
 public final class TerminalListingBroadcastGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
   private static final String BATCH = "terminal-listing-broadcast";
@@ -58,7 +49,6 @@ public final class TerminalListingBroadcastGameTest implements FabricGameTest {
         });
   }
 
-  /** A network nobody has changed costs one boolean per tick, and reads nothing. */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void aNetworkNobodyHasChangedIsNeverReadAgain(TestContext context) {
     ServerPlayerEntity player = watchingTerminal(context);
@@ -76,10 +66,6 @@ public final class TerminalListingBroadcastGameTest implements FabricGameTest {
         });
   }
 
-  /**
-   * A network with no viewer has nothing to tell anyone, so its index is left owing a recompute
-   * rather than being read on a tick for a screen that is not open.
-   */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void aTerminalNobodyIsWatchingIsLeftUnread(TestContext context) {
     ServerPlayerEntity player = watchingTerminal(context);
@@ -103,7 +89,6 @@ public final class TerminalListingBroadcastGameTest implements FabricGameTest {
         });
   }
 
-  /** A screen that has asked for nothing has no window to answer, so nothing is pushed to it. */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void aScreenThatHasAskedForNothingIsNotPushedTo(TestContext context) {
     ServerPlayerEntity player = openTerminal(context);

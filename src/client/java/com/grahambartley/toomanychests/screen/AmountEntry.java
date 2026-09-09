@@ -2,18 +2,6 @@ package com.grahambartley.toomanychests.screen;
 
 import org.lwjgl.glfw.GLFW;
 
-/**
- * The number a player is typing into the custom amount prompt, and what each key does to it.
- *
- * <p>A plain buffer rather than a text field, so the prompt survives the screen being laid out
- * again and so what may be typed is a pure function rather than a listener. That also puts the
- * whole of the prompt's behaviour somewhere it can be proven without a running client; the class
- * that draws it holds no rules of its own.
- *
- * <p>Only digits are taken, and a digit that would push the number past what could be withdrawn is
- * refused outright: a field that accepts 9999 and silently hands over 64 has told the player
- * something untrue about what is about to happen.
- */
 public final class AmountEntry {
   private final int ceiling;
 
@@ -31,7 +19,6 @@ public final class AmountEntry {
     return typed;
   }
 
-  /** Zero until something has been typed, which is what makes the prompt refuse to confirm. */
   public int value() {
     return typed.isEmpty() ? 0 : Integer.parseInt(typed);
   }
@@ -58,7 +45,6 @@ public final class AmountEntry {
     return PromptKey.HANDLED;
   }
 
-  /** Returns whether the number really changed, so a leading zero is not mistaken for an edit. */
   public boolean append(char typedCharacter) {
     if (typedCharacter < '0' || typedCharacter > '9' || ceiling == 0) {
       return false;

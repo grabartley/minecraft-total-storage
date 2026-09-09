@@ -9,7 +9,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class DepositAllRequestPayloadTest {
-
   private static RegistryByteBuf buffer() {
     return new RegistryByteBuf(Unpooled.buffer(), null);
   }

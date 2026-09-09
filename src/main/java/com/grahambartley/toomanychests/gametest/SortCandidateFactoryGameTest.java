@@ -19,11 +19,6 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.text.Text;
 
-/**
- * Flattening a variant reads the item registry, the live tag data, and the stack's components, none
- * of which exist outside a running server. The ordering those fields feed is proven off-game by
- * {@code SortComparatorTest}; what is proven here is that the fields arrive correct.
- */
 public final class SortCandidateFactoryGameTest implements FabricGameTest {
   private static final String BATCH = "sort-candidates";
   private static final int TICK_LIMIT = 20;

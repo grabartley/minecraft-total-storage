@@ -10,7 +10,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 class TerminalActionPayloadTest {
-
   @ParameterizedTest
   @EnumSource(TerminalAction.class)
   void everyActionSurvivesTheWireUnchanged(TerminalAction action) {
@@ -23,7 +22,6 @@ class TerminalActionPayloadTest {
     assertEquals(0, buffer.readableBytes());
   }
 
-  /** A payload that lost its action falls back to the one that changes nothing. */
   @Test
   void aRequestNamingNoActionDefaultsToTheHarmlessOne() {
     assertEquals(TerminalAction.HIGHLIGHT, new TerminalActionPayload(1, null).action());

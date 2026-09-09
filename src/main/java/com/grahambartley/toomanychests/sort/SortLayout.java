@@ -7,25 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Turns the scattered contents of a container into the row of stacks it should hold.
- *
- * <p>Merging comes before ordering because part stacks are the reason players press sort at all: a
- * chest with seven piles of cobblestone in it should end up with one pile and six free slots, not
- * seven piles sitting next to each other. Splitting comes last, because the comparator orders
- * holdings and a container stores stacks.
- *
- * <p>Pure and generic over the variant per ADR 0012, so every case here is a unit test rather than
- * a gametest.
- */
 public final class SortLayout {
   private SortLayout() {}
 
-  /**
-   * The arrangement the given holdings should be written back as, in slot order.
-   *
-   * <p>Never loses or invents anything: the total across the result equals the total that went in.
-   */
   public static <V> List<SortHolding<V>> arrange(
       List<SortHolding<V>> holdings, Comparator<SortCandidate> comparator) {
     Objects.requireNonNull(holdings, "holdings");

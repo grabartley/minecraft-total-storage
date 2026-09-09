@@ -3,7 +3,6 @@ package com.grahambartley.toomanychests.sort;
 import com.grahambartley.toomanychests.tag.PresetTag;
 import java.util.Set;
 
-/** Builders for the holdings sort tests reason about, so cases stay short and comparable. */
 final class TestCandidates {
   static final int STACK = 64;
 

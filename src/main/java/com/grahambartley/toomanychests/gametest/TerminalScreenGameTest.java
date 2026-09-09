@@ -28,18 +28,6 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * What right-clicking a terminal actually does, proven against a running server.
- *
- * <p>The rules deciding who is let in are already exhausted in JUnit and in {@link
- * TerminalAccessGameTest}. What only a world can show is that the decision reaches the screen: that
- * a refused player is left holding nothing, that two players get two working handlers over one
- * network, and that every way a screen can end leaves the viewer list empty again. A viewer entry
- * that outlives its screen is the leak every later resync and every revocation would act on.
- *
- * <p>The whole class shares one batch because {@link TerminalViewers} is one JVM-wide map, and a
- * test reading it while another writes it would flake in a way nobody would diagnose twice.
- */
 public final class TerminalScreenGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
   private static final String BATCH = "terminal-screen";
@@ -149,7 +137,6 @@ public final class TerminalScreenGameTest implements FabricGameTest {
     finish(context, owner, friend);
   }
 
-  /** The registry earns its keep by reaching the player who did not act. */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void aResyncReachesEveryScreenShowingTheTerminal(TestContext context) {
     ServerPlayerEntity owner = playerAtTheTerminal(context);
@@ -181,10 +168,6 @@ public final class TerminalScreenGameTest implements FabricGameTest {
     finish(context, owner, friend);
   }
 
-  /**
-   * Dying is the one way out of a screen that vanilla neither closes nor keeps ticking, so nothing
-   * else would ever notice the viewer entry it leaves behind.
-   */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void dyingClosesTheTerminalAndLeavesNoViewer(TestContext context) {
     ServerPlayerEntity owner = playerAtTheTerminal(context);
@@ -226,11 +209,6 @@ public final class TerminalScreenGameTest implements FabricGameTest {
         });
   }
 
-  /**
-   * The whole reason the listing is paginated per ADR 0009. Opening a terminal has to cost the same
-   * whether it reaches one empty barrel or a warehouse, and the only way to be sure is to weigh the
-   * packet against a network that really is holding something.
-   */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void theOpenPayloadDoesNotGrowWithWhatTheNetworkHolds(TestContext context) {
     ServerPlayerEntity owner = playerAtTheTerminal(context);
@@ -273,7 +251,6 @@ public final class TerminalScreenGameTest implements FabricGameTest {
     finish(context, owner, friend);
   }
 
-  /** Per ADR 0021 a lowered maximum clamps the reach without rewriting what was configured. */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void theScreenIsToldTheReachTheTerminalActuallyHas(TestContext context) {
     ServerPlayerEntity owner = playerAtTheTerminal(context);
@@ -359,7 +336,6 @@ public final class TerminalScreenGameTest implements FabricGameTest {
     return TerminalAccessControl.viewers();
   }
 
-  /** Every test hands the viewer list, the network registry and the player list back empty. */
   private static void finish(TestContext context, ServerPlayerEntity... players) {
     for (final ServerPlayerEntity player : players) {
       player.closeHandledScreen();

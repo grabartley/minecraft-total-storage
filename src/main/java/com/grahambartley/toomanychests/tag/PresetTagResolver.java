@@ -10,13 +10,6 @@ import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.TagKey;
 
-/**
- * Files an item under every preset it matches. Membership is read live rather than snapshotted, so
- * a datapack reload reclassifies items with no migration.
- *
- * <p>Food is the one preset that also consults a data component, because an edible item added by
- * another mod carries a food component whether or not anyone remembered to tag it.
- */
 public final class PresetTagResolver {
   public Set<PresetTag> resolve(Item item) {
     RegistryEntry<Item> entry = Registries.ITEM.getEntry(item);

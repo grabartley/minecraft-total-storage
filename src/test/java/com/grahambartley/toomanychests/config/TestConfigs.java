@@ -2,7 +2,6 @@ package com.grahambartley.toomanychests.config;
 
 import java.util.Map;
 
-/** Config fixtures, so tests vary one thing at a time instead of restating eleven fields. */
 public final class TestConfigs {
   private TestConfigs() {}
 
@@ -59,7 +58,6 @@ public final class TestConfigs {
         Map.of());
   }
 
-  /** Every field set away from its default, so a round trip that drops one is visible. */
   public static TooManyChestsConfig everythingNonDefault() {
     return new TooManyChestsConfig(
         32,

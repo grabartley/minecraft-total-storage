@@ -25,18 +25,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 
-/**
- * What the world does to a network behind its back.
- *
- * <p>Membership arithmetic is proven in JUnit. What needs a running world is that the events arrive
- * at all: that vanilla removing a block entity reaches the network before anything can be withdrawn
- * from it, and that a container the network has forgotten cannot be reached through a provider held
- * from before it went.
- *
- * <p>Chunk loading and unloading are driven through the registry rather than by unloading a chunk
- * for real, because a gametest cannot unload the chunk it is standing in. What is proven here is
- * the network's response; that Fabric fires the events themselves is the province of manual QA.
- */
 public final class NetworkMembershipGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
   private static final String BATCH = "network-membership";
@@ -215,7 +203,6 @@ public final class NetworkMembershipGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /** Powered on the shared registry, so removals arrive the way the world really delivers them. */
   private NetworkMembership poweredNetwork(TestContext context) {
     NetworkMembership membership = NetworkMembership.around(context.getWorld(), region(context));
     membership.powerOn();

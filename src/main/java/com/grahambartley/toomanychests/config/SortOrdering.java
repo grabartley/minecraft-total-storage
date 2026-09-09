@@ -3,7 +3,6 @@ package com.grahambartley.toomanychests.config;
 import java.util.Locale;
 import java.util.Optional;
 
-/** Which ordering rule sorting follows. See ADR 0005. */
 public enum SortOrdering implements ConfigEnum {
   REGISTRY_ID,
   DISPLAY_NAME;

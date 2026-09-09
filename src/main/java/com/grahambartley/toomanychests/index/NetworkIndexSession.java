@@ -21,16 +21,6 @@ import net.minecraft.registry.RegistryKey;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 
-/**
- * A powered terminal's live view of its network, from the one discovery scan that starts it to the
- * teardown that ends it.
- *
- * <p>Per ADR 0007 the two states are total. Between {@link #begin} and {@link #end} the session
- * holds an index kept current by container mutations alone; outside them it holds nothing and
- * listens to nothing, so an unpowered terminal is not merely cheap, it is absent.
- *
- * @param <V> the variant type, {@code ItemVariant} in production
- */
 public final class NetworkIndexSession<V> implements ContainerMutationListener {
   private final ContainerMutationRegistry registry;
   private final NetworkIndexCache<V> cache;
@@ -53,7 +43,6 @@ public final class NetworkIndexSession<V> implements ContainerMutationListener {
         NetworkIndexOrdering.byKey(new ItemVariantSortKey()));
   }
 
-  /** Powering on: adopt what the scan found and listen to exactly that. */
   public void begin(ContainerScanResult scan) {
     Objects.requireNonNull(scan, "scan");
     begin(scan.providers().stream().map(StorageProvider::origin).toList());
@@ -70,7 +59,6 @@ public final class NetworkIndexSession<V> implements ContainerMutationListener {
     active = true;
   }
 
-  /** Powering off: every listener goes, and so does the index. */
   public void end() {
     for (final StorageOrigin origin : watched) {
       registry.unwatch(origin, this);
@@ -80,10 +68,6 @@ public final class NetworkIndexSession<V> implements ContainerMutationListener {
     active = false;
   }
 
-  /**
-   * Adopts one container mid-session, which only a chunk load produces. Ignored while unpowered,
-   * because a terminal that is listening to nothing must not start listening to something.
-   */
   public void admit(StorageOrigin origin) {
     Objects.requireNonNull(origin, "origin");
     if (!active || watched.contains(origin)) {
@@ -94,10 +78,6 @@ public final class NetworkIndexSession<V> implements ContainerMutationListener {
     registry.watch(origin, this);
   }
 
-  /**
-   * Forgets one container, which is what breaking it or unloading its chunk amounts to. Containers
-   * this session never held are ignored, so every network can be told about every removal.
-   */
   public void drop(StorageOrigin origin) {
     if (origin == null || !watched.remove(origin)) {
       return;
@@ -106,7 +86,6 @@ public final class NetworkIndexSession<V> implements ContainerMutationListener {
     cache.forget(origin);
   }
 
-  /** Forgets every container in one chunk, and reports which those were. */
   public List<StorageOrigin> dropChunk(RegistryKey<World> worldKey, ChunkPos chunkPos) {
     if (!active || worldKey == null || chunkPos == null) {
       return List.of();
@@ -126,11 +105,6 @@ public final class NetworkIndexSession<V> implements ContainerMutationListener {
     reconcile(scan.providers().stream().map(StorageProvider::origin).toList());
   }
 
-  /**
-   * Brings membership in line with a fresh scan, keeping the snapshots of everything that survived.
-   * A rebuild would be simpler and would also throw away every container the scan did not change,
-   * turning one chunk loading into a re-read of the whole network.
-   */
   public void reconcile(Collection<StorageOrigin> current) {
     Objects.requireNonNull(current, "current");
     if (!active) {
@@ -149,7 +123,6 @@ public final class NetworkIndexSession<V> implements ContainerMutationListener {
     return watched.contains(origin);
   }
 
-  /** Empty until the session begins, and empty again the moment it ends. */
   public NetworkIndex<V> index() {
     return active ? cache.index() : NetworkIndex.empty();
   }
@@ -159,7 +132,6 @@ public final class NetworkIndexSession<V> implements ContainerMutationListener {
     cache.invalidate(origin);
   }
 
-  /** Whether the network has changed since its index was last read. Never true while inactive. */
   public boolean isStale() {
     return active && cache.isStale();
   }

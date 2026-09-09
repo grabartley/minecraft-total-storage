@@ -166,10 +166,6 @@ class NextTickQueueTest {
     assertTrue(ran.isEmpty());
   }
 
-  /**
-   * The queue is drained before any of it runs, so a scan that loads a chunk cannot make the tick
-   * it was deferred to run forever.
-   */
   @Test
   void workSubmittedWhileDrainingWaitsForTheNextDrain() {
     queue.submit(

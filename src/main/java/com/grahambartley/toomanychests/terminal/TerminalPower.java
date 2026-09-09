@@ -14,16 +14,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Turns a terminal's redstone signal into the life and death of its network.
- *
- * <p>Per ADR 0007 the two states are total, so this is the only place a network is built or torn
- * down. Powering on costs one discovery scan and powering off costs one teardown, and nothing here
- * runs on a tick.
- *
- * <p>Every entry point is idempotent against the state already recorded, which is what keeps a
- * terminal surrounded by redstone from rescanning once per neighbour update.
- */
 public final class TerminalPower {
   private final TerminalNetworkRegistry<NetworkMembership> registry;
 
@@ -45,10 +35,6 @@ public final class TerminalPower {
     return network(world, pos).isPresent();
   }
 
-  /**
-   * Answers a neighbour update. The block state is the record of what the terminal is currently
-   * doing, so a signal that agrees with it means nothing has happened and no scan is owed.
-   */
   public void signalChanged(ServerWorld world, BlockPos pos, BlockState state) {
     if (world == null || pos == null || state == null) {
       return;
@@ -72,11 +58,6 @@ public final class TerminalPower {
         1.0f);
   }
 
-  /**
-   * Brings a terminal's network in line with the block state it loaded with, so a terminal that was
-   * powered when its chunk was saved is running again the moment the chunk is back. The network
-   * itself is memory only: nothing about it is written to disk, and nothing needs to be.
-   */
   public void loaded(ServerWorld world, BlockPos pos, BlockState state) {
     if (world == null || pos == null || state == null || !state.contains(TerminalBlock.POWERED)) {
       return;
@@ -88,16 +69,10 @@ public final class TerminalPower {
     }
   }
 
-  /** A terminal that has been broken or whose chunk has gone leaves nothing listening behind it. */
   public void unloaded(ServerWorld world, BlockPos pos) {
     deactivate(world, pos);
   }
 
-  /**
-   * Brings a running terminal's network in line with the region it should be walking now, which is
-   * one scan when that region has really moved and nothing at all when it has not. A terminal that
-   * is not running is left alone, because powering it on scans the new region anyway.
-   */
   public boolean rescan(ServerWorld world, BlockPos pos) {
     if (world == null || pos == null) {
       return false;
@@ -111,7 +86,6 @@ public final class TerminalPower {
     return true;
   }
 
-  /** Shuts down every network at once, which only a server stopping asks for. */
   public void shutDownAll() {
     registry.clear().forEach(NetworkMembership::powerOff);
   }
@@ -133,11 +107,6 @@ public final class TerminalPower {
     registry.deactivate(TerminalAddress.of(world, pos)).ifPresent(NetworkMembership::powerOff);
   }
 
-  /**
-   * A terminal keeps the radius it was configured with whatever the server maximum does, and the
-   * clamp is applied here, where a scan is about to walk it. Rewriting the terminal instead would
-   * turn a maximum an operator lowers and thinks better of into a permanent loss of reach.
-   */
   private static ScanRegion scanRegion(ServerWorld world, BlockPos pos) {
     final int configured =
         world.getBlockEntity(pos) instanceof TerminalBlockEntity terminal

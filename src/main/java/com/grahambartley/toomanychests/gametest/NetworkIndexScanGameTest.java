@@ -25,11 +25,6 @@ import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 
-/**
- * The index reads whatever the Transfer API reports for real containers, which is the half of the
- * work unit tests cannot reach: {@code ItemVariant} cannot even initialise without a bootstrapped
- * registry, so aggregation is proven in JUnit and the reading of live storages is proven here.
- */
 public final class NetworkIndexScanGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
   private static final String BATCH = "network-index";

@@ -14,18 +14,6 @@ import net.minecraft.test.TestContext;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableTextContent;
 
-/**
- * What a deposit says it could not store, against a real inventory.
- *
- * <p>Separate from {@code DepositServiceGameTest} because it is a different question: that one asks
- * where items went, this one asks what the player is told about the ones that stayed. Both need a
- * world, and for the same reason: naming an item needs a registry, so an outcome that accounts for
- * its shortfall cannot be built in a plain JVM at all.
- *
- * <p>The keys are asserted rather than the English. The English is a fallback for a client whose
- * resource pack has not caught up, and a branch that quietly reused another branch's key would say
- * the wrong thing in every language but this one.
- */
 public final class DepositLeftoverReportGameTest implements FabricGameTest {
   private static final String BATCH = "deposit-leftover-report";
   private static final int TICK_LIMIT = 60;
@@ -33,14 +21,6 @@ public final class DepositLeftoverReportGameTest implements FabricGameTest {
 
   private final DepositService deposits = new DepositService();
 
-  /**
-   * The partial path accounts for its shortfall by item, not only by number.
-   *
-   * <p>Separate from the no-space case because the two are gathered by different code: one lists
-   * every offer, the other lists what each offer could not place. The same variant is spread over
-   * two slots here, so a report that failed to gather them would say two entries where a player
-   * sees one kind.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -77,10 +57,6 @@ public final class DepositLeftoverReportGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * A deposit that fits entirely accounts for nothing, which is the other half of the rule: an
-   * outcome may not invent a shortfall any more than it may hide one.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -102,7 +78,6 @@ public final class DepositLeftoverReportGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** The partial line names the item, which is the whole reason the breakdown is gathered. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -139,11 +114,6 @@ public final class DepositLeftoverReportGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * More kinds than the line will name. The two largest are named and the rest are counted, so both
-   * the separator between them and the "and N other kinds" tail are exercised: a partial
-   * deposit-all routinely leaves more behind than a sentence can carry.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -178,7 +148,6 @@ public final class DepositLeftoverReportGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** Two or more unnamed kinds read in the plural, which is the other half of that rule. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -208,7 +177,6 @@ public final class DepositLeftoverReportGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** A network with no room says so under its own key rather than borrowing the partial one. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -234,10 +202,6 @@ public final class DepositLeftoverReportGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * What could not be stored is named, not merely counted. "Sixty left over" reads as a failure
-   * where "sixty cobblestone left over" reads as a chest that filled up, which is actionable.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -266,10 +230,6 @@ public final class DepositLeftoverReportGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * The report has to match what is really still in the inventory, or it is worse than no report: a
-   * player who is told the wrong thing goes looking for items that never moved.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,

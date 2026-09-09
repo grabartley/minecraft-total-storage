@@ -10,7 +10,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class TerminalRadiusEditPayloadTest {
-
   @Test
   void theRadiusAskedForSurvivesTheWireUnchanged() {
     TerminalRadiusEditPayload sent = new TerminalRadiusEditPayload(3, 12);

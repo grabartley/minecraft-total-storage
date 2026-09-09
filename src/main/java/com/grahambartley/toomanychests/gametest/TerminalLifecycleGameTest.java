@@ -17,22 +17,6 @@ import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 
-/**
- * When a terminal that loaded powered actually starts running.
- *
- * <p>Per ADR 0026 a load is answered on the next tick rather than where the world announces it, so
- * every test here is about that gap: nothing may start inside the callback, what is owed must
- * happen once the tick comes, and a terminal that has gone again in between is left alone.
- *
- * <p>The terminals are placed already powered, which is a state only a saved world produces, and
- * the state that used to hang a world load. Every load is announced by the world itself rather than
- * by calling {@link com.grahambartley.toomanychests.terminal.TerminalPower} by hand, since calling
- * it by hand is what let the hang ship.
- *
- * <p>The first test unloads and reloads a chunk for real, out in a chunk a thousand blocks from the
- * test structures. That distance is the only way a gametest can unload a chunk at all: it cannot
- * unload the one it is standing in.
- */
 public final class TerminalLifecycleGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
   private static final String BATCH = "terminal-lifecycle";
@@ -56,9 +40,7 @@ public final class TerminalLifecycleGameTest implements FabricGameTest {
     context.runAtEveryTick(
         () -> {
           if (reloadedAt[0] < 0L) {
-            // The chunk going is a precondition, not the thing under test, and it arrives over
-            // several ticks: the chunk manager lets go of a chunk before the unload it causes has
-            // been announced. Waiting for both is what makes the reload below mean anything.
+
             if (world.getChunkManager().isChunkLoaded(chunkPos.x, chunkPos.z)
                 || TerminalNetworks.power().network(world, pos).isPresent()) {
               return;
@@ -132,10 +114,6 @@ public final class TerminalLifecycleGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /**
-   * The world marks a block entity removed when it is broken and when its chunk goes, so a start
-   * owed to one is answered by asking it rather than by looking its position up again.
-   */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = 40)
   public void aStartOwedToATerminalThatIsGoneFindsNothingToStart(TestContext context) {
     final ServerWorld world = context.getWorld();
@@ -199,11 +177,6 @@ public final class TerminalLifecycleGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /**
-   * A thousand blocks out, so the chunk is neither a spawn chunk nor one a mock player left over
-   * from another test is holding loaded, and offset from this structure so it belongs to this test
-   * alone.
-   */
   private static BlockPos remoteTerminalPos(TestContext context) {
     final BlockPos here = context.getAbsolutePos(BlockPos.ORIGIN);
     return new BlockPos(
@@ -214,7 +187,6 @@ public final class TerminalLifecycleGameTest implements FabricGameTest {
     return ModBlocks.TERMINAL.getDefaultState().with(TerminalBlock.POWERED, Boolean.TRUE);
   }
 
-  /** A radius of one, so a scan out in the wild cannot walk into anything it does not own. */
   private static void narrowTo(ServerWorld world, BlockPos pos) {
     if (world.getBlockEntity(pos) instanceof TerminalBlockEntity terminal) {
       terminal.updateSettings(settings -> settings.withRadius(1));
@@ -232,7 +204,6 @@ public final class TerminalLifecycleGameTest implements FabricGameTest {
     terminal.updateSettings(settings -> settings.withRadius(1));
   }
 
-  /** Removing the terminal is what the world would do, and it takes any network with it. */
   private void tearDown(TestContext context) {
     context.setBlockState(TERMINAL, Blocks.AIR.getDefaultState());
   }

@@ -10,16 +10,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Puts the terminal screen in front of a player, or tells them why it will not open.
- *
- * <p>A viewer is recorded only once the screen really opened. Vanilla refuses to open a screen for
- * a player who is already in one or who is spectating, and an entry written before that refusal
- * would name a viewer who is looking at nothing, which is exactly the entry a revoke or a resync
- * would then act on.
- */
 public final class TerminalOpener {
-
   private TerminalOpener() {}
 
   public static TerminalOpenState open(ServerWorld world, BlockPos pos, ServerPlayerEntity player) {

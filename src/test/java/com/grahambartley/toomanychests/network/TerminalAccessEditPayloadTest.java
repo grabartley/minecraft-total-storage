@@ -10,7 +10,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 class TerminalAccessEditPayloadTest {
-
   @ParameterizedTest
   @EnumSource(TerminalAccessMode.class)
   void everyModeSurvivesTheWireUnchanged(TerminalAccessMode mode) {
@@ -23,7 +22,6 @@ class TerminalAccessEditPayloadTest {
     assertEquals(0, buffer.readableBytes());
   }
 
-  /** A payload that lost its mode must not open a terminal that was locked. */
   @Test
   void aRequestNamingNoModeDefaultsToTheMostClosedOne() {
     assertEquals(TerminalAccessMode.OWNER, new TerminalAccessEditPayload(1, null).mode());

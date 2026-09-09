@@ -12,13 +12,6 @@ import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.minecraft.world.World;
 
-/**
- * Reads what one container currently holds, resolving its storage afresh every time.
- *
- * <p>Re-resolving rather than holding a {@code Storage} across ticks is what keeps the cache
- * honest: a container that has been broken or unloaded reads as empty on the next recompute instead
- * of reporting whatever it held when it was discovered.
- */
 public final class ContainerContentsReader
     implements Function<StorageOrigin, Map<ItemVariant, Long>> {
   private final World world;

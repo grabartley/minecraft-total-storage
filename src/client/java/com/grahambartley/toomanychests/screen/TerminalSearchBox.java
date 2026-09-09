@@ -8,20 +8,6 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
-/**
- * The terminal's search field: the chrome around it, and the text a player has typed into it.
- *
- * <p>The field draws no background of its own, so the box behind it can be the mod's own
- * nine-sliced sprite rather than vanilla's black rectangle. That leaves the widget covering only
- * the text area, which is what takes a click, and the border it sits inside is drawn around it.
- *
- * <p>The text is not held here. The widget is the only copy of it, so the box a player is looking
- * at and the query a request carries cannot drift apart.
- *
- * <p>The hint is a suggestion rather than a placeholder, because vanilla draws a placeholder only
- * while the field has no focus and this one takes focus the moment the terminal opens. A player
- * would never see it, and an unlabelled box is just a rectangle.
- */
 public final class TerminalSearchBox {
   private static final Identifier BOX = TerminalSprites.of("search/box");
   private static final Identifier BOX_FOCUSED = TerminalSprites.of("search/box_focused");
@@ -30,11 +16,6 @@ public final class TerminalSearchBox {
 
   private final TextFieldWidget field;
 
-  /**
-   * @param originX where the terminal window sits on screen
-   * @param originY where the terminal window sits on screen
-   * @param previous what was already typed, which a resize must not throw away
-   */
   public TerminalSearchBox(TextRenderer textRenderer, int originX, int originY, String previous) {
     field =
         new TextFieldWidget(
@@ -70,11 +51,6 @@ public final class TerminalSearchBox {
     return field.isFocused();
   }
 
-  /**
-   * Takes the field off screen with its tab. Not painting the box behind it would leave the text,
-   * the caret and the suggestion drawn over whatever the other view puts there, and the field would
-   * still be holding the keyboard.
-   */
   public void setVisible(boolean visible) {
     field.visible = visible;
     if (!visible) {
@@ -90,7 +66,6 @@ public final class TerminalSearchBox {
     return field.keyPressed(keyCode, scanCode, modifiers);
   }
 
-  /** The box the field is written into, which shows whether the terminal is listening. */
   public void drawBox(DrawContext context, int originX, int originY) {
     context.drawGuiTexture(
         field.isFocused() ? BOX_FOCUSED : BOX,

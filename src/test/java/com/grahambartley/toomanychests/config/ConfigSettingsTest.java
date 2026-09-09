@@ -75,10 +75,6 @@ class ConfigSettingsTest {
     assertEquals(TooManyChestsConfig.defaults(), setting.reset(moved));
   }
 
-  /**
-   * The guard against a setting existing in the config record and nowhere else. Resetting the list
-   * one by one only lands back on the defaults if the list reaches every field the fixture moved.
-   */
   @Test
   void resettingEverySettingReturnsAConfigToItsDefaults() {
     TooManyChestsConfig away = TestConfigs.everythingNonDefault();

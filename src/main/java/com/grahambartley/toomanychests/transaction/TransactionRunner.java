@@ -7,18 +7,6 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * The one place in the mod that opens a transaction.
- *
- * <p>Per ADR 0015 no feature opens its own, so every mutating path gets the same guarantees for
- * free: a result that is not committed rolls back, and so does an operation that throws. The worst
- * failure a storage mod has is duplicating items, and the second worst is destroying them; both
- * come from a half-applied move surviving.
- *
- * <p>The Transfer API's transaction stack is thread local, so an operation run off the server
- * thread would silently open a second, unrelated stack while mutating server state. That is a bug
- * that surfaces as corruption much later, so it is refused here instead.
- */
 public final class TransactionRunner {
   private static final Logger LOGGER = LoggerFactory.getLogger(TransactionRunner.class);
 
@@ -28,7 +16,6 @@ public final class TransactionRunner {
     this.onServerThread = Objects.requireNonNull(onServerThread, "onServerThread");
   }
 
-  /** Runs an operation in its own outer transaction, committing only if it says to. */
   public <T> OperationResult<T> run(NetworkOperation<T> operation) {
     Objects.requireNonNull(operation, "operation");
     requireServerThread();
@@ -41,10 +28,6 @@ public final class TransactionRunner {
     }
   }
 
-  /**
-   * Runs one step of a compound operation, so a step that fails rolls back alone and leaves its
-   * parent free to carry on or abandon everything.
-   */
   public <T> OperationResult<T> runNested(
       TransactionContext parent, NetworkOperation<T> operation) {
     Objects.requireNonNull(parent, "parent");

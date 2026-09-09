@@ -2,17 +2,6 @@ package com.grahambartley.toomanychests.operation;
 
 import java.util.Objects;
 
-/**
- * What one withdrawal did: how much was asked for, and how much really moved.
- *
- * <p>Both numbers are carried because the difference between them is the whole message. A player
- * who clicked for a stack and received nine needs to be told nine, and a caller deciding whether to
- * resync a screen needs to know something moved at all.
- *
- * @param result how the withdrawal ended
- * @param requested the amount the request was bounded to, after clamping
- * @param moved how much really reached the player
- */
 public record WithdrawOutcome(WithdrawResult result, long requested, long moved) {
   public WithdrawOutcome {
     Objects.requireNonNull(result, "result");
@@ -42,7 +31,6 @@ public record WithdrawOutcome(WithdrawResult result, long requested, long moved)
     return new WithdrawOutcome(WithdrawResult.NO_ROOM, requested, 0L);
   }
 
-  /** Decides between a whole and a partial withdrawal from the amounts themselves. */
   public static WithdrawOutcome moved(long requested, long moved) {
     if (moved <= 0L) {
       throw new IllegalArgumentException("a withdrawal that moved nothing needs a reason");

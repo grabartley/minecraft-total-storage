@@ -12,7 +12,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 class NetworkSettingsMirrorTest {
-
   private static NetworkSettingsView answered(int radius) {
     return new NetworkSettingsView(
         radius,
@@ -41,7 +40,6 @@ class NetworkSettingsMirrorTest {
     assertEquals(20, NetworkSettingsMirror.view().radius());
   }
 
-  /** A panel arriving after its terminal closed must not be drawn into the next one. */
   @Test
   void anAnswerForAnotherScreenIsDropped() {
     NetworkSettingsMirror.opened(7);

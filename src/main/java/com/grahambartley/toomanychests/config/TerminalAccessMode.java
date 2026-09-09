@@ -3,7 +3,6 @@ package com.grahambartley.toomanychests.config;
 import java.util.Locale;
 import java.util.Optional;
 
-/** Who may operate a terminal. See ADR 0008. */
 public enum TerminalAccessMode implements ConfigEnum {
   OWNER,
   TRUSTED,

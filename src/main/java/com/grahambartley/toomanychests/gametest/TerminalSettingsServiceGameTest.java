@@ -10,14 +10,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 
-/**
- * What a settings panel is answered with when it asks, and when it is left alone.
- *
- * <p>The same contract the item listing keeps: a request naming a screen the player does not have
- * open reaches nothing, and a panel that has asked for nothing is never pushed to. The second half
- * matters more here than it does for the listing, because a player on the item grid is still
- * holding a handler that could be sent settings it is not drawing.
- */
 public final class TerminalSettingsServiceGameTest implements FabricGameTest {
   private static final String BATCH = "terminal-settings-service";
   private static final int TICK_LIMIT = 60;
@@ -44,7 +36,6 @@ public final class TerminalSettingsServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** Per ADR 0009 the sync id is checked against the screen the server holds, never trusted. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -89,10 +80,6 @@ public final class TerminalSettingsServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * Going back to the grid closes the panel, so an edit by somebody else stops reaching a screen
-   * that is not drawing it. A window of no rows is what says so.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -110,10 +97,6 @@ public final class TerminalSettingsServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * The case the close path skips the gate for. A terminal that lost power under an open panel is
-   * exactly when the server must stop pushing to it, and the gate needs a live network.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -135,7 +118,6 @@ public final class TerminalSettingsServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** A close naming a screen the sender does not have open reaches nothing, like every request. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,

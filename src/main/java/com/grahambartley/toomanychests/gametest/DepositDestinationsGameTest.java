@@ -17,15 +17,6 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Reading a real terminal's decisions and turning them into containers to write to.
- *
- * <p>The routing order itself is exhausted in {@code DepositRoutingTest} against plain data. What
- * only a world can show is the half that has to read the game: that the roles come from the
- * terminal a player actually configured, that an item is matched against both the presets computed
- * for it and the custom tags stored on that terminal, and that a container gone since the last scan
- * is not offered as somewhere to put things.
- */
 public final class DepositDestinationsGameTest implements FabricGameTest {
   private static final String BATCH = "deposit-destinations";
   private static final int TICK_LIMIT = 60;
@@ -49,7 +40,6 @@ public final class DepositDestinationsGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** ADR 0004, read from the terminal the player really configured rather than from a fixture. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -65,10 +55,6 @@ public final class DepositDestinationsGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * Preset membership is computed per ADR 0011 while custom tags are stored on the terminal, so a
-   * filter naming a preset has to match an item nobody ever filed by hand.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -90,7 +76,6 @@ public final class DepositDestinationsGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** The other half of the same union: a tag this network invented, stored on its terminal. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,

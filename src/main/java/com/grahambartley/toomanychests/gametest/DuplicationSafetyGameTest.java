@@ -1,0 +1,190 @@
+package com.grahambartley.toomanychests.gametest;
+
+import com.grahambartley.toomanychests.lifecycle.ContainerLifecycle;
+import com.grahambartley.toomanychests.network.WithdrawRequestPayload;
+import com.grahambartley.toomanychests.operation.WithdrawDestination;
+import com.grahambartley.toomanychests.operation.WithdrawOutcome;
+import com.grahambartley.toomanychests.operation.WithdrawResult;
+import com.grahambartley.toomanychests.operation.WithdrawService;
+import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.minecraft.block.Blocks;
+import net.minecraft.item.Item;
+import net.minecraft.item.Items;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.test.GameTest;
+import net.minecraft.test.TestContext;
+import net.minecraft.util.math.ChunkPos;
+
+public final class DuplicationSafetyGameTest implements FabricGameTest {
+  private static final String BATCH = "duplication-safety";
+  private static final int TICK_LIMIT = 60;
+  private static final int STACK = 64;
+  private static final Item TRACKED = Items.DIAMOND;
+
+  private final WithdrawService withdrawals = new WithdrawService();
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void twoPlayersTakingTheLastStackTogetherConserveIt(TestContext context) {
+    NetworkOperationFixture.stockedBarrel(
+        context, NetworkOperationFixture.EAST_BARREL, TRACKED, STACK);
+    ServerPlayerEntity first = NetworkOperationFixture.openTerminal(context);
+    ServerPlayerEntity second = NetworkOperationFixture.alsoOpen(context);
+    long before = NetworkOperationFixture.countInWorld(context, TRACKED, first, second);
+
+    WithdrawOutcome won = take(first, STACK, WithdrawDestination.CURSOR);
+    WithdrawOutcome lost = take(second, STACK, WithdrawDestination.CURSOR);
+
+    context.assertTrue(
+        won.moved() + lost.moved() == STACK,
+        "The two withdrawals moved " + (won.moved() + lost.moved()) + " of one stack");
+    NetworkOperationFixture.assertConserved(context, before, TRACKED, first, second);
+    NetworkOperationFixture.finish(context, first, second);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aWithdrawalAgainstAContainerBrokenInTheSameTickConservesEverything(
+      TestContext context) {
+    NetworkOperationFixture.stockedBarrel(
+        context, NetworkOperationFixture.EAST_BARREL, TRACKED, STACK);
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    long before = NetworkOperationFixture.countInWorld(context, TRACKED, player);
+
+    context.setBlockState(NetworkOperationFixture.EAST_BARREL, Blocks.AIR);
+    WithdrawOutcome outcome = take(player, STACK, WithdrawDestination.CURSOR);
+
+    context.assertTrue(
+        outcome.moved() == 0L,
+        "A container that has gone granted " + outcome.moved() + " items anyway");
+    NetworkOperationFixture.assertConserved(context, before, TRACKED, player);
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aWithdrawalAgainstAForgottenChunkConservesEverything(TestContext context) {
+    NetworkOperationFixture.stockedBarrel(
+        context, NetworkOperationFixture.EAST_BARREL, TRACKED, STACK);
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    long before = NetworkOperationFixture.countInWorld(context, TRACKED, player);
+
+    ContainerLifecycle.registry()
+        .chunkUnloaded(
+            context.getWorld().getRegistryKey(),
+            new ChunkPos(context.getAbsolutePos(NetworkOperationFixture.EAST_BARREL)));
+    WithdrawOutcome outcome = take(player, STACK, WithdrawDestination.CURSOR);
+
+    context.assertTrue(
+        outcome.result() == WithdrawResult.NOTHING_AVAILABLE,
+        "An unloaded container should leave the network holding none of it, got "
+            + outcome.result());
+    NetworkOperationFixture.assertConserved(context, before, TRACKED, player);
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void twoOverlappingTerminalsTakingFromOneBarrelConserveIt(TestContext context) {
+    NetworkOperationFixture.stockedBarrel(
+        context, NetworkOperationFixture.SHARED_BARREL, TRACKED, STACK);
+    ServerPlayerEntity south = NetworkOperationFixture.openTerminal(context);
+    ServerPlayerEntity north = NetworkOperationFixture.openNorthTerminal(context);
+    long before = NetworkOperationFixture.countInWorld(context, TRACKED, south, north);
+
+    WithdrawOutcome first = take(south, STACK, WithdrawDestination.CURSOR);
+    WithdrawOutcome second = take(north, STACK, WithdrawDestination.CURSOR);
+
+    context.assertTrue(
+        first.moved() + second.moved() == STACK,
+        "Two terminals over one barrel moved "
+            + (first.moved() + second.moved())
+            + " of one stack");
+    NetworkOperationFixture.assertConserved(context, before, TRACKED, south, north);
+    NetworkOperationFixture.finish(context, south, north);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aForgedRequestForAnItemTheNetworkNeverHeldConjuresNothing(TestContext context) {
+    NetworkOperationFixture.stockedBarrel(
+        context, NetworkOperationFixture.EAST_BARREL, TRACKED, STACK);
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    long before = NetworkOperationFixture.countInWorld(context, Items.NETHERITE_INGOT, player);
+
+    WithdrawOutcome outcome =
+        withdrawals.withdraw(
+            player,
+            new WithdrawRequestPayload(
+                NetworkOperationFixture.handlerOf(player).syncId,
+                ItemVariant.of(Items.NETHERITE_INGOT),
+                STACK,
+                WithdrawDestination.CURSOR));
+
+    context.assertTrue(
+        outcome.result() == WithdrawResult.NOTHING_AVAILABLE,
+        "An item the network never held reported as " + outcome.result());
+    NetworkOperationFixture.assertConserved(context, before, Items.NETHERITE_INGOT, player);
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aForgedRequestForMoreThanTheNetworkHoldsGrantsOnlyWhatExists(TestContext context) {
+    NetworkOperationFixture.stockedBarrel(context, NetworkOperationFixture.EAST_BARREL, TRACKED, 9);
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    long before = NetworkOperationFixture.countInWorld(context, TRACKED, player);
+
+    WithdrawOutcome outcome = take(player, STACK, WithdrawDestination.CURSOR);
+
+    context.assertTrue(
+        outcome.moved() == 9L, "Nine existed and the request moved " + outcome.moved());
+    NetworkOperationFixture.assertConserved(context, before, TRACKED, player);
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void clickingAStaleEntryRepeatedlyNeverAccumulatesItems(TestContext context) {
+    NetworkOperationFixture.stockedBarrel(context, NetworkOperationFixture.EAST_BARREL, TRACKED, 5);
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    long before = NetworkOperationFixture.countInWorld(context, TRACKED, player);
+
+    for (int click = 0; click < 6; click++) {
+      take(player, STACK, WithdrawDestination.INVENTORY);
+    }
+
+    context.assertTrue(
+        NetworkOperationFixture.countCarried(player, TRACKED) == 5L,
+        "Six clicks on five diamonds carried away "
+            + NetworkOperationFixture.countCarried(player, TRACKED));
+    NetworkOperationFixture.assertConserved(context, before, TRACKED, player);
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  private WithdrawOutcome take(
+      ServerPlayerEntity player, int amount, WithdrawDestination destination) {
+    return withdrawals.withdraw(
+        player,
+        new WithdrawRequestPayload(
+            NetworkOperationFixture.handlerOf(player).syncId,
+            ItemVariant.of(TRACKED),
+            amount,
+            destination));
+  }
+}

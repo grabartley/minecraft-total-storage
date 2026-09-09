@@ -46,10 +46,6 @@ class ListingRowTest {
         IllegalArgumentException.class, () -> new ListingRow<>("cobblestone", 1L, providerCount));
   }
 
-  /**
-   * Telling a player their stack is in one chest is telling them nothing, and repeating it on every
-   * cell would bury the rows where the answer is worth reading.
-   */
   @DisplayName("only a spread across more than one container is worth saying out loud")
   @ParameterizedTest(name = "{0} containers is worth saying: {1}")
   @CsvSource({"0, false", "1, false", "2, true", "12, true"})

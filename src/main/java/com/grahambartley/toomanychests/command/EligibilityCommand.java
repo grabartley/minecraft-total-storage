@@ -15,13 +15,6 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.util.Identifier;
 
-/**
- * The {@code /tmc config eligibility} subtree, where an operator forces a block into or out of
- * every network regardless of what the eligibility rules make of it.
- *
- * <p>Suggestions come from the block registry rather than from the overrides already set, because
- * the useful completion is the block an operator is about to name, not the one they named before.
- */
 public final class EligibilityCommand {
   private static final String BLOCK = "block";
   private static final String ELIGIBLE = "eligible";

@@ -2,6 +2,10 @@ package com.grahambartley.toomanychests.sort;
 
 import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.lock.LockedSlotsAttachment;
+import com.grahambartley.toomanychests.mutation.ContainerMutationWitness;
+import com.grahambartley.toomanychests.mutation.ContainerMutations;
+import com.grahambartley.toomanychests.screenhandler.ContainerViewerSync;
+import com.grahambartley.toomanychests.storage.StorageOrigin;
 import com.grahambartley.toomanychests.transaction.NetworkTransactions;
 import com.grahambartley.toomanychests.transaction.OperationResult;
 import java.util.ArrayList;
@@ -13,23 +17,10 @@ import net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-/**
- * Sorts whatever container a player currently has open, and is the only path a client request may
- * take.
- *
- * <p>Per ADR 0009 the request names a screen and nothing else. The sync id is checked against the
- * handler the server already holds for that player, so a client naming someone else's chest, a
- * chest it closed a tick ago, or a position it invented gets nowhere: the server never resolves a
- * container the player is not already standing in front of.
- *
- * <p>Everything moves inside one transaction per ADR 0015. A sort empties every slot before it
- * refills them, which is the one moment a container's contents exist only in a list, so a failure
- * part way through has to put back exactly what it took. The conservation check is what makes that
- * a guarantee rather than a hope.
- */
 public final class ContainerSortService {
   private final SortCandidateFactory candidates;
 
@@ -62,14 +53,30 @@ public final class ContainerSortService {
     if (slots.stream().allMatch(SingleSlotStorage::isResourceBlank)) {
       return SortOutcome.NOTHING_TO_SORT;
     }
-    final OperationResult<Long> result =
-        NetworkTransactions.runner().run(transaction -> rearrange(slots, target, transaction));
+    final OperationResult<Long> result;
+    final List<StorageOrigin> changed;
+    try (ContainerMutationWitness witness =
+        ContainerMutationWitness.overEverything(ContainerMutations.registry())) {
+      result =
+          NetworkTransactions.runner().run(transaction -> rearrange(slots, target, transaction));
+      if (result.committed()) {
+        target.inventory().markDirty();
+      }
+      changed = List.copyOf(witness.changed());
+    }
     if (result.rolledBack()) {
       return SortOutcome.FAILED;
     }
-    target.inventory().markDirty();
-    SortViewerSync.resync(player.getServer(), target.inventory());
+    resync(player, target, changed);
     return SortOutcome.SORTED;
+  }
+
+  private static void resync(
+      ServerPlayerEntity player, SortTarget target, List<StorageOrigin> changed) {
+    final List<Inventory> showing =
+        new ArrayList<>(ContainerViewerSync.inventoriesOf(player.getServer(), changed));
+    showing.add(target.inventory());
+    ContainerViewerSync.resyncAll(player.getServer(), showing);
   }
 
   private static List<SingleSlotStorage<ItemVariant>> slotsOf(SortTarget target) {

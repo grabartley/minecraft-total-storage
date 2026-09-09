@@ -17,15 +17,6 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * The half of a settings answer that carries an item variant.
- *
- * <p>A gametest rather than a unit test because encoding a variant needs the registries a plain JVM
- * does not have, which is why {@code NetworkSettingsPayloadTest} sends rows without an icon.
- *
- * <p>The icon is the one thing on a row a client cannot work out for itself, per ADR 0025, so a row
- * that lost it on the wire would draw as a blank square beside a count and be unrecognisable.
- */
 public final class NetworkSettingsPayloadGameTest implements FabricGameTest {
   private static final String BATCH = "network-settings-payload";
   private static final int SYNC_ID = 6;
@@ -47,7 +38,6 @@ public final class NetworkSettingsPayloadGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /** An empty container has nothing to be iconed with, and that absence has to travel too. */
   @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = 20)
   public void aRowWithNothingToShowArrivesWithNoIcon(TestContext context) {
     ContainerRoleEntry received =
@@ -59,7 +49,6 @@ public final class NetworkSettingsPayloadGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /** The rest of the row has to survive alongside the icon, not instead of it. */
   @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = 20)
   public void anIconedRowStillCarriesEverythingElseItSays(TestContext context) {
     ContainerRoleEntry received =

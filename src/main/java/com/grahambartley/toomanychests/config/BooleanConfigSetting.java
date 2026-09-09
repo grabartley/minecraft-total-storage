@@ -6,7 +6,6 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
-/** A setting that is either on or off. */
 final class BooleanConfigSetting implements ConfigSetting {
   private static final List<String> VALUES = List.of("true", "false");
 

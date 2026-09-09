@@ -11,18 +11,8 @@ import java.util.List;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import org.junit.jupiter.api.Test;
 
-/**
- * Every way the item grid answers that a cell holds nothing.
- *
- * <p>A cell holding a row needs an {@code ItemVariant} and therefore a registry, so what a page
- * really contains is left to {@code ListingPageTest} and to the terminal's automated QA. What is
- * reachable here is the half that decides a cell is empty, and that half is the one a click has to
- * get right: a grid drawing a placeholder must not report a cell under the pointer, or clicking the
- * "this network is empty" message would withdraw something.
- */
 class TerminalItemsPanelTest {
 
-  /** A page the server says is live, carrying no rows, which is a client scrolled past the end. */
   private static ListingPage<ItemVariant> live(int totalMatching) {
     return new ListingPage<>(1L, ListingStatus.LIVE, 0, totalMatching, List.of());
   }
@@ -42,7 +32,6 @@ class TerminalItemsPanelTest {
         panel.hoveredCell(TerminalScreenLayout.cellX(0) + 1, TerminalScreenLayout.cellY(0) + 1));
   }
 
-  /** The empty-state picture is drawn where the cells would be, and must not be clickable. */
   @Test
   void aGridExplainingWhyItIsEmptyHasNoCellUnderThePointer() {
     TerminalItemsPanel panel = showing(ListingPage.offline(1L));
@@ -52,7 +41,6 @@ class TerminalItemsPanelTest {
         panel.hoveredCell(TerminalScreenLayout.cellX(4) + 1, TerminalScreenLayout.cellY(4) + 1));
   }
 
-  /** A live page reaches the hit test itself, where a pending one stops at the has-rows guard. */
   @Test
   void aPointerBesideTheGridHasNoCellUnderIt() {
     TerminalItemsPanel panel = showing(live(500));
@@ -80,7 +68,6 @@ class TerminalItemsPanelTest {
     assertEquals(offline, showing(offline).page());
   }
 
-  /** A listing that shrank under a scrolled grid must not leave it pointing past the end. */
   @Test
   void theScrollIsBroughtBackInsideAListingThatShrank() {
     TerminalItemsPanel panel = new TerminalItemsPanel();

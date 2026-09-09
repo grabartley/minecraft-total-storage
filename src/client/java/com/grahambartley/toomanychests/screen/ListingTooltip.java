@@ -7,17 +7,6 @@ import java.util.Objects;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-/**
- * What the terminal adds to an item's own tooltip.
- *
- * <p>The exact total is always there, because the number on the cell is compacted the moment it
- * stops fitting and a player asking how much they have wants the real figure rather than the one
- * that fitted.
- *
- * <p>How many containers hold it is only there when it is more than one. A line saying a stack is
- * in one chest tells a player nothing they could act on, and repeating it on every cell would bury
- * the rows where the answer is twelve.
- */
 public final class ListingTooltip {
   private ListingTooltip() {}
 

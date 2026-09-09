@@ -32,10 +32,6 @@ class TerminalListingStateTest {
     assertTrue(state.hasWindow());
   }
 
-  /**
-   * The criteria are kept rather than re-sent with every refresh, which is what lets the server
-   * push a page to a player who is not touching anything.
-   */
   @Test
   void aLaterRequestReplacesTheOneBeforeItRatherThanAddingToIt() {
     state.requested(ListingWindow.of(0, 72), ItemFilter.ofSearch("oak"));
@@ -61,7 +57,6 @@ class TerminalListingStateTest {
     assertEquals(2L, state.revision());
   }
 
-  /** A screen that has asked for nothing is not pushed to, because there is nothing to answer. */
   @Test
   void aWindowOfNoRowsIsNotAWindowWorthPushingTo() {
     state.requested(ListingWindow.of(40, 0), ItemFilter.NONE);

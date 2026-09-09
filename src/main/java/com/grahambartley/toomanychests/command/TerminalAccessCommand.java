@@ -23,18 +23,6 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * The access branches of {@code /tmc terminal <pos>}: which players a terminal lets in, and who may
- * say so.
- *
- * <p>Unlike the rest of the tree these branches cannot be gated with {@code requires}, because who
- * may run them depends on the terminal the position names and Brigadier decides {@code requires}
- * before any argument is parsed. The check is therefore inside each handler, which also lets an
- * owner be told the terminal is not theirs rather than told the subcommand does not exist.
- *
- * <p>Players are named by profile rather than by connected entity so an owner can trust a friend
- * who is currently offline, which is when a trust list is most often edited.
- */
 public final class TerminalAccessCommand {
   private static final String MODE = "mode";
   private static final String PLAYERS = "players";
@@ -71,7 +59,6 @@ public final class TerminalAccessCommand {
                 .executes(TerminalAccessCommand::untrust));
   }
 
-  /** Open to anyone, because a player refused a terminal deserves to learn why. */
   private static int getAccessMode(CommandContext<ServerCommandSource> context)
       throws CommandSyntaxException {
     final ServerCommandSource source = context.getSource();
@@ -108,7 +95,6 @@ public final class TerminalAccessCommand {
     return 1;
   }
 
-  /** Gated, because a trust list names players who are not the one reading it. */
   private static int listTrusted(CommandContext<ServerCommandSource> context)
       throws CommandSyntaxException {
     final ServerCommandSource source = context.getSource();
@@ -173,12 +159,6 @@ public final class TerminalAccessCommand {
         : CommandMessages.terminalNotTrusted(player, pos);
   }
 
-  /**
-   * Whether this source may configure the terminal, reporting the reason it may not.
-   *
-   * <p>A source with no player behind it is a console or a command block, which has no ownership to
-   * appeal to and is held to the operator level alone.
-   */
   private static boolean administrable(CommandContext<ServerCommandSource> context, BlockPos pos) {
     final ServerCommandSource source = context.getSource();
     final Optional<TerminalSettings> settings = trustService().settingsAt(source.getWorld(), pos);

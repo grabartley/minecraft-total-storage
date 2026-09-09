@@ -2,12 +2,6 @@ package com.grahambartley.toomanychests.terminal;
 
 import net.minecraft.text.Text;
 
-/**
- * Everything a terminal says to the player standing in front of it, in one place.
- *
- * <p>Each line carries its English alongside its translation key, so a player on a server whose
- * resource pack has not caught up is refused in words rather than in a raw key.
- */
 public final class TerminalMessages {
   private static final String PREFIX = "block.too-many-chests.terminal.";
 
@@ -33,13 +27,11 @@ public final class TerminalMessages {
     return line("container-out-of-range", "This terminal does not reach that container");
   }
 
-  /** Said when a terminal is running at less than it was set to, which is not obvious otherwise. */
   public static Text radiusClamped(int blocks) {
     return Text.translatableWithFallback(
         PREFIX + "radius-clamped", "The server caps this terminal at %s blocks", blocks);
   }
 
-  /** Said when a rescan changed nothing, so the button is not mistaken for one that did nothing. */
   public static Text nothingNewToFind() {
     return line("rescan-unchanged", "This terminal had nothing new to find");
   }

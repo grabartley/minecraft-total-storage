@@ -10,9 +10,6 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 class AccessModeCycleTest {
 
-  /**
-   * Clicking opens the terminal up a step at a time, so the cautious mode is the one reached first.
-   */
   @ParameterizedTest
   @CsvSource({"OWNER, TRUSTED", "TRUSTED, OPEN", "OPEN, OWNER"})
   void clickingLetsMorePeopleIn(TerminalAccessMode from, TerminalAccessMode to) {

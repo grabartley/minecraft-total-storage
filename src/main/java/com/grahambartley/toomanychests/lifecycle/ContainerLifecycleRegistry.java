@@ -11,16 +11,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 
-/**
- * Who wants to hear that containers have appeared or vanished.
- *
- * <p>Not keyed by position, unlike the mutation registry. A removal is only interesting to a
- * network that holds the container, and only the network knows what it holds, so every subscriber
- * hears every event and answers for itself. Removals are rare enough that this costs nothing, and
- * with no subscriber a publish is one {@code isEmpty} check.
- *
- * <p>Server side and single threaded, like the world events that feed it.
- */
 public final class ContainerLifecycleRegistry {
   private final Set<ContainerLifecycleListener> listeners = new LinkedHashSet<>();
 
@@ -77,7 +67,6 @@ public final class ContainerLifecycleRegistry {
     listeners.clear();
   }
 
-  /** Copied because a listener is entitled to unsubscribe while being told about an event. */
   private List<ContainerLifecycleListener> subscribers() {
     return List.copyOf(listeners);
   }

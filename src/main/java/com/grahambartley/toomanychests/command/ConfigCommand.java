@@ -15,13 +15,6 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 
-/**
- * The {@code /tmc config} subtree, driven by the settings list rather than a node per setting.
- *
- * <p>Reading is open to anyone, since a setting a client is already told about on join is not a
- * secret. Changing one is not: every mutating branch is gated, and the gate is on the branch rather
- * than inside the handler so a player without it never sees the subcommand offered.
- */
 public final class ConfigCommand {
   private static final String SETTING = "setting";
   private static final String VALUE = "value";
@@ -122,12 +115,6 @@ public final class ConfigCommand {
     return apply(context, TooManyChestsConfig.defaults(), CommandMessages.everySettingReset());
   }
 
-  /**
-   * Saves and announces a change, or says why it did not happen.
-   *
-   * <p>Broadcast to operators, because a setting moving is a server-wide event and the operator who
-   * did not type it still has to know it moved.
-   */
   static int apply(
       CommandContext<ServerCommandSource> context, TooManyChestsConfig updated, Text success) {
     final ServerCommandSource source = context.getSource();
@@ -153,13 +140,6 @@ public final class ConfigCommand {
     return 0;
   }
 
-  /**
-   * The setting already named on the command line, while the value after it is being suggested.
-   *
-   * <p>Read from the last child rather than the context handed in, because a command reached
-   * through the {@code /tmc} alias parses into a redirected child context and the outer one a
-   * suggestion provider is given carries no arguments at all.
-   */
   private static Optional<ConfigSetting> settingArgument(
       CommandContext<ServerCommandSource> context) {
     try {

@@ -45,6 +45,7 @@ The canonical implementations are **Loot Lock** and **Dogs Unleashed**. Follow t
 - Any new behavioural code ships with unit tests in the same pull request. Documentation-only and configuration-only changes are exempt.
 - Gametests cover behaviour that only exists in a running world: block interactions, networking, persistence across reload, and anything involving more than one player.
 - Anything that moves items or grants rewards gets a test asserting **conservation**: the total in the world before equals the total after. Absence of an exception is not evidence of correctness.
+- **Every change to a mutating code path adds a case to the duplication-safety suite.** Conservation is asserted over the whole of the test's patch of world, counting containers, player inventories, and anything on the floor, so a total that balances cannot be balancing by accident. A rollback path is tested by forcing the failure, not by trusting that the transaction would have handled it.
 
 ## Compatibility
 
@@ -56,4 +57,4 @@ The canonical implementations are **Loot Lock** and **Dogs Unleashed**. Follow t
 
 - Every change updates the documentation it invalidates, in the same pull request.
 - Reasoning behind an architectural decision belongs in an architecture decision record under `docs/adr/`, not in a comment and not in a commit message.
-- Code comments explain **why**, and only when the reason is genuinely surprising. Code that needs a comment to explain what it does should be renamed instead.
+- **The source carries no comments at all.** Not explanatory ones, not javadoc, not "why" ones. Naming and structure carry the meaning, and anything that genuinely needs explaining is either a decision record or a sign the code should be reshaped until it does not.

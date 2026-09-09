@@ -7,16 +7,6 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 
-/**
- * The wire form of a network's tag set, for handing the terminal screen the vocabulary it renders
- * the filter column from.
- *
- * <p>Presets do not travel. A client resolves them from the same compiled-in enum the server used,
- * so sending them would be sending the client something it already has.
- *
- * <p>Decoding drops a tag it cannot name rather than refusing the packet, which keeps one bad entry
- * from costing a player their whole filter column.
- */
 public final class NetworkTagPacketCodec {
   public static final PacketCodec<RegistryByteBuf, NetworkTagSet> INSTANCE =
       PacketCodec.of(NetworkTagPacketCodec::write, NetworkTagPacketCodec::read);

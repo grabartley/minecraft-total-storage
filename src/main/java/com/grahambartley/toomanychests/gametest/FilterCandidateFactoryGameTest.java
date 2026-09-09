@@ -8,13 +8,6 @@ import net.minecraft.item.Items;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 
-/**
- * What an item variant looks like once it has been flattened for the filter engine.
- *
- * <p>The matching rules are proven in JUnit against hand-written candidates. What needs a running
- * world is that a real variant flattens into the identifier, name and tags those rules expect,
- * since every one of those comes from a registry that only exists inside the game.
- */
 public final class FilterCandidateFactoryGameTest implements FabricGameTest {
   private static final String BATCH = "filter-candidates";
 
@@ -43,10 +36,6 @@ public final class FilterCandidateFactoryGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /**
-   * The tags are what the filter column narrows by, so a variant that arrived without them would
-   * quietly vanish from every filtered view while still being in the network.
-   */
   @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = 20)
   public void aVariantCarriesThePresetTagsItIsFiledUnder(TestContext context) {
     FilterCandidate candidate = factory.of(ItemVariant.of(Items.COOKED_BEEF));

@@ -13,30 +13,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 
-/**
- * Draws the outlines a terminal asked for, over the world.
- *
- * <p>Rendered as line boxes through the world renderer, the same way vanilla draws the outline of
- * the block you are pointing at, so nothing new is textured and nothing has to be positioned in the
- * GUI. Drawn after entities so a chest behind a player still reads.
- *
- * <p>The boxes are grown very slightly past the block they describe. An outline drawn exactly on a
- * block's faces fights that block's own edges for the same pixels and flickers as the camera moves,
- * which reads as a rendering fault rather than as a highlight.
- */
 public final class ContainerHighlightRenderer {
-  /** Enough to clear the block's own faces without the outline looking loose around it. */
   private static final double SWELL = 0.002;
 
-  /**
-   * How far inside the first outline the second one sits, for the roles drawn doubled.
-   *
-   * <p>Sized to read from across a room rather than only up close. The doubling is the shape cue
-   * that tells an excluded container apart for a player who cannot separate the red from the white,
-   * so an inset too small to see at the distance a player actually stands is the same as no cue at
-   * all. A fifth of a block is about three pixels of a block face at arm's length and still reads
-   * as one outline inside another from ten blocks away.
-   */
   private static final double INNER_INSET = 0.2;
 
   private ContainerHighlightRenderer() {}

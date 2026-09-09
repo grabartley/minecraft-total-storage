@@ -6,7 +6,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-/** Seam over the block-position half of the Transfer API, so resolution is testable off-game. */
 @FunctionalInterface
 public interface ItemStorageLookup {
   @Nullable

@@ -18,18 +18,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Builds the settings panel's answer from the terminal as it stands right now.
- *
- * <p>Read fresh on every request rather than cached, for the same reason {@link
- * com.grahambartley.toomanychests.access.TerminalAccessService} reads settings fresh: a trust list
- * edited a tick ago has to bind the panel someone else is looking at, and a cache is exactly how
- * two players end up disagreeing about who owns a base.
- *
- * <p>The trust list is only assembled for a caller entitled to read it. It names players who are
- * not the one looking, and handing it to everyone who can open an open terminal would be a leak
- * dressed up as a feature.
- */
 public final class NetworkSettingsService {
   private final ContainerRoleService roles;
 
@@ -76,11 +64,6 @@ public final class NetworkSettingsService {
     return state.contains(TerminalBlock.POWERED) && state.get(TerminalBlock.POWERED);
   }
 
-  /**
-   * Trust list UUIDs turned into names, which only the server can do. A player who has never been
-   * seen by this server keeps their UUID rather than vanishing from the list, because a name the
-   * cache cannot supply is still an entry the owner needs to be able to remove.
-   */
   private static List<String> namesOf(MinecraftServer server, Set<UUID> trusted) {
     final List<String> names = new ArrayList<>(trusted.size());
     for (final UUID player : trusted) {

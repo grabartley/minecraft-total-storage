@@ -23,23 +23,6 @@ import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Turns {@link DepositRouting}'s decision into the live containers a deposit will really write to.
- *
- * <p>The decision itself is plain arithmetic over roles and positions; this is the half that has to
- * touch the world, so it is kept apart from it. Everything it reads is read now: the roles from the
- * terminal's own settings, the tags from its tag set, and the storages from the blocks themselves,
- * so a container broken or reassigned since the last scan is not written to.
- *
- * <p>Several variants are routed together rather than one at a time, because the terminal's
- * settings and the set of containers are the same for all of them. Emptying a full inventory means
- * routing dozens of variants at once, and asking each of them to walk the network again would make
- * the mod's headline gesture the most expensive thing it does.
- *
- * <p>Whether a container already holds an item comes from the network index, which mutations keep
- * current. Being wrong about it costs a stack landing in the second-best container rather than
- * anything a player could lose.
- */
 public final class DepositDestinations {
   private final LiveStorages live;
   private final FilterCandidateFactory candidates;
@@ -53,10 +36,6 @@ public final class DepositDestinations {
     this.candidates = Objects.requireNonNull(candidates, "candidates");
   }
 
-  /**
-   * Every container that will take each variant, in the order routing wants them tried, reading the
-   * terminal and its containers once for all of them.
-   */
   public Map<ItemVariant, List<Storage<ItemVariant>>> forVariants(
       ServerWorld world,
       BlockPos terminal,
@@ -119,10 +98,6 @@ public final class DepositDestinations {
     return containers;
   }
 
-  /**
-   * Every tag this network files the item under. Presets are computed per ADR 0011 and custom tags
-   * are stored on the terminal, so a filter naming either kind has to be matched against both.
-   */
   private static Set<String> tagsFor(TerminalSettings settings, FilterCandidate candidate) {
     final Set<String> filed = new LinkedHashSet<>(candidate.tags());
     filed.addAll(settings.tags().tagIdsFor(candidate.identifier()));

@@ -13,7 +13,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 class NetworkEligibilityRulesTest {
   @ParameterizedTest
   @CsvSource({
-    // hasItemStorage, deniedByDefault, override, expected
     "true,  false, ,      true",
     "true,  true,  ,      false",
     "false, false, ,      false",

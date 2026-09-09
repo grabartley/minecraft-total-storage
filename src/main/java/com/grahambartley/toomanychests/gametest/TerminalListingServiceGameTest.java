@@ -24,18 +24,6 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * What a screen is answered with when it asks the terminal for a page.
- *
- * <p>The paging arithmetic is exhausted in JUnit against a hand-built index. What only a world can
- * show is that a request reaches the live network at all: that the page is built from what the
- * containers hold right now, that narrowing it happens on the server before anything is paged, and
- * that a request naming a screen the player does not have open is refused rather than answered.
- *
- * <p>The page is read back rather than captured off the wire. A gametest's mock player never
- * declares the mod's channels, so a sent packet goes nowhere, and asserting on what was built is
- * the honest half of that.
- */
 public final class TerminalListingServiceGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
   private static final String BATCH = "terminal-listing";
@@ -83,11 +71,6 @@ public final class TerminalListingServiceGameTest implements FabricGameTest {
     finish(context, player);
   }
 
-  /**
-   * Searching happens against the whole index before anything is paged. Narrowing a page the client
-   * already holds could only ever search what it was sent, which is the cost paging exists to
-   * avoid.
-   */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void searchNarrowsTheWholeListingRatherThanThePage(TestContext context) {
     ServerPlayerEntity player = openTerminalWithAStockedBarrel(context);
@@ -119,7 +102,6 @@ public final class TerminalListingServiceGameTest implements FabricGameTest {
     finish(context, player);
   }
 
-  /** Per ADR 0009 the sync id is checked against the screen the server holds, never trusted. */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void aRequestNamingAScreenThePlayerDoesNotHaveOpenIsRefused(TestContext context) {
     ServerPlayerEntity player = openTerminalWithAStockedBarrel(context);
@@ -152,10 +134,6 @@ public final class TerminalListingServiceGameTest implements FabricGameTest {
     finish(context, player);
   }
 
-  /**
-   * The page a player is shown has to follow the containers rather than whatever was true when they
-   * opened the screen, which is what the push at the end of a tick is for.
-   */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void aContainerFillingUpChangesWhatTheNextPageSays(TestContext context) {
     ServerPlayerEntity player = openTerminalWithAStockedBarrel(context);
@@ -176,11 +154,6 @@ public final class TerminalListingServiceGameTest implements FabricGameTest {
     finish(context, player);
   }
 
-  /**
-   * Ranking has to survive the display names the registry actually hands out, which is the half
-   * JUnit cannot see. The index orders by identifier, so a chest boat is listed before a chest;
-   * ranking is what puts the thing the player named at the top of the grid instead.
-   */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void theClosestMatchIsListedFirstHoweverTheIndexOrderedIt(TestContext context) {
     ServerPlayerEntity player =

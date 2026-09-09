@@ -43,10 +43,6 @@ class DepositRoutingTest {
         .toList();
   }
 
-  /**
-   * The four rungs of the routing order, each proven by putting the container that should win last
-   * in the list it is chosen from.
-   */
   static Stream<Arguments> theRoutingOrder() {
     return Stream.of(
         Arguments.of(
@@ -81,7 +77,6 @@ class DepositRoutingTest {
     assertEquals(List.of(4, 3, 2, 1), order(candidates));
   }
 
-  /** ADR 0004: a path that forgets to check roles destroys trust rather than merely misbehaving. */
   @Test
   void anExcludedContainerAppearsAtNoRung() {
     List<DepositTarget> candidates = List.of(excluded(1), excluded(2), general(3, false));
@@ -113,7 +108,6 @@ class DepositRoutingTest {
             .toList());
   }
 
-  /** Two runs of the same network must agree, or no test of where an item lands means anything. */
   @Test
   void containersOnTheSameRungAreOrderedNearestToTheTerminalFirst() {
     List<DepositTarget> candidates =

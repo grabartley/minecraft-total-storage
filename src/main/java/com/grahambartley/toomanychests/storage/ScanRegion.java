@@ -6,11 +6,6 @@ import java.util.Objects;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 
-/**
- * The volume a terminal reaches: a cuboid centred on the terminal whose radius is its half-extent.
- * A cuboid rather than a sphere because discovery walks chunks, and a cuboid maps onto whole chunk
- * columns without a per-position distance test.
- */
 public record ScanRegion(BlockPos center, int radius) {
   public ScanRegion {
     Objects.requireNonNull(center, "center");
@@ -49,7 +44,6 @@ public record ScanRegion(BlockPos center, int radius) {
     return center.getZ() + radius;
   }
 
-  /** Every chunk column the cuboid touches, in a fixed order so scans are repeatable. */
   public List<ChunkPos> chunkPositions() {
     final int minChunkX = minX() >> 4;
     final int maxChunkX = maxX() >> 4;
@@ -65,10 +59,6 @@ public record ScanRegion(BlockPos center, int radius) {
     return List.copyOf(positions);
   }
 
-  /**
-   * Whether the cuboid reaches into one chunk column, which is how a terminal decides that a chunk
-   * loading or unloading somewhere in the world is any of its business.
-   */
   public boolean touchesChunk(ChunkPos chunkPos) {
     return chunkPos != null
         && chunkPos.x >= (minX() >> 4)
@@ -77,7 +67,6 @@ public record ScanRegion(BlockPos center, int radius) {
         && chunkPos.z <= (maxZ() >> 4);
   }
 
-  /** How many block positions the cuboid holds, which is what walking chunks avoids testing. */
   public long blockVolume() {
     final long side = 2L * radius + 1L;
     return side * side * side;

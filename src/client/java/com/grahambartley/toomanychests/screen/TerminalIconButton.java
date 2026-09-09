@@ -9,14 +9,6 @@ import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
-/**
- * A square toolbar button wearing the terminal's own chassis and one 12x12 glyph.
- *
- * <p>Not a vanilla {@code ButtonWidget}, because a vanilla button draws vanilla chrome and would
- * read as something bolted onto the screen rather than part of it. The three states come from the
- * sprite set rather than from a tint, so the resting, hovered and unavailable buttons differ by
- * shape and stay apart for players who cannot separate the accent from the chassis.
- */
 public final class TerminalIconButton extends ClickableWidget {
   private static final Identifier NORMAL = TerminalSprites.of("button/normal");
   private static final Identifier HOVER = TerminalSprites.of("button/hover");

@@ -19,16 +19,6 @@ import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 
-/**
- * What happens to a terminal's opinion of a container when the world takes that container away.
- *
- * <p>The assignment arithmetic is proven in JUnit. What needs a running world is that vanilla
- * removing a block entity reaches the terminal at all, and that the two ways a container can leave
- * are told apart: a break forgets what the terminal decided, an unloading chunk does not.
- *
- * <p>Chunk unloading is driven through a private registry rather than by unloading the chunk the
- * test is standing in, the same compromise {@link NetworkMembershipGameTest} makes.
- */
 public final class ContainerRoleEvictionGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
   private static final String BATCH = "container-roles";
@@ -55,10 +45,6 @@ public final class ContainerRoleEvictionGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /**
-   * The whole point of forgetting on removal: a chest placed where an excluded one stood is a
-   * container nobody has vouched for, and must not inherit the trust its predecessor was given.
-   */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void aContainerReplacedAtTheSamePositionStartsAtTheDefaultRole(TestContext context) {
     placeBarrel(context, BARREL);
@@ -113,10 +99,6 @@ public final class ContainerRoleEvictionGameTest implements FabricGameTest {
     context.complete();
   }
 
-  /**
-   * Per ADR 0014 an unloading chunk says nothing about whether its containers still exist, so a
-   * container that leaves with its chunk and comes back is the same container to its network.
-   */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void aContainerLeavingWithItsChunkKeepsItsRole(TestContext context) {
     placeBarrel(context, BARREL);
@@ -192,12 +174,6 @@ public final class ContainerRoleEvictionGameTest implements FabricGameTest {
     return context.getBlockEntity(TERMINAL);
   }
 
-  /**
-   * Removals arrive while chunks are unloading, and reading a terminal is what loads its chunk back
-   * in. A terminal a thousand blocks away in a chunk nobody has asked for is the only way to prove
-   * that reading never happens: if the removal had gone looking, the chunk would be loaded by the
-   * time it returned.
-   */
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void aRemovalNeverLoadsTheChunkTheTerminalIsIn(TestContext context) {
     final BlockPos away = farFromHere(context);

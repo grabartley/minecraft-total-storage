@@ -17,20 +17,10 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Giving a container a role, which until now was a decision the model could hold and nothing could
- * make.
- *
- * <p>ADR 0004 rests on {@code EXCLUDED} being reachable: it is what lets a player turn the rest of
- * the mod on without it rearranging a chest they curated by hand. What only a world can show is
- * that the role reaches the block entity, that a container the terminal cannot see is refused, and
- * that somebody else's terminal refuses the change outright.
- */
 public final class ContainerRoleServiceGameTest implements FabricGameTest {
   private static final String BATCH = "container-roles";
   private static final int TICK_LIMIT = 60;
 
-  /** Outside the terminal's radius, so the network has no opinion to record about it. */
   private static final BlockPos DISTANT = new BlockPos(6, 1, 6);
 
   private final ContainerRoleService roles = new ContainerRoleService();
@@ -94,10 +84,6 @@ public final class ContainerRoleServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * A network that recorded opinions about containers it cannot see would fill a save with them,
-   * and would let a forged request write an assignment for anywhere in the world.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -121,7 +107,6 @@ public final class ContainerRoleServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** ADR 0008: being let into an open terminal is not a way to reconfigure somebody else's base. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -182,14 +167,6 @@ public final class ContainerRoleServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * A row is recognised by what is in it, so it leads with the variant the container holds most of.
-   *
-   * <p>Counted across the whole container rather than per stack: sixty cobblestone split over two
-   * stacks is more cobblestone than fifty diamonds, and a container a player calls the cobblestone
-   * chest has to draw as one. The kinds are distinct variants rather than occupied slots, which is
-   * the other way the same three stacks could be counted.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
@@ -242,7 +219,6 @@ public final class ContainerRoleServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** An unpowered terminal is holding nothing, so it has nothing to list. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,

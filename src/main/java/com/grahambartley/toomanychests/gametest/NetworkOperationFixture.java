@@ -4,27 +4,24 @@ import com.grahambartley.toomanychests.ModBlocks;
 import com.grahambartley.toomanychests.access.TerminalAccessControl;
 import com.grahambartley.toomanychests.block.entity.TerminalBlockEntity;
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
+import com.grahambartley.toomanychests.filter.TagCombinationMode;
+import com.grahambartley.toomanychests.network.ListingRequestPayload;
+import com.grahambartley.toomanychests.network.ModNetworking;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenHandler;
 import com.grahambartley.toomanychests.storage.ContainerAssignment;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
+import java.util.Set;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BarrelBlockEntity;
+import net.minecraft.entity.ItemEntity;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * One terminal, its containers, and a player standing in front of it, built the same way for every
- * test of an operation.
- *
- * <p>Order matters and is the reason this is shared rather than copied: containers have to exist
- * before the terminal is powered, because per ADR 0007 powering on is the one discovery scan a
- * network gets. A test that placed a barrel afterwards would be testing an empty network and
- * passing for the wrong reason.
- */
 final class NetworkOperationFixture {
   static final String CONTAINER_PAD = "too-many-chests:container_pad";
 
@@ -32,13 +29,15 @@ final class NetworkOperationFixture {
   static final BlockPos POWER = new BlockPos(3, 1, 2);
   static final BlockPos EAST_BARREL = new BlockPos(4, 1, 3);
 
-  /** Two blocks out, so it joins the network only once the radius is widened past its default. */
   static final BlockPos FAR_BARREL = new BlockPos(5, 1, 3);
 
   static final BlockPos WEST_BARREL = new BlockPos(2, 1, 3);
   static final BlockPos STANDING = new BlockPos(3, 1, 4);
 
-  /** Big enough to reach the barrels either side of the terminal and nothing beyond the pad. */
+  static final BlockPos NORTH_TERMINAL = new BlockPos(3, 1, 1);
+
+  static final BlockPos SHARED_BARREL = new BlockPos(4, 1, 2);
+
   private static final int RADIUS = 1;
 
   private NetworkOperationFixture() {}
@@ -56,7 +55,6 @@ final class NetworkOperationFixture {
     return barrel;
   }
 
-  /** Fills every slot of a barrel so the network has nowhere left to put anything. */
   static BarrelBlockEntity fullBarrel(TestContext context, BlockPos where, Item item) {
     final BarrelBlockEntity barrel = placeBarrel(context, where);
     for (int slot = 0; slot < barrel.size(); slot++) {
@@ -66,7 +64,6 @@ final class NetworkOperationFixture {
     return barrel;
   }
 
-  /** Powers the terminal on and opens it, which is the only order a network can be built in. */
   static ServerPlayerEntity openTerminal(TestContext context) {
     final ServerPlayerEntity player = standingPlayer(context);
     placeTerminal(context, player);
@@ -74,17 +71,33 @@ final class NetworkOperationFixture {
     return player;
   }
 
-  /**
-   * A second player at the same terminal, for the races only two screens can produce. The terminal
-   * is opened up first, because a terminal is owner-locked by default per ADR 0008 and the second
-   * player is not its owner.
-   */
   static ServerPlayerEntity alsoOpen(TestContext context) {
     final ServerPlayerEntity player = standingPlayer(context);
     context
         .<TerminalBlockEntity>getBlockEntity(TERMINAL)
         .updateSettings(settings -> settings.withAccessMode(TerminalAccessMode.OPEN));
     context.useBlock(TERMINAL, player);
+    return player;
+  }
+
+  static ServerPlayerEntity openNorthTerminal(TestContext context) {
+    final ServerPlayerEntity player = standingPlayer(context);
+    context.setBlockState(NORTH_TERMINAL, ModBlocks.TERMINAL.getDefaultState());
+    ModBlocks.TERMINAL.onPlaced(
+        context.getWorld(),
+        context.getAbsolutePos(NORTH_TERMINAL),
+        context.getBlockState(NORTH_TERMINAL),
+        player,
+        ModBlocks.TERMINAL.asItem().getDefaultStack());
+    context
+        .<TerminalBlockEntity>getBlockEntity(NORTH_TERMINAL)
+        .updateSettings(settings -> settings.withRadius(RADIUS));
+    TerminalNetworks.power()
+        .signalChanged(
+            context.getWorld(),
+            context.getAbsolutePos(NORTH_TERMINAL),
+            context.getBlockState(NORTH_TERMINAL));
+    context.useBlock(NORTH_TERMINAL, player);
     return player;
   }
 
@@ -104,7 +117,6 @@ final class NetworkOperationFixture {
                     settings.containers().with(context.getAbsolutePos(container), assignment)));
   }
 
-  /** Files an item under a tag this network invented, which lives on the terminal itself. */
   static void fileUnderCustomTag(TestContext context, String tag, String itemId) {
     context
         .<TerminalBlockEntity>getBlockEntity(TERMINAL)
@@ -113,22 +125,25 @@ final class NetworkOperationFixture {
                 settings.withTags(settings.tags().withCustomTag(tag).withItem(tag, itemId)));
   }
 
-  /**
-   * Widens the terminal's configured reach without walking the region, so the next rescan has
-   * something to find. Going through {@code TerminalRadiusService} would rescan as it wrote, which
-   * is exactly what a test of rescan must not do for it.
-   */
   static void widenWithoutRescanning(TestContext context, int radius) {
     context
         .<TerminalBlockEntity>getBlockEntity(TERMINAL)
         .updateSettings(settings -> settings.withRadius(radius));
   }
 
+  static ServerPlayerEntity watching(ServerPlayerEntity player) {
+    ModNetworking.listings()
+        .request(
+            player,
+            new ListingRequestPayload(
+                handlerOf(player).syncId, 0, 10, "", TagCombinationMode.DEFAULT, Set.of()));
+    return player;
+  }
+
   static TerminalScreenHandler handlerOf(ServerPlayerEntity player) {
     return (TerminalScreenHandler) player.currentScreenHandler;
   }
 
-  /** Everything one barrel is holding, which is what a conservation check counts. */
   static long countIn(BarrelBlockEntity barrel, Item item) {
     long total = 0L;
     for (int slot = 0; slot < barrel.size(); slot++) {
@@ -152,6 +167,46 @@ final class NetworkOperationFixture {
     return cursor.isOf(item) ? total + cursor.getCount() : total;
   }
 
+  static long countInWorld(TestContext context, Item item, ServerPlayerEntity... players) {
+    final long[] total = {0L};
+    context.forEachRelativePos(where -> total[0] += countInContainerAt(context, where, item));
+    for (final ItemEntity dropped :
+        context
+            .getWorld()
+            .getEntitiesByClass(ItemEntity.class, context.getTestBox(), any -> true)) {
+      if (dropped.getStack().isOf(item)) {
+        total[0] += dropped.getStack().getCount();
+      }
+    }
+    for (final ServerPlayerEntity player : players) {
+      total[0] += countCarried(player, item);
+    }
+    return total[0];
+  }
+
+  static void assertConserved(
+      TestContext context, long before, Item item, ServerPlayerEntity... players) {
+    final long after = countInWorld(context, item, players);
+    context.assertTrue(
+        after == before,
+        "The world held " + before + " " + item.getName().getString() + " and now holds " + after);
+  }
+
+  private static long countInContainerAt(TestContext context, BlockPos where, Item item) {
+    if (!(context.getWorld().getBlockEntity(context.getAbsolutePos(where))
+        instanceof Inventory inventory)) {
+      return 0L;
+    }
+    long total = 0L;
+    for (int slot = 0; slot < inventory.size(); slot++) {
+      final ItemStack stack = inventory.getStack(slot);
+      if (stack.isOf(item)) {
+        total += stack.getCount();
+      }
+    }
+    return total;
+  }
+
   static void finish(TestContext context, ServerPlayerEntity... players) {
     for (final ServerPlayerEntity player : players) {
       player.currentScreenHandler.setCursorStack(ItemStack.EMPTY);
@@ -160,10 +215,11 @@ final class NetworkOperationFixture {
       context.getWorld().getServer().getPlayerManager().remove(player);
     }
     TerminalNetworks.power().unloaded(context.getWorld(), context.getAbsolutePos(TERMINAL));
+    TerminalNetworks.power().unloaded(context.getWorld(), context.getAbsolutePos(NORTH_TERMINAL));
     context.complete();
   }
 
-  private static ServerPlayerEntity standingPlayer(TestContext context) {
+  static ServerPlayerEntity standingPlayer(TestContext context) {
     final ServerPlayerEntity player = context.createMockCreativeServerPlayerInWorld();
     final BlockPos standing = context.getAbsolutePos(STANDING);
     player.refreshPositionAndAngles(

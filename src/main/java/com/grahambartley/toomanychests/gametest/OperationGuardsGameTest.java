@@ -18,24 +18,10 @@ import net.minecraft.test.BeforeBatch;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 
-/**
- * Pacing an expensive operation, against a real server clock and a real config.
- *
- * <p>The cooldown's arithmetic is exhausted in JUnit against handed-in numbers. What only a world
- * can show is that the guard is really consulted before anything is read, that a refused request
- * moves nothing at all, and that the operator's setting reaches it.
- *
- * <p><b>Every test here owns its batch.</b> Cooldowns and server config are JVM-global, and tests
- * within one batch run together: a probe of two tests sharing a batch showed their tick intervals
- * overlapping, while a second batch did not begin until the first had finished. So a batch is the
- * unit that is safe to change server-wide state in, and sharing one between a test that sets the
- * cooldown and a test that reads it would let either decide the other's outcome.
- */
 public final class OperationGuardsGameTest implements FabricGameTest {
   private static final int TICK_LIMIT = 60;
   private static final int STACK = 64;
 
-  /** One batch per test, because each one owns a server-wide value for its duration. */
   private static final String SET_COOLDOWN_BATCH = "guards-cooldown-set";
 
   private static final String NO_COOLDOWN_BATCH = "guards-cooldown-off";
@@ -58,12 +44,6 @@ public final class OperationGuardsGameTest implements FabricGameTest {
     OperationGuards.cooldowns().clear();
   }
 
-  /**
-   * Asking again before the cooldown is up changes nothing at all rather than half-working. The
-   * cooldown is set here rather than assumed, so the case does not depend on a default somebody
-   * could change. The inventory is what proves it: a rate limited deposit that still moved items
-   * would be a limit that costs a player their stuff in exchange for protecting the server.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = SET_COOLDOWN_BATCH,
@@ -98,7 +78,6 @@ public final class OperationGuardsGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /** A cooldown of nothing is the limit switched off, which is what the setting's floor means. */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = NO_COOLDOWN_BATCH,
@@ -126,11 +105,6 @@ public final class OperationGuardsGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, player);
   }
 
-  /**
-   * That the operator's hotbar setting really reaches the gesture. Which slots the setting names is
-   * proven in {@code PlayerSlotsGameTest} without touching server-wide state; what this adds is
-   * that the deposit reads the setting at all.
-   */
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = HOTBAR_BATCH,
@@ -172,7 +146,6 @@ public final class OperationGuardsGameTest implements FabricGameTest {
             .build());
   }
 
-  /** Put back unconditionally: anything thrown here would leave every later batch changed. */
   private static void restore(TestContext context, TooManyChestsConfig original) {
     ServerConfigService.update(context.getWorld().getServer(), original);
   }

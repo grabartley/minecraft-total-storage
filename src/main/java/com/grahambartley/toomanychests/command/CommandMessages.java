@@ -9,13 +9,6 @@ import com.grahambartley.toomanychests.terminal.TerminalRadius;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Everything the command tree says, in one place.
- *
- * <p>Each line carries its English alongside its translation key. A dedicated server's console
- * holds no resource pack, so a plain translatable line reaches the operator who most needs it as a
- * raw key, and that operator is the whole reason these commands exist.
- */
 public final class CommandMessages {
   private static final String PREFIX = "command.too-many-chests.";
 

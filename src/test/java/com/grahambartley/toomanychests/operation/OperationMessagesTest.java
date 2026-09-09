@@ -13,13 +13,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 
-/**
- * What the terminal says after every move.
- *
- * <p>The keys are asserted rather than the English, because the English is a fallback for a client
- * whose resource pack has not caught up and the key is what a translator binds to. A branch that
- * quietly reused another's key would say the wrong thing in every language but this one.
- */
 class OperationMessagesTest {
   private static final String PREFIX = "operation.too-many-chests.";
 
@@ -32,7 +25,6 @@ class OperationMessagesTest {
     return ((TranslatableTextContent) line.get().getContent()).getArgs();
   }
 
-  /** Success says nothing: the items arriving is the feedback, and a line per click is noise. */
   @Test
   void aWholeWithdrawalAndAWholeDepositSayNothing() {
     assertTrue(OperationMessages.forWithdrawal(WithdrawOutcome.moved(64L, 64L)).isEmpty());
@@ -48,7 +40,6 @@ class OperationMessagesTest {
     assertEquals(64L, argumentsOf(line)[1]);
   }
 
-  /** The three empty-handed endings are the ones a player cannot tell apart without being told. */
   @Test
   void everyEmptyHandedEndingGetsAReasonOfItsOwn() {
     assertEquals(
@@ -65,7 +56,6 @@ class OperationMessagesTest {
         keyOf(OperationMessages.forDeposit(DepositOutcome.slotLocked())));
   }
 
-  /** A lock that reports itself as an empty slot teaches a player to distrust the lock. */
   @Test
   void aLockedSlotIsToldApartFromAnEmptyOne() {
     assertFalse(
@@ -101,11 +91,6 @@ class OperationMessagesTest {
         OperationMessages.forDeposit(ending).isPresent());
   }
 
-  /**
-   * A deposit that stored everything says nothing, and one refused for pace has already been
-   * answered by the guard that refused it. Every other ending is spoken for here, because an ending
-   * nobody explains is indistinguishable from a button that did nothing.
-   */
   @Test
   void theTwoSilentEndingsAreSilentForDifferentReasons() {
     assertTrue(OperationMessages.forDeposit(DepositOutcome.stored(64L, 64L, List.of())).isEmpty());
@@ -117,7 +102,6 @@ class OperationMessagesTest {
             .getKey());
   }
 
-  /** Seconds rather than ticks, and never rounded down to "in zero seconds". */
   @ParameterizedTest
   @CsvSource({"1,1", "20,1", "21,2", "40,2", "41,3"})
   void theWaitIsReportedInWholeSecondsAndNeverInNone(long ticks, long seconds) {
@@ -138,11 +122,6 @@ class OperationMessagesTest {
     };
   }
 
-  /**
-   * The two endings that carry leftovers cannot be built without a registry to name an item, so
-   * they are exercised against a real deposit in {@code DepositServiceGameTest}. Everything here is
-   * an ending that accounts for nothing because nothing stayed behind.
-   */
   private static DepositOutcome depositEnding(DepositResult result) {
     return switch (result) {
       case DEPOSITED -> DepositOutcome.stored(64L, 64L, List.of());

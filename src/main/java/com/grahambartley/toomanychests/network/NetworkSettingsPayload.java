@@ -17,23 +17,6 @@ import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * The settings panel's answer on its way to the screen that asked for it.
- *
- * <p>Bounded on both sides of the wire by {@link NetworkSettingsView}'s own caps, so a network
- * reaching hundreds of containers costs the same packet as one reaching three.
- *
- * <p>The distance each row carries is dropped rather than sent. It exists to order the list and the
- * server has already ordered it, so sending it would be handing a client a number whose only use is
- * arithmetic the server already did. The slot counts go the same way: they are summed into the
- * network's capacity before the answer is built, and the client is sent that total rather than the
- * addends. A tally over the whole network is dropped for the same reason the panel has no room to
- * draw one: {@code /tmc terminal info} is where a network is counted.
- *
- * <p>The icon is sent, because it is the one thing on a row a client cannot work out for itself:
- * which variant a container holds most of is a fact about that container's contents, and per ADR
- * 0025 the client never sees them.
- */
 public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
     implements CustomPayload {
   public static final CustomPayload.Id<NetworkSettingsPayload> ID =
@@ -110,11 +93,6 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
             containers));
   }
 
-  /**
-   * A used count larger than the total could only come from a forged packet, and a record that
-   * refuses to hold one would take the connection down over a number nobody draws. It is clamped to
-   * something drawable instead.
-   */
   private static NetworkCapacity readCapacity(RegistryByteBuf buf) {
     final int used = Math.max(0, buf.readVarInt());
     final int total = Math.max(0, buf.readVarInt());

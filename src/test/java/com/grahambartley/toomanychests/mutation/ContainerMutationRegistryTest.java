@@ -180,6 +180,77 @@ class ContainerMutationRegistryTest {
         NullPointerException.class, () -> registry.watch(originAt(OVERWORLD, CHEST), null));
   }
 
+  @Test
+  void aListenerWatchingEverywhereHearsAboutAContainerNobodyNamed() {
+    RecordingListener listener = new RecordingListener();
+    registry.watchEverywhere(listener);
+
+    registry.publish(OVERWORLD, CHEST);
+
+    assertEquals(List.of(originAt(OVERWORLD, CHEST)), listener.changed);
+  }
+
+  @Test
+  void aListenerWatchingEverywhereHearsAboutEveryContainer() {
+    RecordingListener listener = new RecordingListener();
+    registry.watchEverywhere(listener);
+
+    registry.publish(OVERWORLD, CHEST);
+    registry.publish(NETHER, BARREL);
+
+    assertEquals(List.of(originAt(OVERWORLD, CHEST), originAt(NETHER, BARREL)), listener.changed);
+  }
+
+  @Test
+  void oneMutationTellsBothKindsOfListenerExactlyOnce() {
+    RecordingListener everywhere = new RecordingListener();
+    RecordingListener named = new RecordingListener();
+    registry.watchEverywhere(everywhere);
+    registry.watch(originAt(OVERWORLD, CHEST), named);
+
+    registry.publish(OVERWORLD, CHEST);
+
+    assertEquals(List.of(originAt(OVERWORLD, CHEST)), everywhere.changed);
+    assertEquals(List.of(originAt(OVERWORLD, CHEST)), named.changed);
+  }
+
+  @Test
+  void aListenerThatStoppedWatchingEverywhereHearsNothingMore() {
+    RecordingListener listener = new RecordingListener();
+    registry.watchEverywhere(listener);
+    registry.stopWatchingEverywhere(listener);
+
+    registry.publish(OVERWORLD, CHEST);
+
+    assertTrue(listener.changed.isEmpty());
+  }
+
+  @Test
+  void aRegistryWatchingEverywhereIsNotIdle() {
+    RecordingListener listener = new RecordingListener();
+    registry.watchEverywhere(listener);
+
+    assertFalse(registry.isIdle());
+    assertEquals(1, registry.watchedEverywhereCount());
+    assertEquals(0, registry.watchedContainerCount());
+  }
+
+  @Test
+  void clearingEmptiesBothKindsOfWatcher() {
+    registry.watchEverywhere(new RecordingListener());
+    registry.watch(originAt(OVERWORLD, CHEST), new RecordingListener());
+
+    registry.clear();
+
+    assertTrue(registry.isIdle());
+    assertEquals(0, registry.watchedEverywhereCount());
+  }
+
+  @Test
+  void watchingEverywhereNeedsAListener() {
+    assertThrows(NullPointerException.class, () -> registry.watchEverywhere(null));
+  }
+
   private static StorageOrigin originAt(RegistryKey<World> worldKey, BlockPos pos) {
     return new BlockStorageOrigin(worldKey, pos);
   }

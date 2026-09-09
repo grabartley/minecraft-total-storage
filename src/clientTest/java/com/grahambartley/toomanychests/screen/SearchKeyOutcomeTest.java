@@ -6,10 +6,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 class SearchKeyOutcomeTest {
-  /**
-   * Every state the box can be in, so escape emptying it before closing the screen and a focused
-   * box swallowing the keys a container screen would otherwise act on are both settled here.
-   */
+
   @ParameterizedTest
   @CsvSource({
     "true,true,true,CLEAR_SEARCH",

@@ -26,7 +26,6 @@ class ContainerRoleEntryTest {
     assertFalse(entry(1, 1L).isEmpty());
   }
 
-  /** A container holding nothing has no icon to draw, which the row has to be able to say. */
   @Test
   void aContainerHoldingNothingCarriesNoIcon() {
     assertTrue(entry(0, 0L).icon().isEmpty());
@@ -53,9 +52,6 @@ class ContainerRoleEntryTest {
     assertThrows(IllegalArgumentException.class, () -> entry(variants, items));
   }
 
-  /**
-   * A container cannot fill more slots than it has, which would make a network read as overfull.
-   */
   @Test
   void usingMoreSlotsThanTheContainerHasIsRefused() {
     assertThrows(
@@ -84,7 +80,6 @@ class ContainerRoleEntryTest {
                 SOMEWHERE, ContainerRole.GENERAL, Optional.empty(), 0, 0L, 0, 0, -1.0));
   }
 
-  /** Discovery scans reuse a mutable position, so a row that kept one would drift as they walk. */
   @Test
   void aMutablePositionIsCopiedRatherThanHeld() {
     BlockPos.Mutable moving = new BlockPos.Mutable(1, 2, 3);

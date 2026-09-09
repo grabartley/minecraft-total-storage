@@ -8,14 +8,6 @@ import net.minecraft.component.ComponentChanges;
 import net.minecraft.component.ComponentType;
 import net.minecraft.registry.Registries;
 
-/**
- * Encodes an item's data components as one comparable string, so two variants of the same item
- * always cluster in the same order.
- *
- * <p>The entries are sorted by component identifier before joining because {@link ComponentChanges}
- * preserves whatever order the stack was built in, and two stacks carrying identical components in
- * a different order would otherwise sort apart.
- */
 public final class DataComponentKey {
   private static final String NONE = "";
   private static final String ENTRY_SEPARATOR = ";";

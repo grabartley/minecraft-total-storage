@@ -30,18 +30,6 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * The branches of {@code /tmc terminal <pos>} that reach a network's containers rather than its
- * access list: what it is holding, what it may do with each of them, and asking it to look again.
- *
- * <p>These exist so a container role is reachable without a client mod at all, which the mod's
- * standards require of every setting. Until they did, {@code EXCLUDED} was a role the model could
- * hold and nothing could give, which made ADR 0004's whole promise unavailable to a player.
- *
- * <p>Gated inside each handler rather than with {@code requires}, for the reason {@link
- * TerminalAccessCommand} explains: who may run one depends on the terminal the position names, and
- * Brigadier settles {@code requires} before it has parsed a position.
- */
 public final class TerminalNetworkCommand {
   private static final String CONTAINER = "container";
   private static final String ROLE = "role";
@@ -79,7 +67,6 @@ public final class TerminalNetworkCommand {
     return CommandManager.literal("highlight").executes(TerminalNetworkCommand::highlight);
   }
 
-  /** Open to anyone: what a terminal reaches is what a player standing at it can already see. */
   private static int info(CommandContext<ServerCommandSource> context)
       throws CommandSyntaxException {
     final ServerCommandSource source = context.getSource();
@@ -142,7 +129,6 @@ public final class TerminalNetworkCommand {
     return outcome.applied() ? 1 : 0;
   }
 
-  /** Gated like every other verb that makes a terminal do work, and for the same reason. */
   private static int rescan(CommandContext<ServerCommandSource> context)
       throws CommandSyntaxException {
     final ServerCommandSource source = context.getSource();
@@ -163,7 +149,6 @@ public final class TerminalNetworkCommand {
     return rescanned ? 1 : 0;
   }
 
-  /** Needs a player, because an outline drawn in a world nobody is looking at reaches nobody. */
   private static int highlight(CommandContext<ServerCommandSource> context)
       throws CommandSyntaxException {
     final ServerCommandSource source = context.getSource();
@@ -200,7 +185,6 @@ public final class TerminalNetworkCommand {
     }
   }
 
-  /** A role changed from the console still has to reach whoever is looking at that terminal. */
   private static void resyncViewers(ServerCommandSource source, BlockPos terminal) {
     TerminalViewerSync.playersOn(
             source.getServer(), TerminalAddress.of(source.getWorld(), terminal))

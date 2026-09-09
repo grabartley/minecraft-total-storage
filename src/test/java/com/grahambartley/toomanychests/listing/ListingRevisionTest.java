@@ -22,7 +22,6 @@ class ListingRevisionTest {
     assertEquals(3L, revision.current());
   }
 
-  /** A screen holding no page has accepted {@code NONE}, so the very first page has to beat it. */
   @Test
   void theFirstPageIssuedBeatsHoldingNoPageAtAll() {
     assertTrue(ListingRevision.supersedes(revision.next(), ListingRevision.NONE));
