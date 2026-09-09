@@ -8,11 +8,7 @@ plugins {
 	id 'com.modrinth.minotaur' version '2.9.0'
 }
 
-version = gradle.startParameter.projectProperties.getOrDefault(
-		"version",
-		project.hasProperty("snapshotSuffix")
-				? "${project.mod_version}-${project.snapshotSuffix}"
-				: project.mod_version)
+version = gradle.startParameter.projectProperties.getOrDefault("version", project.mod_version)
 group = project.maven_group
 
 base {
