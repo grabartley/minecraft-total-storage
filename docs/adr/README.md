@@ -41,6 +41,7 @@ Shared engineering standards across all the mods in this family live in [`../sta
 | [0031](0031-expensive-operations-are-paced-per-player-and-per-operation.md) | Expensive operations are paced per player and per operation |
 | [0032](0032-a-commit-resyncs-everyone-who-can-see-it.md) | A commit resyncs everyone who can see what it moved |
 | [0033](0033-renaming-a-tag-moves-its-id.md) | Renaming a tag moves its id |
+| [0034](0034-a-linter-forbids-comments-rather-than-a-formatter-stripping-them.md) | A linter forbids comments rather than a formatter stripping them |
 
 ## Writing A New Record
 

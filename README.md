@@ -183,9 +183,9 @@ Setting names and their values tab-complete. Changes are saved to the world imme
 
 ## Development
 
-Gradle + Fabric Loom toolchain with Spotless formatting, JaCoCo coverage, Fabric GameTest, and CI/CD via GitHub Actions, sharing the workflow of [minecraft-dogs-unleashed](https://github.com/grabartley/minecraft-dogs-unleashed).
+Gradle + Fabric Loom toolchain with Spotless formatting, Checkstyle, JaCoCo coverage, Fabric GameTest, and CI/CD via GitHub Actions, sharing the workflow of [minecraft-dogs-unleashed](https://github.com/grabartley/minecraft-dogs-unleashed).
 
-- `./gradlew check` runs formatting, unit tests, and side-safety verification
+- `./gradlew check` runs formatting, unit tests, side-safety verification, and the no-comments gate
 - `./gradlew runClient` launches the dev client
 - `./gradlew runGametest` runs the in-game test suite
 
