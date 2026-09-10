@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.puppycrawl.tools.checkstyle.Checker;
@@ -19,18 +20,50 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class NoCommentsRuleTest {
 
   private static final String CONFIG = "config/checkstyle/checkstyle.xml";
   private static final String FIXTURE = "/comment-gate/CommentGateFixture.java.txt";
-  private static final int EXPECTED_VIOLATIONS = 6;
+  private static final String RULE_ID = "NoComments";
+
+  private static final List<Arguments> COMMENTS =
+      List.of(
+          Arguments.of(3, "javadoc on the type"),
+          Arguments.of(6, "a plain line comment"),
+          Arguments.of(19, "a trailing comment after code"),
+          Arguments.of(21, "a bare double slash carrying no text"),
+          Arguments.of(23, "a block comment"),
+          Arguments.of(25, "an inline block comment after code"));
+
+  private static final List<Arguments> LITERALS =
+      List.of(
+          Arguments.of(7, "a url whose slashes sit inside a string"),
+          Arguments.of(9, "block comment markers inside a string"),
+          Arguments.of(11, "a double quote character literal"),
+          Arguments.of(13, "an escaped quote followed by slashes inside a string"),
+          Arguments.of(15, "the opening delimiter of a text block"),
+          Arguments.of(16, "comment markers inside a text block"),
+          Arguments.of(17, "the closing delimiter of a text block"));
+
+  @TempDir static Path workspace;
 
   private static List<AuditEvent> violations;
+
+  static Stream<Arguments> comments() {
+    return COMMENTS.stream();
+  }
+
+  static Stream<Arguments> literals() {
+    return LITERALS.stream();
+  }
 
   @BeforeAll
   static void auditTheFixture() throws Exception {
@@ -39,35 +72,35 @@ class NoCommentsRuleTest {
     violations = audit(config, writeFixtureToDisk());
   }
 
-  @ParameterizedTest
-  @ValueSource(ints = {3, 6, 19, 21, 23, 25})
-  void everyCommentFormIsReported(int line) {
+  @ParameterizedTest(name = "line {0}, {1}")
+  @MethodSource("comments")
+  void everyCommentFormIsReported(int line, String form) {
     assertTrue(
         reportedLines().contains(line),
-        "line " + line + " carries a comment the gate failed to report");
+        "line " + line + " is " + form + ", and the gate failed to report it");
   }
 
-  @ParameterizedTest
-  @ValueSource(ints = {7, 9, 11, 13, 15, 16, 17})
-  void noStringLiteralIsMistakenForAComment(int line) {
+  @ParameterizedTest(name = "line {0}, {1}")
+  @MethodSource("literals")
+  void noStringLiteralIsMistakenForAComment(int line, String form) {
     assertFalse(
         reportedLines().contains(line),
-        "line " + line + " is a string literal the gate wrongly reported as a comment");
+        "line " + line + " is " + form + ", and the gate wrongly reported it as a comment");
   }
 
   @Test
   void theGateReportsEveryCommentAndNothingElse() {
     assertEquals(
-        EXPECTED_VIOLATIONS,
+        COMMENTS.size(),
         violations.size(),
-        "expected exactly " + EXPECTED_VIOLATIONS + " violations, got " + reportedLines());
+        "expected exactly " + COMMENTS.size() + " violations, got " + reportedLines());
   }
 
   @Test
   void everyViolationCarriesTheRuleIdSoCiOutputIsTraceable() {
     assertTrue(
-        violations.stream().allMatch(event -> "NoComments".equals(event.getModuleId())),
-        "a violation reached the build without the NoComments id");
+        violations.stream().allMatch(event -> RULE_ID.equals(event.getModuleId())),
+        "a violation reached the build without the " + RULE_ID + " id");
   }
 
   private static Set<Integer> reportedLines() {
@@ -75,12 +108,11 @@ class NoCommentsRuleTest {
   }
 
   private static File writeFixtureToDisk() throws IOException {
-    Path target = Files.createTempDirectory("comment-gate").resolve("CommentGateFixture.java");
+    Path target = workspace.resolve("CommentGateFixture.java");
     try (InputStream source = NoCommentsRuleTest.class.getResourceAsStream(FIXTURE)) {
-      assertTrue(source != null, FIXTURE + " is missing from the test resources");
+      assertNotNull(source, FIXTURE + " is missing from the test resources");
       Files.copy(source, target);
     }
-    target.toFile().deleteOnExit();
     return target.toFile();
   }
 

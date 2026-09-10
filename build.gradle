@@ -88,7 +88,7 @@ dependencies {
 	}
 
 	testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
-	testImplementation 'com.puppycrawl.tools:checkstyle:10.17.0'
+	testImplementation "com.puppycrawl.tools:checkstyle:${project.checkstyle_version}"
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testImplementation 'org.mockito:mockito-core:5.10.0'
 	testImplementation 'org.mockito:mockito-junit-jupiter:5.10.0'
@@ -152,7 +152,7 @@ jacoco {
 }
 
 checkstyle {
-	toolVersion = "10.17.0"
+	toolVersion = project.checkstyle_version
 	configFile = rootProject.file("config/checkstyle/checkstyle.xml")
 	maxWarnings = 0
 	maxErrors = 0
