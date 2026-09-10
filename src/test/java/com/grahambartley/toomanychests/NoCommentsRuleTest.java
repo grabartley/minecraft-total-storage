@@ -33,6 +33,7 @@ class NoCommentsRuleTest {
   private static final String CONFIG = "config/checkstyle/checkstyle.xml";
   private static final String FIXTURE = "/comment-gate/CommentGateFixture.java.txt";
   private static final String RULE_ID = "NoComments";
+  private static final String STANDARD = "docs/standards.md";
 
   private static final List<Arguments> COMMENTS =
       List.of(
@@ -93,14 +94,28 @@ class NoCommentsRuleTest {
     assertEquals(
         COMMENTS.size(),
         violations.size(),
-        "expected exactly " + COMMENTS.size() + " violations, got " + reportedLines());
+        "expected exactly "
+            + COMMENTS.size()
+            + " violations, got "
+            + violations.size()
+            + " at lines "
+            + reportedLines());
   }
 
   @Test
   void everyViolationCarriesTheRuleIdSoCiOutputIsTraceable() {
+    assertFalse(violations.isEmpty(), "no violations were produced, so the id proves nothing");
     assertTrue(
         violations.stream().allMatch(event -> RULE_ID.equals(event.getModuleId())),
         "a violation reached the build without the " + RULE_ID + " id");
+  }
+
+  @Test
+  void everyViolationNamesTheStandardItEnforces() {
+    assertFalse(violations.isEmpty(), "no violations were produced, so the message proves nothing");
+    assertTrue(
+        violations.stream().allMatch(event -> event.getMessage().contains(STANDARD)),
+        "a violation reached the build without pointing at " + STANDARD);
   }
 
   private static Set<Integer> reportedLines() {
