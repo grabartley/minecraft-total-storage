@@ -29,39 +29,15 @@ The Gradle `checkstyle` plugin attaches a task per source set, and `check` picks
 
 `MatchXpath` was chosen over the built-in `TodoComment` with a catch-all format, which was tried first and rejected. Checkstyle hands `TodoComment` the content `"\n"` for a bare `//`, and `"\n".split("\n")` in Java returns an empty array, so an empty comment matches nothing and passes. `MatchXpath` sees the node itself and does not care what is inside it.
 
-## Verifying The Gate
+## The Gate Tests Itself
 
-The failure mode worth guarding against is a gate that silently stops gating: a mistyped query matches nothing, reports zero violations, and reads exactly like a clean tree. Nothing in the build detects that, so re-prove the gate by hand after any edit to the query.
+The failure mode worth guarding against is a gate that silently stops gating: a mistyped query matches nothing, reports zero violations, and reads exactly like a clean tree. A verification procedure that lives in a document and relies on someone remembering to run it is the same class of failure this record exists to remove.
 
-Drop this into any source set and run `./gradlew checkstyleMain`. It must report exactly six violations, on lines 3, 6, 15, 17, 19 and 21, and none on the four string literals:
+`NoCommentsRuleTest` runs Checkstyle against the real `config/checkstyle/checkstyle.xml`, over a fixture at `src/test/resources/comment-gate/CommentGateFixture.java.txt`. The fixture is a resource rather than a source file so the gate cannot audit its own test data.
 
-```java
-package com.grahambartley.toomanychests;
+It asserts that each of the six comment forms is reported, that none of the seven literal lines is, and that the total is exactly six, so a query matching too much fails as loudly as one matching too little. The fixture covers a text block holding `//`, `/*` and `*/`, which is the case a regular expression or a hand-written lexer gets wrong.
 
-/** Javadoc on the type. */
-public final class CommentGateFixture {
-
-	// a plain line comment
-	private static final String URL = "https://example.com/a//b";
-
-	private static final String STAR = "/* not a comment */";
-
-	private static final char QUOTE = '"';
-
-	private static final String ESCAPED = "a \" // still a string";
-
-	private static final int TRAILING = 1; // a trailing comment
-
-	//
-
-	/* a block comment */
-	public int value() {
-		return 42; /* an inline block */
-	}
-}
-```
-
-A run that reports five rather than six is the `TodoComment` failure above: the bare `//` on line 17 is the one that gets missed.
+`config/checkstyle/checkstyle.xml` is declared an input of the `test` task. Without that, editing the query leaves the test up to date and Gradle skips it, which is precisely the silent failure being guarded against.
 
 ## Consequences
 
@@ -73,4 +49,5 @@ The drawbacks accepted:
 - **Consumers of the published sources jar get no hover documentation.** The build publishes sources via `withSourcesJar()`, and a reader outside this repository has no javadoc and no access to these records unless they find the repository. The API surface is small and the names are long, which is the bet being made.
 - **A genuinely surprising piece of code has nowhere in-file to explain itself.** That pressure is intended. It is meant to push the explanation into a record here, or push the code into a shape that does not need one, and it will occasionally be the wrong answer for a truly obscure workaround.
 - **A second tool now runs on every build.** Checkstyle is configured with exactly one rule and is not a general style gate. Growing it into one is a separate decision, and it should be resisted while Spotless and `googleJavaFormat` own formatting.
-- **Only this repository is covered.** The standard is shared across the five mods in the family, and the other four still hold the rule by memory alone.
+- **A comment-only file with no type declaration is not caught.** A `.java` file whose entire content is `// orphan`, with no `package` statement and no type, audits clean. Anything carrying a `package` line is caught, `package-info.java` javadoc included, so this is unreachable in a real source tree, but it is a hole rather than a guarantee.
+- **The wider family is in a worse state than this record can fix.** `docs/standards.md` is nominally shared across the five mods, and has in practice diverged into four copies, two of them absent. Dogs Unleashed and Loot Lock carry no `docs/standards.md` at all, and hold comments in 158 of 364 and 43 of 119 Java files respectively. More Arrows and Teleport Effects state the opposite rule, that comments explain why when the reason is genuinely surprising, while Teleport Effects holds comments in 159 of 225 files and More Arrows in none. More Doors states a no-comments rule and keeps it. Bringing the other four into line, and reconciling the document itself, is separate work and is not attempted here.

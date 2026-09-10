@@ -88,6 +88,7 @@ dependencies {
 	}
 
 	testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
+	testImplementation 'com.puppycrawl.tools:checkstyle:10.17.0'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testImplementation 'org.mockito:mockito-core:5.10.0'
 	testImplementation 'org.mockito:mockito-junit-jupiter:5.10.0'
@@ -123,6 +124,10 @@ java {
 
 test {
 	useJUnitPlatform()
+	inputs
+		.file(rootProject.file("config/checkstyle/checkstyle.xml"))
+		.withPropertyName("noCommentsGateConfig")
+		.withPathSensitivity(PathSensitivity.RELATIVE)
 	testLogging {
 		events "passed", "skipped", "failed"
 		exceptionFormat "full"
@@ -151,13 +156,6 @@ checkstyle {
 	configFile = rootProject.file("config/checkstyle/checkstyle.xml")
 	maxWarnings = 0
 	maxErrors = 0
-}
-
-tasks.withType(Checkstyle).configureEach {
-	reports {
-		xml.required = true
-		html.required = true
-	}
 }
 
 jacocoTestReport {
