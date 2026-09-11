@@ -4,6 +4,7 @@ import com.grahambartley.toomanychests.access.TerminalCaller;
 import com.grahambartley.toomanychests.terminal.TerminalLookup;
 import com.grahambartley.toomanychests.terminal.TerminalSettings;
 import java.util.Optional;
+import java.util.function.Predicate;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.util.math.BlockPos;
 
@@ -23,21 +24,16 @@ final class TerminalCommandGate {
   }
 
   private static Optional<TerminalSettings> permitted(
-      ServerCommandSource source, BlockPos pos, TerminalPermission permission) {
+      ServerCommandSource source, BlockPos pos, Predicate<TerminalSettings> permission) {
     final Optional<TerminalSettings> settings = TerminalLookup.settingsAt(source.getWorld(), pos);
     if (settings.isEmpty()) {
       source.sendError(CommandMessages.noTerminalAt(pos));
       return Optional.empty();
     }
-    if (!permission.allows(settings.get())) {
+    if (!permission.test(settings.get())) {
       source.sendError(CommandMessages.terminalNotYours(pos));
       return Optional.empty();
     }
     return settings;
-  }
-
-  @FunctionalInterface
-  private interface TerminalPermission {
-    boolean allows(TerminalSettings settings);
   }
 }

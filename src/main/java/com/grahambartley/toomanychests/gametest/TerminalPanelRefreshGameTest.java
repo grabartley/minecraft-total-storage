@@ -4,6 +4,7 @@ import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.config.TooManyChestsConfig;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenHandler;
 import com.grahambartley.toomanychests.terminal.ContainerEligibilityRefresh;
+import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import java.util.Map;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.server.MinecraftServer;
@@ -16,6 +17,7 @@ import net.minecraft.test.TestContext;
 public final class TerminalPanelRefreshGameTest implements FabricGameTest {
   private static final String BATCH = "terminal-panel-refresh";
   private static final int TICK_LIMIT = 60;
+  private static final int SETTLE_TICKS = 4;
 
   @BeforeBatch(batchId = BATCH)
   public void seedFromTheWorldsConfig(ServerWorld world) {
@@ -34,15 +36,25 @@ public final class TerminalPanelRefreshGameTest implements FabricGameTest {
     TerminalScreenHandler handler = NetworkOperationFixture.handlerOf(owner);
     long before = handler.listing().revision();
     TooManyChestsConfig original = ServerConfigService.current();
-
     ServerConfigService.update(server(context), excludeBarrels(original));
-    long after = handler.listing().revision();
-    ServerConfigService.update(server(context), original);
 
-    context.assertTrue(
-        after > before,
-        "A watching player should have been pushed the rebuilt network, stamp stayed at " + before);
-    NetworkOperationFixture.finish(context, owner);
+    context.runAtTick(
+        context.getTick() + SETTLE_TICKS,
+        () -> {
+          long after = handler.listing().revision();
+          int held =
+              TerminalNetworks.power()
+                  .containerCount(
+                      context.getWorld(), context.getAbsolutePos(NetworkOperationFixture.TERMINAL));
+          ServerConfigService.update(server(context), original);
+
+          context.assertTrue(held == 0, "Excluding barrels should have emptied the network");
+          context.assertTrue(
+              after > before,
+              "A watching player should have been pushed the rebuilt network, stamp stayed at "
+                  + before);
+          NetworkOperationFixture.finish(context, owner);
+        });
   }
 
   private static TooManyChestsConfig excludeBarrels(TooManyChestsConfig base) {

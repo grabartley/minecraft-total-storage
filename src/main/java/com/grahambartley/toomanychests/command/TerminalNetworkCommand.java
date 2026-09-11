@@ -1,8 +1,6 @@
 package com.grahambartley.toomanychests.command;
 
 import com.grahambartley.toomanychests.config.ServerConfigService;
-import com.grahambartley.toomanychests.network.ModNetworking;
-import com.grahambartley.toomanychests.network.TerminalSettingsNetworking;
 import com.grahambartley.toomanychests.operation.ExpensiveOperation;
 import com.grahambartley.toomanychests.operation.OperationGuards;
 import com.grahambartley.toomanychests.screenhandler.TerminalViewerSync;
@@ -189,12 +187,6 @@ public final class TerminalNetworkCommand {
   }
 
   private static void resyncViewers(ServerCommandSource source, BlockPos terminal) {
-    TerminalViewerSync.playersOn(
-            source.getServer(), TerminalAddress.of(source.getWorld(), terminal))
-        .forEach(
-            viewer -> {
-              TerminalSettingsNetworking.panels().refresh(viewer);
-              ModNetworking.listings().refresh(viewer);
-            });
+    TerminalViewerSync.refresh(source.getServer(), TerminalAddress.of(source.getWorld(), terminal));
   }
 }

@@ -3,14 +3,14 @@ package com.grahambartley.toomanychests.screenhandler;
 import com.grahambartley.toomanychests.config.ServerConfigChanges;
 import com.grahambartley.toomanychests.config.ServerConfigListener;
 import com.grahambartley.toomanychests.config.TooManyChestsConfig;
-import com.grahambartley.toomanychests.network.ModNetworking;
-import com.grahambartley.toomanychests.network.TerminalSettingsNetworking;
+import com.grahambartley.toomanychests.lifecycle.NextTick;
 import com.grahambartley.toomanychests.terminal.TerminalAddress;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
 
 public final class TerminalPanelRefresh implements ServerConfigListener {
+  private static final Object PENDING = new Object();
+
   public static void register() {
     ServerConfigChanges.subscribe(new TerminalPanelRefresh());
   }
@@ -20,11 +20,12 @@ public final class TerminalPanelRefresh implements ServerConfigListener {
     if (server == null || config == null) {
       return;
     }
+    NextTick.queue().submit(PENDING, () -> refreshEveryViewer(server));
+  }
+
+  private static void refreshEveryViewer(MinecraftServer server) {
     for (final TerminalAddress terminal : TerminalNetworks.registry().addresses()) {
-      for (final ServerPlayerEntity viewer : TerminalViewerSync.playersOn(server, terminal)) {
-        TerminalSettingsNetworking.panels().refresh(viewer);
-        ModNetworking.listings().refresh(viewer);
-      }
+      TerminalViewerSync.refresh(server, terminal);
     }
   }
 }

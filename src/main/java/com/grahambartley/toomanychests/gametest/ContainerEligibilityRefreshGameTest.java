@@ -1,6 +1,8 @@
 package com.grahambartley.toomanychests.gametest;
 
+import com.grahambartley.toomanychests.config.ConfigBuilder;
 import com.grahambartley.toomanychests.config.ServerConfigService;
+import com.grahambartley.toomanychests.config.SortOrdering;
 import com.grahambartley.toomanychests.config.TooManyChestsConfig;
 import com.grahambartley.toomanychests.lifecycle.NetworkMembership;
 import com.grahambartley.toomanychests.terminal.ContainerEligibilityRefresh;
@@ -92,14 +94,22 @@ public final class ContainerEligibilityRefreshGameTest implements FabricGameTest
     TooManyChestsConfig original = ServerConfigService.current();
     NetworkMembership before = network(context);
 
-    ServerConfigService.update(
-        server(context), original.withContainerEligibilityOverrides(Map.of()));
+    ServerConfigService.update(server(context), withOtherOrdering(original));
     NetworkMembership after = network(context);
     ServerConfigService.update(server(context), original);
 
     context.assertTrue(
         before == after, "A config change that moves no eligibility should scan nothing");
     NetworkOperationFixture.finish(context, owner);
+  }
+
+  private static TooManyChestsConfig withOtherOrdering(TooManyChestsConfig base) {
+    return ConfigBuilder.from(base)
+        .sortOrdering(
+            base.sortOrdering() == SortOrdering.REGISTRY_ID
+                ? SortOrdering.DISPLAY_NAME
+                : SortOrdering.REGISTRY_ID)
+        .build();
   }
 
   private static TooManyChestsConfig override(TooManyChestsConfig base, boolean eligible) {

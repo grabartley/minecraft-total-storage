@@ -3,7 +3,6 @@ package com.grahambartley.toomanychests;
 import com.grahambartley.toomanychests.access.TerminalAccessControl;
 import com.grahambartley.toomanychests.command.TooManyChestsCommand;
 import com.grahambartley.toomanychests.config.ServerConfigService;
-import com.grahambartley.toomanychests.config.TooManyChestsConfig;
 import com.grahambartley.toomanychests.lifecycle.ContainerLifecycle;
 import com.grahambartley.toomanychests.lifecycle.NextTick;
 import com.grahambartley.toomanychests.lifecycle.ServerThread;
@@ -63,7 +62,6 @@ public class TooManyChests implements ModInitializer {
           PayloadCapLog.clear();
           ContainerMutations.registry().clear();
           ContainerLifecycle.registry().clear();
-          ContainerEligibilityRefresh.seedFrom(TooManyChestsConfig.defaults());
         });
     LOGGER.info("Too Many Chests initialized");
   }

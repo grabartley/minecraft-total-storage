@@ -14,7 +14,7 @@ public final class ContainerEligibilityRefresh implements ServerConfigListener {
   private final TerminalPower power;
   private final ContainerEligibilityWatch overrides = new ContainerEligibilityWatch();
 
-  public ContainerEligibilityRefresh(TerminalPower power) {
+  private ContainerEligibilityRefresh(TerminalPower power) {
     this.power = Objects.requireNonNull(power, "power");
   }
 
