@@ -7,17 +7,12 @@ import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 
 public final class TerminalIconButton extends ClickableWidget {
-  private static final Identifier NORMAL = TerminalSprites.of("button/normal");
-  private static final Identifier HOVER = TerminalSprites.of("button/hover");
-  private static final Identifier DISABLED = TerminalSprites.of("button/disabled");
-
-  private final Identifier icon;
+  private final TerminalSprite icon;
   private final Runnable onPress;
 
-  public TerminalIconButton(int x, int y, Identifier icon, Text label, Runnable onPress) {
+  public TerminalIconButton(int x, int y, TerminalSprite icon, Text label, Runnable onPress) {
     super(x, y, TerminalScreenLayout.BUTTON_SIZE, TerminalScreenLayout.BUTTON_SIZE, label);
     this.icon = Objects.requireNonNull(icon, "icon");
     this.onPress = Objects.requireNonNull(onPress, "onPress");
@@ -26,20 +21,14 @@ public final class TerminalIconButton extends ClickableWidget {
 
   @Override
   protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
-    context.drawGuiTexture(chromeFor(), getX(), getY(), getWidth(), getHeight());
-    context.drawGuiTexture(
-        icon,
+    TerminalChrome.controlOrUnavailable(active, isSelected())
+        .draw(context, getX(), getY(), getWidth(), getHeight());
+    icon.draw(
+        context,
         getX() + TerminalScreenLayout.ICON_INSET,
         getY() + TerminalScreenLayout.ICON_INSET,
         TerminalScreenLayout.ICON_SIZE,
         TerminalScreenLayout.ICON_SIZE);
-  }
-
-  private Identifier chromeFor() {
-    if (!active) {
-      return DISABLED;
-    }
-    return isSelected() ? HOVER : NORMAL;
   }
 
   @Override

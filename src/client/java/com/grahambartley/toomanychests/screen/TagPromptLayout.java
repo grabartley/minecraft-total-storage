@@ -5,7 +5,7 @@ import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
 public final class TagPromptLayout {
   public static final int NO_ROW = -1;
 
-  public static final int WIDTH = 172;
+  public static final int WIDTH = TerminalScreenLayout.GRID_WIDTH;
 
   public static final int PADDING = 6;
 
@@ -15,7 +15,7 @@ public final class TagPromptLayout {
 
   public static final int ROW_HEIGHT = 12;
 
-  public static final int VISIBLE_ROWS = 5;
+  public static final int VISIBLE_ROWS = 4;
 
   public static final int HEADING_HEIGHT = LINE_HEIGHT + GAP;
 
@@ -28,12 +28,16 @@ public final class TagPromptLayout {
 
   public static final int CHECK_SIZE = 8;
 
+  public static final int CHECK_BORDER = 1;
+
+  public static final int TICK_SIZE = CHECK_SIZE - 2 * CHECK_BORDER;
+
   public static final int TEXT_MARGIN = 3;
 
   private TagPromptLayout() {}
 
   public static int left() {
-    return TerminalScreenLayout.GRID_X + (TerminalScreenLayout.GRID_WIDTH - WIDTH) / 2;
+    return TerminalScreenLayout.GRID_X;
   }
 
   public static int top() {

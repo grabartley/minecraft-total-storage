@@ -26,7 +26,7 @@ public final class TerminalSettingsLayout {
 
   public static final int CONTENT_HEIGHT = PANEL_HEIGHT - SECTION_TAB_HEIGHT - SECTION_GAP;
 
-  public static final int ROW_HEIGHT = 20;
+  public static final int ROW_HEIGHT = TerminalScreenLayout.SLOT_SIZE;
 
   public static final int ROWS = CONTENT_HEIGHT / ROW_HEIGHT;
 

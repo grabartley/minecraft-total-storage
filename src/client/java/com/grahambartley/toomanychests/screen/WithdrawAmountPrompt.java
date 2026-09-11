@@ -8,21 +8,14 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 
 public final class WithdrawAmountPrompt {
-  private static final Identifier PANEL = TerminalSprites.of("panel/inset");
-  private static final Identifier FIELD = TerminalSprites.of("search/box_focused");
-
   private static final int PADDING = 8;
   private static final int LINE_HEIGHT = 9;
   private static final int FIELD_HEIGHT = 12;
   private static final int GAP = 4;
 
   private static final int MIN_WIDTH = 120;
-
-  private static final int LABEL_COLOUR = 0xE4E9F2;
-  private static final int HINT_COLOUR = 0x9AA3B3;
 
   private static final float ELEVATION = 300.0F;
 
@@ -85,11 +78,13 @@ public final class WithdrawAmountPrompt {
 
     context.getMatrices().push();
     context.getMatrices().translate(0.0F, 0.0F, ELEVATION);
-    context.drawGuiTexture(PANEL, left, top, width, height);
+    TerminalSprite.PANEL.draw(context, left, top, width, height);
     int lineY = top + PADDING;
-    lineY = drawLines(context, textRenderer, heading, left, lineY, width, LABEL_COLOUR) + GAP;
-    lineY = drawLines(context, textRenderer, available, left, lineY, width, HINT_COLOUR) + GAP;
-    context.drawGuiTexture(FIELD, left + PADDING, lineY, inner, FIELD_HEIGHT);
+    lineY =
+        drawLines(context, textRenderer, heading, left, lineY, width, VanillaPalette.LABEL) + GAP;
+    lineY =
+        drawLines(context, textRenderer, available, left, lineY, width, VanillaPalette.MUTED) + GAP;
+    TerminalSprite.FIELD_FOCUSED.draw(context, left + PADDING, lineY, inner, FIELD_HEIGHT);
     drawLines(
         context,
         textRenderer,
@@ -97,8 +92,9 @@ public final class WithdrawAmountPrompt {
         left,
         lineY + 2,
         width,
-        LABEL_COLOUR);
-    drawLines(context, textRenderer, hint, left, lineY + FIELD_HEIGHT + GAP, width, HINT_COLOUR);
+        VanillaPalette.FIELD_TEXT);
+    drawLines(
+        context, textRenderer, hint, left, lineY + FIELD_HEIGHT + GAP, width, VanillaPalette.MUTED);
     context.getMatrices().pop();
   }
 

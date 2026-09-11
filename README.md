@@ -20,6 +20,8 @@ Each terminal reaches as far as its own radius, a cube centred on the block, and
 
 Right-click a powered terminal you are allowed to open and its screen comes up, showing the terminal's own window above your inventory. Two players can have the same terminal open at once, each with their own screen, and a change either of them commits refreshes both.
 
+The window is a Minecraft window. Its chassis, its bevels, its slot frames and its label grey are vanilla's own, copied out of the game's textures rather than designed to sit beside them, and a grid cell is a vanilla slot: eighteen pixels with the item at the same inset a chest uses, so the grid's nine columns line up with the nine of your inventory underneath. Hovering, counts, durability bars and cooldown sweeps are drawn by the game's own calls, so an item in the grid renders exactly as it does in a chest. One colour is the mod's own, a redstone red, and it marks a row that is switched on or armed: a tag that is filtering, a container the network may not write to, and a tag armed for deletion. See [ADR 0035](docs/adr/0035-the-terminal-wears-vanillas-chrome.md).
+
 The screen is not a container. What the network holds is far more than a container screen can address, so the listing is paged and every operation is resolved by the server against the containers as they stand, rather than against a slot the client picked. See [ADR 0025](docs/adr/0025-the-network-is-not-an-inventory.md) and [ADR 0009](docs/adr/0009-clients-send-intent.md).
 
 Searching and filtering narrow the whole network rather than the page you are looking at, because the server does the narrowing before it sends anything back. The listing also keeps itself current: a chest filling up behind you changes the numbers on screen without you touching anything. See [ADR 0027](docs/adr/0027-the-listing-is-narrowed-on-the-server.md).
@@ -197,4 +199,4 @@ Gradle + Fabric Loom toolchain with Spotless formatting, Checkstyle, JaCoCo cove
 - [`docs/terminal-block-art.md`](docs/terminal-block-art.md) is the reference for the terminal block's textures, models and sounds, and the blockstate it needs
 - [`docs/terminal-gui-sprites.md`](docs/terminal-gui-sprites.md) is the sprite reference for the terminal screen, and how to edit the art
 - [`docs/locked-slot-art.md`](docs/locked-slot-art.md) is the lock badge reference, and how a locked slot signals itself without relying on colour
-- [`docs/sort-button-art.md`](docs/sort-button-art.md) is the sort button reference, and why it wears vanilla's greys rather than the terminal's
+- [`docs/sort-button-art.md`](docs/sort-button-art.md) is the sort button reference, and why a button drawn on someone else's screen still needs its own art

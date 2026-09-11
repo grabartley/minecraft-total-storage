@@ -35,7 +35,7 @@ Because the badge is 7x8 of a 16x16 slot it covers just over a fifth of the item
 
 ## Why The Badge Reads Everywhere
 
-The badge is a padlock in light `E4E9F2` under a one pixel dark `22262E` outline that closes all the way around, including inside the shackle's arch. Two tones is what makes it independent of whatever is behind it:
+The badge is a padlock in `FFFFFF` under a one pixel `000000` outline that closes all the way around, including inside the shackle's arch. Both are vanilla's own, from the palette in [`terminal-gui-sprites.md`](terminal-gui-sprites.md), and they are the two furthest apart it holds, which is what this badge needs. Two tones is what makes it independent of whatever is behind it:
 
 - Against a **bright** item such as glowstone dust, the dark outline separates it.
 - Against a **dark** item such as coal, the light fill separates it.

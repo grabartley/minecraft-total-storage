@@ -5,10 +5,6 @@ import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
 import net.minecraft.text.Text;
 
 public final class ContainerRowText {
-  private static final int GENERAL_COLOUR = 0xE4E9F2;
-  private static final int FILTERED_COLOUR = 0x9CF0C2;
-  private static final int EXCLUDED_COLOUR = 0xED6353;
-
   private ContainerRowText() {}
 
   public static Text contents(ContainerRoleEntry entry) {
@@ -33,9 +29,8 @@ public final class ContainerRowText {
 
   public static int roleColour(ContainerRole role) {
     return switch (role == null ? ContainerRole.DEFAULT : role) {
-      case GENERAL -> GENERAL_COLOUR;
-      case FILTERED -> FILTERED_COLOUR;
-      case EXCLUDED -> EXCLUDED_COLOUR;
+      case GENERAL, FILTERED -> VanillaPalette.LABEL;
+      case EXCLUDED -> VanillaPalette.ACCENT;
     };
   }
 }

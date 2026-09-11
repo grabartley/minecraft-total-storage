@@ -8,19 +8,8 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 
 public final class TagAssignmentPrompt {
-  private static final Identifier PANEL = TerminalSprites.of("panel/inset");
-  private static final Identifier ROW = TerminalSprites.of("filter/row");
-  private static final Identifier ROW_HOVER = TerminalSprites.of("filter/row_hover");
-  private static final Identifier ROW_ACTIVE = TerminalSprites.of("filter/row_active");
-  private static final Identifier CHECKED = TerminalSprites.of("slot/cell_selected");
-  private static final Identifier UNCHECKED = TerminalSprites.of("slot/cell");
-
-  private static final int LABEL_COLOUR = 0xE4E9F2;
-  private static final int HINT_COLOUR = 0x9AA3B3;
-  private static final int PRESET_COLOUR = 0x6D7484;
 
   private static final float ELEVATION = 300.0F;
 
@@ -79,7 +68,7 @@ public final class TagAssignmentPrompt {
     final int top = originY + TagPromptLayout.top();
     context.getMatrices().push();
     context.getMatrices().translate(0.0F, 0.0F, ELEVATION);
-    context.drawGuiTexture(PANEL, left, top, TagPromptLayout.WIDTH, TagPromptLayout.HEIGHT);
+    TerminalSprite.PANEL.draw(context, left, top, TagPromptLayout.WIDTH, TagPromptLayout.HEIGHT);
     drawHeading(context, textRenderer, left, top);
     drawRows(context, textRenderer, view, originX, originY, mouseX, mouseY);
     drawFooter(context, textRenderer, view, matching, left, top);
@@ -95,7 +84,7 @@ public final class TagAssignmentPrompt {
         trimmed,
         left + TagPromptLayout.PADDING,
         top + TagPromptLayout.PADDING,
-        LABEL_COLOUR,
+        VanillaPalette.LABEL,
         false);
   }
 
@@ -134,19 +123,23 @@ public final class TagAssignmentPrompt {
       boolean hovered,
       int left,
       int top) {
-    context.drawGuiTexture(
-        carried ? ROW_ACTIVE : hovered ? ROW_HOVER : ROW,
-        left,
-        top,
-        TagPromptLayout.ROW_WIDTH,
-        TagPromptLayout.ROW_HEIGHT);
+    TerminalChrome.drawRow(
+        context, hovered, left, top, TagPromptLayout.ROW_WIDTH, TagPromptLayout.ROW_HEIGHT);
     final int checkInset = (TagPromptLayout.ROW_HEIGHT - TagPromptLayout.CHECK_SIZE) / 2;
-    context.drawGuiTexture(
-        carried ? CHECKED : UNCHECKED,
+    TerminalSprite.SUNKEN.draw(
+        context,
         left + checkInset,
         top + checkInset,
         TagPromptLayout.CHECK_SIZE,
         TagPromptLayout.CHECK_SIZE);
+    if (carried) {
+      TerminalSprite.CHECK.draw(
+          context,
+          left + checkInset + TagPromptLayout.CHECK_BORDER,
+          top + checkInset + TagPromptLayout.CHECK_BORDER,
+          TagPromptLayout.TICK_SIZE,
+          TagPromptLayout.TICK_SIZE);
+    }
     final int textLeft =
         left + checkInset + TagPromptLayout.CHECK_SIZE + TagPromptLayout.TEXT_MARGIN;
     final OrderedText name =
@@ -159,7 +152,9 @@ public final class TagAssignmentPrompt {
         name,
         textLeft,
         top + (TagPromptLayout.ROW_HEIGHT - TagPromptLayout.LINE_HEIGHT) / 2 + 1,
-        tag.immutable() ? PRESET_COLOUR : carried ? LABEL_COLOUR : HINT_COLOUR,
+        tag.immutable()
+            ? VanillaPalette.DISABLED
+            : carried ? VanillaPalette.LABEL : VanillaPalette.MUTED,
         false);
   }
 
@@ -181,7 +176,7 @@ public final class TagAssignmentPrompt {
         trimmed,
         left + TagPromptLayout.PADDING,
         top + TagPromptLayout.HEIGHT - TagPromptLayout.PADDING - TagPromptLayout.LINE_HEIGHT,
-        HINT_COLOUR,
+        VanillaPalette.MUTED,
         false);
   }
 }

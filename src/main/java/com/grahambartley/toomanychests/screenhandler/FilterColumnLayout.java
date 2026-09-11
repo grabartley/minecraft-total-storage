@@ -35,7 +35,7 @@ public final class FilterColumnLayout {
 
   public static final int ROW_WIDTH = WIDTH - SCROLLBAR_WIDTH - 1;
 
-  public static final int TEXT_MARGIN = 2;
+  public static final int TEXT_MARGIN = 4;
 
   private FilterColumnLayout() {}
 

@@ -64,15 +64,17 @@ Every state differs from its neighbour by shape and not only by colour, the same
 | Resting → held | The bevel inverts and the glyph moves down and right by one pixel |
 | Resting → disabled | The bevel is removed entirely and the button reads flat |
 
-The hover ring is white rather than dark, and that is not a free choice. The glyph runs edge to edge inside its 8x8 area: the bars start hard against the left of it and the arrowhead ends hard against the right. A dark ring in the gutter sits directly against both and swallows them, so the mark loses its ends exactly when the player is pointing at it. A white ring separates the glyph instead of absorbing it, and closing the highlight all the way round is a shape the resting button does not have.
+The hover ring is white rather than dark, and that is not a free choice. The glyph runs edge to edge inside its 8x8 area: the bars start hard against the left of it and the arrowhead ends hard against the right. A dark ring in the gutter sits directly against both and swallows them, so the mark loses its ends exactly when the player is pointing at it. A white ring separates the glyph instead of absorbing it, and closing the highlight all the way round is a shape the resting button does not have. It is also the whole of the hover cue: the face stays `C6C6C6`, because a lit face would need a grey vanilla does not paint.
 
 The held state deliberately lands on vanilla's own recessed treatment: a dark outline, a dark top-left edge, a light bottom-right edge and an `8B8B8B` face is exactly how vanilla draws an inventory slot. A held button reading as a recess is the point, and the state lasts only as long as the mouse is down.
 
-Disabled keeps the glyph rather than hiding it, at `6E6E6E` instead of `404040`. A button that empties out reads as broken; a button that goes flat and quiet reads as unavailable.
+Disabled keeps the glyph rather than hiding it, at `8B8B8B` instead of `404040`. A button that empties out reads as broken; a button that goes flat and quiet reads as unavailable.
 
 ## Palette
 
 Vanilla's container chrome, sampled from `textures/gui/container/generic_54.png`.
+
+This is the same palette every other sprite in the mod uses, and it is listed in full in [`terminal-gui-sprites.md`](terminal-gui-sprites.md). The button needs six of its keys:
 
 | Key | Hex | Role |
 |---|---|---|
@@ -80,10 +82,8 @@ Vanilla's container chrome, sampled from `textures/gui/container/generic_54.png`
 | `W` | `FFFFFF` | Bevel highlight, up and left |
 | `K` | `555555` | Bevel shadow, down and right |
 | `M` | `C6C6C6` | Vanilla container face |
-| `L` | `DBDBDB` | Vanilla container face, lit for hover |
-| `D` | `8B8B8B` | Vanilla chassis shadow, the held face and the disabled chrome |
+| `D` | `8B8B8B` | Vanilla chassis shadow, the held face and the disabled glyph |
 | `o` | `404040` | Glyph, vanilla's label dark |
-| `g` | `6E6E6E` | Glyph, muted for disabled |
 
 ## Editing A Sprite
 

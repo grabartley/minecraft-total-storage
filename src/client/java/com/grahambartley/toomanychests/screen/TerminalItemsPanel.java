@@ -8,25 +8,19 @@ import java.util.Optional;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.ingame.HandledScreen;
+import net.minecraft.item.ItemStack;
 import net.minecraft.text.OrderedText;
-import net.minecraft.util.Identifier;
 
 public final class TerminalItemsPanel {
-  private static final Identifier CELL = TerminalSprites.of("slot/cell");
-  private static final Identifier CELL_HOVER = TerminalSprites.of("slot/cell_hover");
-  private static final Identifier SCROLL_TRACK = TerminalSprites.of("scroll/track");
-  private static final Identifier SCROLL_THUMB = TerminalSprites.of("scroll/thumb");
-  private static final Identifier SCROLL_THUMB_DISABLED =
-      TerminalSprites.of("scroll/thumb_disabled");
-
   private static final int ITEM_SIZE = 16;
   private static final int LINE_HEIGHT = 9;
 
   private static final float COUNT_ELEVATION = 200.0F;
 
-  private static final int COUNT_COLOUR = 0xFFFFFF;
+  private static final String NO_STACK_COUNT = "";
 
-  private static final int PLACEHOLDER_COLOUR = 0x9AA3B3;
+  private static final int SAME_LAYER = 0;
 
   private final ListingScroll scroll =
       new ListingScroll(TerminalScreenLayout.LISTING_COLUMNS, TerminalScreenLayout.LISTING_ROWS);
@@ -60,47 +54,38 @@ public final class TerminalItemsPanel {
     if (!page.status().hasRows()) {
       return TerminalScreenLayout.NO_CELL;
     }
-    final int cell = TerminalScreenLayout.cellAt(windowX, windowY);
-    if (cell == TerminalScreenLayout.NO_CELL || rowAt(cell) == null) {
-      return TerminalScreenLayout.NO_CELL;
-    }
-    return cell;
+    return TerminalScreenLayout.cellAt(windowX, windowY);
   }
 
   public ListingRow<ItemVariant> rowAt(int cell) {
     return page.at(scroll.firstIndex() + cell);
   }
 
-  public void drawCells(DrawContext context, int originX, int originY, int hovered) {
+  public void drawCells(DrawContext context, int originX, int originY) {
     if (placeholder.isPresent()) {
       return;
     }
     for (int cell = 0; cell < TerminalScreenLayout.LISTING_PAGE_SIZE; cell++) {
-      context.drawGuiTexture(
-          cell == hovered ? CELL_HOVER : CELL,
+      TerminalSprite.SUNKEN.draw(
+          context,
           originX + TerminalScreenLayout.cellX(cell),
           originY + TerminalScreenLayout.cellY(cell),
-          TerminalScreenLayout.CELL_SIZE,
-          TerminalScreenLayout.CELL_SIZE);
+          TerminalScreenLayout.SLOT_SIZE,
+          TerminalScreenLayout.SLOT_SIZE);
     }
   }
 
   public void drawScrollbar(DrawContext context, int originX, int originY) {
-    context.drawGuiTexture(
-        SCROLL_TRACK,
+    TerminalChrome.drawScrollbar(
+        context,
+        scrollbar,
         originX + TerminalScreenLayout.SCROLLBAR_X,
         originY + TerminalScreenLayout.SCROLLBAR_Y,
         TerminalScreenLayout.SCROLLBAR_WIDTH,
         TerminalScreenLayout.SCROLLBAR_HEIGHT);
-    context.drawGuiTexture(
-        scrollbar.isEnabled() ? SCROLL_THUMB : SCROLL_THUMB_DISABLED,
-        originX + TerminalScreenLayout.SCROLLBAR_X,
-        originY + TerminalScreenLayout.SCROLLBAR_Y + scrollbar.thumbTop(),
-        TerminalScreenLayout.SCROLLBAR_WIDTH,
-        scrollbar.thumbHeight());
   }
 
-  public void drawRows(DrawContext context, TextRenderer textRenderer) {
+  public void drawRows(DrawContext context, TextRenderer textRenderer, int hovered) {
     placeholder.ifPresent(shown -> drawPlaceholder(context, textRenderer, shown));
     if (!page.status().hasRows()) {
       return;
@@ -110,11 +95,25 @@ public final class TerminalItemsPanel {
       if (row == null) {
         continue;
       }
-      final int itemX = TerminalScreenLayout.cellX(cell) + TerminalScreenLayout.CELL_ITEM_OFFSET;
-      final int itemY = TerminalScreenLayout.cellY(cell) + TerminalScreenLayout.CELL_ITEM_OFFSET;
-      context.drawItem(row.variant().toStack(), itemX, itemY);
+      final int itemX = TerminalScreenLayout.cellX(cell) + TerminalScreenLayout.SLOT_ITEM_OFFSET;
+      final int itemY = TerminalScreenLayout.cellY(cell) + TerminalScreenLayout.SLOT_ITEM_OFFSET;
+      final ItemStack stack = row.variant().toStack();
+      context.drawItem(stack, itemX, itemY);
       drawCount(context, textRenderer, ItemCountFormat.cell(row.count()), itemX, itemY);
+      context.drawItemInSlot(textRenderer, stack, itemX, itemY, NO_STACK_COUNT);
     }
+    drawHighlight(context, hovered);
+  }
+
+  private static void drawHighlight(DrawContext context, int hovered) {
+    if (hovered == TerminalScreenLayout.NO_CELL) {
+      return;
+    }
+    HandledScreen.drawSlotHighlight(
+        context,
+        TerminalScreenLayout.cellX(hovered) + TerminalScreenLayout.SLOT_ITEM_OFFSET,
+        TerminalScreenLayout.cellY(hovered) + TerminalScreenLayout.SLOT_ITEM_OFFSET,
+        SAME_LAYER);
   }
 
   private static void drawCount(
@@ -129,7 +128,7 @@ public final class TerminalItemsPanel {
         label,
         Math.round((itemX + ITEM_SIZE) / scale) - width,
         Math.round((itemY + ITEM_SIZE - LINE_HEIGHT * scale) / scale),
-        COUNT_COLOUR,
+        VanillaPalette.COUNT,
         true);
     context.getMatrices().pop();
   }
@@ -147,12 +146,14 @@ public final class TerminalItemsPanel {
         Math.max(
             TerminalScreenLayout.GRID_Y,
             TerminalScreenLayout.GRID_Y + (TerminalScreenLayout.GRID_HEIGHT - block) / 2);
-    context.drawGuiTexture(
-        shown.sprite(),
-        centreX - ListingPlaceholder.SPRITE_SIZE / 2,
-        top,
-        ListingPlaceholder.SPRITE_SIZE,
-        ListingPlaceholder.SPRITE_SIZE);
+    shown
+        .sprite()
+        .draw(
+            context,
+            centreX - ListingPlaceholder.SPRITE_SIZE / 2,
+            top,
+            ListingPlaceholder.SPRITE_SIZE,
+            ListingPlaceholder.SPRITE_SIZE);
     int lineY = top + ListingPlaceholder.SPRITE_SIZE + ListingPlaceholder.MESSAGE_GAP;
     for (final OrderedText line : lines) {
       context.drawText(
@@ -160,7 +161,7 @@ public final class TerminalItemsPanel {
           line,
           centreX - textRenderer.getWidth(line) / 2,
           lineY,
-          PLACEHOLDER_COLOUR,
+          VanillaPalette.LABEL,
           false);
       lineY += LINE_HEIGHT;
     }

@@ -10,9 +10,7 @@ public final class TerminalScreenLayout {
   public static final int MAIN_ROWS = 3;
   public static final int SLOT_SIZE = 18;
 
-  public static final int CELL_SIZE = 20;
-
-  public static final int CELL_ITEM_OFFSET = 2;
+  public static final int SLOT_ITEM_OFFSET = 1;
 
   public static final int LISTING_COLUMNS = 9;
   public static final int LISTING_ROWS = 5;
@@ -20,8 +18,8 @@ public final class TerminalScreenLayout {
 
   public static final int NO_CELL = -1;
 
-  public static final int GRID_WIDTH = LISTING_COLUMNS * CELL_SIZE;
-  public static final int GRID_HEIGHT = LISTING_ROWS * CELL_SIZE;
+  public static final int GRID_WIDTH = LISTING_COLUMNS * SLOT_SIZE;
+  public static final int GRID_HEIGHT = LISTING_ROWS * SLOT_SIZE;
 
   public static final int SCROLLBAR_WIDTH = 8;
 
@@ -127,7 +125,7 @@ public final class TerminalScreenLayout {
   public static final int SCROLLBAR_Y = GRID_Y;
   public static final int SCROLLBAR_HEIGHT = GRID_HEIGHT;
 
-  public static final int INVENTORY_X = GRID_X + (GRID_WIDTH - COLUMNS * SLOT_SIZE) / 2;
+  public static final int INVENTORY_X = GRID_X + SLOT_ITEM_OFFSET;
 
   public static final int INVENTORY_GAP = 14;
 
@@ -169,17 +167,17 @@ public final class TerminalScreenLayout {
 
   public static int cellX(int cell) {
     requireCell(cell);
-    return GRID_X + cell % LISTING_COLUMNS * CELL_SIZE;
+    return GRID_X + cell % LISTING_COLUMNS * SLOT_SIZE;
   }
 
   public static int cellY(int cell) {
     requireCell(cell);
-    return GRID_Y + cell / LISTING_COLUMNS * CELL_SIZE;
+    return GRID_Y + cell / LISTING_COLUMNS * SLOT_SIZE;
   }
 
   public static int cellAt(int windowX, int windowY) {
-    final int column = Math.floorDiv(windowX - GRID_X, CELL_SIZE);
-    final int row = Math.floorDiv(windowY - GRID_Y, CELL_SIZE);
+    final int column = Math.floorDiv(windowX - GRID_X, SLOT_SIZE);
+    final int row = Math.floorDiv(windowY - GRID_Y, SLOT_SIZE);
     if (windowX < GRID_X || windowY < GRID_Y || column >= LISTING_COLUMNS || row >= LISTING_ROWS) {
       return NO_CELL;
     }

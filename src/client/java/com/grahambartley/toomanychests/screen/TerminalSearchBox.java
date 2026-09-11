@@ -6,17 +6,16 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 
 public final class TerminalSearchBox {
-  private static final Identifier BOX = TerminalSprites.of("search/box");
-  private static final Identifier BOX_FOCUSED = TerminalSprites.of("search/box_focused");
-
   private static final Text HINT = TerminalScreenText.of("search.hint");
+
+  private final TextRenderer textRenderer;
 
   private final TextFieldWidget field;
 
   public TerminalSearchBox(TextRenderer textRenderer, int originX, int originY, String previous) {
+    this.textRenderer = textRenderer;
     field =
         new TextFieldWidget(
             textRenderer,
@@ -26,13 +25,9 @@ public final class TerminalSearchBox {
             TerminalScreenLayout.SEARCH_TEXT_HEIGHT,
             TerminalScreenText.of("search"));
     field.setDrawsBackground(false);
+    field.setEditableColor(VanillaPalette.FIELD_TEXT);
     field.setMaxLength(ListingRequestPayload.MAX_SEARCH_LENGTH);
-    field.setChangedListener(this::showHintWhileEmpty);
     field.setText(previous);
-  }
-
-  private void showHintWhileEmpty(String text) {
-    field.setSuggestion(text.isEmpty() ? HINT.getString() : null);
   }
 
   public TextFieldWidget widget() {
@@ -67,11 +62,22 @@ public final class TerminalSearchBox {
   }
 
   public void drawBox(DrawContext context, int originX, int originY) {
-    context.drawGuiTexture(
-        field.isFocused() ? BOX_FOCUSED : BOX,
-        originX + TerminalScreenLayout.SEARCH_X,
-        originY + TerminalScreenLayout.SEARCH_Y,
-        TerminalScreenLayout.SEARCH_WIDTH,
-        TerminalScreenLayout.SEARCH_HEIGHT);
+    (field.isFocused() ? TerminalSprite.FIELD_FOCUSED : TerminalSprite.FIELD)
+        .draw(
+            context,
+            originX + TerminalScreenLayout.SEARCH_X,
+            originY + TerminalScreenLayout.SEARCH_Y,
+            TerminalScreenLayout.SEARCH_WIDTH,
+            TerminalScreenLayout.SEARCH_HEIGHT);
+    if (isSearching()) {
+      return;
+    }
+    context.drawText(
+        textRenderer,
+        HINT,
+        originX + TerminalScreenLayout.SEARCH_TEXT_X,
+        originY + TerminalScreenLayout.SEARCH_TEXT_Y,
+        VanillaPalette.PANEL,
+        true);
   }
 }

@@ -54,6 +54,19 @@ class TerminalItemsPanelTest {
   }
 
   @Test
+  void anEmptyCellOfALivePageIsStillUnderThePointer() {
+    TerminalItemsPanel panel = showing(live(1));
+    int lastCell = TerminalScreenLayout.LISTING_PAGE_SIZE - 1;
+
+    assertNull(panel.rowAt(lastCell), "this test needs a cell with no item in it");
+    assertEquals(
+        lastCell,
+        panel.hoveredCell(
+            TerminalScreenLayout.cellX(lastCell) + 1, TerminalScreenLayout.cellY(lastCell) + 1),
+        "a cell with no item in it still highlights, the way a vanilla slot does");
+  }
+
+  @Test
   void aCellOfAPageWithNoRowsHoldsNothing() {
     TerminalItemsPanel panel = showing(ListingPage.pending(0L));
 
