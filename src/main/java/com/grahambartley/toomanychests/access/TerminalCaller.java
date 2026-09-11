@@ -29,4 +29,8 @@ public record TerminalCaller(Optional<UUID> player, boolean operator) {
   public boolean mayAdminister(TerminalSettings settings) {
     return TerminalAccessRules.mayAdminister(settings, player.orElse(null), operator);
   }
+
+  public boolean mayOpen(TerminalSettings settings) {
+    return TerminalAccessRules.decide(settings, player.orElse(null), operator).allowed();
+  }
 }

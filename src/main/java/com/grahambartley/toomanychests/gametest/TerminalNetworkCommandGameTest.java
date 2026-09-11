@@ -1,12 +1,17 @@
 package com.grahambartley.toomanychests.gametest;
 
+import com.grahambartley.toomanychests.operation.OperationGuards;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleService;
+import com.grahambartley.toomanychests.terminal.TerminalLookup;
+import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.test.BeforeBatch;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
@@ -17,6 +22,11 @@ public final class TerminalNetworkCommandGameTest implements FabricGameTest {
   private static final int REFUSED = -1;
 
   private final ContainerRoleService roles = new ContainerRoleService();
+
+  @BeforeBatch(batchId = BATCH)
+  public void clearCooldowns(ServerWorld world) {
+    OperationGuards.cooldowns().clear();
+  }
 
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
@@ -134,10 +144,7 @@ public final class TerminalNetworkCommandGameTest implements FabricGameTest {
     ServerPlayerEntity owner = openTerminalWithAWiderRegionToFind(context);
 
     int result =
-        run(
-            context,
-            server(context).getCommandSource().withLevel(0),
-            "toomanychests terminal " + at(terminal(context)) + " rescan");
+        run(context, server(context).getCommandSource().withLevel(0), rescanCommand(context));
 
     context.assertTrue(result == 0, "A third party's rescan reported work, got " + result);
     context.assertTrue(
@@ -153,8 +160,7 @@ public final class TerminalNetworkCommandGameTest implements FabricGameTest {
   public void theConsoleCanMakeATerminalWalkItsRegionAgain(TestContext context) {
     ServerPlayerEntity owner = openTerminalWithAWiderRegionToFind(context);
 
-    int result =
-        runAsConsole(context, "toomanychests terminal " + at(terminal(context)) + " rescan");
+    int result = runAsConsole(context, rescanCommand(context));
 
     context.assertTrue(result > 0, "The console was refused a rescan, got " + result);
     context.assertTrue(
@@ -183,11 +189,176 @@ public final class TerminalNetworkCommandGameTest implements FabricGameTest {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
     ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
 
-    int result =
-        runAsConsole(context, "toomanychests terminal " + at(terminal(context)) + " highlight");
+    int result = runAsConsole(context, highlightCommand(context));
 
     context.assertTrue(result <= 0, "The console highlighted to nobody, got " + result);
     NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void theOwnerCanSetTheRadiusOfTheirOwnTerminal(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+
+    int result = run(context, asPlayer(context, owner), radiusCommand(context, 2));
+
+    context.assertTrue(result == 2, "An owner was refused their own terminal, got " + result);
+    context.assertTrue(radiusOf(context) == 2, "The owner's radius was not written");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aThirdPartyCannotSetTheRadiusOfSomebodyElsesTerminal(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    ServerPlayerEntity stranger = NetworkOperationFixture.standingPlayer(context);
+
+    int result = run(context, asPlayer(context, stranger), radiusCommand(context, 2));
+
+    context.assertTrue(result == 0, "A third party moved a radius, got " + result);
+    context.assertTrue(radiusOf(context) == 1, "A refused set wrote the radius anyway");
+    NetworkOperationFixture.finish(context, owner, stranger);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void theConsoleCanSetTheRadiusOfATerminalItDoesNotOwn(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+
+    int result = runAsConsole(context, radiusCommand(context, 2));
+
+    context.assertTrue(result == 2, "The console was refused a radius, got " + result);
+    context.assertTrue(radiusOf(context) == 2, "The console's radius was not written");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aPlayerWhoCannotOpenATerminalCannotHighlightItsNetwork(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    ServerPlayerEntity stranger = NetworkOperationFixture.standingPlayer(context);
+
+    int result = run(context, asPlayer(context, stranger), highlightCommand(context));
+
+    context.assertTrue(
+        result == 0, "A third party was shown somebody else's containers, got " + result);
+    NetworkOperationFixture.finish(context, owner, stranger);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aPlayerWhoMayOpenATerminalCanStillHighlightItsNetwork(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+
+    int result = run(context, asPlayer(context, owner), highlightCommand(context));
+
+    context.assertTrue(result == 1, "The owner was shown " + result + " of one container");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aRescanFindsAContainerPlacedSinceTheLastScanWithTheRegionUnchanged(
+      TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.WEST_BARREL);
+    context.assertTrue(
+        containerCount(context) == 1,
+        "A barrel placed after the scan should not be in the network");
+
+    int result = run(context, asPlayer(context, owner), rescanCommand(context));
+
+    context.assertTrue(result > 0, "An owner was refused a rescan, got " + result);
+    context.assertTrue(
+        containerCount(context) == 2,
+        "The rescan held " + containerCount(context) + " of the two barrels in reach");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aSecondRescanFromTheCommandLineInTheSameTickIsRefusedAndScansNothing(
+      TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    int first = run(context, asPlayer(context, owner), rescanCommand(context));
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.WEST_BARREL);
+
+    int second = run(context, asPlayer(context, owner), rescanCommand(context));
+
+    context.assertTrue(first > 0, "The owner's first rescan was refused, got " + first);
+    context.assertTrue(second == 0, "A second rescan in the same tick should be refused");
+    context.assertTrue(
+        containerCount(context) == 1,
+        "A rate limited rescan walked the region anyway and held "
+            + containerCount(context)
+            + " containers");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aRescanWithNoRunningNetworkIsReportedWithoutSpendingTheLimit(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    TerminalNetworks.power().unloaded(context.getWorld(), terminal(context));
+
+    int whileOff = run(context, asPlayer(context, owner), rescanCommand(context));
+    TerminalNetworks.power()
+        .loaded(
+            context.getWorld(),
+            terminal(context),
+            context.getBlockState(NetworkOperationFixture.TERMINAL));
+    int onceOnAgain = run(context, asPlayer(context, owner), rescanCommand(context));
+
+    context.assertTrue(
+        whileOff == 0, "A terminal with no network reported a scan, got " + whileOff);
+    context.assertTrue(
+        onceOnAgain > 0,
+        "The refused rescan spent the limit that the next one needed, got " + onceOnAgain);
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  private static int radiusOf(TestContext context) {
+    return TerminalLookup.settingsAt(context.getWorld(), terminal(context)).orElseThrow().radius();
+  }
+
+  private static ServerCommandSource asPlayer(TestContext context, ServerPlayerEntity player) {
+    return server(context).getCommandSource().withLevel(0).withEntity(player);
+  }
+
+  private static String radiusCommand(TestContext context, int blocks) {
+    return "toomanychests terminal " + at(terminal(context)) + " radius " + blocks;
+  }
+
+  private static String rescanCommand(TestContext context) {
+    return "toomanychests terminal " + at(terminal(context)) + " rescan";
+  }
+
+  private static String highlightCommand(TestContext context) {
+    return "toomanychests terminal " + at(terminal(context)) + " highlight";
   }
 
   private static String roleCommand(TestContext context, String role) {

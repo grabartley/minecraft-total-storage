@@ -319,10 +319,19 @@ public final class CommandMessages {
     return line("container.role.unknown", "'%s' is not a role. Roles are: %s", requested, roles);
   }
 
-  public static Text terminalRescanned(BlockPos pos, boolean rescanned) {
-    return rescanned
-        ? line("terminal.rescanned", "The terminal at %s scanned its region again", at(pos))
-        : line("terminal.rescan.unchanged", "The terminal at %s had nothing new to find", at(pos));
+  public static Text terminalRescanned(BlockPos pos, int containers) {
+    return line(
+        "terminal.rescanned",
+        "The terminal at %s scanned its region again and found %s containers",
+        at(pos),
+        containers);
+  }
+
+  public static Text terminalUnpowered(BlockPos pos) {
+    return line(
+        "terminal.unpowered",
+        "The terminal at %s has no power, so it has no region to walk",
+        at(pos));
   }
 
   public static Text terminalHighlighted(BlockPos pos, int containers) {

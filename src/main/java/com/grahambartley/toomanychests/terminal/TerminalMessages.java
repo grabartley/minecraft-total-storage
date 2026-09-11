@@ -34,8 +34,9 @@ public final class TerminalMessages {
         PREFIX + "radius-clamped", "The server caps this terminal at %s blocks", blocks);
   }
 
-  public static Text nothingNewToFind() {
-    return line("rescan-unchanged", "This terminal had nothing new to find");
+  public static Text rescanned(int containers) {
+    return Text.translatableWithFallback(
+        PREFIX + "rescanned", "Scanned the region again and found %s containers", containers);
   }
 
   public static Text tagNameRejected(TagNameOutcome why) {

@@ -31,6 +31,8 @@
       "com.grahambartley.toomanychests.gametest.ConfigSyncGameTest",
       "com.grahambartley.toomanychests.gametest.ConfigCommandGameTest",
       "com.grahambartley.toomanychests.gametest.NetworkEligibilityGameTest",
+      "com.grahambartley.toomanychests.gametest.ContainerEligibilityRefreshGameTest",
+      "com.grahambartley.toomanychests.gametest.TerminalPanelRefreshGameTest",
       "com.grahambartley.toomanychests.gametest.ContainerDiscoveryScanGameTest",
       "com.grahambartley.toomanychests.gametest.PresetTagResolverGameTest",
       "com.grahambartley.toomanychests.gametest.NetworkIndexScanGameTest",

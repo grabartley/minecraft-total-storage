@@ -1,6 +1,8 @@
 package com.grahambartley.toomanychests.screenhandler;
 
 import com.grahambartley.toomanychests.access.TerminalAccessControl;
+import com.grahambartley.toomanychests.network.ModNetworking;
+import com.grahambartley.toomanychests.network.TerminalSettingsNetworking;
 import com.grahambartley.toomanychests.terminal.TerminalAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +39,15 @@ public final class TerminalViewerSync {
       }
     }
     return List.copyOf(watching);
+  }
+
+  public static int refresh(MinecraftServer server, TerminalAddress terminal) {
+    final List<ServerPlayerEntity> watching = playersOn(server, terminal);
+    for (final ServerPlayerEntity viewer : watching) {
+      TerminalSettingsNetworking.panels().refresh(viewer);
+      ModNetworking.listings().refresh(viewer);
+    }
+    return watching.size();
   }
 
   public static int resync(MinecraftServer server, TerminalAddress terminal) {

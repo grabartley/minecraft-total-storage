@@ -1,7 +1,6 @@
 package com.grahambartley.toomanychests.command;
 
 import com.grahambartley.toomanychests.access.TerminalAccessControl;
-import com.grahambartley.toomanychests.access.TerminalAccessRules;
 import com.grahambartley.toomanychests.access.TerminalTrustService;
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.terminal.TerminalSettings;
@@ -77,7 +76,7 @@ public final class TerminalAccessCommand {
       throws CommandSyntaxException {
     final ServerCommandSource source = context.getSource();
     final BlockPos pos = TerminalCommand.terminalPos(context);
-    if (!administrable(context, pos)) {
+    if (TerminalCommandGate.administrable(source, pos).isEmpty()) {
       return 0;
     }
     final String requested = StringArgumentType.getString(context, MODE);
@@ -99,11 +98,11 @@ public final class TerminalAccessCommand {
       throws CommandSyntaxException {
     final ServerCommandSource source = context.getSource();
     final BlockPos pos = TerminalCommand.terminalPos(context);
-    if (!administrable(context, pos)) {
+    final Optional<TerminalSettings> gated = TerminalCommandGate.administrable(source, pos);
+    if (gated.isEmpty()) {
       return 0;
     }
-    final TerminalSettings settings =
-        trustService().settingsAt(source.getWorld(), pos).orElseThrow();
+    final TerminalSettings settings = gated.get();
     if (settings.trusted().isEmpty()) {
       source.sendFeedback(() -> CommandMessages.terminalTrustEmpty(pos), false);
       return 0;
@@ -129,7 +128,7 @@ public final class TerminalAccessCommand {
       throws CommandSyntaxException {
     final ServerCommandSource source = context.getSource();
     final BlockPos pos = TerminalCommand.terminalPos(context);
-    if (!administrable(context, pos)) {
+    if (TerminalCommandGate.administrable(source, pos).isEmpty()) {
       return 0;
     }
     final ServerWorld world = source.getWorld();
@@ -157,22 +156,6 @@ public final class TerminalAccessCommand {
     return moved
         ? CommandMessages.terminalUntrusted(player, pos)
         : CommandMessages.terminalNotTrusted(player, pos);
-  }
-
-  private static boolean administrable(CommandContext<ServerCommandSource> context, BlockPos pos) {
-    final ServerCommandSource source = context.getSource();
-    final Optional<TerminalSettings> settings = trustService().settingsAt(source.getWorld(), pos);
-    if (settings.isEmpty()) {
-      source.sendError(CommandMessages.noTerminalAt(pos));
-      return false;
-    }
-    final UUID caller = source.getPlayer() == null ? null : source.getPlayer().getUuid();
-    if (TerminalAccessRules.mayAdminister(
-        settings.get(), caller, TooManyChestsCommand.isOperator(source))) {
-      return true;
-    }
-    source.sendError(CommandMessages.terminalNotYours(pos));
-    return false;
   }
 
   private static String nameOf(ServerCommandSource source, UUID player) {

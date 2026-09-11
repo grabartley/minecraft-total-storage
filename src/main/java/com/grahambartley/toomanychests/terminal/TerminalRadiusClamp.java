@@ -5,7 +5,6 @@ import com.grahambartley.toomanychests.config.ServerConfigListener;
 import com.grahambartley.toomanychests.config.TooManyChestsConfig;
 import java.util.Objects;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
 
 public final class TerminalRadiusClamp implements ServerConfigListener {
   private final TerminalPower power;
@@ -23,11 +22,6 @@ public final class TerminalRadiusClamp implements ServerConfigListener {
     if (server == null || config == null) {
       return;
     }
-    for (final TerminalAddress address : power.registry().addresses()) {
-      final ServerWorld world = server.getWorld(address.worldKey());
-      if (world != null) {
-        power.rescan(world, address.pos());
-      }
-    }
+    power.rescanAllIfRegionChanged(server);
   }
 }

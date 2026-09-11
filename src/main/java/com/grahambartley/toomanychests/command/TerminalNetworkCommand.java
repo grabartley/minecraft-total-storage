@@ -1,9 +1,8 @@
 package com.grahambartley.toomanychests.command;
 
-import com.grahambartley.toomanychests.access.TerminalCaller;
 import com.grahambartley.toomanychests.config.ServerConfigService;
-import com.grahambartley.toomanychests.network.ModNetworking;
-import com.grahambartley.toomanychests.network.TerminalSettingsNetworking;
+import com.grahambartley.toomanychests.operation.ExpensiveOperation;
+import com.grahambartley.toomanychests.operation.OperationGuards;
 import com.grahambartley.toomanychests.screenhandler.TerminalViewerSync;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerHighlightService;
@@ -13,6 +12,7 @@ import com.grahambartley.toomanychests.terminal.RoleTally;
 import com.grahambartley.toomanychests.terminal.TerminalAddress;
 import com.grahambartley.toomanychests.terminal.TerminalLookup;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
+import com.grahambartley.toomanychests.terminal.TerminalPower;
 import com.grahambartley.toomanychests.terminal.TerminalRadius;
 import com.grahambartley.toomanychests.terminal.TerminalSettings;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -28,6 +28,7 @@ import net.minecraft.command.argument.BlockPosArgumentType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 
 public final class TerminalNetworkCommand {
@@ -117,11 +118,7 @@ public final class TerminalNetworkCommand {
     }
     final RoleChangeOutcome outcome =
         ROLES.assign(
-            source.getWorld(),
-            pos,
-            TerminalCaller.of(source.getPlayer(), TooManyChestsCommand.isOperator(source)),
-            container,
-            role.get());
+            source.getWorld(), pos, TerminalCommandGate.caller(source), container, role.get());
     report(source, pos, container, role.get(), outcome);
     if (outcome.applied()) {
       resyncViewers(source, pos);
@@ -133,20 +130,25 @@ public final class TerminalNetworkCommand {
       throws CommandSyntaxException {
     final ServerCommandSource source = context.getSource();
     final BlockPos pos = TerminalCommand.terminalPos(context);
-    final Optional<TerminalSettings> settings = TerminalLookup.settingsAt(source.getWorld(), pos);
-    if (settings.isEmpty()) {
-      source.sendError(CommandMessages.noTerminalAt(pos));
+    if (TerminalCommandGate.administrable(source, pos).isEmpty()) {
       return 0;
     }
-    if (!TerminalCaller.of(source.getPlayer(), TooManyChestsCommand.isOperator(source))
-        .mayAdminister(settings.get())) {
-      source.sendError(CommandMessages.terminalNotYours(pos));
+    final TerminalPower power = TerminalNetworks.power();
+    if (!power.isActive(source.getWorld(), pos)) {
+      source.sendError(CommandMessages.terminalUnpowered(pos));
       return 0;
     }
-    final boolean rescanned = TerminalNetworks.power().rescan(source.getWorld(), pos);
-    source.sendFeedback(() -> CommandMessages.terminalRescanned(pos, rescanned), rescanned);
+    final Optional<Text> refusal =
+        OperationGuards.refuse(source.getPlayer(), ExpensiveOperation.RESCAN);
+    if (refusal.isPresent()) {
+      source.sendError(refusal.get());
+      return 0;
+    }
+    power.rescan(source.getWorld(), pos);
+    final int held = power.containerCount(source.getWorld(), pos);
+    source.sendFeedback(() -> CommandMessages.terminalRescanned(pos, held), true);
     resyncViewers(source, pos);
-    return rescanned ? 1 : 0;
+    return 1;
   }
 
   private static int highlight(CommandContext<ServerCommandSource> context)
@@ -158,8 +160,7 @@ public final class TerminalNetworkCommand {
       source.sendError(CommandMessages.highlightNeedsAPlayer());
       return 0;
     }
-    if (TerminalLookup.at(source.getWorld(), pos).isEmpty()) {
-      source.sendError(CommandMessages.noTerminalAt(pos));
+    if (TerminalCommandGate.openable(source, pos).isEmpty()) {
       return 0;
     }
     final int shown = ContainerHighlightService.highlight(player, source.getWorld(), pos);
@@ -186,12 +187,6 @@ public final class TerminalNetworkCommand {
   }
 
   private static void resyncViewers(ServerCommandSource source, BlockPos terminal) {
-    TerminalViewerSync.playersOn(
-            source.getServer(), TerminalAddress.of(source.getWorld(), terminal))
-        .forEach(
-            viewer -> {
-              TerminalSettingsNetworking.panels().refresh(viewer);
-              ModNetworking.listings().refresh(viewer);
-            });
+    TerminalViewerSync.refresh(source.getServer(), TerminalAddress.of(source.getWorld(), terminal));
   }
 }

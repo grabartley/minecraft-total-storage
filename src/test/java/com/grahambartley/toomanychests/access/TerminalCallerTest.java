@@ -3,6 +3,7 @@ package com.grahambartley.toomanychests.access;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.terminal.TerminalSettings;
 import java.util.Optional;
 import java.util.UUID;
@@ -53,6 +54,36 @@ class TerminalCallerTest {
   void aCallerMissingItsPlayerIsTreatedAsHavingNoneRatherThanThrowing() {
     assertFalse(new TerminalCaller(null, false).mayAdminister(ownedTerminal()));
     assertTrue(new TerminalCaller(null, true).mayAdminister(ownedTerminal()));
+  }
+
+  @Test
+  void theOwnerMayOpenTheirOwnTerminal() {
+    assertTrue(new TerminalCaller(Optional.of(OWNER), false).mayOpen(ownedTerminal()));
+  }
+
+  @Test
+  void somebodyElseMayNotOpenAnOwnerLockedTerminal() {
+    assertFalse(new TerminalCaller(Optional.of(SOMEBODY_ELSE), false).mayOpen(ownedTerminal()));
+  }
+
+  @Test
+  void aTrustedPlayerMayOpenButStillMayNotConfigure() {
+    final TerminalSettings trusting =
+        ownedTerminal().withAccessMode(TerminalAccessMode.TRUSTED).withTrusted(SOMEBODY_ELSE);
+    final TerminalCaller trusted = new TerminalCaller(Optional.of(SOMEBODY_ELSE), false);
+
+    assertTrue(trusted.mayOpen(trusting));
+    assertFalse(trusted.mayAdminister(trusting));
+  }
+
+  @Test
+  void anOperatorMayOpenATerminalThatIsNotTheirs() {
+    assertTrue(new TerminalCaller(Optional.of(SOMEBODY_ELSE), true).mayOpen(ownedTerminal()));
+  }
+
+  @Test
+  void theConsoleMayOpenNothingBecauseThereIsNobodyToShowItTo() {
+    assertFalse(TerminalCaller.of(null, true).mayOpen(ownedTerminal()));
   }
 
   @Test

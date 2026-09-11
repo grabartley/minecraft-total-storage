@@ -12,7 +12,9 @@ import com.grahambartley.toomanychests.network.ModNetworking;
 import com.grahambartley.toomanychests.network.PayloadCapLog;
 import com.grahambartley.toomanychests.operation.OperationGuards;
 import com.grahambartley.toomanychests.screenhandler.TerminalListingBroadcast;
+import com.grahambartley.toomanychests.screenhandler.TerminalPanelRefresh;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLifecycle;
+import com.grahambartley.toomanychests.terminal.ContainerEligibilityRefresh;
 import com.grahambartley.toomanychests.terminal.TerminalLifecycle;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import com.grahambartley.toomanychests.terminal.TerminalRadiusClamp;
@@ -44,7 +46,13 @@ public class TooManyChests implements ModInitializer {
     TerminalScreenLifecycle.register();
     new TerminalListingBroadcast(ModNetworking.listings()).register();
     TerminalRadiusClamp.register();
-    ServerLifecycleEvents.SERVER_STARTING.register(ServerConfigService::loadFromWorld);
+    ContainerEligibilityRefresh.register();
+    TerminalPanelRefresh.register();
+    ServerLifecycleEvents.SERVER_STARTING.register(
+        server -> {
+          ServerConfigService.loadFromWorld(server);
+          ContainerEligibilityRefresh.seedFrom(ServerConfigService.current());
+        });
     ServerLifecycleEvents.SERVER_STOPPED.register(
         server -> {
           NextTick.queue().clear();

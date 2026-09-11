@@ -26,7 +26,7 @@ public final class TerminalRadiusService {
     }
     final TerminalRadius radius = TerminalRadius.of(requested, serverMaximum());
     terminal.get().updateSettings(settings -> settings.withRadius(radius.blocks()));
-    power.rescan(world, pos);
+    power.rescanIfRegionChanged(world, pos);
     return Optional.of(radius);
   }
 
