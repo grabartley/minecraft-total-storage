@@ -29,8 +29,8 @@ An implementation names a state and a rectangle and gets a finished button. Ther
 
 This drawback is gone. It read: the mod maintains two palettes, nothing enforces the split, and nothing catches someone reaching for the wrong one. [ADR 0035](0035-the-terminal-wears-vanillas-chrome.md) put the terminal on this same vanilla chrome, so there is one palette rather than two, every sprite source declares it, and `TerminalSpriteTest` walks the whole shipped sprite tree and fails the build on any colour outside it. The sort button is held to the same rule as everything else, which is what this decision wanted in the first place.
 
-Accepted drawback: the glyph exists twice, as `icon/sort` in the terminal palette and inside the four sort button sprites in vanilla's. If the sorting metaphor changes, both have to change. Keeping them in step is a review concern, not something the build checks.
+Accepted drawback: the glyph exists twice, as `icon/sort` and again inside the four sort button sprites. If the sorting metaphor changes, both have to change. Keeping them in step is a review concern, not something the build checks.
 
 Accepted drawback: baking the glyph in means the button cannot be nine-sliced, so it is fixed at the one size drawn. That size is not free to choose: vanilla leaves a 14 pixel band between the panel bevel and the first slot row, so the button is 14x14 and a second size would be four more sprites rather than a different draw rectangle.
 
-Accepted drawback: vanilla's greys are only correct for as long as vanilla uses them. A resource pack that restyles container screens leaves the button matching a panel that no longer exists, where the terminal palette would at least have been consistently foreign.
+Accepted drawback: vanilla's greys are only correct for as long as vanilla uses them. A resource pack that restyles container screens leaves the button matching a panel that no longer exists. Since [ADR 0035](0035-the-terminal-wears-vanillas-chrome.md) this is no longer the button's problem alone, it is the shape of every surface the mod draws, and it is the price of looking native by default rather than foreign by default.

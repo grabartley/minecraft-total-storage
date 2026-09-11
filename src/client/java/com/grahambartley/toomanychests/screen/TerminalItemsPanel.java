@@ -76,19 +76,13 @@ public final class TerminalItemsPanel {
   }
 
   public void drawScrollbar(DrawContext context, int originX, int originY) {
-    TerminalSprite.SUNKEN.draw(
+    TerminalChrome.drawScrollbar(
         context,
+        scrollbar,
         originX + TerminalScreenLayout.SCROLLBAR_X,
         originY + TerminalScreenLayout.SCROLLBAR_Y,
         TerminalScreenLayout.SCROLLBAR_WIDTH,
         TerminalScreenLayout.SCROLLBAR_HEIGHT);
-    (scrollbar.isEnabled() ? TerminalSprite.RAISED : TerminalSprite.FLAT)
-        .draw(
-            context,
-            originX + TerminalScreenLayout.SCROLLBAR_X,
-            originY + TerminalScreenLayout.SCROLLBAR_Y + scrollbar.thumbTop(),
-            TerminalScreenLayout.SCROLLBAR_WIDTH,
-            scrollbar.thumbHeight());
   }
 
   public void drawRows(DrawContext context, TextRenderer textRenderer, int hovered) {
@@ -105,8 +99,8 @@ public final class TerminalItemsPanel {
       final int itemY = TerminalScreenLayout.cellY(cell) + TerminalScreenLayout.SLOT_ITEM_OFFSET;
       final ItemStack stack = row.variant().toStack();
       context.drawItem(stack, itemX, itemY);
-      context.drawItemInSlot(textRenderer, stack, itemX, itemY, NO_STACK_COUNT);
       drawCount(context, textRenderer, ItemCountFormat.cell(row.count()), itemX, itemY);
+      context.drawItemInSlot(textRenderer, stack, itemX, itemY, NO_STACK_COUNT);
     }
     drawHighlight(context, hovered);
   }

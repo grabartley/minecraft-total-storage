@@ -29,7 +29,7 @@ The rule binds the chrome, not everything the mod draws in colour. The in-world 
 
 ## Consequences
 
-The window is narrower and shorter, because a 162 pixel grid needs less room than a 180 pixel one. That is spare screen, not lost function: the grid still holds forty-five cells and the settings sections still hold four rows each, now at the slot pitch.
+The window is narrower and shorter, because a 162 pixel grid needs less room than a 180 pixel one. That is mostly spare screen rather than lost function: the grid still holds forty-five cells and the settings sections still hold four rows each, now at the slot pitch. Two lists did give up a row, the filter column going from nine to eight and the tag assignment prompt from five to four. Both scroll, so nothing in either becomes unreachable.
 
 The sprite set shrank from thirty-two files to twenty-three. Naming a sprite for the chrome it draws rather than the widget that draws it collapsed a recessed row, a recessed scrollbar channel and a slot into one sprite, and deleted the bespoke hover and selection cells entirely in favour of vanilla's own highlight.
 

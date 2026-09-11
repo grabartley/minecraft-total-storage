@@ -408,18 +408,12 @@ public final class TerminalSettingsPanel {
   }
 
   private void drawScrollbar(DrawContext context, int originX, int originY) {
-    TerminalSprite.SUNKEN.draw(
+    TerminalChrome.drawScrollbar(
         context,
+        scrollbar,
         originX + TerminalScreenLayout.SCROLLBAR_X,
         originY + TerminalSettingsLayout.CONTENT_Y,
         TerminalScreenLayout.SCROLLBAR_WIDTH,
         TerminalSettingsLayout.CONTENT_HEIGHT);
-    (scrollbar.isEnabled() ? TerminalSprite.RAISED : TerminalSprite.FLAT)
-        .draw(
-            context,
-            originX + TerminalScreenLayout.SCROLLBAR_X,
-            originY + TerminalSettingsLayout.CONTENT_Y + scrollbar.thumbTop(),
-            TerminalScreenLayout.SCROLLBAR_WIDTH,
-            scrollbar.thumbHeight());
   }
 }

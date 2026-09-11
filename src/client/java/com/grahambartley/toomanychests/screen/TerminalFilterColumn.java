@@ -210,16 +210,12 @@ public final class TerminalFilterColumn {
   }
 
   private void drawScrollbar(DrawContext context, int originX, int originY) {
-    final int left = originX + FilterColumnLayout.SCROLLBAR_X;
-    final int top = originY + FilterColumnLayout.CONTENT_Y;
-    TerminalSprite.SUNKEN.draw(
-        context, left, top, FilterColumnLayout.SCROLLBAR_WIDTH, FilterColumnLayout.CONTENT_HEIGHT);
-    (scrollbar.isEnabled() ? TerminalSprite.RAISED : TerminalSprite.FLAT)
-        .draw(
-            context,
-            left,
-            top + scrollbar.thumbTop(),
-            FilterColumnLayout.SCROLLBAR_WIDTH,
-            scrollbar.thumbHeight());
+    TerminalChrome.drawScrollbar(
+        context,
+        scrollbar,
+        originX + FilterColumnLayout.SCROLLBAR_X,
+        originY + FilterColumnLayout.CONTENT_Y,
+        FilterColumnLayout.SCROLLBAR_WIDTH,
+        FilterColumnLayout.CONTENT_HEIGHT);
   }
 }

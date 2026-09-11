@@ -119,10 +119,10 @@ class TerminalSpriteTest {
     return scalingOf(sprite.spritePath() + ".png");
   }
 
-  static Stream<TerminalSprite> everyNineSlicedSprite() {
-    final List<TerminalSprite> sliced =
-        Stream.of(TerminalSprite.values()).filter(sprite -> scalingOf(sprite) != null).toList();
-    assertFalse(sliced.isEmpty(), "no sprite in the catalogue declares nine-slice scaling");
+  static Stream<Path> everyNineSlicedSprite() {
+    final List<Path> sliced =
+        everySpriteTheModShips().filter(sprite -> scalingOf(relativeName(sprite)) != null).toList();
+    assertFalse(sliced.isEmpty(), "nothing the mod ships declares nine-slice scaling");
     return sliced.stream();
   }
 
@@ -201,25 +201,26 @@ class TerminalSpriteTest {
 
   @ParameterizedTest
   @MethodSource("everyNineSlicedSprite")
-  void everyNineSlicedSpriteDeclaresTheSizeItActuallyIs(TerminalSprite sprite) {
-    final JsonObject scaling = scalingOf(sprite);
-    final BufferedImage texture = textureOf(sprite);
+  void everyNineSlicedSpriteDeclaresTheSizeItActuallyIs(Path sprite) {
+    final String name = relativeName(sprite);
+    final JsonObject scaling = scalingOf(name);
+    final BufferedImage texture = readFile(sprite);
     final int border = scaling.get("border").getAsInt();
 
-    assertEquals(texture.getWidth(), scaling.get("width").getAsInt(), sprite + " declares a width");
+    assertEquals(texture.getWidth(), scaling.get("width").getAsInt(), name + " declares a width");
     assertEquals(
-        texture.getHeight(), scaling.get("height").getAsInt(), sprite + " declares a height");
+        texture.getHeight(), scaling.get("height").getAsInt(), name + " declares a height");
     assertTrue(
         2 * border < Math.min(texture.getWidth(), texture.getHeight()),
-        sprite + " has a border with no centre left inside it");
+        name + " has a border with no centre left inside it");
   }
 
   @ParameterizedTest
   @MethodSource("everyNineSlicedSprite")
-  void everySpriteKeepsItsMarkingsOutOfTheBandsThatTile(TerminalSprite sprite) {
-    final JsonObject scaling = scalingOf(sprite);
-    final BufferedImage texture = textureOf(sprite);
-    final int border = scaling.get("border").getAsInt();
+  void everySpriteKeepsItsMarkingsOutOfTheBandsThatTile(Path sprite) {
+    final String name = relativeName(sprite);
+    final BufferedImage texture = readFile(sprite);
+    final int border = scalingOf(name).get("border").getAsInt();
     final BufferedImage wide =
         nineSliced(
             texture,
@@ -227,19 +228,23 @@ class TerminalSpriteTest {
             STRETCH_FACTOR * texture.getHeight(),
             border);
 
-    for (int y = border; y < wide.getHeight() - border; y++) {
+    for (int y = 0; y < wide.getHeight(); y++) {
       for (int x = 0; x < wide.getWidth(); x++) {
-        final boolean inSideBand = x < border || x >= wide.getWidth() - border;
-        final int settled = inSideBand ? wide.getRGB(x, border) : wide.getRGB(border, y);
+        final boolean fixedColumn = x < border || x >= wide.getWidth() - border;
+        final boolean fixedRow = y < border || y >= wide.getHeight() - border;
+        if (fixedColumn && fixedRow) {
+          continue;
+        }
+        final int settled = fixedColumn ? wide.getRGB(x, border) : wide.getRGB(border, y);
         assertEquals(
             settled,
             wide.getRGB(x, y),
-            sprite
+            name
                 + " repeats a marking inside a band that tiles, at "
                 + x
                 + ","
                 + y
-                + "; anything that must stay put belongs in a corner or outside the sprite");
+                + "; anything that must stay put belongs in a corner");
       }
     }
   }

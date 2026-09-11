@@ -13,7 +13,7 @@ public final class TerminalChrome {
     return hovered ? TerminalSprite.RAISED_LIT : TerminalSprite.RAISED;
   }
 
-  public static TerminalSprite unavailableControl() {
+  private static TerminalSprite unavailableControl() {
     return TerminalSprite.FLAT;
   }
 
@@ -28,8 +28,15 @@ public final class TerminalChrome {
     return hovered ? TerminalSprite.RAISED_LIT : TerminalSprite.PRESSED;
   }
 
-  public static TerminalSprite row(boolean hovered) {
+  private static TerminalSprite row(boolean hovered) {
     return hovered ? TerminalSprite.RAISED_LIT : TerminalSprite.FLAT;
+  }
+
+  public static void drawScrollbar(
+      DrawContext context, TerminalScrollbar scrollbar, int x, int y, int width, int height) {
+    TerminalSprite.SUNKEN.draw(context, x, y, width, height);
+    controlOrUnavailable(scrollbar.isEnabled(), false)
+        .draw(context, x, y + scrollbar.thumbTop(), width, scrollbar.thumbHeight());
   }
 
   public static void drawRow(
