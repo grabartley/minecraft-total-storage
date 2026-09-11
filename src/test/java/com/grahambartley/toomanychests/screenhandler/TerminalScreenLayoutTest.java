@@ -119,18 +119,6 @@ class TerminalScreenLayoutTest {
   }
 
   @Test
-  void theInventoryIsCentredUnderTheGrid() {
-    int inventoryWidth = TerminalScreenLayout.COLUMNS * TerminalScreenLayout.SLOT_SIZE;
-    int leftMargin = TerminalScreenLayout.x(0) - TerminalScreenLayout.GRID_X;
-    int rightMargin =
-        TerminalScreenLayout.GRID_X
-            + TerminalScreenLayout.GRID_WIDTH
-            - (TerminalScreenLayout.x(0) + inventoryWidth);
-
-    assertEquals(leftMargin, rightMargin);
-  }
-
-  @Test
   void theRecessedAreaClearsThePlayerInventoryLabel() {
     assertTrue(
         TerminalScreenLayout.INSET_Y + TerminalScreenLayout.INSET_HEIGHT
@@ -572,15 +560,18 @@ class TerminalScreenLayoutTest {
 
   @Test
   void theGridAndThePlayerInventoryShareTheirColumns() {
-    assertEquals(TerminalScreenLayout.GRID_X, TerminalScreenLayout.INVENTORY_X);
     assertEquals(
         TerminalScreenLayout.COLUMNS * TerminalScreenLayout.SLOT_SIZE,
         TerminalScreenLayout.GRID_WIDTH);
     for (int column = 0; column < TerminalScreenLayout.COLUMNS; column++) {
       assertEquals(
           TerminalScreenLayout.cellX(column),
+          TerminalScreenLayout.x(column) - TerminalScreenLayout.SLOT_ITEM_OFFSET,
+          "the slot frame of grid column " + column + " is not above the inventory frame below it");
+      assertEquals(
+          TerminalScreenLayout.cellX(column) + TerminalScreenLayout.SLOT_ITEM_OFFSET,
           TerminalScreenLayout.x(column),
-          "column " + column + " of the grid does not line up with the inventory below it");
+          "the item in grid column " + column + " is not above the item in the inventory below it");
     }
   }
 }

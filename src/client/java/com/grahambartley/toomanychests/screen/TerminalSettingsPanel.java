@@ -127,7 +127,7 @@ public final class TerminalSettingsPanel {
     for (final SettingsSection shown : SettingsSection.values()) {
       final int left = originX + TerminalSettingsLayout.sectionTabX(shown.index());
       final int top = originY + TerminalSettingsLayout.PANEL_Y;
-      TerminalSprite.tab(shown == section, hovered == shown.index())
+      TerminalChrome.tab(shown == section, hovered == shown.index())
           .draw(
               context,
               left,
@@ -299,7 +299,7 @@ public final class TerminalSettingsPanel {
       boolean changeable) {
     final int left = originX + TerminalSettingsLayout.PANEL_X;
     final int top = originY + TerminalSettingsLayout.rowY(row);
-    TerminalRowChrome.draw(
+    TerminalChrome.drawActiveRow(
         context,
         entry.role() == ContainerRole.EXCLUDED,
         hovered,
@@ -329,9 +329,8 @@ public final class TerminalSettingsPanel {
 
   private static void drawRow(
       DrawContext context, TerminalSetting setting, int originX, int originY, boolean hovered) {
-    TerminalRowChrome.draw(
+    TerminalChrome.drawRow(
         context,
-        false,
         hovered,
         originX + TerminalSettingsLayout.PANEL_X,
         originY + TerminalSettingsLayout.rowY(setting.row()),
@@ -398,7 +397,7 @@ public final class TerminalSettingsPanel {
       boolean enabled,
       boolean hovered) {
     final int size = SettingsControl.size();
-    TerminalSprite.control(enabled, hovered).draw(context, x, y, size, size);
+    TerminalChrome.controlOrUnavailable(enabled, hovered).draw(context, x, y, size, size);
     context.drawText(
         textRenderer,
         glyph,

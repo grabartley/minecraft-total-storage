@@ -20,6 +20,8 @@ class VanillaPaletteTest {
 
   private static final int ANVIL_PROBLEM_COLOUR = 16736352;
 
+  private static final BufferedImage CHEST_TEXTURE = chest();
+
   private static BufferedImage chest() {
     try (InputStream source = VanillaPaletteTest.class.getResourceAsStream(CHEST)) {
       assertNotNull(source, "Minecraft's own chest texture is not on the test classpath");
@@ -30,7 +32,7 @@ class VanillaPaletteTest {
   }
 
   private static int at(int x, int y) {
-    return chest().getRGB(x, y) & 0xFFFFFF;
+    return CHEST_TEXTURE.getRGB(x, y) & 0xFFFFFF;
   }
 
   static Stream<Arguments> chromeSampledFromTheChest() {

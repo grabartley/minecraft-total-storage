@@ -230,7 +230,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   private void drawTab(DrawContext context, TerminalTab drawn, TerminalSprite icon) {
     final int left = x + TerminalScreenLayout.TOOLBAR_X;
     final int top = y + TerminalScreenLayout.tabY(drawn.index());
-    TerminalSprite.tab(drawn == tab, drawn == hoveredTab)
+    TerminalChrome.tab(drawn == tab, drawn == hoveredTab)
         .draw(
             context, left, top, TerminalScreenLayout.BUTTON_SIZE, TerminalScreenLayout.BUTTON_SIZE);
     icon.draw(

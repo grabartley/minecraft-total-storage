@@ -28,8 +28,9 @@ public final class ContainerRowText {
   }
 
   public static int roleColour(ContainerRole role) {
-    return (role == null ? ContainerRole.DEFAULT : role) == ContainerRole.EXCLUDED
-        ? VanillaPalette.ACCENT
-        : VanillaPalette.LABEL;
+    return switch (role == null ? ContainerRole.DEFAULT : role) {
+      case GENERAL, FILTERED -> VanillaPalette.LABEL;
+      case EXCLUDED -> VanillaPalette.ACCENT;
+    };
   }
 }

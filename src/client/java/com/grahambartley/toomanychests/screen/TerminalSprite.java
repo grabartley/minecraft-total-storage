@@ -35,22 +35,11 @@ public enum TerminalSprite {
     return path;
   }
 
+  public Identifier id() {
+    return id;
+  }
+
   public void draw(DrawContext context, int x, int y, int width, int height) {
     context.drawGuiTexture(id, x, y, width, height);
-  }
-
-  public static TerminalSprite control(boolean hovered) {
-    return hovered ? RAISED_LIT : RAISED;
-  }
-
-  public static TerminalSprite control(boolean enabled, boolean hovered) {
-    return enabled ? control(hovered) : FLAT;
-  }
-
-  public static TerminalSprite tab(boolean current, boolean hovered) {
-    if (current) {
-      return RAISED;
-    }
-    return hovered ? RAISED_LIT : PRESSED;
   }
 }

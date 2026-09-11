@@ -21,7 +21,7 @@ public final class TerminalIconButton extends ClickableWidget {
 
   @Override
   protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
-    TerminalSprite.control(active, isSelected())
+    TerminalChrome.controlOrUnavailable(active, isSelected())
         .draw(context, getX(), getY(), getWidth(), getHeight());
     icon.draw(
         context,

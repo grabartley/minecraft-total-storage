@@ -123,7 +123,7 @@ public final class TagAssignmentPrompt {
       boolean hovered,
       int left,
       int top) {
-    TerminalRowChrome.draw(
+    TerminalChrome.drawActiveRow(
         context,
         carried,
         hovered,

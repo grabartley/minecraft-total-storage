@@ -38,14 +38,13 @@ The set is named for the chrome it draws, not for the widget that draws it, so a
 | `icon/deposit_all` | 12x12 | stretch | Deposit all action |
 | `icon/rescan` | 12x12 | stretch | Rescan the network |
 | `icon/highlight` | 12x12 | stretch | Re-highlight containers in world |
-| `icon/sort` | 12x12 | stretch | Sort action |
 | `icon/clear_all` | 8x8 | stretch | Clear every active filter |
 | `icon/items` | 12x12 | stretch | Item view tab |
 | `icon/settings` | 12x12 | stretch | Settings tab |
 | `empty/network` | 32x32 | stretch | The network holds no containers |
 | `empty/no_results` | 32x32 | stretch | The search and filters match nothing |
 
-`slot/locked` and `sort_button/*` belong to their own features and are documented in [`locked-slot-art.md`](locked-slot-art.md) and [`sort-button-art.md`](sort-button-art.md). They use this same palette.
+`slot/locked`, `icon/sort` and `sort_button/*` belong to their own features rather than to the terminal screen, and are documented in [`locked-slot-art.md`](locked-slot-art.md) and [`sort-button-art.md`](sort-button-art.md). They ship in this same tree, use this same palette, and are held to it by the same test.
 
 ## Layout Rules
 
@@ -93,7 +92,7 @@ Every chrome colour is sampled from a Minecraft texture, and `VanillaPaletteTest
 | `W` | `FFFFFF` | Bevel highlight, up and left | The chassis's top and left bevel, and a slot's bottom and right edge |
 | `o` | `404040` | Label text | The title of every vanilla container |
 
-No sprite paints anything else. One colour is the mod's own, `C43A2E`, and it is painted rather than shipped: `TerminalRowChrome` fills a two pixel bar down the left edge of a row, over whichever chrome that row is already wearing, so an active row keeps its hover state instead of trading it away. The accent is redstone red because redstone power is the terminal's on switch, so the block and its screen share one visual idea. It appears on exactly two things: a filter that is currently filtering, and a container the network is not allowed to write to. Neither is carried by colour alone; the bar is a shape, and the container's role is written out in words beside it.
+No sprite paints anything else. One colour is the mod's own, `C43A2E`, and it is painted rather than shipped: `TerminalChrome` fills a two pixel bar down the left edge of a row, over whichever chrome that row is already wearing, so an active row keeps its hover state instead of trading it away. The accent is redstone red because redstone power is the terminal's on switch, so the block and its screen share one visual idea. It marks a row that is switched on or armed, which is four things: a tag that is currently filtering the listing, a tag an item already carries, a container the network may not write to, and a tag armed for deletion. None of them leans on the colour, since the bar is a shape and each row also says in words what it is doing.
 
 Two colours the mod draws are deliberately outside this palette and belong to other vocabularies: the in-world container outlines in `HighlightColour`, which have to read against arbitrary world geometry rather than against a grey panel, and the locked-slot wash in `LockedSlotTint`, documented in [`locked-slot-art.md`](locked-slot-art.md). Neither is chrome.
 

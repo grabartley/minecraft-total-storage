@@ -61,6 +61,18 @@ class TerminalSpriteTest {
     }
   }
 
+  private static BufferedImage readFile(Path file) {
+    try (InputStream source = Files.newInputStream(file)) {
+      return ImageIO.read(source);
+    } catch (IOException failure) {
+      throw new UncheckedIOException("could not read " + file, failure);
+    }
+  }
+
+  private static String relativeName(Path sprite) {
+    return spriteRoot().relativize(sprite).toString().replace(java.io.File.separatorChar, '/');
+  }
+
   private static BufferedImage textureOf(TerminalSprite sprite) {
     return read(SPRITE_ROOT + "/" + sprite.spritePath() + ".png");
   }
@@ -150,7 +162,7 @@ class TerminalSpriteTest {
   @ParameterizedTest
   @MethodSource("everySpriteTheModShips")
   void everySpriteTheModShipsStaysInsideVanillasPalette(Path sprite) {
-    final BufferedImage texture = read(SPRITE_ROOT + "/" + spriteRoot().relativize(sprite));
+    final BufferedImage texture = readFile(sprite);
 
     for (int y = 0; y < texture.getHeight(); y++) {
       for (int x = 0; x < texture.getWidth(); x++) {
@@ -160,7 +172,7 @@ class TerminalSpriteTest {
         }
         assertTrue(
             VANILLA_COLOURS.contains(pixel & 0xFFFFFF),
-            spriteRoot().relativize(sprite)
+            relativeName(sprite)
                 + " paints "
                 + String.format("#%06X", pixel & 0xFFFFFF)
                 + " at "
@@ -175,7 +187,7 @@ class TerminalSpriteTest {
   @ParameterizedTest
   @MethodSource("everySpriteTheModShips")
   void aSpriteIsNineSlicedWhenAndOnlyWhenItsSizeIsNotKnownInAdvance(Path sprite) {
-    final String relative = spriteRoot().relativize(sprite).toString();
+    final String relative = relativeName(sprite);
     final boolean declaresScaling = scalingOf(relative) != null;
 
     assertEquals(
@@ -267,12 +279,5 @@ class TerminalSpriteTest {
             "the window chassis differs from Minecraft's own chest at " + x + "," + y);
       }
     }
-  }
-
-  @Test
-  void theAccentIsPaintedRatherThanShippedSoNoSpriteHasToCarryIt() {
-    assertFalse(
-        VANILLA_COLOURS.contains(VanillaPalette.ACCENT),
-        "the accent is the mod's own colour and must not be mistaken for one of vanilla's");
   }
 }

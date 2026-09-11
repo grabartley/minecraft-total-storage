@@ -61,9 +61,8 @@ public final class TerminalTagsPanel {
     final int left = originX + TerminalSettingsLayout.PANEL_X;
     final int top = originY + TerminalSettingsLayout.rowY(TagsSectionLayout.NEW_TAG_ROW);
     final boolean hovered = view.mayAdminister() && TagsSectionLayout.isOverNewTag(mouseX, mouseY);
-    TerminalRowChrome.draw(
+    TerminalChrome.drawRow(
         context,
-        false,
         hovered,
         left,
         top,
@@ -126,7 +125,7 @@ public final class TerminalTagsPanel {
     final int left = originX + TerminalSettingsLayout.PANEL_X;
     final int top = originY + TerminalSettingsLayout.rowY(row);
     final boolean armed = isArmed(tag.id());
-    TerminalRowChrome.draw(
+    TerminalChrome.drawActiveRow(
         context,
         armed,
         hovered,
@@ -160,7 +159,7 @@ public final class TerminalTagsPanel {
         view.mayAdminister()
             && TagsSectionLayout.regionAt(mouseX, mouseY) == TagRowRegion.DELETE
             && TerminalSettingsLayout.rowAt(mouseX, mouseY) == row;
-    TerminalSprite.control(view.mayAdminister(), hovered)
+    TerminalChrome.controlOrUnavailable(view.mayAdminister(), hovered)
         .draw(context, left, top, TagsSectionLayout.CONTROL_SIZE, TagsSectionLayout.CONTROL_SIZE);
     final int inset = (TagsSectionLayout.CONTROL_SIZE - ICON_SIZE) / 2;
     TerminalSprite.CLEAR_ALL.draw(context, left + inset, top + inset, ICON_SIZE, ICON_SIZE);

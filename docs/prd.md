@@ -588,7 +588,7 @@ Every screen the mod draws is a Minecraft screen. A player opens the terminal fr
 | UI-1 | Every interface the mod draws uses vanilla's container chrome: its chassis, its bevels, its slot frames and its label greys, copied from Minecraft's own textures rather than designed to resemble them |
 | UI-2 | A slot is 18 pixels with its item drawn at `+1,+1` wherever the mod draws one, so the mod's grids line up column for column with the player inventory below them |
 | UI-3 | Hovering, item counts, durability bars and cooldown sweeps are drawn by the game's own calls, so an item in a mod grid renders exactly as it does in a chest |
-| UI-4 | No chrome the mod draws, meaning its panels, rows, controls, fields, slots, icons and text, paints a colour outside the vanilla palette, except the accent that marks an active filter and an excluded container, and that accent is always accompanied by a shape and a word |
+| UI-4 | No chrome the mod draws, meaning its panels, rows, controls, fields, slots, icons and text, paints a colour the palette does not hold, and every colour in that palette is sampled from a Minecraft texture except one accent, which marks a row that is switched on or armed and is always accompanied by a shape and a word |
 | UI-5 | Conformance is tested rather than reviewed: the build reads Minecraft's own textures and fails if a colour drifts or if any shipped sprite paints one that is not in the palette |
 | UI-6 | A colour drawn over pixels the mod does not own, a state tint on a slot or an outline on world geometry, is exempt from UI-4 and is documented where it lives |
 

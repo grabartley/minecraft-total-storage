@@ -125,7 +125,7 @@ public final class TerminalScreenLayout {
   public static final int SCROLLBAR_Y = GRID_Y;
   public static final int SCROLLBAR_HEIGHT = GRID_HEIGHT;
 
-  public static final int INVENTORY_X = GRID_X;
+  public static final int INVENTORY_X = GRID_X + SLOT_ITEM_OFFSET;
 
   public static final int INVENTORY_GAP = 14;
 

@@ -103,7 +103,7 @@ public final class TerminalFilterColumn {
       int mouseX,
       int mouseY) {
     final int top = originY + FilterColumnLayout.Y;
-    TerminalSprite.control(FilterColumnLayout.isOverMode(mouseX, mouseY))
+    TerminalChrome.control(FilterColumnLayout.isOverMode(mouseX, mouseY))
         .draw(
             context,
             originX + FilterColumnLayout.X,
@@ -120,7 +120,8 @@ public final class TerminalFilterColumn {
         top + (FilterColumnLayout.HEADER_HEIGHT - LINE_HEIGHT) / 2 + 1,
         selection.isFiltering() ? VanillaPalette.LABEL : VanillaPalette.MUTED,
         false);
-    TerminalSprite.control(selection.isFiltering(), FilterColumnLayout.isOverClear(mouseX, mouseY))
+    TerminalChrome.controlOrUnavailable(
+            selection.isFiltering(), FilterColumnLayout.isOverClear(mouseX, mouseY))
         .draw(
             context,
             originX + FilterColumnLayout.CLEAR_X,
@@ -172,7 +173,7 @@ public final class TerminalFilterColumn {
       int originX,
       int top) {
     final int left = originX + FilterColumnLayout.X;
-    TerminalRowChrome.draw(
+    TerminalChrome.drawActiveRow(
         context,
         active,
         hovered,
