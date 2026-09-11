@@ -20,6 +20,10 @@ import org.junit.jupiter.params.provider.ValueSource;
 class TerminalScreenLayoutTest {
   private static final int ITEM_SIZE = 16;
 
+  private static final int VANILLA_SLOT_SIZE = 18;
+
+  private static final int VANILLA_SLOT_ITEM_OFFSET = 1;
+
   static Stream<Integer> everySlot() {
     return IntStream.range(0, TerminalScreenLayout.SLOT_COUNT).boxed();
   }
@@ -378,10 +382,10 @@ class TerminalScreenLayoutTest {
         TerminalScreenLayout.LISTING_PAGE_SIZE,
         TerminalScreenLayout.LISTING_COLUMNS * TerminalScreenLayout.LISTING_ROWS);
     assertEquals(
-        TerminalScreenLayout.LISTING_COLUMNS * TerminalScreenLayout.CELL_SIZE,
+        TerminalScreenLayout.LISTING_COLUMNS * TerminalScreenLayout.SLOT_SIZE,
         TerminalScreenLayout.GRID_WIDTH);
     assertEquals(
-        TerminalScreenLayout.LISTING_ROWS * TerminalScreenLayout.CELL_SIZE,
+        TerminalScreenLayout.LISTING_ROWS * TerminalScreenLayout.SLOT_SIZE,
         TerminalScreenLayout.GRID_HEIGHT);
   }
 
@@ -438,13 +442,13 @@ class TerminalScreenLayoutTest {
     assertTrue(cellX >= TerminalScreenLayout.GRID_X, "left edge at " + cellX);
     assertTrue(cellY >= TerminalScreenLayout.GRID_Y, "top edge at " + cellY);
     assertTrue(
-        cellX + TerminalScreenLayout.CELL_SIZE
+        cellX + TerminalScreenLayout.SLOT_SIZE
             <= TerminalScreenLayout.GRID_X + TerminalScreenLayout.GRID_WIDTH,
-        "right edge at " + (cellX + TerminalScreenLayout.CELL_SIZE));
+        "right edge at " + (cellX + TerminalScreenLayout.SLOT_SIZE));
     assertTrue(
-        cellY + TerminalScreenLayout.CELL_SIZE
+        cellY + TerminalScreenLayout.SLOT_SIZE
             <= TerminalScreenLayout.GRID_Y + TerminalScreenLayout.GRID_HEIGHT,
-        "bottom edge at " + (cellY + TerminalScreenLayout.CELL_SIZE));
+        "bottom edge at " + (cellY + TerminalScreenLayout.SLOT_SIZE));
   }
 
   @Test
@@ -465,7 +469,7 @@ class TerminalScreenLayoutTest {
   void everyCellIsFoundAtItsOwnCorners(int cell) {
     int cellX = TerminalScreenLayout.cellX(cell);
     int cellY = TerminalScreenLayout.cellY(cell);
-    int last = TerminalScreenLayout.CELL_SIZE - 1;
+    int last = TerminalScreenLayout.SLOT_SIZE - 1;
 
     assertEquals(cell, TerminalScreenLayout.cellAt(cellX, cellY));
     assertEquals(cell, TerminalScreenLayout.cellAt(cellX + last, cellY));
@@ -557,6 +561,26 @@ class TerminalScreenLayoutTest {
   @Test
   void anItemDrawnAtTheCellOffsetSitsInsideItsCell() {
     assertEquals(
-        TerminalScreenLayout.CELL_SIZE, 2 * TerminalScreenLayout.CELL_ITEM_OFFSET + ITEM_SIZE);
+        TerminalScreenLayout.SLOT_SIZE, 2 * TerminalScreenLayout.SLOT_ITEM_OFFSET + ITEM_SIZE);
+  }
+
+  @Test
+  void aGridCellIsAVanillaSlot() {
+    assertEquals(VANILLA_SLOT_SIZE, TerminalScreenLayout.SLOT_SIZE);
+    assertEquals(VANILLA_SLOT_ITEM_OFFSET, TerminalScreenLayout.SLOT_ITEM_OFFSET);
+  }
+
+  @Test
+  void theGridAndThePlayerInventoryShareTheirColumns() {
+    assertEquals(TerminalScreenLayout.GRID_X, TerminalScreenLayout.INVENTORY_X);
+    assertEquals(
+        TerminalScreenLayout.COLUMNS * TerminalScreenLayout.SLOT_SIZE,
+        TerminalScreenLayout.GRID_WIDTH);
+    for (int column = 0; column < TerminalScreenLayout.COLUMNS; column++) {
+      assertEquals(
+          TerminalScreenLayout.cellX(column),
+          TerminalScreenLayout.x(column),
+          "column " + column + " of the grid does not line up with the inventory below it");
+    }
   }
 }

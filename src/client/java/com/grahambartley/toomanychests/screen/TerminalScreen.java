@@ -23,20 +23,9 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
-  private static final Identifier PANEL = TerminalSprites.of("panel/background");
-  private static final Identifier INSET = TerminalSprites.of("panel/inset");
-  private static final Identifier TAB_SELECTED = TerminalSprites.of("tab/selected");
-  private static final Identifier TAB_UNSELECTED = TerminalSprites.of("tab/unselected");
-  private static final Identifier ITEMS_ICON = TerminalSprites.of("icon/items");
-  private static final Identifier SETTINGS_ICON = TerminalSprites.of("icon/settings");
-  private static final Identifier DEPOSIT_ALL_ICON = TerminalSprites.of("icon/deposit_all");
-  private static final Identifier RESCAN_ICON = TerminalSprites.of("icon/rescan");
-  private static final Identifier HIGHLIGHT_ICON = TerminalSprites.of("icon/highlight");
-
   private final TerminalItemsPanel items = new TerminalItemsPanel();
   private final TerminalSettingsPanel settings = new TerminalSettingsPanel();
   private final TerminalTagsPanel tagsPanel = new TerminalTagsPanel();
@@ -81,9 +70,10 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     super.init();
     search = new TerminalSearchBox(textRenderer, x, y, search == null ? "" : search.text());
     addDrawableChild(search.widget());
-    depositAll = action(0, DEPOSIT_ALL_ICON, "deposit_all", this::depositEverything);
-    rescan = action(0, RESCAN_ICON, "rescan", () -> act(TerminalAction.RESCAN));
-    highlight = action(1, HIGHLIGHT_ICON, "highlight", () -> act(TerminalAction.HIGHLIGHT));
+    depositAll = action(0, TerminalSprite.DEPOSIT_ALL, "deposit_all", this::depositEverything);
+    rescan = action(0, TerminalSprite.RESCAN, "rescan", () -> act(TerminalAction.RESCAN));
+    highlight =
+        action(1, TerminalSprite.HIGHLIGHT, "highlight", () -> act(TerminalAction.HIGHLIGHT));
     setInitialFocus(search.widget());
     updateWidgets(TerminalListingMirror.page().status());
     if (TerminalListingMirror.isShowing(handler.syncId)) {
@@ -96,7 +86,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     requestVisibleRows();
   }
 
-  private TerminalIconButton action(int row, Identifier icon, String label, Runnable onPress) {
+  private TerminalIconButton action(int row, TerminalSprite icon, String label, Runnable onPress) {
     final TerminalIconButton button =
         new TerminalIconButton(
             x + TerminalScreenLayout.TOOLBAR_X,
@@ -207,47 +197,44 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   @Override
   protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
-    context.drawGuiTexture(PANEL, x, y, backgroundWidth, backgroundHeight);
+    TerminalSprite.PANEL.draw(context, x, y, backgroundWidth, backgroundHeight);
     if (!tab.isSettings()) {
       search.drawBox(context, x, y);
     }
-    context.drawGuiTexture(
-        INSET,
+    TerminalSprite.SUNKEN.draw(
+        context,
         x + TerminalScreenLayout.INSET_X,
         y + TerminalScreenLayout.INSET_Y,
         TerminalScreenLayout.INSET_WIDTH,
         TerminalScreenLayout.INSET_HEIGHT);
     if (!tab.isSettings()) {
-      items.drawCells(context, x, y, hoveredCell);
+      items.drawCells(context, x, y);
       items.drawScrollbar(context, x, y);
     }
     drawTabs(context);
     for (final Slot slot : handler.slots) {
-      context.drawGuiTexture(
-          INSET,
-          x + slot.x - 1,
-          y + slot.y - 1,
+      TerminalSprite.SUNKEN.draw(
+          context,
+          x + slot.x - TerminalScreenLayout.SLOT_ITEM_OFFSET,
+          y + slot.y - TerminalScreenLayout.SLOT_ITEM_OFFSET,
           TerminalScreenLayout.SLOT_SIZE,
           TerminalScreenLayout.SLOT_SIZE);
     }
   }
 
   private void drawTabs(DrawContext context) {
-    drawTab(context, TerminalTab.ITEMS, ITEMS_ICON);
-    drawTab(context, TerminalTab.SETTINGS, SETTINGS_ICON);
+    drawTab(context, TerminalTab.ITEMS, TerminalSprite.ITEMS);
+    drawTab(context, TerminalTab.SETTINGS, TerminalSprite.SETTINGS);
   }
 
-  private void drawTab(DrawContext context, TerminalTab drawn, Identifier icon) {
+  private void drawTab(DrawContext context, TerminalTab drawn, TerminalSprite icon) {
     final int left = x + TerminalScreenLayout.TOOLBAR_X;
     final int top = y + TerminalScreenLayout.tabY(drawn.index());
-    context.drawGuiTexture(
-        drawn == tab ? TAB_SELECTED : TAB_UNSELECTED,
-        left,
-        top,
-        TerminalScreenLayout.BUTTON_SIZE,
-        TerminalScreenLayout.BUTTON_SIZE);
-    context.drawGuiTexture(
-        icon,
+    (drawn == tab ? TerminalSprite.RAISED : TerminalSprite.PRESSED)
+        .draw(
+            context, left, top, TerminalScreenLayout.BUTTON_SIZE, TerminalScreenLayout.BUTTON_SIZE);
+    icon.draw(
+        context,
         left + TerminalScreenLayout.ICON_INSET,
         top + TerminalScreenLayout.ICON_INSET,
         TerminalScreenLayout.ICON_SIZE,
@@ -274,7 +261,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     }
     filters.draw(
         context, textRenderer, tagsThisFrame, selection, 0, 0, hoveredWindowX, hoveredWindowY);
-    items.drawRows(context, textRenderer);
+    items.drawRows(context, textRenderer, hoveredCell);
   }
 
   @Override

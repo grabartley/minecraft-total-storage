@@ -8,24 +8,11 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 
 public final class TerminalFilterColumn {
-  private static final Identifier ROW = TerminalSprites.of("filter/row");
-  private static final Identifier ROW_HOVER = TerminalSprites.of("filter/row_hover");
-  private static final Identifier ROW_ACTIVE = TerminalSprites.of("filter/row_active");
-  private static final Identifier CONTROL = TerminalSprites.of("button/normal");
-  private static final Identifier CONTROL_HOVER = TerminalSprites.of("button/hover");
-  private static final Identifier CONTROL_DISABLED = TerminalSprites.of("button/disabled");
-  private static final Identifier CLEAR_ICON = TerminalSprites.of("icon/clear_all");
-  private static final Identifier SCROLL_TRACK = TerminalSprites.of("scroll/track");
-  private static final Identifier SCROLL_THUMB = TerminalSprites.of("scroll/thumb");
-  private static final Identifier SCROLL_THUMB_DISABLED =
-      TerminalSprites.of("scroll/thumb_disabled");
-
-  private static final int LABEL_COLOUR = 0xE4E9F2;
-  private static final int MUTED_COLOUR = 0x9AA3B3;
-  private static final int EMPTY_COLOUR = 0x6D7484;
+  private static final int LABEL_COLOUR = VanillaPalette.LABEL;
+  private static final int MUTED_COLOUR = VanillaPalette.MUTED;
+  private static final int EMPTY_COLOUR = VanillaPalette.DISABLED;
   private static final int LINE_HEIGHT = 9;
   private static final int ICON_SIZE = 8;
 
@@ -119,12 +106,13 @@ public final class TerminalFilterColumn {
       int mouseX,
       int mouseY) {
     final int top = originY + FilterColumnLayout.Y;
-    context.drawGuiTexture(
-        FilterColumnLayout.isOverMode(mouseX, mouseY) ? CONTROL_HOVER : CONTROL,
-        originX + FilterColumnLayout.X,
-        top,
-        FilterColumnLayout.MODE_WIDTH,
-        FilterColumnLayout.HEADER_HEIGHT);
+    TerminalSprite.control(true, FilterColumnLayout.isOverMode(mouseX, mouseY))
+        .draw(
+            context,
+            originX + FilterColumnLayout.X,
+            top,
+            FilterColumnLayout.MODE_WIDTH,
+            FilterColumnLayout.HEADER_HEIGHT);
     final Text mode = FilterColumnText.mode(selection.mode());
     context.drawText(
         textRenderer,
@@ -135,18 +123,16 @@ public final class TerminalFilterColumn {
         top + (FilterColumnLayout.HEADER_HEIGHT - LINE_HEIGHT) / 2 + 1,
         selection.isFiltering() ? LABEL_COLOUR : MUTED_COLOUR,
         false);
-    final boolean clearable = selection.isFiltering();
-    context.drawGuiTexture(
-        !clearable
-            ? CONTROL_DISABLED
-            : FilterColumnLayout.isOverClear(mouseX, mouseY) ? CONTROL_HOVER : CONTROL,
-        originX + FilterColumnLayout.CLEAR_X,
-        top,
-        FilterColumnLayout.CONTROL_SIZE,
-        FilterColumnLayout.CONTROL_SIZE);
+    TerminalSprite.control(selection.isFiltering(), FilterColumnLayout.isOverClear(mouseX, mouseY))
+        .draw(
+            context,
+            originX + FilterColumnLayout.CLEAR_X,
+            top,
+            FilterColumnLayout.CONTROL_SIZE,
+            FilterColumnLayout.CONTROL_SIZE);
     final int iconInset = (FilterColumnLayout.CONTROL_SIZE - ICON_SIZE) / 2;
-    context.drawGuiTexture(
-        CLEAR_ICON,
+    TerminalSprite.CLEAR_ALL.draw(
+        context,
         originX + FilterColumnLayout.CLEAR_X + iconInset,
         top + iconInset,
         ICON_SIZE,
@@ -189,12 +175,8 @@ public final class TerminalFilterColumn {
       int originX,
       int top) {
     final int left = originX + FilterColumnLayout.X;
-    context.drawGuiTexture(
-        active ? ROW_ACTIVE : hovered ? ROW_HOVER : ROW,
-        left,
-        top,
-        FilterColumnLayout.ROW_WIDTH,
-        FilterColumnLayout.ROW_HEIGHT);
+    TerminalSprite.row(active, hovered)
+        .draw(context, left, top, FilterColumnLayout.ROW_WIDTH, FilterColumnLayout.ROW_HEIGHT);
     final String count = FilterColumnText.count(tag);
     final int countWidth = textRenderer.getWidth(count);
     final int textY = top + (FilterColumnLayout.ROW_HEIGHT - LINE_HEIGHT) / 2 + 1;
@@ -224,17 +206,14 @@ public final class TerminalFilterColumn {
   private void drawScrollbar(DrawContext context, int originX, int originY) {
     final int left = originX + FilterColumnLayout.SCROLLBAR_X;
     final int top = originY + FilterColumnLayout.CONTENT_Y;
-    context.drawGuiTexture(
-        SCROLL_TRACK,
-        left,
-        top,
-        FilterColumnLayout.SCROLLBAR_WIDTH,
-        FilterColumnLayout.CONTENT_HEIGHT);
-    context.drawGuiTexture(
-        scrollbar.isEnabled() ? SCROLL_THUMB : SCROLL_THUMB_DISABLED,
-        left,
-        top + scrollbar.thumbTop(),
-        FilterColumnLayout.SCROLLBAR_WIDTH,
-        scrollbar.thumbHeight());
+    TerminalSprite.SUNKEN.draw(
+        context, left, top, FilterColumnLayout.SCROLLBAR_WIDTH, FilterColumnLayout.CONTENT_HEIGHT);
+    (scrollbar.isEnabled() ? TerminalSprite.RAISED : TerminalSprite.FLAT)
+        .draw(
+            context,
+            left,
+            top + scrollbar.thumbTop(),
+            FilterColumnLayout.SCROLLBAR_WIDTH,
+            scrollbar.thumbHeight());
   }
 }

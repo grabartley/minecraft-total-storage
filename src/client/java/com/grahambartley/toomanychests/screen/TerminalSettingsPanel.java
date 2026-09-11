@@ -13,27 +13,12 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 
 public final class TerminalSettingsPanel {
-  private static final Identifier TAB_SELECTED = TerminalSprites.of("filter/row_active");
-  private static final Identifier TAB_HOVER = TerminalSprites.of("filter/row_hover");
-  private static final Identifier TAB = TerminalSprites.of("filter/row");
-  private static final Identifier ROW = TerminalSprites.of("filter/row");
-  private static final Identifier ROW_HOVER = TerminalSprites.of("filter/row_hover");
-  private static final Identifier ROW_ACTIVE = TerminalSprites.of("filter/row_active");
-  private static final Identifier CONTROL = TerminalSprites.of("button/normal");
-  private static final Identifier CONTROL_HOVER = TerminalSprites.of("button/hover");
-  private static final Identifier CONTROL_DISABLED = TerminalSprites.of("button/disabled");
-  private static final Identifier SCROLL_TRACK = TerminalSprites.of("scroll/track");
-  private static final Identifier SCROLL_THUMB = TerminalSprites.of("scroll/thumb");
-  private static final Identifier SCROLL_THUMB_DISABLED =
-      TerminalSprites.of("scroll/thumb_disabled");
+  private static final int LABEL_COLOUR = VanillaPalette.LABEL;
+  private static final int MUTED_COLOUR = VanillaPalette.MUTED;
 
-  private static final int LABEL_COLOUR = 0xE4E9F2;
-  private static final int MUTED_COLOUR = 0x9AA3B3;
-
-  private static final int WARNING_COLOUR = 0xED6353;
+  private static final int WARNING_COLOUR = VanillaPalette.WARNING;
 
   private static final int TEXT_INSET = 4;
   private static final int ICON_SIZE = 16;
@@ -147,12 +132,15 @@ public final class TerminalSettingsPanel {
     for (final SettingsSection shown : SettingsSection.values()) {
       final int left = originX + TerminalSettingsLayout.sectionTabX(shown.index());
       final int top = originY + TerminalSettingsLayout.PANEL_Y;
-      context.drawGuiTexture(
-          shown == section ? TAB_SELECTED : hovered == shown.index() ? TAB_HOVER : TAB,
-          left,
-          top,
-          TerminalSettingsLayout.SECTION_TAB_WIDTH,
-          TerminalSettingsLayout.SECTION_TAB_HEIGHT);
+      (shown == section
+              ? TerminalSprite.RAISED
+              : hovered == shown.index() ? TerminalSprite.RAISED_LIT : TerminalSprite.PRESSED)
+          .draw(
+              context,
+              left,
+              top,
+              TerminalSettingsLayout.SECTION_TAB_WIDTH,
+              TerminalSettingsLayout.SECTION_TAB_HEIGHT);
       final Text label = TerminalScreenText.of(shown.label());
       context.drawText(
           textRenderer,
@@ -319,12 +307,13 @@ public final class TerminalSettingsPanel {
       boolean changeable) {
     final int left = originX + TerminalSettingsLayout.PANEL_X;
     final int top = originY + TerminalSettingsLayout.rowY(row);
-    context.drawGuiTexture(
-        hovered ? ROW_HOVER : entry.role() == ContainerRole.EXCLUDED ? ROW_ACTIVE : ROW,
-        left,
-        top,
-        TerminalSettingsLayout.ROW_WIDTH,
-        TerminalSettingsLayout.ROW_HEIGHT - 1);
+    TerminalSprite.row(entry.role() == ContainerRole.EXCLUDED, hovered)
+        .draw(
+            context,
+            left,
+            top,
+            TerminalSettingsLayout.ROW_WIDTH,
+            TerminalSettingsLayout.ROW_HEIGHT - 1);
     final int iconY = top + (TerminalSettingsLayout.ROW_HEIGHT - 1 - ICON_SIZE) / 2;
     entry.icon().ifPresent(icon -> context.drawItem(icon.toStack(), left + TEXT_INSET, iconY));
     final int textY = top + (TerminalSettingsLayout.ROW_HEIGHT - 1 - LINE_HEIGHT) / 2;
@@ -352,12 +341,13 @@ public final class TerminalSettingsPanel {
       int originY,
       boolean hovered,
       boolean active) {
-    context.drawGuiTexture(
-        active ? ROW_ACTIVE : hovered ? ROW_HOVER : ROW,
-        originX + TerminalSettingsLayout.PANEL_X,
-        originY + TerminalSettingsLayout.rowY(setting.row()),
-        TerminalSettingsLayout.FULL_ROW_WIDTH,
-        TerminalSettingsLayout.ROW_HEIGHT - 1);
+    TerminalSprite.row(active, hovered)
+        .draw(
+            context,
+            originX + TerminalSettingsLayout.PANEL_X,
+            originY + TerminalSettingsLayout.rowY(setting.row()),
+            TerminalSettingsLayout.FULL_ROW_WIDTH,
+            TerminalSettingsLayout.ROW_HEIGHT - 1);
   }
 
   private static void labelled(
@@ -419,8 +409,7 @@ public final class TerminalSettingsPanel {
       boolean enabled,
       boolean hovered) {
     final int size = SettingsControl.size();
-    context.drawGuiTexture(
-        !enabled ? CONTROL_DISABLED : hovered ? CONTROL_HOVER : CONTROL, x, y, size, size);
+    TerminalSprite.control(enabled, hovered).draw(context, x, y, size, size);
     context.drawText(
         textRenderer,
         glyph,
@@ -431,17 +420,18 @@ public final class TerminalSettingsPanel {
   }
 
   private void drawScrollbar(DrawContext context, int originX, int originY) {
-    context.drawGuiTexture(
-        SCROLL_TRACK,
+    TerminalSprite.SUNKEN.draw(
+        context,
         originX + TerminalScreenLayout.SCROLLBAR_X,
         originY + TerminalSettingsLayout.CONTENT_Y,
         TerminalScreenLayout.SCROLLBAR_WIDTH,
         TerminalSettingsLayout.CONTENT_HEIGHT);
-    context.drawGuiTexture(
-        scrollbar.isEnabled() ? SCROLL_THUMB : SCROLL_THUMB_DISABLED,
-        originX + TerminalScreenLayout.SCROLLBAR_X,
-        originY + TerminalSettingsLayout.CONTENT_Y + scrollbar.thumbTop(),
-        TerminalScreenLayout.SCROLLBAR_WIDTH,
-        scrollbar.thumbHeight());
+    (scrollbar.isEnabled() ? TerminalSprite.RAISED : TerminalSprite.FLAT)
+        .draw(
+            context,
+            originX + TerminalScreenLayout.SCROLLBAR_X,
+            originY + TerminalSettingsLayout.CONTENT_Y + scrollbar.thumbTop(),
+            TerminalScreenLayout.SCROLLBAR_WIDTH,
+            scrollbar.thumbHeight());
   }
 }

@@ -21,7 +21,7 @@ Nothing in the screen code names a pixel offset. A widget names a sprite and a r
 
 The sprites are generated from palette-mapped text sources under `art/gui/`, and both the source and the PNG are committed. A text source reviews as a diff that shows which pixels moved; a PNG reviews as "1 file changed".
 
-Every state pair differs by shape and not only by colour: an outline that appears, brackets that appear, a bevel that is removed. Accent detailing is placed so that it lands in a nine-slice band that stretches along the axis it runs, so a rail stays a rail at any width.
+Every state pair differs by shape and not only by colour: a bevel that appears, a bevel that inverts, a bevel that is removed. Accent detailing is placed so that it lands in a nine-slice band that tiles along the axis it runs, so a bar stays a bar at any height. Which colours those sprites are allowed to use was settled later, by [ADR 0035](0035-the-terminal-wears-vanillas-chrome.md).
 
 The reference table lives in [`../terminal-gui-sprites.md`](../terminal-gui-sprites.md), which is what the screen implementation reads.
 

@@ -17,7 +17,7 @@ The terminal's own toolbar buttons are composed: a `button/*` chassis sprite in 
 
 The greys are sampled from `generic_54.png`: the `373737` slot border becomes the button outline, `C6C6C6` the face, `FFFFFF` and `555555` the bevel, `404040` the glyph. The button is a raised element made out of the same values as the panel it sits on, so it reads as a control that screen always had.
 
-The glyph is baked in rather than composed. There is exactly one action here, so a chassis that can carry seven icons buys nothing, and two of the four states move the glyph or recolour it: held shifts it down and right by a pixel, disabled mutes it to `6E6E6E`. Composing those would need a matching set of icon variants and an offset that has to change with the state, which is more moving parts than drawing four sprites.
+The glyph is baked in rather than composed. There is exactly one action here, so a chassis that can carry seven icons buys nothing, and two of the four states move the glyph or recolour it: held shifts it down and right by a pixel, disabled mutes it to `8B8B8B`. Composing those would need a matching set of icon variants and an offset that has to change with the state, which is more moving parts than drawing four sprites.
 
 The reference table lives in [`../sort-button-art.md`](../sort-button-art.md).
 

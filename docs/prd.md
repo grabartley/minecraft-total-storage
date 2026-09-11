@@ -579,7 +579,19 @@ The property that decides whether the mod is safe in a modpack. How the suite is
 | A11Y-3 | Every player-facing string carries a translation key with an English fallback |
 | A11Y-4 | Sounds are quiet, mechanical, and not fatiguing on repeat |
 
-### 8.5 Compatibility
+### 8.5 Interface style
+
+Every screen the mod draws is a Minecraft screen. A player opens the terminal from the same hotbar, with their own inventory drawn underneath it by the game, so an interface in a style of its own reads as a seam rather than as an identity.
+
+| ID | Requirement |
+|---|---|
+| UI-1 | Every interface the mod draws uses vanilla's container chrome: its chassis, its bevels, its slot frames and its label greys, copied from Minecraft's own textures rather than designed to resemble them |
+| UI-2 | A slot is 18 pixels with its item drawn at `+1,+1` wherever the mod draws one, so the mod's grids line up column for column with the player inventory below them |
+| UI-3 | Hovering, item counts, durability bars and cooldown sweeps are drawn by the game's own calls, so an item in a mod grid renders exactly as it does in a chest |
+| UI-4 | No mod-drawn surface paints a colour outside the vanilla palette, except the accent that marks an active filter and an excluded container, and that accent is always accompanied by a shape and a word |
+| UI-5 | Conformance is tested rather than reviewed: the build reads Minecraft's own textures and fails if a colour drifts or a sprite paints one that is not in the palette |
+
+### 8.6 Compatibility
 
 | ID | Requirement |
 |---|---|

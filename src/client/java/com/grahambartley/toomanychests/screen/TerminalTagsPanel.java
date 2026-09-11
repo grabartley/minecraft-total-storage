@@ -10,20 +10,11 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 
 public final class TerminalTagsPanel {
-  private static final Identifier ROW = TerminalSprites.of("filter/row");
-  private static final Identifier ROW_HOVER = TerminalSprites.of("filter/row_hover");
-  private static final Identifier ROW_ACTIVE = TerminalSprites.of("filter/row_active");
-  private static final Identifier CONTROL = TerminalSprites.of("button/normal");
-  private static final Identifier CONTROL_HOVER = TerminalSprites.of("button/hover");
-  private static final Identifier CONTROL_DISABLED = TerminalSprites.of("button/disabled");
-  private static final Identifier CLEAR_ICON = TerminalSprites.of("icon/clear_all");
-
-  private static final int LABEL_COLOUR = 0xE4E9F2;
-  private static final int MUTED_COLOUR = 0x9AA3B3;
-  private static final int WARNING_COLOUR = 0xED6353;
+  private static final int LABEL_COLOUR = VanillaPalette.LABEL;
+  private static final int MUTED_COLOUR = VanillaPalette.MUTED;
+  private static final int WARNING_COLOUR = VanillaPalette.WARNING;
   private static final int LINE_HEIGHT = 9;
   private static final int ICON_SIZE = 8;
 
@@ -73,12 +64,13 @@ public final class TerminalTagsPanel {
     final int left = originX + TerminalSettingsLayout.PANEL_X;
     final int top = originY + TerminalSettingsLayout.rowY(TagsSectionLayout.NEW_TAG_ROW);
     final boolean hovered = view.mayAdminister() && TagsSectionLayout.isOverNewTag(mouseX, mouseY);
-    context.drawGuiTexture(
-        hovered ? ROW_HOVER : ROW,
-        left,
-        top,
-        TerminalSettingsLayout.ROW_WIDTH,
-        TerminalSettingsLayout.ROW_HEIGHT);
+    TerminalSprite.row(false, hovered)
+        .draw(
+            context,
+            left,
+            top,
+            TerminalSettingsLayout.ROW_WIDTH,
+            TerminalSettingsLayout.ROW_HEIGHT);
     final Text label =
         view.mayAdminister()
             ? TerminalScreenText.of("tags.new")
@@ -136,12 +128,13 @@ public final class TerminalTagsPanel {
     final int left = originX + TerminalSettingsLayout.PANEL_X;
     final int top = originY + TerminalSettingsLayout.rowY(row);
     final boolean armed = isArmed(tag.id());
-    context.drawGuiTexture(
-        armed ? ROW_ACTIVE : hovered ? ROW_HOVER : ROW,
-        left,
-        top,
-        TerminalSettingsLayout.ROW_WIDTH,
-        TerminalSettingsLayout.ROW_HEIGHT);
+    TerminalSprite.row(armed, hovered)
+        .draw(
+            context,
+            left,
+            top,
+            TerminalSettingsLayout.ROW_WIDTH,
+            TerminalSettingsLayout.ROW_HEIGHT);
     final Text label = armed ? TerminalScreenText.of("tags.delete.confirm") : TagText.row(tag);
     final OrderedText name = TrimmedText.toWidth(textRenderer, label, TagsSectionLayout.NAME_WIDTH);
     context.drawText(
@@ -168,13 +161,9 @@ public final class TerminalTagsPanel {
         view.mayAdminister()
             && TagsSectionLayout.regionAt(mouseX, mouseY) == TagRowRegion.DELETE
             && TerminalSettingsLayout.rowAt(mouseX, mouseY) == row;
-    context.drawGuiTexture(
-        !view.mayAdminister() ? CONTROL_DISABLED : hovered ? CONTROL_HOVER : CONTROL,
-        left,
-        top,
-        TagsSectionLayout.CONTROL_SIZE,
-        TagsSectionLayout.CONTROL_SIZE);
+    TerminalSprite.control(view.mayAdminister(), hovered)
+        .draw(context, left, top, TagsSectionLayout.CONTROL_SIZE, TagsSectionLayout.CONTROL_SIZE);
     final int inset = (TagsSectionLayout.CONTROL_SIZE - ICON_SIZE) / 2;
-    context.drawGuiTexture(CLEAR_ICON, left + inset, top + inset, ICON_SIZE, ICON_SIZE);
+    TerminalSprite.CLEAR_ALL.draw(context, left + inset, top + inset, ICON_SIZE, ICON_SIZE);
   }
 }
