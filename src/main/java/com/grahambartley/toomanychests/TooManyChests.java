@@ -46,7 +46,11 @@ public class TooManyChests implements ModInitializer {
     new TerminalListingBroadcast(ModNetworking.listings()).register();
     TerminalRadiusClamp.register();
     ContainerEligibilityRefresh.register();
-    ServerLifecycleEvents.SERVER_STARTING.register(ServerConfigService::loadFromWorld);
+    ServerLifecycleEvents.SERVER_STARTING.register(
+        server -> {
+          ServerConfigService.loadFromWorld(server);
+          ContainerEligibilityRefresh.overrides().seed(ServerConfigService.current());
+        });
     ServerLifecycleEvents.SERVER_STOPPED.register(
         server -> {
           NextTick.queue().clear();

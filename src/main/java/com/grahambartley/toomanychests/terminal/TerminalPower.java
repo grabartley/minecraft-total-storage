@@ -8,8 +8,10 @@ import com.grahambartley.toomanychests.lifecycle.NetworkMembership;
 import com.grahambartley.toomanychests.storage.ScanRegion;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.math.BlockPos;
@@ -73,28 +75,55 @@ public final class TerminalPower {
     deactivate(world, pos);
   }
 
-  public boolean rescan(ServerWorld world, BlockPos pos) {
-    if (world == null || pos == null || !isActive(world, pos)) {
-      return false;
-    }
-    deactivate(world, pos);
-    activate(world, pos);
-    return true;
+  public int containerCount(ServerWorld world, BlockPos pos) {
+    return network(world, pos).map(network -> network.containers().size()).orElse(0);
   }
 
-  public boolean rescanIfRegionChanged(ServerWorld world, BlockPos pos) {
+  public void rescan(ServerWorld world, BlockPos pos) {
+    if (world == null || pos == null || !isActive(world, pos)) {
+      return;
+    }
+    rebuild(world, pos);
+  }
+
+  public void rescanIfRegionChanged(ServerWorld world, BlockPos pos) {
     if (world == null || pos == null) {
-      return false;
+      return;
     }
     final NetworkMembership running = registry.find(TerminalAddress.of(world, pos)).orElse(null);
     if (running == null || running.region().equals(scanRegion(world, pos))) {
-      return false;
+      return;
     }
-    return rescan(world, pos);
+    rebuild(world, pos);
+  }
+
+  public void rescanAll(MinecraftServer server) {
+    forEachRunning(server, this::rescan);
+  }
+
+  public void rescanAllIfRegionChanged(MinecraftServer server) {
+    forEachRunning(server, this::rescanIfRegionChanged);
   }
 
   public void shutDownAll() {
     registry.clear().forEach(NetworkMembership::powerOff);
+  }
+
+  private void forEachRunning(MinecraftServer server, BiConsumer<ServerWorld, BlockPos> visit) {
+    if (server == null) {
+      return;
+    }
+    for (final TerminalAddress address : registry.addresses()) {
+      final ServerWorld world = server.getWorld(address.worldKey());
+      if (world != null) {
+        visit.accept(world, address.pos());
+      }
+    }
+  }
+
+  private void rebuild(ServerWorld world, BlockPos pos) {
+    deactivate(world, pos);
+    activate(world, pos);
   }
 
   private void activate(ServerWorld world, BlockPos pos) {

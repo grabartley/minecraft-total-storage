@@ -98,11 +98,11 @@ public final class TerminalAccessCommand {
       throws CommandSyntaxException {
     final ServerCommandSource source = context.getSource();
     final BlockPos pos = TerminalCommand.terminalPos(context);
-    if (TerminalCommandGate.administrable(source, pos).isEmpty()) {
+    final Optional<TerminalSettings> gated = TerminalCommandGate.administrable(source, pos);
+    if (gated.isEmpty()) {
       return 0;
     }
-    final TerminalSettings settings =
-        trustService().settingsAt(source.getWorld(), pos).orElseThrow();
+    final TerminalSettings settings = gated.get();
     if (settings.trusted().isEmpty()) {
       source.sendFeedback(() -> CommandMessages.terminalTrustEmpty(pos), false);
       return 0;

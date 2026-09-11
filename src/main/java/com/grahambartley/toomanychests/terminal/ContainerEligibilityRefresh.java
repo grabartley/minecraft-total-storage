@@ -6,14 +6,18 @@ import com.grahambartley.toomanychests.config.ServerConfigListener;
 import com.grahambartley.toomanychests.config.TooManyChestsConfig;
 import java.util.Objects;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
 
 public final class ContainerEligibilityRefresh implements ServerConfigListener {
+  private static final ContainerEligibilityWatch OVERRIDES = new ContainerEligibilityWatch();
+
   private final TerminalPower power;
-  private final ContainerEligibilityWatch overrides = new ContainerEligibilityWatch();
 
   public ContainerEligibilityRefresh(TerminalPower power) {
     this.power = Objects.requireNonNull(power, "power");
+  }
+
+  public static ContainerEligibilityWatch overrides() {
+    return OVERRIDES;
   }
 
   public static void register() {
@@ -22,14 +26,9 @@ public final class ContainerEligibilityRefresh implements ServerConfigListener {
 
   @Override
   public void serverConfigChanged(MinecraftServer server, TooManyChestsConfig config) {
-    if (server == null || config == null || !overrides.moved(config)) {
+    if (server == null || config == null || !OVERRIDES.moved(config)) {
       return;
     }
-    for (final TerminalAddress address : power.registry().addresses()) {
-      final ServerWorld world = server.getWorld(address.worldKey());
-      if (world != null) {
-        power.rescan(world, address.pos());
-      }
-    }
+    power.rescanAll(server);
   }
 }

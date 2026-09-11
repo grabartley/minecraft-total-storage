@@ -200,17 +200,17 @@ public final class TerminalRadiusGameTest implements FabricGameTest {
   public void anyoneCanReadOneTerminalsRadius(TestContext context) {
     placeTerminal(context, 2);
 
-    int result = runAsPlayer(context, readRadiusCommand(context));
+    int result = runAsNonOperator(context, readRadiusCommand(context));
 
     context.assertTrue(result == 2, "Reading a terminal's radius should be open to anyone");
     context.complete();
   }
 
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
-  public void aPlayerWhoNeitherOwnsATerminalNorOpsCannotSetItsRadius(TestContext context) {
+  public void aNonOperatorCannotSetTheRadiusOfATerminalTheyDoNotOwn(TestContext context) {
     placeTerminal(context, 1);
 
-    int result = runAsPlayer(context, radiusCommand(context, 2));
+    int result = runAsNonOperator(context, radiusCommand(context, 2));
 
     context.assertTrue(result == 0, "An unowned terminal should answer only to an operator");
     context.assertTrue(
@@ -302,7 +302,7 @@ public final class TerminalRadiusGameTest implements FabricGameTest {
     return run(context, server(context).getCommandSource(), command);
   }
 
-  private static int runAsPlayer(TestContext context, String command) {
+  private static int runAsNonOperator(TestContext context, String command) {
     return run(context, server(context).getCommandSource().withLevel(0), command);
   }
 

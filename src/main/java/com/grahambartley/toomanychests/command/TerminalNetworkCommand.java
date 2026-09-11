@@ -150,7 +150,7 @@ public final class TerminalNetworkCommand {
       return 0;
     }
     TerminalNetworks.power().rescan(source.getWorld(), pos);
-    final int held = ROLES.containers(source.getWorld(), pos).size();
+    final int held = TerminalNetworks.power().containerCount(source.getWorld(), pos);
     source.sendFeedback(() -> CommandMessages.terminalRescanned(pos, held), true);
     resyncViewers(source, pos);
     return 1;

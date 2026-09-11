@@ -47,7 +47,18 @@ class ContainerEligibilityWatchTest {
   }
 
   @Test
-  void aMissingConfigIsNotAMove() {
-    assertFalse(watch.moved(null));
+  void seedingFromAWorldsOverridesLeavesThemWhereTheyWere() {
+    final TooManyChestsConfig loaded = TestConfigs.withOverrides(Map.of("minecraft:furnace", true));
+
+    watch.seed(loaded);
+
+    assertFalse(watch.moved(loaded));
+  }
+
+  @Test
+  void clearingAnOverrideTheWorldLoadedWithCountsAsAMove() {
+    watch.seed(TestConfigs.withOverrides(Map.of("minecraft:furnace", true)));
+
+    assertTrue(watch.moved(TooManyChestsConfig.defaults()));
   }
 }

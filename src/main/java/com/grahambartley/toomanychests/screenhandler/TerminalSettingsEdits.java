@@ -18,6 +18,7 @@ import com.grahambartley.toomanychests.terminal.TerminalAddress;
 import com.grahambartley.toomanychests.terminal.TerminalLookup;
 import com.grahambartley.toomanychests.terminal.TerminalMessages;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
+import com.grahambartley.toomanychests.terminal.TerminalPower;
 import com.grahambartley.toomanychests.terminal.TerminalRadius;
 import com.grahambartley.toomanychests.terminal.TerminalRadiusService;
 import java.util.Objects;
@@ -128,17 +129,13 @@ public final class TerminalSettingsEdits {
     if (!OperationGuards.allows(player, ExpensiveOperation.RESCAN)) {
       return false;
     }
-    TerminalNetworks.power().rescan(context.world(), context.terminal());
-    player.sendMessage(TerminalMessages.rescanned(held(context)), true);
+    final TerminalPower power = TerminalNetworks.power();
+    power.rescan(context.world(), context.terminal());
+    player.sendMessage(
+        TerminalMessages.rescanned(power.containerCount(context.world(), context.terminal())),
+        true);
     ContainerHighlightService.highlight(player, context.world(), context.terminal());
     return pushed(context);
-  }
-
-  private static int held(TerminalOperationContext context) {
-    return TerminalNetworks.power()
-        .network(context.world(), context.terminal())
-        .map(network -> network.containers().size())
-        .orElse(0);
   }
 
   private boolean pushed(TerminalOperationContext context) {

@@ -3,12 +3,15 @@ package com.grahambartley.toomanychests.gametest;
 import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.config.TooManyChestsConfig;
 import com.grahambartley.toomanychests.lifecycle.NetworkMembership;
+import com.grahambartley.toomanychests.terminal.ContainerEligibilityRefresh;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import java.util.Map;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.block.Blocks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.test.BeforeBatch;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
@@ -17,6 +20,11 @@ public final class ContainerEligibilityRefreshGameTest implements FabricGameTest
   private static final String BATCH = "container-eligibility-refresh";
   private static final int TICK_LIMIT = 60;
   private static final String FURNACE = "minecraft:furnace";
+
+  @BeforeBatch(batchId = BATCH)
+  public void seedFromTheWorldsConfig(ServerWorld world) {
+    ContainerEligibilityRefresh.overrides().seed(ServerConfigService.current());
+  }
 
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
