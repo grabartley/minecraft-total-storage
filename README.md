@@ -168,7 +168,7 @@ Every server-wide setting is configurable from the console, so a server can be s
 | `/tmc config eligibility clear <block>` | operators | Stops forcing that block |
 | `/tmc config eligibility clear all` | operators | Stops forcing every block |
 | `/tmc terminal <pos> radius` | anyone | One terminal's radius, and what it actually reaches |
-| `/tmc terminal <pos> radius <blocks>` | operators | Sets one terminal's radius, clamped to the server maximum |
+| `/tmc terminal <pos> radius <blocks>` | owner or operators | Sets one terminal's radius, clamped to the server maximum |
 | `/tmc terminal <pos> access` | anyone | Which access mode one terminal is in |
 | `/tmc terminal <pos> access <owner\|trusted\|open>` | owner or operators | Sets who may open that terminal |
 | `/tmc terminal <pos> trust` | owner or operators | The players that terminal trusts |
@@ -177,8 +177,8 @@ Every server-wide setting is configurable from the console, so a server can be s
 | `/tmc terminal <pos> info` | anyone | Summarises one terminal: power, radius, access, and its containers by role |
 | `/tmc terminal <pos> role <container>` | anyone | What one container's role is |
 | `/tmc terminal <pos> role <container> <general\|filtered\|excluded>` | owner or operators | Sets it, refusing a container the terminal does not reach |
-| `/tmc terminal <pos> rescan` | owner or operators | Makes the terminal walk its region again |
-| `/tmc terminal <pos> highlight` | players | Outlines the containers it is holding |
+| `/tmc terminal <pos> rescan` | owner or operators | Makes the terminal walk its region again, rate limited like the panel button |
+| `/tmc terminal <pos> highlight` | anyone who may open it | Outlines the containers it is holding |
 | `/tmc sort` | anyone | Sorts the container you have open |
 
 Setting names and their values tab-complete. Changes are saved to the world immediately and pushed to connected clients. Operators are permission level 2.

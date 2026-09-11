@@ -128,11 +128,17 @@ public final class TerminalSettingsEdits {
     if (!OperationGuards.allows(player, ExpensiveOperation.RESCAN)) {
       return false;
     }
-    if (!TerminalNetworks.power().rescan(context.world(), context.terminal())) {
-      player.sendMessage(TerminalMessages.nothingNewToFind(), true);
-    }
+    TerminalNetworks.power().rescan(context.world(), context.terminal());
+    player.sendMessage(TerminalMessages.rescanned(held(context)), true);
     ContainerHighlightService.highlight(player, context.world(), context.terminal());
     return pushed(context);
+  }
+
+  private static int held(TerminalOperationContext context) {
+    return TerminalNetworks.power()
+        .network(context.world(), context.terminal())
+        .map(network -> network.containers().size())
+        .orElse(0);
   }
 
   private boolean pushed(TerminalOperationContext context) {

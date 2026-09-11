@@ -37,7 +37,6 @@ public final class TerminalCommand {
                                     BLOCKS,
                                     IntegerArgumentType.integer(
                                         TerminalSettings.MIN_RADIUS, TerminalSettings.MAX_RADIUS))
-                                .requires(TooManyChestsCommand::isOperator)
                                 .executes(TerminalCommand::setRadius)))
                 .then(TerminalAccessCommand.accessNode())
                 .then(TerminalAccessCommand.trustNode())
@@ -74,6 +73,9 @@ public final class TerminalCommand {
       throws CommandSyntaxException {
     final ServerCommandSource source = context.getSource();
     final BlockPos pos = BlockPosArgumentType.getLoadedBlockPos(context, POS);
+    if (TerminalCommandGate.administrable(source, pos).isEmpty()) {
+      return 0;
+    }
     final Optional<TerminalRadius> radius =
         RADIUS.apply(source.getWorld(), pos, IntegerArgumentType.getInteger(context, BLOCKS));
     if (radius.isEmpty()) {

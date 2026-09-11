@@ -74,6 +74,15 @@ public final class TerminalPower {
   }
 
   public boolean rescan(ServerWorld world, BlockPos pos) {
+    if (world == null || pos == null || !isActive(world, pos)) {
+      return false;
+    }
+    deactivate(world, pos);
+    activate(world, pos);
+    return true;
+  }
+
+  public boolean rescanIfRegionChanged(ServerWorld world, BlockPos pos) {
     if (world == null || pos == null) {
       return false;
     }
@@ -81,9 +90,7 @@ public final class TerminalPower {
     if (running == null || running.region().equals(scanRegion(world, pos))) {
       return false;
     }
-    deactivate(world, pos);
-    activate(world, pos);
-    return true;
+    return rescan(world, pos);
   }
 
   public void shutDownAll() {

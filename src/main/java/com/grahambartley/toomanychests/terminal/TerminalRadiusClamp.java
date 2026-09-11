@@ -26,7 +26,7 @@ public final class TerminalRadiusClamp implements ServerConfigListener {
     for (final TerminalAddress address : power.registry().addresses()) {
       final ServerWorld world = server.getWorld(address.worldKey());
       if (world != null) {
-        power.rescan(world, address.pos());
+        power.rescanIfRegionChanged(world, address.pos());
       }
     }
   }

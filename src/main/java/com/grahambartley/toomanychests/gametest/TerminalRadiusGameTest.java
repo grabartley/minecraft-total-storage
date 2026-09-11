@@ -207,12 +207,12 @@ public final class TerminalRadiusGameTest implements FabricGameTest {
   }
 
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
-  public void aNonOperatorCannotSetOneTerminalsRadius(TestContext context) {
+  public void aPlayerWhoNeitherOwnsATerminalNorOpsCannotSetItsRadius(TestContext context) {
     placeTerminal(context, 1);
 
     int result = runAsPlayer(context, radiusCommand(context, 2));
 
-    context.assertTrue(result == REFUSED_EXIT_CODE, "A non-operator should not reach radius set");
+    context.assertTrue(result == 0, "An unowned terminal should answer only to an operator");
     context.assertTrue(
         terminal(context).settings().radius() == 1, "A refused set should leave the radius alone");
     context.complete();

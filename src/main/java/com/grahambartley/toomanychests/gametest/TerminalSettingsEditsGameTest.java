@@ -199,6 +199,28 @@ public final class TerminalSettingsEditsGameTest implements FabricGameTest {
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
       tickLimit = TICK_LIMIT)
+  public void aRescanPicksUpAContainerPlacedSinceTheLastScan(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.WEST_BARREL);
+    context.assertTrue(
+        containerCount(context) == 1,
+        "A barrel placed after the scan should not be in the network");
+
+    edits.act(owner, new TerminalActionPayload(syncId(owner), TerminalAction.RESCAN));
+
+    context.assertTrue(
+        containerCount(context) == 2,
+        "The rescan held "
+            + containerCount(context)
+            + " of the two barrels, with the region unchanged");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
   public void aRescanThatFindsNothingNewLeavesTheNetworkExactlyAsItWas(TestContext context) {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
     ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);

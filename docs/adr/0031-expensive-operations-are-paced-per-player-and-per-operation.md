@@ -38,6 +38,8 @@ Cooldowns are held in memory and forgotten when a player disconnects. They are n
 
 A player who genuinely wants to rescan twice waits half a second. A player trying to spend the server's tick budget gets one walk per cooldown however fast they click.
 
+The pace belongs to the operation rather than to the button that asks for it, so `/tmc terminal <pos> rescan` passes the same guard the panel does and the command line is no faster than the interface. The console has no player and therefore no cooldown, which is correct: a server running its own command is spending its own ticks on purpose. A refusal for pace never spends the limit it refused, and neither does a rescan that finds no running network to walk.
+
 Because the cooldown is server-wide state, gametests that spend one reset it per batch and any test that changes the setting runs in a batch of its own.
 
 The batch is the right unit for that, and it is worth writing down which way round it works, because it is easy to assume the opposite. A probe of three tests, two sharing a batch and one in a second batch, logged this:
