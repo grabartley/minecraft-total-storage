@@ -10,9 +10,12 @@ import net.minecraft.text.Text;
 public final class TerminalSearchBox {
   private static final Text HINT = TerminalScreenText.of("search.hint");
 
+  private final TextRenderer textRenderer;
+
   private final TextFieldWidget field;
 
   public TerminalSearchBox(TextRenderer textRenderer, int originX, int originY, String previous) {
+    this.textRenderer = textRenderer;
     field =
         new TextFieldWidget(
             textRenderer,
@@ -58,7 +61,7 @@ public final class TerminalSearchBox {
     return field.keyPressed(keyCode, scanCode, modifiers);
   }
 
-  public void drawBox(DrawContext context, TextRenderer textRenderer, int originX, int originY) {
+  public void drawBox(DrawContext context, int originX, int originY) {
     (field.isFocused() ? TerminalSprite.FIELD_FOCUSED : TerminalSprite.FIELD)
         .draw(
             context,

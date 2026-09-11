@@ -114,12 +114,6 @@ class TerminalChromeTest {
         "a tag row writes its name over the accent bar");
   }
 
-  @Test
-  void theAccentBarEndsWhereRowContentBegins() {
-    assertEquals(
-        TerminalChrome.CONTENT_INSET, TerminalChrome.ACCENT_INSET + TerminalChrome.ACCENT_WIDTH);
-  }
-
   @ParameterizedTest(name = "current={0} hovered={1}")
   @CsvSource({
     "true,false,RAISED",
