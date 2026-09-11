@@ -23,10 +23,6 @@ public final class TerminalPower {
     this.registry = Objects.requireNonNull(registry, "registry");
   }
 
-  public TerminalNetworkRegistry<NetworkMembership> registry() {
-    return registry;
-  }
-
   public Optional<NetworkMembership> network(ServerWorld world, BlockPos pos) {
     return world == null || pos == null
         ? Optional.empty()

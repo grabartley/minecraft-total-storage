@@ -1,6 +1,5 @@
 package com.grahambartley.toomanychests.command;
 
-import com.grahambartley.toomanychests.access.TerminalCaller;
 import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.network.ModNetworking;
 import com.grahambartley.toomanychests.network.TerminalSettingsNetworking;
@@ -15,6 +14,7 @@ import com.grahambartley.toomanychests.terminal.RoleTally;
 import com.grahambartley.toomanychests.terminal.TerminalAddress;
 import com.grahambartley.toomanychests.terminal.TerminalLookup;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
+import com.grahambartley.toomanychests.terminal.TerminalPower;
 import com.grahambartley.toomanychests.terminal.TerminalRadius;
 import com.grahambartley.toomanychests.terminal.TerminalSettings;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -120,11 +120,7 @@ public final class TerminalNetworkCommand {
     }
     final RoleChangeOutcome outcome =
         ROLES.assign(
-            source.getWorld(),
-            pos,
-            TerminalCaller.of(source.getPlayer(), TooManyChestsCommand.isOperator(source)),
-            container,
-            role.get());
+            source.getWorld(), pos, TerminalCommandGate.caller(source), container, role.get());
     report(source, pos, container, role.get(), outcome);
     if (outcome.applied()) {
       resyncViewers(source, pos);
@@ -139,7 +135,8 @@ public final class TerminalNetworkCommand {
     if (TerminalCommandGate.administrable(source, pos).isEmpty()) {
       return 0;
     }
-    if (!TerminalNetworks.power().isActive(source.getWorld(), pos)) {
+    final TerminalPower power = TerminalNetworks.power();
+    if (!power.isActive(source.getWorld(), pos)) {
       source.sendError(CommandMessages.terminalUnpowered(pos));
       return 0;
     }
@@ -149,8 +146,8 @@ public final class TerminalNetworkCommand {
       source.sendError(refusal.get());
       return 0;
     }
-    TerminalNetworks.power().rescan(source.getWorld(), pos);
-    final int held = TerminalNetworks.power().containerCount(source.getWorld(), pos);
+    power.rescan(source.getWorld(), pos);
+    final int held = power.containerCount(source.getWorld(), pos);
     source.sendFeedback(() -> CommandMessages.terminalRescanned(pos, held), true);
     resyncViewers(source, pos);
     return 1;

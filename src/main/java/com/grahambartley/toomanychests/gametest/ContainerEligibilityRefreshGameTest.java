@@ -17,18 +17,30 @@ import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 
 public final class ContainerEligibilityRefreshGameTest implements FabricGameTest {
-  private static final String BATCH = "container-eligibility-refresh";
+  private static final String ADMIT_BATCH = "container-eligibility-admit";
+  private static final String WITHDRAW_BATCH = "container-eligibility-withdraw";
+  private static final String UNTOUCHED_BATCH = "container-eligibility-untouched";
   private static final int TICK_LIMIT = 60;
   private static final String FURNACE = "minecraft:furnace";
 
-  @BeforeBatch(batchId = BATCH)
-  public void seedFromTheWorldsConfig(ServerWorld world) {
-    ContainerEligibilityRefresh.overrides().seed(ServerConfigService.current());
+  @BeforeBatch(batchId = ADMIT_BATCH)
+  public void seedBeforeAdmitting(ServerWorld world) {
+    ContainerEligibilityRefresh.seedFrom(ServerConfigService.current());
+  }
+
+  @BeforeBatch(batchId = WITHDRAW_BATCH)
+  public void seedBeforeWithdrawing(ServerWorld world) {
+    ContainerEligibilityRefresh.seedFrom(ServerConfigService.current());
+  }
+
+  @BeforeBatch(batchId = UNTOUCHED_BATCH)
+  public void seedBeforeLeavingEligibilityAlone(ServerWorld world) {
+    ContainerEligibilityRefresh.seedFrom(ServerConfigService.current());
   }
 
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
-      batchId = BATCH,
+      batchId = ADMIT_BATCH,
       tickLimit = TICK_LIMIT)
   public void admittingABlockBringsItIntoARunningNetworkWithNoRestart(TestContext context) {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
@@ -50,7 +62,7 @@ public final class ContainerEligibilityRefreshGameTest implements FabricGameTest
 
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
-      batchId = BATCH,
+      batchId = WITHDRAW_BATCH,
       tickLimit = TICK_LIMIT)
   public void withdrawingAnOverrideDropsTheBlockFromARunningNetwork(TestContext context) {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
@@ -72,7 +84,7 @@ public final class ContainerEligibilityRefreshGameTest implements FabricGameTest
 
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
-      batchId = BATCH,
+      batchId = UNTOUCHED_BATCH,
       tickLimit = TICK_LIMIT)
   public void aConfigChangeLeavingEligibilityAloneDoesNotRebuildTheNetwork(TestContext context) {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
@@ -95,10 +107,7 @@ public final class ContainerEligibilityRefreshGameTest implements FabricGameTest
   }
 
   private static int containerCount(TestContext context) {
-    return TerminalNetworks.power()
-        .network(context.getWorld(), terminal(context))
-        .map(network -> network.containers().size())
-        .orElse(0);
+    return TerminalNetworks.power().containerCount(context.getWorld(), terminal(context));
   }
 
   private static NetworkMembership network(TestContext context) {

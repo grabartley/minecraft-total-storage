@@ -3,6 +3,7 @@ package com.grahambartley.toomanychests;
 import com.grahambartley.toomanychests.access.TerminalAccessControl;
 import com.grahambartley.toomanychests.command.TooManyChestsCommand;
 import com.grahambartley.toomanychests.config.ServerConfigService;
+import com.grahambartley.toomanychests.config.TooManyChestsConfig;
 import com.grahambartley.toomanychests.lifecycle.ContainerLifecycle;
 import com.grahambartley.toomanychests.lifecycle.NextTick;
 import com.grahambartley.toomanychests.lifecycle.ServerThread;
@@ -12,6 +13,7 @@ import com.grahambartley.toomanychests.network.ModNetworking;
 import com.grahambartley.toomanychests.network.PayloadCapLog;
 import com.grahambartley.toomanychests.operation.OperationGuards;
 import com.grahambartley.toomanychests.screenhandler.TerminalListingBroadcast;
+import com.grahambartley.toomanychests.screenhandler.TerminalPanelRefresh;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLifecycle;
 import com.grahambartley.toomanychests.terminal.ContainerEligibilityRefresh;
 import com.grahambartley.toomanychests.terminal.TerminalLifecycle;
@@ -46,10 +48,11 @@ public class TooManyChests implements ModInitializer {
     new TerminalListingBroadcast(ModNetworking.listings()).register();
     TerminalRadiusClamp.register();
     ContainerEligibilityRefresh.register();
+    TerminalPanelRefresh.register();
     ServerLifecycleEvents.SERVER_STARTING.register(
         server -> {
           ServerConfigService.loadFromWorld(server);
-          ContainerEligibilityRefresh.overrides().seed(ServerConfigService.current());
+          ContainerEligibilityRefresh.seedFrom(ServerConfigService.current());
         });
     ServerLifecycleEvents.SERVER_STOPPED.register(
         server -> {
@@ -60,6 +63,7 @@ public class TooManyChests implements ModInitializer {
           PayloadCapLog.clear();
           ContainerMutations.registry().clear();
           ContainerLifecycle.registry().clear();
+          ContainerEligibilityRefresh.seedFrom(TooManyChestsConfig.defaults());
         });
     LOGGER.info("Too Many Chests initialized");
   }

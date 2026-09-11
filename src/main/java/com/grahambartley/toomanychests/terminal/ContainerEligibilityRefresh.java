@@ -8,25 +8,27 @@ import java.util.Objects;
 import net.minecraft.server.MinecraftServer;
 
 public final class ContainerEligibilityRefresh implements ServerConfigListener {
-  private static final ContainerEligibilityWatch OVERRIDES = new ContainerEligibilityWatch();
+  private static final ContainerEligibilityRefresh INSTANCE =
+      new ContainerEligibilityRefresh(TerminalNetworks.power());
 
   private final TerminalPower power;
+  private final ContainerEligibilityWatch overrides = new ContainerEligibilityWatch();
 
   public ContainerEligibilityRefresh(TerminalPower power) {
     this.power = Objects.requireNonNull(power, "power");
   }
 
-  public static ContainerEligibilityWatch overrides() {
-    return OVERRIDES;
+  public static void register() {
+    ServerConfigChanges.subscribe(INSTANCE);
   }
 
-  public static void register() {
-    ServerConfigChanges.subscribe(new ContainerEligibilityRefresh(TerminalNetworks.power()));
+  public static void seedFrom(TooManyChestsConfig config) {
+    INSTANCE.overrides.seed(config);
   }
 
   @Override
   public void serverConfigChanged(MinecraftServer server, TooManyChestsConfig config) {
-    if (server == null || config == null || !OVERRIDES.moved(config)) {
+    if (server == null || config == null || !overrides.moved(config)) {
       return;
     }
     power.rescanAll(server);
