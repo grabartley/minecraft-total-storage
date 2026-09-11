@@ -5,6 +5,7 @@ plugins {
 	id 'maven-publish'
 	id 'com.diffplug.spotless' version '6.25.0'
 	id 'jacoco'
+	id 'checkstyle'
 	id 'com.modrinth.minotaur' version '2.9.0'
 }
 
@@ -87,6 +88,7 @@ dependencies {
 	}
 
 	testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
+	testImplementation "com.puppycrawl.tools:checkstyle:${project.checkstyle_version}"
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testImplementation 'org.mockito:mockito-core:5.10.0'
 	testImplementation 'org.mockito:mockito-junit-jupiter:5.10.0'
@@ -122,6 +124,10 @@ java {
 
 test {
 	useJUnitPlatform()
+	inputs
+		.file(rootProject.file("config/checkstyle/checkstyle.xml"))
+		.withPropertyName("noCommentsGateConfig")
+		.withPathSensitivity(PathSensitivity.RELATIVE)
 	testLogging {
 		events "passed", "skipped", "failed"
 		exceptionFormat "full"
@@ -143,6 +149,13 @@ tasks.register("clientTest", Test) {
 
 jacoco {
 	toolVersion = "0.8.12"
+}
+
+checkstyle {
+	toolVersion = project.checkstyle_version
+	configFile = rootProject.file("config/checkstyle/checkstyle.xml")
+	maxWarnings = 0
+	maxErrors = 0
 }
 
 jacocoTestReport {
