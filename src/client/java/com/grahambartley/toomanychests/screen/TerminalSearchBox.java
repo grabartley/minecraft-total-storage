@@ -24,12 +24,7 @@ public final class TerminalSearchBox {
     field.setDrawsBackground(false);
     field.setEditableColor(VanillaPalette.FIELD_TEXT);
     field.setMaxLength(ListingRequestPayload.MAX_SEARCH_LENGTH);
-    field.setChangedListener(this::showHintWhileEmpty);
     field.setText(previous);
-  }
-
-  private void showHintWhileEmpty(String text) {
-    field.setSuggestion(text.isEmpty() ? HINT.getString() : null);
   }
 
   public TextFieldWidget widget() {
@@ -63,7 +58,7 @@ public final class TerminalSearchBox {
     return field.keyPressed(keyCode, scanCode, modifiers);
   }
 
-  public void drawBox(DrawContext context, int originX, int originY) {
+  public void drawBox(DrawContext context, TextRenderer textRenderer, int originX, int originY) {
     (field.isFocused() ? TerminalSprite.FIELD_FOCUSED : TerminalSprite.FIELD)
         .draw(
             context,
@@ -71,5 +66,15 @@ public final class TerminalSearchBox {
             originY + TerminalScreenLayout.SEARCH_Y,
             TerminalScreenLayout.SEARCH_WIDTH,
             TerminalScreenLayout.SEARCH_HEIGHT);
+    if (isSearching()) {
+      return;
+    }
+    context.drawText(
+        textRenderer,
+        HINT,
+        originX + TerminalScreenLayout.SEARCH_TEXT_X,
+        originY + TerminalScreenLayout.SEARCH_TEXT_Y,
+        VanillaPalette.PANEL,
+        true);
   }
 }

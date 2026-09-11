@@ -15,7 +15,7 @@ import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 
 public final class TerminalSettingsPanel {
-  private static final int TEXT_INSET = 4;
+  private static final int TEXT_INSET = TerminalChrome.CONTENT_INSET;
   private static final int ICON_SIZE = 16;
   private static final int LINE_HEIGHT = 9;
 

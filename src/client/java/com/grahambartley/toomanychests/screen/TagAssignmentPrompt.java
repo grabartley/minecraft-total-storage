@@ -123,14 +123,8 @@ public final class TagAssignmentPrompt {
       boolean hovered,
       int left,
       int top) {
-    TerminalChrome.drawActiveRow(
-        context,
-        carried,
-        hovered,
-        left,
-        top,
-        TagPromptLayout.ROW_WIDTH,
-        TagPromptLayout.ROW_HEIGHT);
+    TerminalChrome.drawRow(
+        context, hovered, left, top, TagPromptLayout.ROW_WIDTH, TagPromptLayout.ROW_HEIGHT);
     final int checkInset = (TagPromptLayout.ROW_HEIGHT - TagPromptLayout.CHECK_SIZE) / 2;
     TerminalSprite.SUNKEN.draw(
         context,

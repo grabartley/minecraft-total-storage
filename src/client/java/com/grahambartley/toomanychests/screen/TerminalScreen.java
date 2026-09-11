@@ -199,7 +199,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
     TerminalSprite.PANEL.draw(context, x, y, backgroundWidth, backgroundHeight);
     if (!tab.isSettings()) {
-      search.drawBox(context, x, y);
+      search.drawBox(context, textRenderer, x, y);
     }
     TerminalSprite.SUNKEN.draw(
         context,

@@ -1,6 +1,7 @@
 package com.grahambartley.toomanychests.screen;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -8,6 +9,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import com.grahambartley.toomanychests.screenhandler.FilterColumnLayout;
+import com.grahambartley.toomanychests.screenhandler.TagsSectionLayout;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.util.Identifier;
 import org.junit.jupiter.api.Test;
@@ -99,6 +102,22 @@ class TerminalChromeTest {
   @CsvSource({"false", "true"})
   void anUnavailableControlIsFlatWhetherOrNotThePointerIsOverIt(boolean hovered) {
     assertEquals(TerminalSprite.FLAT, TerminalChrome.controlOrUnavailable(false, hovered));
+  }
+
+  @Test
+  void everyRowLeavesItsTextClearOfTheAccentBar() {
+    assertTrue(
+        FilterColumnLayout.TEXT_MARGIN >= TerminalChrome.CONTENT_INSET,
+        "a filter row writes its name over the accent bar");
+    assertTrue(
+        TagsSectionLayout.TEXT_MARGIN >= TerminalChrome.CONTENT_INSET,
+        "a tag row writes its name over the accent bar");
+  }
+
+  @Test
+  void theAccentBarEndsWhereRowContentBegins() {
+    assertEquals(
+        TerminalChrome.CONTENT_INSET, TerminalChrome.ACCENT_INSET + TerminalChrome.ACCENT_WIDTH);
   }
 
   @ParameterizedTest(name = "current={0} hovered={1}")

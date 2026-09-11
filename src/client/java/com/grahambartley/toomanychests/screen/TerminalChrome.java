@@ -7,6 +7,8 @@ public final class TerminalChrome {
 
   public static final int ACCENT_WIDTH = 2;
 
+  public static final int CONTENT_INSET = ACCENT_INSET + ACCENT_WIDTH;
+
   private TerminalChrome() {}
 
   public static TerminalSprite control(boolean hovered) {
