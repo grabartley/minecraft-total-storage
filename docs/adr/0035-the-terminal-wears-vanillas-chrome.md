@@ -23,15 +23,21 @@ Concretely:
 - Item overlays are drawn by `DrawContext.drawItemInSlot`, so durability bars and cooldown sweeps appear exactly as they do in a chest.
 - Text uses vanilla's label grey, and secondary text reuses a chrome colour rather than introducing a new one.
 
-Two colours survive from the old palette, and only two: the redstone accent appears on a filter that is currently filtering and on a container the network may not write to. Both are places where one row differs from its neighbours and that difference is the whole message, and neither relies on the colour alone: an accent bar is a shape, and the role is written out in words beside it.
+One colour survives from the old palette: the redstone accent, on a filter that is currently filtering and on a container the network may not write to. Both are places where one row differs from its neighbours and that difference is the whole message, and neither relies on the colour alone, since the accent is a bar and the role is written out in words beside it. It is painted rather than shipped. A row draws its chrome and then has the bar filled over it, so an active row under the pointer keeps its hover state, no sprite has to carry a colour Minecraft does not use, and nothing has to be kept out of a nine-slice band that tiles.
+
+The rule binds the chrome, not everything the mod draws in colour. The in-world container outlines read against arbitrary world geometry rather than against a grey panel, and the locked-slot wash is a state tint over someone else's screen. Both keep their own colours and their own documentation.
 
 ## Consequences
 
 The window is narrower and shorter, because a 162 pixel grid needs less room than a 180 pixel one. That is spare screen, not lost function: the grid still holds forty-five cells and the settings sections still hold four rows each, now at the slot pitch.
 
-The sprite set shrank from thirty-two files to twenty. Naming a sprite for the chrome it draws rather than the widget that draws it collapsed a recessed row, a recessed scrollbar channel and a slot into one sprite, and deleted the bespoke hover and selection cells entirely in favour of vanilla's own highlight.
+The sprite set shrank from thirty-two files to twenty-three. Naming a sprite for the chrome it draws rather than the widget that draws it collapsed a recessed row, a recessed scrollbar channel and a slot into one sprite, and deleted the bespoke hover and selection cells entirely in favour of vanilla's own highlight.
 
 "Looks vanilla" stopped being a matter of opinion. `VanillaPaletteTest` reads `generic_54.png` off the test classpath and fails if a palette constant drifts from the pixel vanilla paints there. `TerminalSpriteTest` nine-slices the shipped sprites using the border their own `.mcmeta` declares and compares the result to Minecraft's texture pixel for pixel, and fails if any sprite paints a colour outside the palette. A future change that quietly reintroduces a bespoke grey fails the build rather than a code review.
+
+One distinction is lost. A `Filtered` container's role chip was green where a `General` one was pale; both are now the label grey, because the palette holds no green that reads on a light panel and inventing one is the thing this decision forbids. The role is still written out in the chip, and the in-world outline still separates the two, so nothing becomes unreachable. The chip's colour now says only "the network may not write here".
+
+`VanillaPalette` carries two kinds of constant: the colours drawing code passes to `drawText`, and the chrome colours a sprite is allowed to contain. They are the same list because that is the point, and the conformance test binds to it.
 
 The cost is that the terminal no longer announces itself as a machine. That was a real idea, and this trades it for the screen reading as part of the game. The accent is what is left of it, and it now marks state instead of identity.
 

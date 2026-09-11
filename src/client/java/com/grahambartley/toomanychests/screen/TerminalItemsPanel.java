@@ -18,9 +18,9 @@ public final class TerminalItemsPanel {
 
   private static final float COUNT_ELEVATION = 200.0F;
 
-  private static final int HIGHLIGHT_ELEVATION = 0;
-
   private static final String NO_STACK_COUNT = "";
+
+  private static final int SAME_LAYER = 0;
 
   private final ListingScroll scroll =
       new ListingScroll(TerminalScreenLayout.LISTING_COLUMNS, TerminalScreenLayout.LISTING_ROWS);
@@ -54,11 +54,7 @@ public final class TerminalItemsPanel {
     if (!page.status().hasRows()) {
       return TerminalScreenLayout.NO_CELL;
     }
-    final int cell = TerminalScreenLayout.cellAt(windowX, windowY);
-    if (cell == TerminalScreenLayout.NO_CELL || rowAt(cell) == null) {
-      return TerminalScreenLayout.NO_CELL;
-    }
-    return cell;
+    return TerminalScreenLayout.cellAt(windowX, windowY);
   }
 
   public ListingRow<ItemVariant> rowAt(int cell) {
@@ -111,10 +107,19 @@ public final class TerminalItemsPanel {
       context.drawItem(stack, itemX, itemY);
       context.drawItemInSlot(textRenderer, stack, itemX, itemY, NO_STACK_COUNT);
       drawCount(context, textRenderer, ItemCountFormat.cell(row.count()), itemX, itemY);
-      if (cell == hovered) {
-        HandledScreen.drawSlotHighlight(context, itemX, itemY, HIGHLIGHT_ELEVATION);
-      }
     }
+    drawHighlight(context, hovered);
+  }
+
+  private static void drawHighlight(DrawContext context, int hovered) {
+    if (hovered == TerminalScreenLayout.NO_CELL) {
+      return;
+    }
+    HandledScreen.drawSlotHighlight(
+        context,
+        TerminalScreenLayout.cellX(hovered) + TerminalScreenLayout.SLOT_ITEM_OFFSET,
+        TerminalScreenLayout.cellY(hovered) + TerminalScreenLayout.SLOT_ITEM_OFFSET,
+        SAME_LAYER);
   }
 
   private static void drawCount(

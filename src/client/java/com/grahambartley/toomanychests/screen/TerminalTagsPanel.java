@@ -12,9 +12,6 @@ import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 
 public final class TerminalTagsPanel {
-  private static final int LABEL_COLOUR = VanillaPalette.LABEL;
-  private static final int MUTED_COLOUR = VanillaPalette.MUTED;
-  private static final int WARNING_COLOUR = VanillaPalette.WARNING;
   private static final int LINE_HEIGHT = 9;
   private static final int ICON_SIZE = 8;
 
@@ -64,13 +61,14 @@ public final class TerminalTagsPanel {
     final int left = originX + TerminalSettingsLayout.PANEL_X;
     final int top = originY + TerminalSettingsLayout.rowY(TagsSectionLayout.NEW_TAG_ROW);
     final boolean hovered = view.mayAdminister() && TagsSectionLayout.isOverNewTag(mouseX, mouseY);
-    TerminalSprite.row(false, hovered)
-        .draw(
-            context,
-            left,
-            top,
-            TerminalSettingsLayout.ROW_WIDTH,
-            TerminalSettingsLayout.ROW_HEIGHT);
+    TerminalRowChrome.draw(
+        context,
+        false,
+        hovered,
+        left,
+        top,
+        TerminalSettingsLayout.ROW_WIDTH,
+        TerminalSettingsLayout.ROW_HEIGHT);
     final Text label =
         view.mayAdminister()
             ? TerminalScreenText.of("tags.new")
@@ -80,7 +78,7 @@ public final class TerminalTagsPanel {
         label,
         left + TagsSectionLayout.TEXT_MARGIN,
         top + (TerminalSettingsLayout.ROW_HEIGHT - LINE_HEIGHT) / 2,
-        view.mayAdminister() ? LABEL_COLOUR : MUTED_COLOUR,
+        view.mayAdminister() ? VanillaPalette.LABEL : VanillaPalette.MUTED,
         false);
   }
 
@@ -128,13 +126,14 @@ public final class TerminalTagsPanel {
     final int left = originX + TerminalSettingsLayout.PANEL_X;
     final int top = originY + TerminalSettingsLayout.rowY(row);
     final boolean armed = isArmed(tag.id());
-    TerminalSprite.row(armed, hovered)
-        .draw(
-            context,
-            left,
-            top,
-            TerminalSettingsLayout.ROW_WIDTH,
-            TerminalSettingsLayout.ROW_HEIGHT);
+    TerminalRowChrome.draw(
+        context,
+        armed,
+        hovered,
+        left,
+        top,
+        TerminalSettingsLayout.ROW_WIDTH,
+        TerminalSettingsLayout.ROW_HEIGHT);
     final Text label = armed ? TerminalScreenText.of("tags.delete.confirm") : TagText.row(tag);
     final OrderedText name = TrimmedText.toWidth(textRenderer, label, TagsSectionLayout.NAME_WIDTH);
     context.drawText(
@@ -142,7 +141,7 @@ public final class TerminalTagsPanel {
         name,
         left + TagsSectionLayout.TEXT_MARGIN,
         top + (TerminalSettingsLayout.ROW_HEIGHT - LINE_HEIGHT) / 2,
-        armed ? WARNING_COLOUR : LABEL_COLOUR,
+        armed ? VanillaPalette.WARNING : VanillaPalette.LABEL,
         false);
     drawDeleteControl(context, view, originX, originY, row, mouseX, mouseY);
   }

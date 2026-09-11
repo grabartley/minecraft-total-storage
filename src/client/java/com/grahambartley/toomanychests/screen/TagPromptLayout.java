@@ -37,7 +37,7 @@ public final class TagPromptLayout {
   private TagPromptLayout() {}
 
   public static int left() {
-    return TerminalScreenLayout.GRID_X + (TerminalScreenLayout.GRID_WIDTH - WIDTH) / 2;
+    return TerminalScreenLayout.GRID_X;
   }
 
   public static int top() {

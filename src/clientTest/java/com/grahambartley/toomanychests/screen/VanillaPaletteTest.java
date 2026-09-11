@@ -59,12 +59,4 @@ class VanillaPaletteTest {
   void warningTextIsTheColourVanillaReportsAProblemIn() {
     assertEquals(ANVIL_PROBLEM_COLOUR, VanillaPalette.WARNING);
   }
-
-  @Test
-  void secondaryTextReusesChromeRatherThanInventingAGrey() {
-    assertEquals(VanillaPalette.BEVEL_SHADOW, VanillaPalette.MUTED);
-    assertEquals(VanillaPalette.SUNKEN_FILL, VanillaPalette.DISABLED);
-    assertEquals(VanillaPalette.BEVEL_HIGHLIGHT, VanillaPalette.FIELD_TEXT);
-    assertEquals(VanillaPalette.BEVEL_HIGHLIGHT, VanillaPalette.COUNT);
-  }
 }

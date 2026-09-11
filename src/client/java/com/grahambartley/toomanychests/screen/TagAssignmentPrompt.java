@@ -10,9 +10,6 @@ import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 
 public final class TagAssignmentPrompt {
-  private static final int LABEL_COLOUR = VanillaPalette.LABEL;
-  private static final int HINT_COLOUR = VanillaPalette.MUTED;
-  private static final int PRESET_COLOUR = VanillaPalette.DISABLED;
 
   private static final float ELEVATION = 300.0F;
 
@@ -87,7 +84,7 @@ public final class TagAssignmentPrompt {
         trimmed,
         left + TagPromptLayout.PADDING,
         top + TagPromptLayout.PADDING,
-        LABEL_COLOUR,
+        VanillaPalette.LABEL,
         false);
   }
 
@@ -126,8 +123,14 @@ public final class TagAssignmentPrompt {
       boolean hovered,
       int left,
       int top) {
-    TerminalSprite.row(carried, hovered)
-        .draw(context, left, top, TagPromptLayout.ROW_WIDTH, TagPromptLayout.ROW_HEIGHT);
+    TerminalRowChrome.draw(
+        context,
+        carried,
+        hovered,
+        left,
+        top,
+        TagPromptLayout.ROW_WIDTH,
+        TagPromptLayout.ROW_HEIGHT);
     final int checkInset = (TagPromptLayout.ROW_HEIGHT - TagPromptLayout.CHECK_SIZE) / 2;
     TerminalSprite.SUNKEN.draw(
         context,
@@ -155,7 +158,9 @@ public final class TagAssignmentPrompt {
         name,
         textLeft,
         top + (TagPromptLayout.ROW_HEIGHT - TagPromptLayout.LINE_HEIGHT) / 2 + 1,
-        tag.immutable() ? PRESET_COLOUR : carried ? LABEL_COLOUR : HINT_COLOUR,
+        tag.immutable()
+            ? VanillaPalette.DISABLED
+            : carried ? VanillaPalette.LABEL : VanillaPalette.MUTED,
         false);
   }
 
@@ -177,7 +182,7 @@ public final class TagAssignmentPrompt {
         trimmed,
         left + TagPromptLayout.PADDING,
         top + TagPromptLayout.HEIGHT - TagPromptLayout.PADDING - TagPromptLayout.LINE_HEIGHT,
-        HINT_COLOUR,
+        VanillaPalette.MUTED,
         false);
   }
 }

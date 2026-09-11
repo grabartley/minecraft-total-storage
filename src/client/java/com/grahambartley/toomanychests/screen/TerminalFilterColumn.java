@@ -10,9 +10,6 @@ import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 
 public final class TerminalFilterColumn {
-  private static final int LABEL_COLOUR = VanillaPalette.LABEL;
-  private static final int MUTED_COLOUR = VanillaPalette.MUTED;
-  private static final int EMPTY_COLOUR = VanillaPalette.DISABLED;
   private static final int LINE_HEIGHT = 9;
   private static final int ICON_SIZE = 8;
 
@@ -106,7 +103,7 @@ public final class TerminalFilterColumn {
       int mouseX,
       int mouseY) {
     final int top = originY + FilterColumnLayout.Y;
-    TerminalSprite.control(true, FilterColumnLayout.isOverMode(mouseX, mouseY))
+    TerminalSprite.control(FilterColumnLayout.isOverMode(mouseX, mouseY))
         .draw(
             context,
             originX + FilterColumnLayout.X,
@@ -121,7 +118,7 @@ public final class TerminalFilterColumn {
             + FilterColumnLayout.X
             + (FilterColumnLayout.MODE_WIDTH - textRenderer.getWidth(mode)) / 2,
         top + (FilterColumnLayout.HEADER_HEIGHT - LINE_HEIGHT) / 2 + 1,
-        selection.isFiltering() ? LABEL_COLOUR : MUTED_COLOUR,
+        selection.isFiltering() ? VanillaPalette.LABEL : VanillaPalette.MUTED,
         false);
     TerminalSprite.control(selection.isFiltering(), FilterColumnLayout.isOverClear(mouseX, mouseY))
         .draw(
@@ -175,8 +172,14 @@ public final class TerminalFilterColumn {
       int originX,
       int top) {
     final int left = originX + FilterColumnLayout.X;
-    TerminalSprite.row(active, hovered)
-        .draw(context, left, top, FilterColumnLayout.ROW_WIDTH, FilterColumnLayout.ROW_HEIGHT);
+    TerminalRowChrome.draw(
+        context,
+        active,
+        hovered,
+        left,
+        top,
+        FilterColumnLayout.ROW_WIDTH,
+        FilterColumnLayout.ROW_HEIGHT);
     final String count = FilterColumnText.count(tag);
     final int countWidth = textRenderer.getWidth(count);
     final int textY = top + (FilterColumnLayout.ROW_HEIGHT - LINE_HEIGHT) / 2 + 1;
@@ -192,14 +195,16 @@ public final class TerminalFilterColumn {
         name,
         left + FilterColumnLayout.TEXT_MARGIN,
         textY,
-        active ? LABEL_COLOUR : tag.isEmptyHere() ? EMPTY_COLOUR : MUTED_COLOUR,
+        active
+            ? VanillaPalette.LABEL
+            : tag.isEmptyHere() ? VanillaPalette.DISABLED : VanillaPalette.MUTED,
         false);
     context.drawText(
         textRenderer,
         count,
         left + FilterColumnLayout.ROW_WIDTH - FilterColumnLayout.TEXT_MARGIN - countWidth,
         textY,
-        tag.isEmptyHere() ? EMPTY_COLOUR : MUTED_COLOUR,
+        tag.isEmptyHere() ? VanillaPalette.DISABLED : VanillaPalette.MUTED,
         false);
   }
 

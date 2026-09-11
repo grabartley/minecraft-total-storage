@@ -9,7 +9,6 @@ public enum TerminalSprite {
   SUNKEN("chrome/sunken"),
   RAISED("chrome/raised"),
   RAISED_LIT("chrome/raised_lit"),
-  RAISED_ACTIVE("chrome/raised_active"),
   PRESSED("chrome/pressed"),
   FLAT("chrome/flat"),
   FIELD("chrome/field"),
@@ -32,29 +31,26 @@ public enum TerminalSprite {
     this.id = Identifier.of(TooManyChests.MOD_ID, path);
   }
 
-  public Identifier id() {
-    return id;
-  }
-
-  public String texturePath() {
-    return "assets/" + TooManyChests.MOD_ID + "/textures/gui/sprites/" + path + ".png";
+  public String spritePath() {
+    return path;
   }
 
   public void draw(DrawContext context, int x, int y, int width, int height) {
     context.drawGuiTexture(id, x, y, width, height);
   }
 
-  public static TerminalSprite row(boolean active, boolean hovered) {
-    if (active) {
-      return RAISED_ACTIVE;
-    }
-    return hovered ? RAISED_LIT : FLAT;
+  public static TerminalSprite control(boolean hovered) {
+    return hovered ? RAISED_LIT : RAISED;
   }
 
   public static TerminalSprite control(boolean enabled, boolean hovered) {
-    if (!enabled) {
-      return FLAT;
+    return enabled ? control(hovered) : FLAT;
+  }
+
+  public static TerminalSprite tab(boolean current, boolean hovered) {
+    if (current) {
+      return RAISED;
     }
-    return hovered ? RAISED_LIT : RAISED;
+    return hovered ? RAISED_LIT : PRESSED;
   }
 }

@@ -1,6 +1,7 @@
 package com.grahambartley.toomanychests.screen;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -10,21 +11,34 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class TerminalSpriteTest {
   private static final String CHEST = "/assets/minecraft/textures/gui/container/generic_54.png";
+
+  private static final String SPRITE_ROOT = "/assets/too-many-chests/textures/gui/sprites";
+
+  private static final String NINE_SLICED = "chrome";
 
   private static final int CHEST_WIDTH = 176;
   private static final int CHEST_HEIGHT = 222;
   private static final int CHEST_SLOT_X = 7;
   private static final int CHEST_SLOT_Y = 17;
   private static final int SLOT_SIZE = 18;
+
+  private static final int STRETCH_FACTOR = 4;
 
   private static final int TRANSPARENT = 0;
 
@@ -36,36 +50,68 @@ class TerminalSpriteTest {
           VanillaPalette.SUNKEN_FILL,
           VanillaPalette.PANEL,
           VanillaPalette.BEVEL_HIGHLIGHT,
-          VanillaPalette.LABEL,
-          VanillaPalette.ACCENT,
-          VanillaPalette.ACCENT_LIGHT);
+          VanillaPalette.LABEL);
 
   private static BufferedImage read(String path) {
     try (InputStream source = TerminalSpriteTest.class.getResourceAsStream(path)) {
       assertNotNull(source, path + " is not on the classpath");
       return ImageIO.read(source);
     } catch (IOException failure) {
-      throw new AssertionError("could not read " + path, failure);
+      throw new UncheckedIOException("could not read " + path, failure);
     }
   }
 
   private static BufferedImage textureOf(TerminalSprite sprite) {
-    return read("/" + sprite.texturePath());
+    return read(SPRITE_ROOT + "/" + sprite.spritePath() + ".png");
   }
 
-  private static JsonObject scalingOf(TerminalSprite sprite) {
-    final String path = "/" + sprite.texturePath() + ".mcmeta";
-    try (InputStream source = TerminalSpriteTest.class.getResourceAsStream(path)) {
-      if (source == null) {
-        return null;
-      }
+  private static Path spriteRoot() {
+    try {
+      final var located = TerminalSpriteTest.class.getResource(SPRITE_ROOT);
+      assertNotNull(located, SPRITE_ROOT + " is not on the classpath");
+      return Path.of(located.toURI());
+    } catch (URISyntaxException failure) {
+      throw new IllegalStateException("could not resolve " + SPRITE_ROOT, failure);
+    }
+  }
+
+  static Stream<Path> everySpriteTheModShips() {
+    try (Stream<Path> tree = Files.walk(spriteRoot())) {
+      final List<Path> pngs =
+          tree.filter(path -> path.getFileName().toString().endsWith(".png")).sorted().toList();
+      assertTrue(
+          pngs.size() >= TerminalSprite.values().length,
+          "the sprite tree holds fewer textures than the catalogue names");
+      return pngs.stream();
+    } catch (IOException failure) {
+      throw new UncheckedIOException("could not walk " + SPRITE_ROOT, failure);
+    }
+  }
+
+  private static JsonObject scalingOf(String texturePath) {
+    final Path meta = spriteRoot().resolve(texturePath + ".mcmeta");
+    if (!Files.exists(meta)) {
+      return null;
+    }
+    try (InputStream source = Files.newInputStream(meta)) {
       return JsonParser.parseReader(new InputStreamReader(source, StandardCharsets.UTF_8))
           .getAsJsonObject()
           .getAsJsonObject("gui")
           .getAsJsonObject("scaling");
     } catch (IOException failure) {
-      throw new AssertionError("could not read " + path, failure);
+      throw new UncheckedIOException("could not read " + meta, failure);
     }
+  }
+
+  private static JsonObject scalingOf(TerminalSprite sprite) {
+    return scalingOf(sprite.spritePath() + ".png");
+  }
+
+  static Stream<TerminalSprite> everyNineSlicedSprite() {
+    final List<TerminalSprite> sliced =
+        Stream.of(TerminalSprite.values()).filter(sprite -> scalingOf(sprite) != null).toList();
+    assertFalse(sliced.isEmpty(), "no sprite in the catalogue declares nine-slice scaling");
+    return sliced.stream();
   }
 
   private static BufferedImage nineSliced(BufferedImage source, int width, int height, int border) {
@@ -93,18 +139,6 @@ class TerminalSpriteTest {
     return border + (drawn - border) % (sourceSize - 2 * border);
   }
 
-  private static void assertSamePixels(
-      BufferedImage drawn, BufferedImage vanilla, int vanillaX, int vanillaY, String what) {
-    for (int y = 0; y < drawn.getHeight(); y++) {
-      for (int x = 0; x < drawn.getWidth(); x++) {
-        assertEquals(
-            vanilla.getRGB(vanillaX + x, vanillaY + y),
-            drawn.getRGB(x, y),
-            what + " differs from Minecraft's own texture at " + x + "," + y);
-      }
-    }
-  }
-
   @ParameterizedTest
   @EnumSource(TerminalSprite.class)
   void everySpriteInTheCatalogueShipsAsATexture(TerminalSprite sprite) {
@@ -114,27 +148,9 @@ class TerminalSpriteTest {
   }
 
   @ParameterizedTest
-  @EnumSource(TerminalSprite.class)
-  void everyNineSlicedSpriteDeclaresTheSizeItActuallyIs(TerminalSprite sprite) {
-    final JsonObject scaling = scalingOf(sprite);
-    if (scaling == null) {
-      return;
-    }
-    final BufferedImage texture = textureOf(sprite);
-    final int border = scaling.get("border").getAsInt();
-
-    assertEquals(texture.getWidth(), scaling.get("width").getAsInt(), sprite + " declares a width");
-    assertEquals(
-        texture.getHeight(), scaling.get("height").getAsInt(), sprite + " declares a height");
-    assertTrue(
-        2 * border < Math.min(texture.getWidth(), texture.getHeight()),
-        sprite + " has a border with no centre left inside it");
-  }
-
-  @ParameterizedTest
-  @EnumSource(TerminalSprite.class)
-  void noSpritePaintsAColourVanillaWouldNot(TerminalSprite sprite) {
-    final BufferedImage texture = textureOf(sprite);
+  @MethodSource("everySpriteTheModShips")
+  void everySpriteTheModShipsStaysInsideVanillasPalette(Path sprite) {
+    final BufferedImage texture = read(SPRITE_ROOT + "/" + spriteRoot().relativize(sprite));
 
     for (int y = 0; y < texture.getHeight(); y++) {
       for (int x = 0; x < texture.getWidth(); x++) {
@@ -144,7 +160,7 @@ class TerminalSpriteTest {
         }
         assertTrue(
             VANILLA_COLOURS.contains(pixel & 0xFFFFFF),
-            sprite
+            spriteRoot().relativize(sprite)
                 + " paints "
                 + String.format("#%06X", pixel & 0xFFFFFF)
                 + " at "
@@ -157,28 +173,61 @@ class TerminalSpriteTest {
   }
 
   @ParameterizedTest
-  @EnumSource(TerminalSprite.class)
+  @MethodSource("everySpriteTheModShips")
+  void aSpriteIsNineSlicedWhenAndOnlyWhenItsSizeIsNotKnownInAdvance(Path sprite) {
+    final String relative = spriteRoot().relativize(sprite).toString();
+    final boolean declaresScaling = scalingOf(relative) != null;
+
+    assertEquals(
+        relative.startsWith(NINE_SLICED),
+        declaresScaling,
+        relative
+            + (declaresScaling
+                ? " declares scaling but is drawn at its own size"
+                : " is drawn at a size nobody knows in advance and declares no scaling"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("everyNineSlicedSprite")
+  void everyNineSlicedSpriteDeclaresTheSizeItActuallyIs(TerminalSprite sprite) {
+    final JsonObject scaling = scalingOf(sprite);
+    final BufferedImage texture = textureOf(sprite);
+    final int border = scaling.get("border").getAsInt();
+
+    assertEquals(texture.getWidth(), scaling.get("width").getAsInt(), sprite + " declares a width");
+    assertEquals(
+        texture.getHeight(), scaling.get("height").getAsInt(), sprite + " declares a height");
+    assertTrue(
+        2 * border < Math.min(texture.getWidth(), texture.getHeight()),
+        sprite + " has a border with no centre left inside it");
+  }
+
+  @ParameterizedTest
+  @MethodSource("everyNineSlicedSprite")
   void everySpriteKeepsItsMarkingsOutOfTheBandsThatTile(TerminalSprite sprite) {
     final JsonObject scaling = scalingOf(sprite);
-    if (scaling == null) {
-      return;
-    }
     final BufferedImage texture = textureOf(sprite);
     final int border = scaling.get("border").getAsInt();
     final BufferedImage wide =
-        nineSliced(texture, 4 * texture.getWidth(), 4 * texture.getHeight(), border);
+        nineSliced(
+            texture,
+            STRETCH_FACTOR * texture.getWidth(),
+            STRETCH_FACTOR * texture.getHeight(),
+            border);
 
     for (int y = border; y < wide.getHeight() - border; y++) {
-      for (int x = border; x < wide.getWidth() - border; x++) {
+      for (int x = 0; x < wide.getWidth(); x++) {
+        final boolean inSideBand = x < border || x >= wide.getWidth() - border;
+        final int settled = inSideBand ? wide.getRGB(x, border) : wide.getRGB(border, y);
         assertEquals(
-            wide.getRGB(border, y),
+            settled,
             wide.getRGB(x, y),
             sprite
-                + " repeats a marking across its middle when stretched, at "
+                + " repeats a marking inside a band that tiles, at "
                 + x
                 + ","
                 + y
-                + "; anything that must stay put belongs in the border");
+                + "; anything that must stay put belongs in a corner or outside the sprite");
       }
     }
   }
@@ -188,8 +237,16 @@ class TerminalSpriteTest {
     final int border = scalingOf(TerminalSprite.SUNKEN).get("border").getAsInt();
     final BufferedImage drawn =
         nineSliced(textureOf(TerminalSprite.SUNKEN), SLOT_SIZE, SLOT_SIZE, border);
+    final BufferedImage chest = read(CHEST);
 
-    assertSamePixels(drawn, read(CHEST), CHEST_SLOT_X, CHEST_SLOT_Y, "a slot");
+    for (int y = 0; y < SLOT_SIZE; y++) {
+      for (int x = 0; x < SLOT_SIZE; x++) {
+        assertEquals(
+            chest.getRGB(CHEST_SLOT_X + x, CHEST_SLOT_Y + y),
+            drawn.getRGB(x, y),
+            "a slot differs from Minecraft's own at " + x + "," + y);
+      }
+    }
   }
 
   @Test
@@ -210,5 +267,12 @@ class TerminalSpriteTest {
             "the window chassis differs from Minecraft's own chest at " + x + "," + y);
       }
     }
+  }
+
+  @Test
+  void theAccentIsPaintedRatherThanShippedSoNoSpriteHasToCarryIt() {
+    assertFalse(
+        VANILLA_COLOURS.contains(VanillaPalette.ACCENT),
+        "the accent is the mod's own colour and must not be mistaken for one of vanilla's");
   }
 }

@@ -15,11 +15,6 @@ import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 
 public final class TerminalSettingsPanel {
-  private static final int LABEL_COLOUR = VanillaPalette.LABEL;
-  private static final int MUTED_COLOUR = VanillaPalette.MUTED;
-
-  private static final int WARNING_COLOUR = VanillaPalette.WARNING;
-
   private static final int TEXT_INSET = 4;
   private static final int ICON_SIZE = 16;
   private static final int LINE_HEIGHT = 9;
@@ -132,9 +127,7 @@ public final class TerminalSettingsPanel {
     for (final SettingsSection shown : SettingsSection.values()) {
       final int left = originX + TerminalSettingsLayout.sectionTabX(shown.index());
       final int top = originY + TerminalSettingsLayout.PANEL_Y;
-      (shown == section
-              ? TerminalSprite.RAISED
-              : hovered == shown.index() ? TerminalSprite.RAISED_LIT : TerminalSprite.PRESSED)
+      TerminalSprite.tab(shown == section, hovered == shown.index())
           .draw(
               context,
               left,
@@ -147,7 +140,7 @@ public final class TerminalSettingsPanel {
           label,
           left + (TerminalSettingsLayout.SECTION_TAB_WIDTH - textRenderer.getWidth(label)) / 2,
           top + (TerminalSettingsLayout.SECTION_TAB_HEIGHT - LINE_HEIGHT) / 2 + 1,
-          shown == section ? LABEL_COLOUR : MUTED_COLOUR,
+          shown == section ? VanillaPalette.LABEL : VanillaPalette.MUTED,
           false);
     }
   }
@@ -162,7 +155,7 @@ public final class TerminalSettingsPanel {
       int mouseY) {
     final TerminalSetting hovered = settingAt(mouseX, mouseY);
     final SettingsControl control = SettingsControl.at(mouseX, mouseY);
-    drawRow(context, TerminalSetting.RADIUS, originX, originY, false, false);
+    drawRow(context, TerminalSetting.RADIUS, originX, originY, false);
     stepper(
         context,
         textRenderer,
@@ -189,15 +182,14 @@ public final class TerminalSettingsPanel {
                 TerminalSetting.RADIUS.label(), view.radius(), view.maxRadius()),
         originX,
         originY + TerminalSettingsLayout.rowY(TerminalSetting.RADIUS.row()),
-        LABEL_COLOUR);
+        VanillaPalette.LABEL);
 
     drawRow(
         context,
         TerminalSetting.ACCESS,
         originX,
         originY,
-        hovered == TerminalSetting.ACCESS && view.mayAdminister(),
-        false);
+        hovered == TerminalSetting.ACCESS && view.mayAdminister());
     labelled(
         context,
         textRenderer,
@@ -207,7 +199,7 @@ public final class TerminalSettingsPanel {
         originY + TerminalSettingsLayout.rowY(TerminalSetting.ACCESS.row()),
         view.mayAdminister());
 
-    drawRow(context, TerminalSetting.TRUSTED, originX, originY, false, false);
+    drawRow(context, TerminalSetting.TRUSTED, originX, originY, false);
     labelled(
         context,
         textRenderer,
@@ -219,7 +211,7 @@ public final class TerminalSettingsPanel {
         originY + TerminalSettingsLayout.rowY(TerminalSetting.TRUSTED.row()),
         false);
 
-    drawRow(context, TerminalSetting.CAPACITY, originX, originY, false, false);
+    drawRow(context, TerminalSetting.CAPACITY, originX, originY, false);
     capacity(
         context,
         textRenderer,
@@ -242,7 +234,7 @@ public final class TerminalSettingsPanel {
         TerminalScreenText.of(TerminalSetting.CAPACITY.label()),
         left + TEXT_INSET,
         textY,
-        MUTED_COLOUR,
+        VanillaPalette.MUTED,
         false);
     final Text value =
         room.isUnknown()
@@ -254,8 +246,8 @@ public final class TerminalSettingsPanel {
         left + TerminalSettingsLayout.FULL_ROW_WIDTH - TEXT_INSET - textRenderer.getWidth(value),
         textY,
         room.isNearCapacity(ClientConfigMirror.current().nearCapacityWarningPercent())
-            ? WARNING_COLOUR
-            : LABEL_COLOUR,
+            ? VanillaPalette.WARNING
+            : VanillaPalette.LABEL,
         false);
   }
 
@@ -275,7 +267,7 @@ public final class TerminalSettingsPanel {
           TerminalScreenText.of(view.powered() ? "settings.empty" : "settings.offline"),
           originX,
           originY + TerminalSettingsLayout.rowY(0),
-          MUTED_COLOUR);
+          VanillaPalette.MUTED);
       return;
     }
     final int hovered = containerRowAt(mouseX, mouseY);
@@ -307,13 +299,14 @@ public final class TerminalSettingsPanel {
       boolean changeable) {
     final int left = originX + TerminalSettingsLayout.PANEL_X;
     final int top = originY + TerminalSettingsLayout.rowY(row);
-    TerminalSprite.row(entry.role() == ContainerRole.EXCLUDED, hovered)
-        .draw(
-            context,
-            left,
-            top,
-            TerminalSettingsLayout.ROW_WIDTH,
-            TerminalSettingsLayout.ROW_HEIGHT - 1);
+    TerminalRowChrome.draw(
+        context,
+        entry.role() == ContainerRole.EXCLUDED,
+        hovered,
+        left,
+        top,
+        TerminalSettingsLayout.ROW_WIDTH,
+        TerminalSettingsLayout.ROW_HEIGHT - 1);
     final int iconY = top + (TerminalSettingsLayout.ROW_HEIGHT - 1 - ICON_SIZE) / 2;
     entry.icon().ifPresent(icon -> context.drawItem(icon.toStack(), left + TEXT_INSET, iconY));
     final int textY = top + (TerminalSettingsLayout.ROW_HEIGHT - 1 - LINE_HEIGHT) / 2;
@@ -322,7 +315,7 @@ public final class TerminalSettingsPanel {
         ContainerRowText.contents(entry),
         left + TEXT_INSET + ICON_SIZE + TEXT_INSET,
         textY,
-        changeable ? LABEL_COLOUR : MUTED_COLOUR,
+        changeable ? VanillaPalette.LABEL : VanillaPalette.MUTED,
         false);
     final Text chip = ContainerRowText.role(entry.role());
     context.drawText(
@@ -330,24 +323,20 @@ public final class TerminalSettingsPanel {
         chip,
         left + TerminalSettingsLayout.ROW_WIDTH - CHIP_WIDTH,
         textY,
-        changeable ? ContainerRowText.roleColour(entry.role()) : MUTED_COLOUR,
+        changeable ? ContainerRowText.roleColour(entry.role()) : VanillaPalette.MUTED,
         false);
   }
 
   private static void drawRow(
-      DrawContext context,
-      TerminalSetting setting,
-      int originX,
-      int originY,
-      boolean hovered,
-      boolean active) {
-    TerminalSprite.row(active, hovered)
-        .draw(
-            context,
-            originX + TerminalSettingsLayout.PANEL_X,
-            originY + TerminalSettingsLayout.rowY(setting.row()),
-            TerminalSettingsLayout.FULL_ROW_WIDTH,
-            TerminalSettingsLayout.ROW_HEIGHT - 1);
+      DrawContext context, TerminalSetting setting, int originX, int originY, boolean hovered) {
+    TerminalRowChrome.draw(
+        context,
+        false,
+        hovered,
+        originX + TerminalSettingsLayout.PANEL_X,
+        originY + TerminalSettingsLayout.rowY(setting.row()),
+        TerminalSettingsLayout.FULL_ROW_WIDTH,
+        TerminalSettingsLayout.ROW_HEIGHT - 1);
   }
 
   private static void labelled(
@@ -360,7 +349,7 @@ public final class TerminalSettingsPanel {
       boolean changeable) {
     final int left = originX + TerminalSettingsLayout.PANEL_X;
     final int textY = rowY + (TerminalSettingsLayout.ROW_HEIGHT - 1 - LINE_HEIGHT) / 2;
-    context.drawText(textRenderer, name, left + TEXT_INSET, textY, MUTED_COLOUR, false);
+    context.drawText(textRenderer, name, left + TEXT_INSET, textY, VanillaPalette.MUTED, false);
     final int room =
         TerminalSettingsLayout.FULL_ROW_WIDTH - 2 * TEXT_INSET - textRenderer.getWidth(name) - 4;
     final List<OrderedText> lines = textRenderer.wrapLines(value, Math.max(1, room));
@@ -375,7 +364,7 @@ public final class TerminalSettingsPanel {
             - TEXT_INSET
             - textRenderer.getWidth(lines.get(0)),
         textY,
-        changeable ? LABEL_COLOUR : MUTED_COLOUR,
+        changeable ? VanillaPalette.LABEL : VanillaPalette.MUTED,
         false);
   }
 
@@ -415,7 +404,7 @@ public final class TerminalSettingsPanel {
         glyph,
         x + (size - textRenderer.getWidth(glyph)) / 2,
         y + (size - LINE_HEIGHT) / 2 + 1,
-        enabled ? LABEL_COLOUR : MUTED_COLOUR,
+        enabled ? VanillaPalette.LABEL : VanillaPalette.MUTED,
         false);
   }
 

@@ -17,9 +17,6 @@ public final class WithdrawAmountPrompt {
 
   private static final int MIN_WIDTH = 120;
 
-  private static final int LABEL_COLOUR = VanillaPalette.LABEL;
-  private static final int HINT_COLOUR = VanillaPalette.MUTED;
-
   private static final float ELEVATION = 300.0F;
 
   private ItemVariant variant;
@@ -83,8 +80,10 @@ public final class WithdrawAmountPrompt {
     context.getMatrices().translate(0.0F, 0.0F, ELEVATION);
     TerminalSprite.PANEL.draw(context, left, top, width, height);
     int lineY = top + PADDING;
-    lineY = drawLines(context, textRenderer, heading, left, lineY, width, LABEL_COLOUR) + GAP;
-    lineY = drawLines(context, textRenderer, available, left, lineY, width, HINT_COLOUR) + GAP;
+    lineY =
+        drawLines(context, textRenderer, heading, left, lineY, width, VanillaPalette.LABEL) + GAP;
+    lineY =
+        drawLines(context, textRenderer, available, left, lineY, width, VanillaPalette.MUTED) + GAP;
     TerminalSprite.FIELD_FOCUSED.draw(context, left + PADDING, lineY, inner, FIELD_HEIGHT);
     drawLines(
         context,
@@ -94,7 +93,8 @@ public final class WithdrawAmountPrompt {
         lineY + 2,
         width,
         VanillaPalette.FIELD_TEXT);
-    drawLines(context, textRenderer, hint, left, lineY + FIELD_HEIGHT + GAP, width, HINT_COLOUR);
+    drawLines(
+        context, textRenderer, hint, left, lineY + FIELD_HEIGHT + GAP, width, VanillaPalette.MUTED);
     context.getMatrices().pop();
   }
 

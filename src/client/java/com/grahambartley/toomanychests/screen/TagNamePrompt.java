@@ -14,9 +14,6 @@ public final class TagNamePrompt {
   private static final int FIELD_HEIGHT = 12;
   private static final int GAP = 4;
 
-  private static final int LABEL_COLOUR = VanillaPalette.LABEL;
-  private static final int HINT_COLOUR = VanillaPalette.MUTED;
-
   private static final float ELEVATION = 300.0F;
 
   private TagNameEntry entry;
@@ -82,7 +79,7 @@ public final class TagNamePrompt {
     context.getMatrices().translate(0.0F, 0.0F, ELEVATION);
     TerminalSprite.PANEL.draw(context, left, top, WIDTH, height);
     int lineY = top + PADDING;
-    lineY = drawLines(context, textRenderer, heading, left, lineY, LABEL_COLOUR) + GAP;
+    lineY = drawLines(context, textRenderer, heading, left, lineY, VanillaPalette.LABEL) + GAP;
     TerminalSprite.FIELD_FOCUSED.draw(context, left + PADDING, lineY, inner, FIELD_HEIGHT);
     drawLines(
         context,
@@ -91,7 +88,7 @@ public final class TagNamePrompt {
         left,
         lineY + 2,
         VanillaPalette.FIELD_TEXT);
-    drawLines(context, textRenderer, hint, left, lineY + FIELD_HEIGHT + GAP, HINT_COLOUR);
+    drawLines(context, textRenderer, hint, left, lineY + FIELD_HEIGHT + GAP, VanillaPalette.MUTED);
     context.getMatrices().pop();
   }
 

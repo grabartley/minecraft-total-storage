@@ -21,8 +21,6 @@ public final class VanillaPalette {
 
   public static final int ACCENT = 0xC43A2E;
 
-  public static final int ACCENT_LIGHT = 0xED6353;
-
   public static final int DISABLED = SUNKEN_FILL;
 
   public static final int FIELD_TEXT = BEVEL_HIGHLIGHT;

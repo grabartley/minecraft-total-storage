@@ -30,7 +30,6 @@ The set is named for the chrome it draws, not for the widget that draws it, so a
 | `chrome/sunken` | 16x16 | nine_slice 1 | Any recessed surface: a slot, a grid cell, the screen recess, a scrollbar channel, a checkbox |
 | `chrome/raised` | 16x16 | nine_slice 3 | A raised control: a resting button, the current tab, a scrollbar thumb |
 | `chrome/raised_lit` | 16x16 | nine_slice 3 | A raised control under the pointer |
-| `chrome/raised_active` | 16x16 | nine_slice 4 | A control that is doing something, carrying the accent bar |
 | `chrome/pressed` | 16x16 | nine_slice 3 | A control that has receded: a tab that is not the current one |
 | `chrome/flat` | 16x16 | nine_slice 3 | A resting list row, and an unavailable control |
 | `chrome/field` | 16x16 | nine_slice 3 | Text field, unfocused |
@@ -68,7 +67,7 @@ Every state differs from its neighbour by shape, not only by colour, so the scre
 | Pair | Shape cue |
 |---|---|
 | Row resting → hovered | The flat face gains a bevel and a second highlight ring |
-| Row hovered → active | The bevel stays and a two pixel accent bar appears on the left edge |
+| Row hovered → active | A two pixel accent bar is painted down the left edge, over whichever chrome the row is already wearing |
 | Button resting → hovered | A second highlight ring closes around the face |
 | Button resting → disabled | The bevel is removed entirely and the button reads flat |
 | Tab current → not current | The bevel inverts, so the tab reads pressed in rather than standing proud |
@@ -93,10 +92,10 @@ Every chrome colour is sampled from a Minecraft texture, and `VanillaPaletteTest
 | `M` | `C6C6C6` | Container face | The chassis itself |
 | `W` | `FFFFFF` | Bevel highlight, up and left | The chassis's top and left bevel, and a slot's bottom and right edge |
 | `o` | `404040` | Label text | The title of every vanilla container |
-| `r` | `C43A2E` | Accent base | Not vanilla. See below |
-| `R` | `ED6353` | Accent light | Not vanilla. See below |
 
-Two colours are the mod's own, and they are the only two. The accent is redstone red because redstone power is the terminal's on switch, so the block and its screen share one visual idea. It appears on exactly two things: a filter that is currently filtering, and a container the network is not allowed to write to. Both are states where "this one is different from the rest" is the entire message, and neither is carried by colour alone.
+No sprite paints anything else. One colour is the mod's own, `C43A2E`, and it is painted rather than shipped: `TerminalRowChrome` fills a two pixel bar down the left edge of a row, over whichever chrome that row is already wearing, so an active row keeps its hover state instead of trading it away. The accent is redstone red because redstone power is the terminal's on switch, so the block and its screen share one visual idea. It appears on exactly two things: a filter that is currently filtering, and a container the network is not allowed to write to. Neither is carried by colour alone; the bar is a shape, and the container's role is written out in words beside it.
+
+Two colours the mod draws are deliberately outside this palette and belong to other vocabularies: the in-world container outlines in `HighlightColour`, which have to read against arbitrary world geometry rather than against a grey panel, and the locked-slot wash in `LockedSlotTint`, documented in [`locked-slot-art.md`](locked-slot-art.md). Neither is chrome.
 
 Text reuses chrome rather than inventing greys: secondary text is the chassis shadow, unavailable text is the recessed floor, and a text field's content is the bevel highlight, which is what vanilla's own in-container search field uses. The one other text colour is `FF6060`, which is what vanilla writes "too expensive" in on an anvil.
 
@@ -135,4 +134,4 @@ python3 tools/gui_sprite.py scales art/gui/icon/sort.sprite.txt /tmp/sort.png
 
 Use `slice` on anything nine-sliced before committing. A detail that sits in a stretched band smears, and this is where that shows up rather than in a screenshot.
 
-A sprite's `.png.mcmeta` declares its scaling. It is written by hand alongside the PNG and must agree with the table above; `TerminalSpriteTest` fails the build if it does not, and fails it again if a sprite paints a colour that is not in the palette above.
+A sprite's `.png.mcmeta` declares its scaling. It is written by hand alongside the PNG and must agree with the table above. `TerminalSpriteTest` walks the whole shipped sprite tree, not just the catalogue, and fails the build if a sprite's metadata disagrees with its texture, if a sprite that is stretched to fit declares no scaling, if a marking sits in a band that tiles, or if any pixel anywhere is a colour that is not in the palette above.
