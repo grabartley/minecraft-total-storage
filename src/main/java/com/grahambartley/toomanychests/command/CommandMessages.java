@@ -60,14 +60,6 @@ public final class CommandMessages {
     return line("quickstack.done", "Stacked %s items into %s nearby containers", items, containers);
   }
 
-  public static Text nothingToQuickStack() {
-    return line("quickstack.empty", "Nothing you are carrying belongs in a container nearby");
-  }
-
-  public static Text quickStackTooSoon() {
-    return line("quickstack.cooldown", "Give the last quick stack a moment");
-  }
-
   public static Text quickStackDisabled() {
     return line("quickstack.disabled", "Quick stack is switched off on this server");
   }

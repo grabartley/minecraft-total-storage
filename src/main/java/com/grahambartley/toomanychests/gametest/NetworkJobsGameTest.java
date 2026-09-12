@@ -33,7 +33,7 @@ public final class NetworkJobsGameTest implements FabricGameTest {
         TerminalAddress.of(
             context.getWorld(), context.getAbsolutePos(NetworkOperationFixture.TERMINAL));
     final ThrowingJob job = new ThrowingJob();
-    NetworkOperations.jobs().start(address, job);
+    NetworkOperations.jobs().start(address, job, context.getWorld().getServer().getTicks());
 
     context.waitAndRun(
         TICKS_TO_SETTLE,

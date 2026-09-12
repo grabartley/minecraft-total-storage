@@ -18,8 +18,4 @@ public enum StorageSortOutcome {
   public boolean wasSorted() {
     return this == SORTED;
   }
-
-  public boolean wasSkipped() {
-    return this == EXCLUDED || this == NOT_SORTABLE;
-  }
 }

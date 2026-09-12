@@ -1,5 +1,8 @@
 package com.grahambartley.toomanychests.gametest;
 
+import com.grahambartley.toomanychests.config.ConfigBuilder;
+import com.grahambartley.toomanychests.config.ServerConfigService;
+import com.grahambartley.toomanychests.config.TooManyChestsConfig;
 import com.grahambartley.toomanychests.lifecycle.ContainerLifecycle;
 import com.grahambartley.toomanychests.network.WithdrawRequestPayload;
 import com.grahambartley.toomanychests.operation.ConsolidationJob;
@@ -16,17 +19,41 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.test.AfterBatch;
+import net.minecraft.test.BeforeBatch;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.ChunkPos;
 
 public final class DuplicationSafetyGameTest implements FabricGameTest {
   private static final String BATCH = "duplication-safety";
+  private static final int WITHIN_THE_STAGE = 1;
+
   private static final int TICK_LIMIT = 60;
   private static final int STACK = 64;
   private static final Item TRACKED = Items.DIAMOND;
 
   private final WithdrawService withdrawals = new WithdrawService();
+
+  @BeforeBatch(batchId = BATCH)
+  public void keepQuickStackInsideTheStage(ServerWorld world) {
+    ServerConfigService.update(
+        world.getServer(),
+        ConfigBuilder.from(ServerConfigService.current())
+            .quickStackRadius(WITHIN_THE_STAGE)
+            .build());
+  }
+
+  @AfterBatch(batchId = BATCH)
+  public void restoreQuickStackRadius(ServerWorld world) {
+    ServerConfigService.update(
+        world.getServer(),
+        ConfigBuilder.from(ServerConfigService.current())
+            .quickStackRadius(TooManyChestsConfig.DEFAULT_QUICK_STACK_RADIUS)
+            .build());
+  }
+
   private final QuickStackService quickStacks = new QuickStackService();
 
   @GameTest(

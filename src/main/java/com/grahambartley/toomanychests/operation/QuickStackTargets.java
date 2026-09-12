@@ -15,9 +15,11 @@ import com.grahambartley.toomanychests.terminal.TerminalSettings;
 import com.grahambartley.toomanychests.terminal.TerminalsHolding;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 
@@ -77,17 +79,26 @@ public final class QuickStackTargets {
       if (!address.worldKey().equals(world.getRegistryKey())) {
         continue;
       }
+      final NetworkMembership network = TerminalNetworks.registry().find(address).orElse(null);
+      if (network == null) {
+        continue;
+      }
       TerminalLookup.settingsAt(world, address.pos())
-          .ifPresent(settings -> recordClaims(claims, nearby, settings));
+          .ifPresent(settings -> recordClaims(claims, network, nearby, settings));
     }
     return claims;
   }
 
   private static void recordClaims(
       Map<BlockPos, QuickStackClaim> claims,
+      NetworkMembership network,
       List<StorageOrigin> nearby,
       TerminalSettings settings) {
+    final Set<StorageOrigin> held = new HashSet<>(network.containers());
     for (final StorageOrigin origin : nearby) {
+      if (!held.contains(origin)) {
+        continue;
+      }
       if (!(origin instanceof BlockStorageOrigin block)) {
         continue;
       }

@@ -17,6 +17,10 @@ public final class ModNetworking {
   private static final DepositService DEPOSITS = new DepositService();
   private static final QuickStackService QUICK_STACKS = new QuickStackService();
 
+  public static QuickStackService quickStacks() {
+    return QUICK_STACKS;
+  }
+
   public static TerminalListingService listings() {
     return LISTINGS;
   }

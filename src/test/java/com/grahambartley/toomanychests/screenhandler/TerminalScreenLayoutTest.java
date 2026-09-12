@@ -228,6 +228,18 @@ class TerminalScreenLayoutTest {
   }
 
   @Test
+  void theActionColumnHoldsEveryActionTheTerminalDraws() {
+    assertTrue(
+        TerminalScreenLayout.actionY(2) + TerminalScreenLayout.BUTTON_SIZE
+            <= TerminalScreenLayout.INSET_Y + TerminalScreenLayout.INSET_HEIGHT,
+        "the third action runs past the recess it sits beside");
+    assertThrows(
+        IndexOutOfBoundsException.class,
+        () -> TerminalScreenLayout.actionY(3),
+        "a fourth action has nowhere to go and must say so");
+  }
+
+  @Test
   void aToolbarButtonIsDrawnInsideTheChassisFrame() {
     assertTrue(
         TerminalScreenLayout.TOOLBAR_X + TerminalScreenLayout.BUTTON_SIZE

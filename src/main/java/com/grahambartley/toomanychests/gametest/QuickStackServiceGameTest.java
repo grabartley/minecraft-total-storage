@@ -1,5 +1,8 @@
 package com.grahambartley.toomanychests.gametest;
 
+import com.grahambartley.toomanychests.config.ConfigBuilder;
+import com.grahambartley.toomanychests.config.ServerConfigService;
+import com.grahambartley.toomanychests.config.TooManyChestsConfig;
 import com.grahambartley.toomanychests.lock.LockedSlots;
 import com.grahambartley.toomanychests.lock.LockedSlotsAttachment;
 import com.grahambartley.toomanychests.operation.OperationGuards;
@@ -15,6 +18,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.test.AfterBatch;
 import net.minecraft.test.BeforeBatch;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
@@ -22,13 +26,29 @@ import net.minecraft.test.TestContext;
 public final class QuickStackServiceGameTest implements FabricGameTest {
   private static final String BATCH = "quick-stack";
 
+  private static final int WITHIN_THE_STAGE = 1;
+
   private static final int TICK_LIMIT = 60;
 
   private final QuickStackService quickStacks = new QuickStackService();
 
   @BeforeBatch(batchId = BATCH)
-  public void clearCooldowns(ServerWorld world) {
+  public void clearCooldownsAndKeepQuickStackInsideTheStage(ServerWorld world) {
     OperationGuards.cooldowns().clear();
+    ServerConfigService.update(
+        world.getServer(),
+        ConfigBuilder.from(ServerConfigService.current())
+            .quickStackRadius(WITHIN_THE_STAGE)
+            .build());
+  }
+
+  @AfterBatch(batchId = BATCH)
+  public void restoreQuickStackRadius(ServerWorld world) {
+    ServerConfigService.update(
+        world.getServer(),
+        ConfigBuilder.from(ServerConfigService.current())
+            .quickStackRadius(TooManyChestsConfig.DEFAULT_QUICK_STACK_RADIUS)
+            .build());
   }
 
   @GameTest(

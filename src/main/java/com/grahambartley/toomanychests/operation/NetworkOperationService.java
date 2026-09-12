@@ -42,15 +42,12 @@ public final class NetworkOperationService {
       player.sendMessage(TerminalMessages.notYours(), true);
       return OperationStart.NOT_ALLOWED;
     }
-    final TerminalAddress address = TerminalAddress.of(open.world(), open.terminal());
+    final NetworkOperationContext context = NetworkOperationContext.of(open);
+    final TerminalAddress address = context.address();
     if (jobs.isRunning(address)) {
       jobs.cancel(open.world().getServer(), address, player);
       return OperationStart.CANCELLED;
     }
-    if (!OperationGuards.allows(player, operation)) {
-      return OperationStart.RATE_LIMITED;
-    }
-    final NetworkOperationContext context = NetworkOperationContext.of(open);
     final NetworkJob job = jobFor.apply(context);
     if (job.hasNothingToDo()) {
       player.sendMessage(NetworkOperationMessages.nothingToDo(operation), true);
@@ -59,7 +56,10 @@ public final class NetworkOperationService {
     if (needsConfirming(player, context, address, operation)) {
       return OperationStart.NEEDS_CONFIRMATION;
     }
-    jobs.start(address, job);
+    if (!OperationGuards.allows(player, operation)) {
+      return OperationStart.RATE_LIMITED;
+    }
+    jobs.start(address, job, context.server().getTicks());
     player.sendMessage(NetworkOperationMessages.started(operation), true);
     return OperationStart.STARTED;
   }

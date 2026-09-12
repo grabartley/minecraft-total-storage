@@ -23,13 +23,13 @@ public final class NetworkJobs {
     return address != null && running.containsKey(address);
   }
 
-  public boolean start(TerminalAddress address, NetworkJob job) {
+  public boolean start(TerminalAddress address, NetworkJob job, int startedAt) {
     Objects.requireNonNull(address, "address");
     Objects.requireNonNull(job, "job");
     if (running.containsKey(address)) {
       return false;
     }
-    running.put(address, new Running(job));
+    running.put(address, new Running(job, startedAt));
     return true;
   }
 
@@ -117,8 +117,9 @@ public final class NetworkJobs {
 
     private int lastReportedTick;
 
-    private Running(NetworkJob job) {
+    private Running(NetworkJob job, int startedAt) {
       this.job = job;
+      this.lastReportedTick = startedAt;
     }
   }
 }

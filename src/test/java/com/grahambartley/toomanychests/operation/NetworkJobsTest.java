@@ -65,24 +65,24 @@ class NetworkJobsTest {
   void startingAJobPutsTheNetworkToWork() {
     NetworkJobs jobs = new NetworkJobs();
 
-    assertTrue(jobs.start(TERMINAL, new RecordingJob()));
+    assertTrue(jobs.start(TERMINAL, new RecordingJob(), 0));
     assertTrue(jobs.isRunning(TERMINAL));
   }
 
   @Test
   void oneNetworkRunsOneJobAtATime() {
     NetworkJobs jobs = new NetworkJobs();
-    jobs.start(TERMINAL, new RecordingJob());
+    jobs.start(TERMINAL, new RecordingJob(), 0);
 
-    assertFalse(jobs.start(TERMINAL, new RecordingJob()));
+    assertFalse(jobs.start(TERMINAL, new RecordingJob(), 0));
   }
 
   @Test
   void twoNetworksRunTheirOwnJobs() {
     NetworkJobs jobs = new NetworkJobs();
 
-    jobs.start(TERMINAL, new RecordingJob());
-    jobs.start(ANOTHER_TERMINAL, new RecordingJob());
+    jobs.start(TERMINAL, new RecordingJob(), 0);
+    jobs.start(ANOTHER_TERMINAL, new RecordingJob(), 0);
 
     assertTrue(jobs.isRunning(TERMINAL));
     assertTrue(jobs.isRunning(ANOTHER_TERMINAL));
@@ -92,7 +92,7 @@ class NetworkJobsTest {
   void cancellingStopsTheJobAndForgetsIt() {
     NetworkJobs jobs = new NetworkJobs();
     RecordingJob job = new RecordingJob();
-    jobs.start(TERMINAL, job);
+    jobs.start(TERMINAL, job, 0);
 
     assertTrue(jobs.cancel(null, TERMINAL, null));
     assertTrue(job.cancelled);
@@ -118,7 +118,7 @@ class NetworkJobsTest {
   void clearingStopsEveryJob() {
     NetworkJobs jobs = new NetworkJobs();
     RecordingJob job = new RecordingJob();
-    jobs.start(TERMINAL, job);
+    jobs.start(TERMINAL, job, 0);
 
     jobs.clear();
 
@@ -130,14 +130,14 @@ class NetworkJobsTest {
   void aJobNeedsANetworkToRunOn() {
     NetworkJobs jobs = new NetworkJobs();
 
-    assertThrows(NullPointerException.class, () -> jobs.start(null, new RecordingJob()));
-    assertThrows(NullPointerException.class, () -> jobs.start(TERMINAL, null));
+    assertThrows(NullPointerException.class, () -> jobs.start(null, new RecordingJob(), 0));
+    assertThrows(NullPointerException.class, () -> jobs.start(TERMINAL, null, 0));
   }
 
   @Test
   void tickingWithoutAServerLeavesEveryJobWhereItWas() {
     NetworkJobs jobs = new NetworkJobs();
-    jobs.start(TERMINAL, new RecordingJob());
+    jobs.start(TERMINAL, new RecordingJob(), 0);
 
     jobs.tick(null);
 

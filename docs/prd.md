@@ -307,7 +307,7 @@ Default order: category by preset tag grouping, then registry identifier, then d
 | SORT-12 | `Filtered` containers receive only matching items during consolidation |
 | SORT-13 | Network sort and consolidate are explicit terminal actions, with confirmation above a size threshold, progress, and a summary naming containers touched and `Excluded` ones skipped |
 | SORT-14 | A long operation is budgeted per tick, by the containers and slots it reads, and continues across ticks rather than blocking the server (ADR 0036) |
-| SORT-15 | An in-progress operation can be cancelled: the step in flight rolls back, nothing further is started, and no item is lost (ADR 0036) |
+| SORT-15 | An in-progress operation can be cancelled between steps: nothing further is started, every committed step stands, and no item is lost (ADR 0036) |
 | SORT-16 | The terminal stays responsive while a large operation runs |
 | SORT-17 | Both are rate limited and require owner or operator permission, checked when the request arrives rather than when the button is drawn |
 
