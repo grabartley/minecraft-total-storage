@@ -196,5 +196,7 @@
   "command.too-many-chests.help.quickstack": "/tmc quickstack tops up matching stacks in the containers around you",
   "command.too-many-chests.sort.unchanged": "That was already sorted",
   "key.too-many-chests.quick_stack": "Quick stack",
-  "command.too-many-chests.quickstack.disabled": "Quick stack is switched off on this server"
+  "command.too-many-chests.quickstack.disabled": "Quick stack is switched off on this server",
+  "operation.too-many-chests.consolidate.done.gathered": "Gathered %s items into as few containers as they fit",
+  "operation.too-many-chests.sort.network.done.tidy": "Every container was already sorted"
 }

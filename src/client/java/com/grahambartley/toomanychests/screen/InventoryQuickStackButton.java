@@ -6,7 +6,7 @@ import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 
 public final class InventoryQuickStackButton {
-  public static final int PANEL_X = 136;
+  public static final int PANEL_X = 154;
 
   public static final int PANEL_Y = 3;
 

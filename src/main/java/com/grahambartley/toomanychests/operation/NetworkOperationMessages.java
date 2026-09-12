@@ -22,19 +22,32 @@ public final class NetworkOperationMessages {
 
   public static Text finished(ExpensiveOperation operation, OperationReport report) {
     final Text summary =
-        operation == ExpensiveOperation.CONSOLIDATE
-            ? line(
-                "consolidate.done",
-                "Gathered %s items and sorted %s containers, merging %s stacks",
-                report.itemsMoved(),
-                report.containersSorted(),
-                report.stacksMerged())
-            : line(
-                "sort.network.done",
-                "Sorted %s containers, merging %s stacks",
-                report.containersSorted(),
-                report.stacksMerged());
+        operation == ExpensiveOperation.CONSOLIDATE ? gathered(report) : sorted(report);
     return report.skippedAnything() ? withSkipped(summary, report) : summary;
+  }
+
+  private static Text gathered(OperationReport report) {
+    return report.containersSorted() == 0
+        ? line(
+            "consolidate.done.gathered",
+            "Gathered %s items into as few containers as they fit",
+            report.itemsMoved())
+        : line(
+            "consolidate.done",
+            "Gathered %s items and sorted %s containers, merging %s stacks",
+            report.itemsMoved(),
+            report.containersSorted(),
+            report.stacksMerged());
+  }
+
+  private static Text sorted(OperationReport report) {
+    return report.containersSorted() == 0
+        ? line("sort.network.done.tidy", "Every container was already sorted")
+        : line(
+            "sort.network.done",
+            "Sorted %s containers, merging %s stacks",
+            report.containersSorted(),
+            report.stacksMerged());
   }
 
   public static Text cancelled(ExpensiveOperation operation, OperationReport report) {

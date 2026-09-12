@@ -58,7 +58,9 @@ y = 3
 
 On every vanilla container that is `x = 154, y = 3` relative to the panel origin, clear of the title text, which ends well short of it, and clear of the slot grid, whose right edge stops at `x = 169`.
 
-The quick stack button sits one button and a four pixel gutter to its left, at `x = 136, y = 3`, so the two never collide on the player inventory where both appear. That anchor is clear of the crafting grid, whose leftmost slot starts at `x = 98` and whose result slot starts at `x = 154`, and clear of the `Crafting` label above them. The inventory panel moves when the recipe book opens, so the button follows the panel every frame rather than being placed once.
+The quick stack button takes the same anchor on the player inventory, `x = 154, y = 3`, because on that screen it is the only place in the band that is free. The `Crafting` label starts at `x = 97` and runs to roughly `x = 133`, so a button at `x = 136` lands hard against the final letter, which is exactly what it looked like the first time: a control dropped on top of the title rather than built into the panel. Everything from the label's end to `x = 154` is too narrow for 14 pixels plus a gutter.
+
+The consequence for a screen that eventually wants two of these: they cannot both live in the band on the player inventory, and the second one belongs outside the panel rather than over the label or a slot. The inventory panel also moves when the recipe book opens, so the button follows the panel every frame rather than being placed once.
 
 The button must never overlap a slot. It is a click target sitting in someone else's screen, and a click that lands on both is a click that does the wrong thing.
 
