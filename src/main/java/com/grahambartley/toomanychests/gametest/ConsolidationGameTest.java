@@ -1,9 +1,7 @@
 package com.grahambartley.toomanychests.gametest;
 
 import com.grahambartley.toomanychests.operation.ConsolidationJob;
-import com.grahambartley.toomanychests.operation.NetworkJob;
 import com.grahambartley.toomanychests.operation.NetworkJobState;
-import com.grahambartley.toomanychests.operation.NetworkOperationContext;
 import com.grahambartley.toomanychests.operation.NetworkOperations;
 import com.grahambartley.toomanychests.operation.OperationGuards;
 import com.grahambartley.toomanychests.operation.OperationReport;
@@ -20,14 +18,13 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.test.BeforeBatch;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
+import net.minecraft.util.math.BlockPos;
 
 public final class ConsolidationGameTest implements FabricGameTest {
   private static final String BATCH = "network-consolidate";
 
   private static final int TICK_LIMIT = 80;
-  private static final int BUDGET = 64;
   private static final int ONE_STEP = 1;
-  private static final int MOST_STEPS_A_TEST_NEEDS = 64;
 
   @BeforeBatch(batchId = BATCH)
   public void clearGuardsAndJobs(ServerWorld world) {
@@ -53,7 +50,10 @@ public final class ConsolidationGameTest implements FabricGameTest {
     ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
     long before = NetworkOperationFixture.countInWorld(context, Items.COBBLESTONE, owner);
 
-    OperationReport report = runToCompletion(new ConsolidationJob(contextFor(context, owner)));
+    OperationReport report =
+        NetworkOperationFixture.runToCompletion(
+            context,
+            new ConsolidationJob(NetworkOperationFixture.operationContext(context, owner)));
 
     context.assertEquals(
         barrelsHolding(east, west, shared), 1, "Cobblestone should end up in one barrel");
@@ -79,7 +79,8 @@ public final class ConsolidationGameTest implements FabricGameTest {
         context, NetworkOperationFixture.EAST_BARREL, ContainerRole.EXCLUDED);
     long before = NetworkOperationFixture.countInWorld(context, Items.COBBLESTONE, owner);
 
-    runToCompletion(new ConsolidationJob(contextFor(context, owner)));
+    NetworkOperationFixture.runToCompletion(
+        context, new ConsolidationJob(NetworkOperationFixture.operationContext(context, owner)));
 
     context.assertEquals(
         (int) NetworkOperationFixture.countIn(excluded, Items.COBBLESTONE),
@@ -110,8 +111,10 @@ public final class ConsolidationGameTest implements FabricGameTest {
         NetworkOperationFixture.EAST_BARREL,
         new ContainerAssignment(
             ContainerRole.FILTERED, ContainerFilter.ofItems("minecraft:diamond")));
+    long before = NetworkOperationFixture.countInWorld(context, Items.COBBLESTONE, owner);
 
-    runToCompletion(new ConsolidationJob(contextFor(context, owner)));
+    NetworkOperationFixture.runToCompletion(
+        context, new ConsolidationJob(NetworkOperationFixture.operationContext(context, owner)));
 
     context.assertEquals(
         (int) NetworkOperationFixture.countIn(filtered, Items.COBBLESTONE),
@@ -121,6 +124,7 @@ public final class ConsolidationGameTest implements FabricGameTest {
         (int) NetworkOperationFixture.countIn(filtered, Items.DIAMOND),
         4,
         "A filtered barrel keeps what it does accept");
+    NetworkOperationFixture.assertConserved(context, before, Items.COBBLESTONE, owner);
     NetworkOperationFixture.finish(context, owner);
   }
 
@@ -139,13 +143,14 @@ public final class ConsolidationGameTest implements FabricGameTest {
     shared.setStack(1, new ItemStack(Items.COBBLESTONE, 14));
     ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
     long before = NetworkOperationFixture.countInWorld(context, Items.COBBLESTONE, owner);
-    ConsolidationJob job = new ConsolidationJob(contextFor(context, owner));
+    ConsolidationJob job =
+        new ConsolidationJob(NetworkOperationFixture.operationContext(context, owner));
 
     NetworkJobState afterOneStep = job.advance(ONE_STEP);
 
     context.assertTrue(
         afterOneStep.isRunning(), "A budget of one step should not finish the whole network");
-    runToCompletion(job);
+    NetworkOperationFixture.runToCompletion(context, job);
     context.assertTrue(job.report().percentDone() == 100, "The job should finish across ticks");
     NetworkOperationFixture.assertConserved(context, before, Items.COBBLESTONE, owner);
     NetworkOperationFixture.finish(context, owner);
@@ -164,14 +169,16 @@ public final class ConsolidationGameTest implements FabricGameTest {
         context, NetworkOperationFixture.SHARED_BARREL, Items.COBBLESTONE, 14);
     ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
     long before = NetworkOperationFixture.countInWorld(context, Items.COBBLESTONE, owner);
-    ConsolidationJob job = new ConsolidationJob(contextFor(context, owner));
+    ConsolidationJob job =
+        new ConsolidationJob(NetworkOperationFixture.operationContext(context, owner));
 
     job.advance(ONE_STEP);
     job.cancel();
 
     context.assertTrue(job.report().cancelled(), "A cancelled job should say so");
     context.assertTrue(
-        job.advance(BUDGET) == NetworkJobState.DONE, "A cancelled job should do no more work");
+        job.advance(NetworkOperationFixture.BUDGET) == NetworkJobState.DONE,
+        "A cancelled job should do no more work");
     NetworkOperationFixture.assertConserved(context, before, Items.COBBLESTONE, owner);
     NetworkOperationFixture.finish(context, owner);
   }
@@ -189,14 +196,24 @@ public final class ConsolidationGameTest implements FabricGameTest {
         context, NetworkOperationFixture.SHARED_BARREL, Items.COBBLESTONE, 14);
     ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
     long before = NetworkOperationFixture.countInWorld(context, Items.COBBLESTONE, owner);
-    ConsolidationJob job = new ConsolidationJob(contextFor(context, owner));
+    ConsolidationJob job =
+        new ConsolidationJob(NetworkOperationFixture.operationContext(context, owner));
 
     job.advance(ONE_STEP);
-    context.setBlockState(NetworkOperationFixture.WEST_BARREL, Blocks.AIR.getDefaultState());
-    runToCompletion(job);
+    long carriedAway = vanish(context, NetworkOperationFixture.WEST_BARREL);
+    NetworkOperationFixture.runToCompletion(context, job);
 
-    NetworkOperationFixture.assertConserved(context, before, Items.COBBLESTONE, owner);
+    NetworkOperationFixture.assertConserved(
+        context, before - carriedAway, Items.COBBLESTONE, owner);
     NetworkOperationFixture.finish(context, owner);
+  }
+
+  private static long vanish(TestContext context, BlockPos where) {
+    final BarrelBlockEntity barrel = context.getBlockEntity(where);
+    final long held = NetworkOperationFixture.countIn(barrel, Items.COBBLESTONE);
+    barrel.clear();
+    context.setBlockState(where, Blocks.AIR.getDefaultState());
+    return held;
   }
 
   private static int barrelsHolding(BarrelBlockEntity... barrels) {
@@ -207,21 +224,5 @@ public final class ConsolidationGameTest implements FabricGameTest {
       }
     }
     return holding;
-  }
-
-  private static NetworkOperationContext contextFor(
-      TestContext context, ServerPlayerEntity player) {
-    return new NetworkOperationContext(
-        context.getWorld(),
-        context.getAbsolutePos(NetworkOperationFixture.TERMINAL),
-        player.getUuid());
-  }
-
-  private static OperationReport runToCompletion(NetworkJob job) {
-    int steps = 0;
-    while (job.advance(BUDGET).isRunning() && steps < MOST_STEPS_A_TEST_NEEDS) {
-      steps++;
-    }
-    return job.report();
   }
 }

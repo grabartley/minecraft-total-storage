@@ -8,7 +8,6 @@ import com.grahambartley.toomanychests.terminal.TerminalAddress;
 import com.grahambartley.toomanychests.terminal.TerminalLookup;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import com.grahambartley.toomanychests.terminal.TerminalSettings;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -48,17 +47,6 @@ public record NetworkOperationContext(ServerWorld world, BlockPos terminal, UUID
 
   public List<StorageOrigin> containers() {
     return network().map(NetworkMembership::containers).orElseGet(List::of);
-  }
-
-  public List<StorageOrigin> writableContainers() {
-    final TerminalSettings settings = settings();
-    final List<StorageOrigin> writable = new ArrayList<>();
-    for (final StorageOrigin origin : containers()) {
-      if (roleOf(settings, origin) != ContainerRole.EXCLUDED) {
-        writable.add(origin);
-      }
-    }
-    return List.copyOf(writable);
   }
 
   public ContainerRole roleFor(StorageOrigin origin) {

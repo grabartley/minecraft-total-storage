@@ -194,8 +194,9 @@
   "operation.too-many-chests.cooldown.consolidate": "Give the last consolidation a moment, %ss left",
   "operation.too-many-chests.cooldown.quick_stack": "Give the last quick stack a moment, %ss left",
   "command.too-many-chests.help.quickstack": "/tmc quickstack tops up matching stacks in the containers around you",
-  "command.too-many-chests.quickstack.done": "Stacked %s items into %s nearby containers",
-  "command.too-many-chests.quickstack.empty": "Nothing you are carrying belongs in a container nearby",
   "command.too-many-chests.sort.unchanged": "That was already sorted",
-  "key.too-many-chests.quick_stack": "Quick stack"
+  "key.too-many-chests.quick_stack": "Quick stack",
+  "command.too-many-chests.quickstack.cooldown": "Give the last quick stack a moment",
+  "command.too-many-chests.quickstack.disabled": "Quick stack is switched off on this server",
+  "config.too-many-chests.quickStackEnabled": "Quick stack enabled"
 }

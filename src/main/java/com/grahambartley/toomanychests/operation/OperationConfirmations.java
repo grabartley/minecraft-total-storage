@@ -23,12 +23,6 @@ public final class OperationConfirmations {
     return false;
   }
 
-  public boolean isArmed(
-      UUID player, TerminalAddress terminal, ExpensiveOperation operation, long tick) {
-    final Long armedAt = armed.get(new Pending(player, terminal, operation));
-    return armedAt != null && tick >= armedAt && tick - armedAt <= WINDOW_TICKS;
-  }
-
   public void forget(UUID player) {
     armed.keySet().removeIf(pending -> pending.player().equals(player));
   }

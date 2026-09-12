@@ -36,15 +36,14 @@ class OperationTallyTest {
   }
 
   @Test
-  void aSecondPhaseAddsTheStepsItBrings() {
-    OperationTally tally = new OperationTally(1);
+  void finishingCountsEveryStepThePlanAllowedFor() {
+    OperationTally tally = new OperationTally(4);
     tally.stepped();
 
-    tally.expect(2);
-    tally.stepped();
+    tally.finished();
 
-    assertEquals(2, tally.report().stepsDone());
-    assertEquals(3, tally.report().stepsTotal());
+    assertEquals(4, tally.report().stepsDone());
+    assertEquals(100, tally.report().percentDone());
   }
 
   @Test

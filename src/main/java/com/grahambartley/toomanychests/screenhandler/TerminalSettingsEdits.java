@@ -14,7 +14,6 @@ import com.grahambartley.toomanychests.operation.TerminalOperationGate;
 import com.grahambartley.toomanychests.terminal.ContainerHighlightService;
 import com.grahambartley.toomanychests.terminal.ContainerRoleService;
 import com.grahambartley.toomanychests.terminal.RoleChangeOutcome;
-import com.grahambartley.toomanychests.terminal.TerminalAction;
 import com.grahambartley.toomanychests.terminal.TerminalAddress;
 import com.grahambartley.toomanychests.terminal.TerminalMessages;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
@@ -111,19 +110,25 @@ public final class TerminalSettingsEdits {
     if (payload == null) {
       return false;
     }
-    if (payload.action() == TerminalAction.HIGHLIGHT) {
-      final TerminalOperationContext context =
-          TerminalOperationGate.open(player, payload.syncId()).orElse(null);
-      if (context == null) {
-        return false;
-      }
-      ContainerHighlightService.highlight(player, context.world(), context.terminal());
-      return true;
-    }
-    if (payload.action() != TerminalAction.RESCAN) {
+    return switch (payload.action()) {
+      case HIGHLIGHT -> highlight(player, payload.syncId());
+      case RESCAN -> rescan(player, payload.syncId());
+      case SORT_NETWORK, CONSOLIDATE -> false;
+    };
+  }
+
+  private boolean highlight(ServerPlayerEntity player, int syncId) {
+    final TerminalOperationContext context =
+        TerminalOperationGate.open(player, syncId).orElse(null);
+    if (context == null) {
       return false;
     }
-    final TerminalOperationContext context = administrable(player, payload.syncId());
+    ContainerHighlightService.highlight(player, context.world(), context.terminal());
+    return true;
+  }
+
+  private boolean rescan(ServerPlayerEntity player, int syncId) {
+    final TerminalOperationContext context = administrable(player, syncId);
     if (context == null) {
       return false;
     }

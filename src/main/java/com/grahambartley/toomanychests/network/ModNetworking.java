@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests.network;
 
 import com.grahambartley.toomanychests.lock.LockToggleService;
 import com.grahambartley.toomanychests.operation.DepositService;
+import com.grahambartley.toomanychests.operation.QuickStackFeedback;
 import com.grahambartley.toomanychests.operation.QuickStackService;
 import com.grahambartley.toomanychests.operation.WithdrawService;
 import com.grahambartley.toomanychests.screenhandler.TerminalListingService;
@@ -72,7 +73,12 @@ public final class ModNetworking {
     ServerPlayNetworking.registerGlobalReceiver(
         QuickStackRequestPayload.ID,
         (payload, context) ->
-            context.server().execute(() -> QUICK_STACKS.quickStack(context.player())));
+            context
+                .server()
+                .execute(
+                    () ->
+                        QuickStackFeedback.report(
+                            context.player(), QUICK_STACKS.quickStack(context.player()))));
 
     TerminalSettingsNetworking.register();
     ConfigSync.register();

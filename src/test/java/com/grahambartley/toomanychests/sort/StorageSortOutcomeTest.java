@@ -20,9 +20,8 @@ class StorageSortOutcomeTest {
   @ParameterizedTest
   @EnumSource(
       value = StorageSortOutcome.class,
-      names = {"ALREADY_SORTED", "EMPTY"})
-  void aContainerThatNeededNothingIsLeftWhereItWas(StorageSortOutcome outcome) {
-    assertTrue(outcome.leftItWhereItWas());
+      names = {"ALREADY_SORTED", "EMPTY", "GONE"})
+  void aContainerThatNeededNothingIsNotReportedAsSkipped(StorageSortOutcome outcome) {
     assertFalse(outcome.wasSkipped());
   }
 
@@ -32,7 +31,6 @@ class StorageSortOutcomeTest {
       names = {"EXCLUDED", "NOT_SORTABLE"})
   void aContainerTheOperationRefusedToTouchIsSkipped(StorageSortOutcome outcome) {
     assertTrue(outcome.wasSkipped());
-    assertFalse(outcome.leftItWhereItWas());
   }
 
   @ParameterizedTest

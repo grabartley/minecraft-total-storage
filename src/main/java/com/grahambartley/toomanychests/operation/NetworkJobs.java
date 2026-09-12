@@ -9,18 +9,18 @@ import java.util.Objects;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class NetworkJobs {
+  private static final Logger LOGGER = LoggerFactory.getLogger(NetworkJobs.class);
+
   public static final int PROGRESS_INTERVAL_TICKS = 20;
 
   private final Map<TerminalAddress, Running> running = new LinkedHashMap<>();
 
   public boolean isRunning(TerminalAddress address) {
     return address != null && running.containsKey(address);
-  }
-
-  public int runningCount() {
-    return running.size();
   }
 
   public boolean start(TerminalAddress address, NetworkJob job) {
@@ -33,16 +33,19 @@ public final class NetworkJobs {
     return true;
   }
 
-  public boolean cancel(MinecraftServer server, TerminalAddress address) {
+  public boolean cancel(
+      MinecraftServer server, TerminalAddress address, ServerPlayerEntity asking) {
     final Running stopped = address == null ? null : running.remove(address);
     if (stopped == null) {
       return false;
     }
     stopped.job.cancel();
-    tell(
-        server,
-        stopped.job,
-        NetworkOperationMessages.cancelled(stopped.job.operation(), stopped.job.report()));
+    final Text message =
+        NetworkOperationMessages.cancelled(stopped.job.operation(), stopped.job.report());
+    tell(server, stopped.job, message);
+    if (asking != null && !asking.getUuid().equals(stopped.job.actor())) {
+      asking.sendMessage(message, true);
+    }
     return true;
   }
 
@@ -54,7 +57,7 @@ public final class NetworkJobs {
     final Iterator<Map.Entry<TerminalAddress, Running>> jobs = running.entrySet().iterator();
     while (jobs.hasNext()) {
       final Running next = jobs.next().getValue();
-      if (next.job.advance(budget).isRunning()) {
+      if (advanced(next.job, budget).isRunning()) {
         reportProgress(server, next);
         continue;
       }
@@ -66,6 +69,16 @@ public final class NetworkJobs {
   public void clear() {
     running.values().forEach(next -> next.job.cancel());
     running.clear();
+  }
+
+  private static NetworkJobState advanced(NetworkJob job, int budget) {
+    try {
+      return job.advance(budget);
+    } catch (RuntimeException failure) {
+      LOGGER.error("Stopping a network operation that threw", failure);
+      job.cancel();
+      return NetworkJobState.DONE;
+    }
   }
 
   private void reportProgress(MinecraftServer server, Running next) {

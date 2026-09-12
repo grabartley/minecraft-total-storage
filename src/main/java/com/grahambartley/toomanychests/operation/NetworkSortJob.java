@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests.operation;
 
+import com.grahambartley.toomanychests.sort.StorageSortResult;
 import com.grahambartley.toomanychests.storage.StorageOrigin;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -34,6 +35,11 @@ public final class NetworkSortJob implements NetworkJob {
   }
 
   @Override
+  public boolean hasNothingToDo() {
+    return pending.isEmpty();
+  }
+
+  @Override
   public NetworkJobState advance(int budget) {
     if (tally.wasCancelled() || pending.isEmpty()) {
       return NetworkJobState.DONE;
@@ -42,11 +48,18 @@ public final class NetworkSortJob implements NetworkJob {
       cancel();
       return NetworkJobState.DONE;
     }
-    for (int step = 0; step < Math.max(1, budget) && !pending.isEmpty(); step++) {
-      tally.sorted(sorting.sortOne(context, pending.poll()));
+    int spent = 0;
+    while (spent < Math.max(1, budget) && !pending.isEmpty()) {
+      final StorageSortResult sorted = sorting.sortOne(context, pending.poll());
+      tally.sorted(sorted);
       tally.stepped();
+      spent += sorted.slotsRead();
     }
-    return pending.isEmpty() ? NetworkJobState.DONE : NetworkJobState.RUNNING;
+    if (!pending.isEmpty()) {
+      return NetworkJobState.RUNNING;
+    }
+    tally.finished();
+    return NetworkJobState.DONE;
   }
 
   @Override

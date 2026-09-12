@@ -34,7 +34,7 @@ public final class ContainerSortStep {
     }
     final StorageProvider provider = providers.resolve(context.world(), origin, role).orElse(null);
     if (provider == null) {
-      return StorageSortResult.of(StorageSortOutcome.NOT_SORTABLE);
+      return StorageSortResult.of(StorageSortOutcome.GONE);
     }
     return NetworkStep.run(
             context.server(),

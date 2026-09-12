@@ -29,10 +29,6 @@ public record OperationReport(
     return new OperationReport(0, 0, 0, 0, 0L, 0, 0, false);
   }
 
-  public boolean changedAnything() {
-    return itemsMoved > 0L || containersSorted > 0;
-  }
-
   public boolean skippedAnything() {
     return excludedSkipped > 0 || restrictedSkipped > 0;
   }

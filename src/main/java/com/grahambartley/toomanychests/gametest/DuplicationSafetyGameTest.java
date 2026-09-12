@@ -2,6 +2,9 @@ package com.grahambartley.toomanychests.gametest;
 
 import com.grahambartley.toomanychests.lifecycle.ContainerLifecycle;
 import com.grahambartley.toomanychests.network.WithdrawRequestPayload;
+import com.grahambartley.toomanychests.operation.ConsolidationJob;
+import com.grahambartley.toomanychests.operation.NetworkSortJob;
+import com.grahambartley.toomanychests.operation.QuickStackService;
 import com.grahambartley.toomanychests.operation.WithdrawDestination;
 import com.grahambartley.toomanychests.operation.WithdrawOutcome;
 import com.grahambartley.toomanychests.operation.WithdrawResult;
@@ -10,6 +13,7 @@ import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.GameTest;
@@ -23,6 +27,7 @@ public final class DuplicationSafetyGameTest implements FabricGameTest {
   private static final Item TRACKED = Items.DIAMOND;
 
   private final WithdrawService withdrawals = new WithdrawService();
+  private final QuickStackService quickStacks = new QuickStackService();
 
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
@@ -175,6 +180,68 @@ public final class DuplicationSafetyGameTest implements FabricGameTest {
             + NetworkOperationFixture.countCarried(player, TRACKED));
     NetworkOperationFixture.assertConserved(context, before, TRACKED, player);
     NetworkOperationFixture.finish(context, player);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aNetworkSortAcrossTwoContainersConservesEverything(TestContext context) {
+    NetworkOperationFixture.stockedBarrel(
+        context, NetworkOperationFixture.EAST_BARREL, TRACKED, STACK);
+    NetworkOperationFixture.stockedBarrel(
+        context, NetworkOperationFixture.WEST_BARREL, TRACKED, STACK / 2);
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    long before = NetworkOperationFixture.countInWorld(context, TRACKED, player);
+
+    NetworkOperationFixture.runToCompletion(
+        context, new NetworkSortJob(NetworkOperationFixture.operationContext(context, player)));
+
+    NetworkOperationFixture.assertConserved(context, before, TRACKED, player);
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aConsolidationAgainstAContainerBrokenMidwayConservesEverything(TestContext context) {
+    NetworkOperationFixture.stockedBarrel(
+        context, NetworkOperationFixture.EAST_BARREL, TRACKED, STACK / 4);
+    NetworkOperationFixture.stockedBarrel(
+        context, NetworkOperationFixture.WEST_BARREL, TRACKED, STACK / 4);
+    NetworkOperationFixture.stockedBarrel(
+        context, NetworkOperationFixture.SHARED_BARREL, TRACKED, STACK / 4);
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    long before = NetworkOperationFixture.countInWorld(context, TRACKED, player);
+    ConsolidationJob job =
+        new ConsolidationJob(NetworkOperationFixture.operationContext(context, player));
+
+    job.advance(1);
+    context.setBlockState(NetworkOperationFixture.SHARED_BARREL, Blocks.AIR);
+    NetworkOperationFixture.runToCompletion(context, job);
+
+    NetworkOperationFixture.assertConserved(context, before, TRACKED, player);
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void twoPlayersQuickStackingIntoOneBarrelConserveEverything(TestContext context) {
+    NetworkOperationFixture.stockedBarrel(context, NetworkOperationFixture.EAST_BARREL, TRACKED, 1);
+    ServerPlayerEntity first = NetworkOperationFixture.standingPlayer(context);
+    ServerPlayerEntity second = NetworkOperationFixture.standingPlayer(context);
+    first.getInventory().setStack(3, new ItemStack(TRACKED, STACK));
+    second.getInventory().setStack(3, new ItemStack(TRACKED, STACK));
+    long before = NetworkOperationFixture.countInWorld(context, TRACKED, first, second);
+
+    quickStacks.quickStack(first);
+    quickStacks.quickStack(second);
+
+    NetworkOperationFixture.assertConserved(context, before, TRACKED, first, second);
+    NetworkOperationFixture.finish(context, first, second);
   }
 
   private WithdrawOutcome take(

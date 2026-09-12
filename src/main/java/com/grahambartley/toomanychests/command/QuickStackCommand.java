@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests.command;
 
+import com.grahambartley.toomanychests.operation.NetworkOperationMessages;
 import com.grahambartley.toomanychests.operation.QuickStackOutcome;
 import com.grahambartley.toomanychests.operation.QuickStackService;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -7,6 +8,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.text.Text;
 
 public final class QuickStackCommand {
   private static final QuickStackService QUICK_STACKS = new QuickStackService();
@@ -21,12 +23,23 @@ public final class QuickStackCommand {
       throws CommandSyntaxException {
     final ServerCommandSource source = context.getSource();
     final QuickStackOutcome outcome = QUICK_STACKS.quickStack(source.getPlayerOrThrow());
-    if (outcome.result().movedAnything()) {
-      source.sendFeedback(
-          () -> CommandMessages.quickStacked(outcome.moved(), outcome.containersTouched()), false);
-      return (int) Math.min(Integer.MAX_VALUE, outcome.moved());
-    }
-    source.sendError(CommandMessages.nothingToQuickStack());
+    return switch (outcome.result()) {
+      case STACKED -> stacked(source, outcome);
+      case NOTHING_TO_STACK -> refuse(source, NetworkOperationMessages.nothingToQuickStack());
+      case RATE_LIMITED -> refuse(source, CommandMessages.quickStackTooSoon());
+      case REFUSED -> refuse(source, CommandMessages.quickStackDisabled());
+    };
+  }
+
+  private static int stacked(ServerCommandSource source, QuickStackOutcome outcome) {
+    source.sendFeedback(
+        () -> NetworkOperationMessages.quickStacked(outcome.moved(), outcome.containersTouched()),
+        false);
+    return (int) Math.min(Integer.MAX_VALUE, outcome.moved());
+  }
+
+  private static int refuse(ServerCommandSource source, Text reason) {
+    source.sendError(reason);
     return 0;
   }
 }

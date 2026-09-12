@@ -21,10 +21,8 @@ public final class OperationTally {
     this.stepsTotal = stepsTotal;
   }
 
-  public void expect(int moreSteps) {
-    if (moreSteps > 0) {
-      stepsTotal += moreSteps;
-    }
+  public void finished() {
+    stepsDone = stepsTotal;
   }
 
   public void stepped() {

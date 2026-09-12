@@ -7,6 +7,8 @@ public interface NetworkJob {
 
   UUID actor();
 
+  boolean hasNothingToDo();
+
   NetworkJobState advance(int budget);
 
   OperationReport report();

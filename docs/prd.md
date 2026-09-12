@@ -306,7 +306,7 @@ Default order: category by preset tag grouping, then registry identifier, then d
 | SORT-11 | `Excluded` containers are never written to or reordered by any network-initiated operation, and stay readable and withdrawable throughout (ADR 0004) |
 | SORT-12 | `Filtered` containers receive only matching items during consolidation |
 | SORT-13 | Network sort and consolidate are explicit terminal actions, with confirmation above a size threshold, progress, and a summary naming containers touched and `Excluded` ones skipped |
-| SORT-14 | A long operation is budgeted per tick and continues across ticks rather than blocking the server |
+| SORT-14 | A long operation is budgeted per tick, by the containers and slots it reads, and continues across ticks rather than blocking the server (ADR 0036) |
 | SORT-15 | An in-progress operation can be cancelled: the step in flight rolls back, nothing further is started, and no item is lost (ADR 0036) |
 | SORT-16 | The terminal stays responsive while a large operation runs |
 | SORT-17 | Both are rate limited and require owner or operator permission, checked when the request arrives rather than when the button is drawn |
@@ -402,10 +402,11 @@ An operator configures every behaviour from the console, with no client mod and 
 | Sort button enabled | On | |
 | Middle-click sort gesture enabled | On | |
 | Quick-stack radius | 8 | 1 to 64 |
+| Quick stack enabled | On | Off refuses the button, the keybind and the command |
 | Deposit all skips hotbar | Off | |
 | Near-capacity warning threshold | 90% | 0 to 100 |
 | Expensive operation cooldown | 10 ticks | 0 to 200, where `0` disables |
-| Per-tick move budget | 64 | 1 to 1024, applied to sorting and consolidation |
+| Per-tick move budget | 64 | 1 to 1024, the containers and slots one tick of sorting or consolidation may read |
 | Containers before an operation asks twice | 8 | 0 to 1024, where `0` never asks |
 | Container eligibility overrides | Empty | |
 

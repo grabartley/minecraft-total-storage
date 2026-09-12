@@ -17,10 +17,14 @@ class StorageSortResultTest {
   }
 
   @Test
-  void aSortCannotEndWithMoreStacksThanItStarted() {
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new StorageSortResult(StorageSortOutcome.SORTED, 2, 3));
+  void aContainerThatSplitAStackIntoMoreSlotsMergedNothing() {
+    assertEquals(0, new StorageSortResult(StorageSortOutcome.SORTED, 2, 3).stacksMerged());
+  }
+
+  @ParameterizedTest
+  @CsvSource({"0, 0, 1", "3, 1, 3", "1, 4, 4"})
+  void theSlotsReadAreTheMostTheContainerHeldEitherSide(int before, int after, int read) {
+    assertEquals(read, new StorageSortResult(StorageSortOutcome.SORTED, before, after).slotsRead());
   }
 
   @Test

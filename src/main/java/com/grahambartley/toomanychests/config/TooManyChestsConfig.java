@@ -16,6 +16,7 @@ public record TooManyChestsConfig(
     boolean sortButtonEnabled,
     boolean middleClickSortEnabled,
     int quickStackRadius,
+    boolean quickStackEnabled,
     boolean depositAllSkipsHotbar,
     int nearCapacityWarningPercent,
     int expensiveOperationCooldownTicks,
@@ -43,6 +44,7 @@ public record TooManyChestsConfig(
   public static final boolean DEFAULT_SORT_BUTTON_ENABLED = true;
   public static final boolean DEFAULT_MIDDLE_CLICK_SORT_ENABLED = true;
   public static final int DEFAULT_QUICK_STACK_RADIUS = 8;
+  public static final boolean DEFAULT_QUICK_STACK_ENABLED = true;
   public static final boolean DEFAULT_DEPOSIT_ALL_SKIPS_HOTBAR = false;
   public static final int DEFAULT_NEAR_CAPACITY_WARNING_PERCENT = 90;
   public static final int DEFAULT_EXPENSIVE_OPERATION_COOLDOWN_TICKS = 10;
@@ -85,6 +87,7 @@ public record TooManyChestsConfig(
         DEFAULT_SORT_BUTTON_ENABLED,
         DEFAULT_MIDDLE_CLICK_SORT_ENABLED,
         DEFAULT_QUICK_STACK_RADIUS,
+        DEFAULT_QUICK_STACK_ENABLED,
         DEFAULT_DEPOSIT_ALL_SKIPS_HOTBAR,
         DEFAULT_NEAR_CAPACITY_WARNING_PERCENT,
         DEFAULT_EXPENSIVE_OPERATION_COOLDOWN_TICKS,
@@ -101,6 +104,7 @@ public record TooManyChestsConfig(
         sortButtonEnabled,
         middleClickSortEnabled,
         quickStackRadius,
+        quickStackEnabled,
         depositAllSkipsHotbar,
         nearCapacityWarningPercent,
         expensiveOperationCooldownTicks,

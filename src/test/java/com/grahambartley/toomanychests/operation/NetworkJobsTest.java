@@ -1,6 +1,5 @@
 package com.grahambartley.toomanychests.operation;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -37,6 +36,11 @@ class NetworkJobsTest {
     }
 
     @Override
+    public boolean hasNothingToDo() {
+      return false;
+    }
+
+    @Override
     public NetworkJobState advance(int budget) {
       return NetworkJobState.RUNNING;
     }
@@ -63,7 +67,6 @@ class NetworkJobsTest {
 
     assertTrue(jobs.start(TERMINAL, new RecordingJob()));
     assertTrue(jobs.isRunning(TERMINAL));
-    assertEquals(1, jobs.runningCount());
   }
 
   @Test
@@ -72,7 +75,6 @@ class NetworkJobsTest {
     jobs.start(TERMINAL, new RecordingJob());
 
     assertFalse(jobs.start(TERMINAL, new RecordingJob()));
-    assertEquals(1, jobs.runningCount());
   }
 
   @Test
@@ -82,7 +84,8 @@ class NetworkJobsTest {
     jobs.start(TERMINAL, new RecordingJob());
     jobs.start(ANOTHER_TERMINAL, new RecordingJob());
 
-    assertEquals(2, jobs.runningCount());
+    assertTrue(jobs.isRunning(TERMINAL));
+    assertTrue(jobs.isRunning(ANOTHER_TERMINAL));
   }
 
   @Test
@@ -91,19 +94,19 @@ class NetworkJobsTest {
     RecordingJob job = new RecordingJob();
     jobs.start(TERMINAL, job);
 
-    assertTrue(jobs.cancel(null, TERMINAL));
+    assertTrue(jobs.cancel(null, TERMINAL, null));
     assertTrue(job.cancelled);
     assertFalse(jobs.isRunning(TERMINAL));
   }
 
   @Test
   void cancellingANetworkWithNoJobChangesNothing() {
-    assertFalse(new NetworkJobs().cancel(null, TERMINAL));
+    assertFalse(new NetworkJobs().cancel(null, TERMINAL, null));
   }
 
   @Test
   void cancellingNothingAtAllIsHarmless() {
-    assertFalse(new NetworkJobs().cancel(null, null));
+    assertFalse(new NetworkJobs().cancel(null, null, null));
   }
 
   @Test
@@ -120,7 +123,7 @@ class NetworkJobsTest {
     jobs.clear();
 
     assertTrue(job.cancelled);
-    assertEquals(0, jobs.runningCount());
+    assertFalse(jobs.isRunning(TERMINAL));
   }
 
   @Test

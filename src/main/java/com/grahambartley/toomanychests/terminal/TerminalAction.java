@@ -7,9 +7,5 @@ public enum TerminalAction {
 
   SORT_NETWORK,
 
-  CONSOLIDATE;
-
-  public boolean isNetworkOperation() {
-    return this == SORT_NETWORK || this == CONSOLIDATE;
-  }
+  CONSOLIDATE
 }

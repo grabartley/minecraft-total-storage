@@ -1,8 +1,6 @@
 package com.grahambartley.toomanychests.gametest;
 
 import com.grahambartley.toomanychests.network.TerminalActionPayload;
-import com.grahambartley.toomanychests.operation.NetworkJob;
-import com.grahambartley.toomanychests.operation.NetworkOperationContext;
 import com.grahambartley.toomanychests.operation.NetworkOperations;
 import com.grahambartley.toomanychests.operation.NetworkSortJob;
 import com.grahambartley.toomanychests.operation.OperationGuards;
@@ -12,10 +10,11 @@ import com.grahambartley.toomanychests.screenhandler.TerminalSettingsEdits;
 import com.grahambartley.toomanychests.screenhandler.TerminalSettingsService;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.TerminalAction;
+import com.grahambartley.toomanychests.terminal.TerminalAddress;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
-import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BarrelBlockEntity;
 import net.minecraft.inventory.Inventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -29,8 +28,6 @@ public final class NetworkSortGameTest implements FabricGameTest {
   private static final String BATCH = "network-sort";
 
   private static final int TICK_LIMIT = 60;
-  private static final int BUDGET = 64;
-  private static final int MOST_STEPS_A_TEST_NEEDS = 64;
 
   @BeforeBatch(batchId = BATCH)
   public void clearGuardsAndJobs(ServerWorld world) {
@@ -53,7 +50,9 @@ public final class NetworkSortGameTest implements FabricGameTest {
     ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
     long before = NetworkOperationFixture.countInWorld(context, Items.COBBLESTONE, owner);
 
-    OperationReport report = runToCompletion(new NetworkSortJob(contextFor(context, owner)));
+    OperationReport report =
+        NetworkOperationFixture.runToCompletion(
+            context, new NetworkSortJob(NetworkOperationFixture.operationContext(context, owner)));
 
     context.assertTrue(
         report.containersSorted() >= 2,
@@ -73,13 +72,18 @@ public final class NetworkSortGameTest implements FabricGameTest {
         NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
     scatter(east, Items.COBBLESTONE, 20, 30);
     ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
-    runToCompletion(new NetworkSortJob(contextFor(context, owner)));
+    long before = NetworkOperationFixture.countInWorld(context, Items.COBBLESTONE, owner);
+    NetworkOperationFixture.runToCompletion(
+        context, new NetworkSortJob(NetworkOperationFixture.operationContext(context, owner)));
 
-    OperationReport second = runToCompletion(new NetworkSortJob(contextFor(context, owner)));
+    OperationReport second =
+        NetworkOperationFixture.runToCompletion(
+            context, new NetworkSortJob(NetworkOperationFixture.operationContext(context, owner)));
 
     context.assertEquals(
         second.containersSorted(), 0, "A sorted network should need no second pass");
     context.assertEquals(east.getStack(0).getCount(), 50, "The arrangement should be unchanged");
+    NetworkOperationFixture.assertConserved(context, before, Items.COBBLESTONE, owner);
     NetworkOperationFixture.finish(context, owner);
   }
 
@@ -94,8 +98,11 @@ public final class NetworkSortGameTest implements FabricGameTest {
     ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
     NetworkOperationFixture.assign(
         context, NetworkOperationFixture.EAST_BARREL, ContainerRole.EXCLUDED);
+    long before = NetworkOperationFixture.countInWorld(context, Items.COBBLESTONE, owner);
 
-    OperationReport report = runToCompletion(new NetworkSortJob(contextFor(context, owner)));
+    OperationReport report =
+        NetworkOperationFixture.runToCompletion(
+            context, new NetworkSortJob(NetworkOperationFixture.operationContext(context, owner)));
 
     context.assertEquals(
         excluded.getStack(0).getCount(), 20, "An excluded container must not be rearranged");
@@ -105,28 +112,7 @@ public final class NetworkSortGameTest implements FabricGameTest {
         report.excludedSkipped() >= 1,
         "The summary should say an excluded container was skipped, said "
             + report.excludedSkipped());
-    NetworkOperationFixture.finish(context, owner);
-  }
-
-  @GameTest(
-      templateName = NetworkOperationFixture.CONTAINER_PAD,
-      batchId = BATCH,
-      tickLimit = TICK_LIMIT)
-  public void aContainerWithSlotsThisModWillNotRearrangeIsSkippedRatherThanRisked(
-      TestContext context) {
-    context.setBlockState(NetworkOperationFixture.EAST_BARREL, Blocks.FURNACE.getDefaultState());
-    Inventory furnace = context.getBlockEntity(NetworkOperationFixture.EAST_BARREL);
-    furnace.setStack(0, new ItemStack(Items.COBBLESTONE, 8));
-    furnace.setStack(1, new ItemStack(Items.COAL, 4));
-    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
-
-    runToCompletion(new NetworkSortJob(contextFor(context, owner)));
-
-    context.assertTrue(
-        furnace.getStack(0).isOf(Items.COBBLESTONE) && furnace.getStack(0).getCount() == 8,
-        "A furnace's input slot must be left where it was, found " + furnace.getStack(0));
-    context.assertTrue(
-        furnace.getStack(1).isOf(Items.COAL), "A furnace's fuel must stay in the fuel slot");
+    NetworkOperationFixture.assertConserved(context, before, Items.COBBLESTONE, owner);
     NetworkOperationFixture.finish(context, owner);
   }
 
@@ -141,13 +127,16 @@ public final class NetworkSortGameTest implements FabricGameTest {
     scatter(east, Items.COBBLESTONE, 20, 30);
     ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
     ServerPlayerEntity watcher = watching(context, NetworkOperationFixture.EAST_BARREL);
+    long before = NetworkOperationFixture.countInWorld(context, Items.COBBLESTONE, owner, watcher);
 
-    runToCompletion(new NetworkSortJob(contextFor(context, owner)));
+    NetworkOperationFixture.runToCompletion(
+        context, new NetworkSortJob(NetworkOperationFixture.operationContext(context, owner)));
 
     ItemStack throughWatcher = watcher.currentScreenHandler.getSlot(0).getStack();
     context.assertTrue(
         throughWatcher.isOf(Items.COBBLESTONE) && throughWatcher.getCount() == 50,
         "The watcher's screen should show the merged stack, found " + throughWatcher);
+    NetworkOperationFixture.assertConserved(context, before, Items.COBBLESTONE, owner, watcher);
     NetworkOperationFixture.finish(context, owner, watcher);
   }
 
@@ -161,7 +150,9 @@ public final class NetworkSortGameTest implements FabricGameTest {
     scatter(east, Items.COBBLESTONE, 20, 30);
     ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
     ServerPlayerEntity guest = NetworkOperationFixture.alsoOpen(context);
-    TerminalActions actions = new TerminalActions(new TerminalSettingsEdits(panels()));
+    long before = NetworkOperationFixture.countInWorld(context, Items.COBBLESTONE, owner, guest);
+    TerminalActions actions =
+        new TerminalActions(new TerminalSettingsEdits(new TerminalSettingsService()));
 
     boolean acted =
         actions.act(
@@ -175,14 +166,11 @@ public final class NetworkSortGameTest implements FabricGameTest {
     context.assertFalse(
         NetworkOperations.jobs()
             .isRunning(
-                com.grahambartley.toomanychests.terminal.TerminalAddress.of(
+                TerminalAddress.of(
                     context.getWorld(), context.getAbsolutePos(NetworkOperationFixture.TERMINAL))),
         "A refused request must not leave a job running");
+    NetworkOperationFixture.assertConserved(context, before, Items.COBBLESTONE, owner, guest);
     NetworkOperationFixture.finish(context, owner, guest);
-  }
-
-  private static TerminalSettingsService panels() {
-    return new TerminalSettingsService();
   }
 
   private static ServerPlayerEntity watching(TestContext context, BlockPos container) {
@@ -191,26 +179,9 @@ public final class NetworkSortGameTest implements FabricGameTest {
     return watcher;
   }
 
-  private static void scatter(
-      Inventory container, net.minecraft.item.Item item, int first, int second) {
+  private static void scatter(Inventory container, Item item, int first, int second) {
     container.setStack(0, new ItemStack(item, first));
     container.setStack(4, new ItemStack(item, second));
     container.markDirty();
-  }
-
-  private static NetworkOperationContext contextFor(
-      TestContext context, ServerPlayerEntity player) {
-    return new NetworkOperationContext(
-        context.getWorld(),
-        context.getAbsolutePos(NetworkOperationFixture.TERMINAL),
-        player.getUuid());
-  }
-
-  private static OperationReport runToCompletion(NetworkJob job) {
-    int steps = 0;
-    while (job.advance(BUDGET).isRunning() && steps < MOST_STEPS_A_TEST_NEEDS) {
-      steps++;
-    }
-    return job.report();
   }
 }

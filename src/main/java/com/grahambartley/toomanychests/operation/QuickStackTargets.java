@@ -8,11 +8,11 @@ import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.storage.ScanRegion;
 import com.grahambartley.toomanychests.storage.StorageOrigin;
 import com.grahambartley.toomanychests.storage.StorageProvider;
-import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import com.grahambartley.toomanychests.terminal.TerminalAddress;
 import com.grahambartley.toomanychests.terminal.TerminalLookup;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import com.grahambartley.toomanychests.terminal.TerminalSettings;
+import com.grahambartley.toomanychests.terminal.TerminalsHolding;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +22,9 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 
 public final class QuickStackTargets {
+  private static final TerminalsHolding<NetworkMembership> HOLDING =
+      new TerminalsHolding<>(TerminalNetworks.registry(), NetworkMembership::containers);
+
   private final ContainerDiscoveryScan scan;
 
   public QuickStackTargets() {
@@ -35,10 +38,14 @@ public final class QuickStackTargets {
   public List<QuickStackTarget> around(ServerWorld world, BlockPos centre, int radius) {
     Objects.requireNonNull(world, "world");
     Objects.requireNonNull(centre, "centre");
-    final Map<BlockPos, QuickStackClaim> claimed = claims(world);
-    final List<QuickStackTarget> targets = new ArrayList<>();
-    for (final StorageProvider provider :
-        scan.scan(world, new ScanRegion(centre, radius)).providers()) {
+    final List<StorageProvider> found =
+        scan.scan(world, new ScanRegion(centre, radius)).providers();
+    if (found.isEmpty()) {
+      return List.of();
+    }
+    final Map<BlockPos, QuickStackClaim> claimed = claims(world, originsOf(found));
+    final List<QuickStackTarget> targets = new ArrayList<>(found.size());
+    for (final StorageProvider provider : found) {
       if (!(provider.origin() instanceof BlockStorageOrigin block)) {
         continue;
       }
@@ -55,32 +62,43 @@ public final class QuickStackTargets {
     return List.copyOf(targets);
   }
 
-  private static Map<BlockPos, QuickStackClaim> claims(ServerWorld world) {
+  private static List<StorageOrigin> originsOf(List<StorageProvider> found) {
+    final List<StorageOrigin> origins = new ArrayList<>(found.size());
+    for (final StorageProvider provider : found) {
+      origins.add(provider.origin());
+    }
+    return List.copyOf(origins);
+  }
+
+  private static Map<BlockPos, QuickStackClaim> claims(
+      ServerWorld world, List<StorageOrigin> nearby) {
     final Map<BlockPos, QuickStackClaim> claims = new HashMap<>();
-    for (final TerminalAddress address : TerminalNetworks.registry().addresses()) {
+    for (final TerminalAddress address : HOLDING.any(nearby)) {
       if (!address.worldKey().equals(world.getRegistryKey())) {
         continue;
       }
-      final NetworkMembership network = TerminalNetworks.registry().find(address).orElse(null);
-      final TerminalSettings settings =
-          TerminalLookup.settingsAt(world, address.pos()).orElse(null);
-      if (network == null || settings == null) {
-        continue;
-      }
-      recordClaims(claims, network, settings);
+      TerminalLookup.settingsAt(world, address.pos())
+          .ifPresent(settings -> recordClaims(claims, nearby, settings));
     }
     return claims;
   }
 
   private static void recordClaims(
-      Map<BlockPos, QuickStackClaim> claims, NetworkMembership network, TerminalSettings settings) {
-    final NetworkTagSet tags = settings.tags();
-    for (final StorageOrigin origin : network.containers()) {
+      Map<BlockPos, QuickStackClaim> claims,
+      List<StorageOrigin> nearby,
+      TerminalSettings settings) {
+    for (final StorageOrigin origin : nearby) {
       if (!(origin instanceof BlockStorageOrigin block)) {
         continue;
       }
       final ContainerAssignment assignment = settings.assignmentFor(block.pos());
-      claims.merge(block.pos(), new QuickStackClaim(assignment, tags), QuickStackClaim::strictest);
+      if (assignment.isDefault()) {
+        continue;
+      }
+      claims.merge(
+          block.pos(),
+          new QuickStackClaim(assignment, settings.tags()),
+          QuickStackClaim::strictest);
     }
   }
 }

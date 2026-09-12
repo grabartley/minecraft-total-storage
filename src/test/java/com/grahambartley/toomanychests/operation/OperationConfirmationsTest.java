@@ -29,7 +29,7 @@ class OperationConfirmationsTest {
     OperationConfirmations confirmations = new OperationConfirmations();
 
     assertFalse(confirmations.claim(PLAYER, TERMINAL, ExpensiveOperation.SORT_NETWORK, 0L));
-    assertTrue(confirmations.isArmed(PLAYER, TERMINAL, ExpensiveOperation.SORT_NETWORK, 0L));
+    assertFalse(confirmations.isEmpty());
   }
 
   @Test
@@ -46,7 +46,7 @@ class OperationConfirmationsTest {
     confirmations.claim(PLAYER, TERMINAL, ExpensiveOperation.SORT_NETWORK, 0L);
     confirmations.claim(PLAYER, TERMINAL, ExpensiveOperation.SORT_NETWORK, 20L);
 
-    assertFalse(confirmations.isArmed(PLAYER, TERMINAL, ExpensiveOperation.SORT_NETWORK, 21L));
+    assertFalse(confirmations.claim(PLAYER, TERMINAL, ExpensiveOperation.SORT_NETWORK, 21L));
   }
 
   @Test
@@ -94,8 +94,8 @@ class OperationConfirmationsTest {
 
     confirmations.forget(PLAYER);
 
-    assertFalse(confirmations.isArmed(PLAYER, TERMINAL, ExpensiveOperation.SORT_NETWORK, 1L));
-    assertTrue(confirmations.isArmed(SOMEBODY_ELSE, TERMINAL, ExpensiveOperation.SORT_NETWORK, 1L));
+    assertFalse(confirmations.claim(PLAYER, TERMINAL, ExpensiveOperation.SORT_NETWORK, 1L));
+    assertTrue(confirmations.claim(SOMEBODY_ELSE, TERMINAL, ExpensiveOperation.SORT_NETWORK, 1L));
   }
 
   @Test

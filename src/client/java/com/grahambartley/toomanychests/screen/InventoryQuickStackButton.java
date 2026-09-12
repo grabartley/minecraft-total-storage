@@ -1,7 +1,6 @@
 package com.grahambartley.toomanychests.screen;
 
 import com.grahambartley.toomanychests.mixin.client.HandledScreenAccessor;
-import com.grahambartley.toomanychests.network.ModNetworkingClient;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
@@ -21,10 +20,7 @@ public final class InventoryQuickStackButton {
           }
           final QuickStackButton button =
               new QuickStackButton(
-                  0,
-                  0,
-                  InventoryScreenText.of("quick_stack"),
-                  ModNetworkingClient::sendQuickStackRequest);
+                  0, 0, InventoryScreenText.of("quick_stack"), QuickStackRequests::send);
           followPanel(inventory, button);
           Screens.getButtons(screen).add(button);
           ScreenEvents.beforeRender(screen)
@@ -37,5 +33,6 @@ public final class InventoryQuickStackButton {
     final HandledScreenAccessor panel = (HandledScreenAccessor) inventory;
     button.setPosition(
         panel.tooManyChests$panelX() + PANEL_X, panel.tooManyChests$panelY() + PANEL_Y);
+    button.active = QuickStackRequests.isOffered();
   }
 }

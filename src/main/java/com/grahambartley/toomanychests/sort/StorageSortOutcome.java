@@ -11,14 +11,12 @@ public enum StorageSortOutcome {
 
   NOT_SORTABLE,
 
+  GONE,
+
   FAILED;
 
   public boolean wasSorted() {
     return this == SORTED;
-  }
-
-  public boolean leftItWhereItWas() {
-    return this == ALREADY_SORTED || this == EMPTY;
   }
 
   public boolean wasSkipped() {

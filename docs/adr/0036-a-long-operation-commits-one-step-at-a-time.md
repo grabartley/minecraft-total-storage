@@ -15,7 +15,9 @@ So a multi-tick operation has to choose what atomicity it actually offers, and s
 
 **A long operation is a queue of steps, and each step is its own transaction.**
 
-A step is one unit of work with a meaning of its own: gather one item variant into as few containers as it fits, or sort one container. `movesPerTickBudget` steps run per tick. Each step opens a transaction through the one runner, commits if it moved what it intended, and rolls back on any failure without touching the steps before or after it.
+A step is one unit of work with a meaning of its own: gather one item variant into as few containers as it fits, or sort one container. Each step opens a transaction through the one runner, commits if it moved what it intended, and rolls back on any failure without touching the steps before or after it.
+
+`movesPerTickBudget` is the allowance a tick spends, counted in the containers and slots a step actually reads rather than in steps. A step that reads two containers costs two; sorting a container of twelve stacks costs twelve. A tick keeps starting steps while it has allowance left, so the work per tick is bounded by the budget plus one step. A step is never split across ticks, because half a sorted container is not a state worth having: the overrun is one container, not one network.
 
 Cancelling, whether by clicking the action again or by the terminal losing power, stops the queue. The step in flight finishes or rolls back on its own terms; nothing further is started.
 

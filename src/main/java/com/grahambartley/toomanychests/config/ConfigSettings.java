@@ -43,6 +43,11 @@ public final class ConfigSettings {
               TooManyChestsConfig::quickStackRadius,
               ConfigBuilder::quickStackRadius),
           new BooleanConfigSetting(
+              "quickStackEnabled",
+              TooManyChestsConfig::quickStackEnabled,
+              ConfigBuilder::quickStackEnabled,
+              TooManyChestsConfig.DEFAULT_QUICK_STACK_ENABLED),
+          new BooleanConfigSetting(
               "depositAllSkipsHotbar",
               TooManyChestsConfig::depositAllSkipsHotbar,
               ConfigBuilder::depositAllSkipsHotbar,

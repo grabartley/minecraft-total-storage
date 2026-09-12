@@ -15,10 +15,10 @@ class OperationReportTest {
   }
 
   @Test
-  void areportOfNothingHasTakenNoStepsAndChangedNothing() {
+  void aReportOfNothingHasTakenNoStepsAndSkippedNothing() {
     OperationReport report = OperationReport.nothing();
 
-    assertFalse(report.changedAnything());
+    assertEquals(0, report.stepsDone());
     assertFalse(report.skippedAnything());
     assertFalse(report.cancelled());
   }
@@ -49,16 +49,6 @@ class OperationReportTest {
   void anOperationCannotMoveANegativeNumberOfItems() {
     assertThrows(
         IllegalArgumentException.class, () -> new OperationReport(0, 0, 0, 0, -1L, 0, 0, false));
-  }
-
-  @Test
-  void movingItemsCountsAsChangingSomething() {
-    assertTrue(new OperationReport(1, 1, 0, 0, 12L, 0, 0, false).changedAnything());
-  }
-
-  @Test
-  void sortingAContainerCountsAsChangingSomething() {
-    assertTrue(new OperationReport(1, 1, 1, 0, 0L, 0, 0, false).changedAnything());
   }
 
   @ParameterizedTest

@@ -44,7 +44,7 @@ public final class ConsolidationJob implements NetworkJob {
     this.sorting = Objects.requireNonNull(sorting, "sorting");
     this.live = Objects.requireNonNull(live, "live");
     this.gathering.addAll(scatteredVariants(context));
-    this.tally = new OperationTally(gathering.size());
+    this.tally = new OperationTally(gathering.size() + context.containers().size());
   }
 
   @Override
@@ -58,6 +58,11 @@ public final class ConsolidationJob implements NetworkJob {
   }
 
   @Override
+  public boolean hasNothingToDo() {
+    return gathering.isEmpty();
+  }
+
+  @Override
   public NetworkJobState advance(int budget) {
     if (tally.wasCancelled()) {
       return NetworkJobState.DONE;
@@ -67,41 +72,49 @@ public final class ConsolidationJob implements NetworkJob {
       cancel();
       return NetworkJobState.DONE;
     }
-    for (int step = 0; step < Math.max(1, budget); step++) {
-      if (!advanceOneStep(network)) {
+    int spent = 0;
+    while (spent < Math.max(1, budget)) {
+      final int cost = advanceOneStep(network);
+      if (cost == NOTHING_LEFT_TO_DO) {
+        tally.finished();
         return NetworkJobState.DONE;
       }
+      spent += cost;
     }
     return NetworkJobState.RUNNING;
   }
 
-  private boolean advanceOneStep(NetworkMembership network) {
+  private static final int NOTHING_LEFT_TO_DO = -1;
+
+  private int advanceOneStep(NetworkMembership network) {
     if (!gathering.isEmpty()) {
-      tally.moved(gather(network, gathering.poll()));
+      final Gathered gathered = gather(network, gathering.poll());
+      tally.moved(gathered.moved());
       tally.stepped();
-      return true;
+      return gathered.containersRead();
     }
     if (!gathered) {
       gathered = true;
       tidying.addAll(touched);
-      tally.expect(tidying.size());
     }
     if (tidying.isEmpty()) {
-      return false;
+      return NOTHING_LEFT_TO_DO;
     }
-    tally.sorted(sorting.sortOne(context, tidying.poll()));
+    final var sorted = sorting.sortOne(context, tidying.poll());
+    tally.sorted(sorted);
     tally.stepped();
-    return true;
+    return sorted.slotsRead();
   }
 
-  private long gather(NetworkMembership network, ItemVariant variant) {
+  private Gathered gather(NetworkMembership network, ItemVariant variant) {
     final List<StorageOrigin> holders = destinations.holdersOf(context, network, variant);
     if (holders.size() < 2) {
-      return 0L;
+      return new Gathered(0L, 1);
     }
     final long held = network.index().countOf(variant);
     final Set<StorageOrigin> filled = new LinkedHashSet<>();
     long moved = 0L;
+    int read = 1;
     for (final StorageOrigin destination : destinations.forVariant(context, network, variant)) {
       final List<StorageOrigin> from = new ArrayList<>(holders);
       from.removeAll(filled);
@@ -109,10 +122,11 @@ public final class ConsolidationJob implements NetworkJob {
       if (from.isEmpty()) {
         break;
       }
+      read += from.size();
       moved += gatherInto(destination, from, variant, held);
       filled.add(destination);
     }
-    return moved;
+    return new Gathered(moved, read);
   }
 
   private long gatherInto(
@@ -158,6 +172,8 @@ public final class ConsolidationJob implements NetworkJob {
     gathering.clear();
     tidying.clear();
   }
+
+  private record Gathered(long moved, int containersRead) {}
 
   private static List<StorageOrigin> withDestination(
       List<StorageOrigin> sources, StorageOrigin destination) {

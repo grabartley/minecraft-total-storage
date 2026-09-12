@@ -1,6 +1,5 @@
 package com.grahambartley.toomanychests.operation;
 
-import com.grahambartley.toomanychests.ModSounds;
 import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.filter.FilterCandidate;
 import com.grahambartley.toomanychests.filter.FilterCandidateFactory;
@@ -17,7 +16,6 @@ import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
 
 public final class QuickStackService {
   private final QuickStackTargets targets;
@@ -36,6 +34,9 @@ public final class QuickStackService {
     if (player == null || !(player.getWorld() instanceof ServerWorld world)) {
       return QuickStackOutcome.refused();
     }
+    if (!ServerConfigService.current().quickStackEnabled()) {
+      return QuickStackOutcome.refused();
+    }
     if (!OperationGuards.allows(player, ExpensiveOperation.QUICK_STACK)) {
       return QuickStackOutcome.rateLimited();
     }
@@ -44,9 +45,9 @@ public final class QuickStackService {
             world, player.getBlockPos(), ServerConfigService.current().quickStackRadius());
     final List<SingleSlotStorage<ItemVariant>> sources = PlayerSlots.unlocked(player);
     if (nearby.isEmpty() || sources.isEmpty()) {
-      return report(player, QuickStackOutcome.nothingToStack());
+      return QuickStackOutcome.nothingToStack();
     }
-    return report(player, stack(player, world, nearby, sources));
+    return stack(player, world, nearby, sources);
   }
 
   private QuickStackOutcome stack(
@@ -116,28 +117,5 @@ public final class QuickStackService {
       origins.add(target.origin());
     }
     return List.copyOf(origins);
-  }
-
-  private static QuickStackOutcome report(ServerPlayerEntity player, QuickStackOutcome outcome) {
-    if (outcome.result() == QuickStackResult.RATE_LIMITED) {
-      return outcome;
-    }
-    player.sendMessage(
-        outcome.result().movedAnything()
-            ? NetworkOperationMessages.quickStacked(outcome.moved(), outcome.containersTouched())
-            : NetworkOperationMessages.nothingToQuickStack(),
-        true);
-    if (outcome.result().movedAnything()) {
-      player
-          .getWorld()
-          .playSound(
-              null,
-              player.getBlockPos(),
-              ModSounds.TERMINAL_DEPOSIT_CONFIRM,
-              SoundCategory.BLOCKS,
-              0.5f,
-              1.0f);
-    }
-    return outcome;
   }
 }

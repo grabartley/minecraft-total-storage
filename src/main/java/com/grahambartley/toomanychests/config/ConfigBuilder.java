@@ -10,6 +10,7 @@ public final class ConfigBuilder {
   private boolean sortButtonEnabled;
   private boolean middleClickSortEnabled;
   private int quickStackRadius;
+  private boolean quickStackEnabled;
   private boolean depositAllSkipsHotbar;
   private int nearCapacityWarningPercent;
   private int expensiveOperationCooldownTicks;
@@ -24,6 +25,7 @@ public final class ConfigBuilder {
     sortButtonEnabled = config.sortButtonEnabled();
     middleClickSortEnabled = config.middleClickSortEnabled();
     quickStackRadius = config.quickStackRadius();
+    quickStackEnabled = config.quickStackEnabled();
     depositAllSkipsHotbar = config.depositAllSkipsHotbar();
     nearCapacityWarningPercent = config.nearCapacityWarningPercent();
     expensiveOperationCooldownTicks = config.expensiveOperationCooldownTicks();
@@ -66,6 +68,11 @@ public final class ConfigBuilder {
     return this;
   }
 
+  public ConfigBuilder quickStackEnabled(boolean value) {
+    quickStackEnabled = value;
+    return this;
+  }
+
   public ConfigBuilder depositAllSkipsHotbar(boolean value) {
     depositAllSkipsHotbar = value;
     return this;
@@ -104,6 +111,7 @@ public final class ConfigBuilder {
         sortButtonEnabled,
         middleClickSortEnabled,
         quickStackRadius,
+        quickStackEnabled,
         depositAllSkipsHotbar,
         nearCapacityWarningPercent,
         expensiveOperationCooldownTicks,
