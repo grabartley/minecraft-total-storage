@@ -40,6 +40,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   private TerminalTab tab = TerminalTab.ITEMS;
   private TerminalSearchBox search;
   private TerminalIconButton depositAll;
+  private TerminalIconButton sortNetwork;
+  private TerminalIconButton consolidate;
   private TerminalIconButton rescan;
   private TerminalIconButton highlight;
 
@@ -71,6 +73,11 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     search = new TerminalSearchBox(textRenderer, x, y, search == null ? "" : search.text());
     addDrawableChild(search.widget());
     depositAll = action(0, TerminalSprite.DEPOSIT_ALL, "deposit_all", this::depositEverything);
+    sortNetwork =
+        action(
+            1, TerminalSprite.SORT_NETWORK, "sort_network", () -> act(TerminalAction.SORT_NETWORK));
+    consolidate =
+        action(2, TerminalSprite.CONSOLIDATE, "consolidate", () -> act(TerminalAction.CONSOLIDATE));
     rescan = action(0, TerminalSprite.RESCAN, "rescan", () -> act(TerminalAction.RESCAN));
     highlight =
         action(1, TerminalSprite.HIGHLIGHT, "highlight", () -> act(TerminalAction.HIGHLIGHT));
@@ -423,8 +430,13 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   private void updateWidgets(ListingStatus status) {
     final boolean settingsShowing = tab.isSettings();
-    depositAll.active = status != ListingStatus.OFFLINE;
+    final boolean online = status != ListingStatus.OFFLINE;
+    depositAll.active = online;
     depositAll.visible = !prompts.isAnyOpen() && !settingsShowing;
+    sortNetwork.visible = depositAll.visible;
+    consolidate.visible = depositAll.visible;
+    sortNetwork.active = online && tagsThisFrame.mayAdminister();
+    consolidate.active = sortNetwork.active;
     rescan.visible = !prompts.isAnyOpen() && settingsShowing;
     highlight.visible = rescan.visible;
     rescan.active = settingsThisFrame.powered() && settingsThisFrame.mayAdminister();
@@ -433,7 +445,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   }
 
   private boolean isDepositAllKey(int keyCode, int scanCode) {
-    return TerminalKeyBindings.isDepositAll(keyCode, scanCode)
+    return ModKeyBindings.isDepositAll(keyCode, scanCode)
         && !tab.isSettings()
         && !prompts.isTagging()
         && !search.isFocused();

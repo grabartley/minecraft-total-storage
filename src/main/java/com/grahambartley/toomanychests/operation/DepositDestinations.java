@@ -12,12 +12,10 @@ import com.grahambartley.toomanychests.terminal.TerminalSettings;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.server.world.ServerWorld;
@@ -82,7 +80,10 @@ public final class DepositDestinations {
     return live.of(
         world,
         DepositRouting.order(
-                targets, terminal, candidate.identifier(), tagsFor(settings, candidate))
+                targets,
+                terminal,
+                candidate.identifier(),
+                VariantTags.of(settings.tags(), candidate))
             .stream()
             .map(target -> containers.get(target.container()))
             .toList());
@@ -96,11 +97,5 @@ public final class DepositDestinations {
       }
     }
     return containers;
-  }
-
-  private static Set<String> tagsFor(TerminalSettings settings, FilterCandidate candidate) {
-    final Set<String> filed = new LinkedHashSet<>(candidate.tags());
-    filed.addAll(settings.tags().tagIdsFor(candidate.identifier()));
-    return Set.copyOf(filed);
   }
 }

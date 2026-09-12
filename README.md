@@ -86,6 +86,26 @@ A full `Filtered` container falls through to a `General` one rather than refusin
 
 Deposit all is rate limited, since it reads every container in the network at once, and so is rescanning. The cooldown is `expensiveOperationCooldownTicks`, ten ticks by default and settable to `0` to switch it off. It is counted per player and per operation, so emptying your inventory never spends your next rescan; see [ADR 0031](docs/adr/0031-expensive-operations-are-paced-per-player-and-per-operation.md). Asking again too soon says so rather than doing nothing, and changes nothing at all: a limit that half-worked would cost you items.
 
+## Tidying the chests themselves
+
+Sorting reorders the contents of a container so opening it by hand still makes sense, and merges its part stacks while it is there. Consolidation goes wider: it gathers each item into as few containers as it fits in, then sorts what it touched.
+
+Both are buttons beside the item grid, and both are deliberate: the network moves a lot of items when you press one. Above `largeOperationContainers` containers, eight by default, the first press asks rather than starts, and the second press within ten seconds goes ahead. Pressing the button again while the operation runs stops it. A server that would rather never be asked sets the value to `0`.
+
+Where the items go is decided by the same rules as a deposit. A `Filtered` container that accepts the item takes it first; otherwise it gathers into a `General` container that already holds it. Consolidation never introduces an item into a `General` container that did not already have some, because "tidy" does not mean "spread into the empty chest in the corner".
+
+**`Excluded` containers are neither read from nor written to**, and the summary says how many were skipped so an untouched chest is explained rather than mysterious. A container whose slots restrict what they accept, a furnace among them, is skipped for the same reason: the mod would rather leave a machine alone than rearrange its input into its fuel slot. See [ADR 0018](docs/adr/0018-two-gates-decide-what-may-be-sorted.md).
+
+A network-wide operation is the mod's longest-running piece of work, so it is budgeted at `movesPerTickBudget` steps per tick and continues across ticks instead of stalling the server. The terminal stays usable while it runs, and progress is reported as it goes. Each step commits on its own, which is what "cancel" means here: nothing further is started, the step in flight settles or rolls back, and no item is ever lost. See [ADR 0036](docs/adr/0036-a-long-operation-commits-one-step-at-a-time.md).
+
+Only the owner and operators can run either, checked when the request arrives rather than when the button is drawn, and both are rate limited like deposit all.
+
+## Quick stacking into what is nearby
+
+Quick stack takes what you are carrying and tops up the containers around you. It is on a button in your inventory screen, on a keybind bound to `V` by default, and on `/tmc quickstack` for a player with no client mod. It works on plain chests with no terminal anywhere: this is a convenience, not a network feature.
+
+It is deliberately conservative. **Quick stack only tops up a container that already holds the item**, never introduces a new one, which is what makes it safe to press without looking. Locked slots are never quick stacked, containers out of `quickStackRadius` are not considered, eight blocks by default, and neither are containers in unloaded chunks. Where a terminal does claim a container nearby, its role is honoured: `Excluded` is skipped and a `Filtered` container still only takes what it accepts. It is rate limited like the other operations that read a lot of containers at once, and it says how much it moved, or that there was nothing nearby that wanted anything.
+
 ## Configuring a network
 
 The terminal has two views, switched with the tabs down its right-hand side: the items it holds, and how it is configured. The settings view is where a storage area stops being whatever happened to be in range and becomes something you arranged.
@@ -180,6 +200,7 @@ Every server-wide setting is configurable from the console, so a server can be s
 | `/tmc terminal <pos> rescan` | owner or operators | Makes the terminal walk its region again, rate limited like the panel button |
 | `/tmc terminal <pos> highlight` | anyone who may open it | Outlines the containers it is holding |
 | `/tmc sort` | anyone | Sorts the container you have open |
+| `/tmc quickstack` | anyone | Tops up matching stacks in the containers around you |
 
 Setting names and their values tab-complete. Changes are saved to the world immediately and pushed to connected clients. Operators are permission level 2.
 
@@ -199,4 +220,4 @@ Gradle + Fabric Loom toolchain with Spotless formatting, Checkstyle, JaCoCo cove
 - [`docs/terminal-block-art.md`](docs/terminal-block-art.md) is the reference for the terminal block's textures, models and sounds, and the blockstate it needs
 - [`docs/terminal-gui-sprites.md`](docs/terminal-gui-sprites.md) is the sprite reference for the terminal screen, and how to edit the art
 - [`docs/locked-slot-art.md`](docs/locked-slot-art.md) is the lock badge reference, and how a locked slot signals itself without relying on colour
-- [`docs/sort-button-art.md`](docs/sort-button-art.md) is the sort button reference, and why a button drawn on someone else's screen still needs its own art
+- [`docs/sort-button-art.md`](docs/sort-button-art.md) is the reference for the buttons this mod draws on screens it does not own, and why they still need their own art

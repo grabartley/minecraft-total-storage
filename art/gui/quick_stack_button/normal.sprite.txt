@@ -1,0 +1,25 @@
+# Quick stack button, resting. Two items dropping into a tray, in the same 14x14 face the container sort button occupies.
+# size = 14x14
+# Vanilla container chrome. Every colour is sampled from Minecraft's own GUI textures,
+# so a screen drawn with them is indistinguishable from a chest beside it.
+# N = 000000   chassis outline, the black edge vanilla draws around a container window
+# B = 373737   sunken shadow, up and left, vanilla's slot border
+# K = 555555   bevel shadow, down and right
+# W = FFFFFF   bevel highlight, up and left
+# M = C6C6C6   vanilla container face
+# D = 8B8B8B   chassis shadow, the floor of anything recessed, and a muted glyph
+# o = 404040   glyph, vanilla label dark
+BBBBBBBBBBBBBB
+BWWWWWWWWWWWWB
+BWMMMMMMMMMMKB
+BWMMoMMMoMMMKB
+BWMMoMMMoMMMKB
+BWMMoMMMoMMMKB
+BWMoooMoooMMKB
+BWMMoMMMoMMMKB
+BWMMMMMMMMMMKB
+BWMoMMMMMMoMKB
+BWMooooooooMKB
+BWMMMMMMMMMMKB
+BWKKKKKKKKKKKB
+BBBBBBBBBBBBBB

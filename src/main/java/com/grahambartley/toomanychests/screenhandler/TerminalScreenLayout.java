@@ -71,7 +71,7 @@ public final class TerminalScreenLayout {
 
   public static final int TOOLBAR_X = INSET_X + INSET_WIDTH + TOOLBAR_GAP;
 
-  public static final int TOOLBAR_Y = INSET_Y;
+  public static final int TOOLBAR_Y = SEARCH_Y;
 
   public static final int TAB_COUNT = 2;
 

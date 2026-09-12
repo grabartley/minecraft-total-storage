@@ -224,7 +224,7 @@ class TerminalScreenLayoutTest {
         TerminalScreenLayout.TOOLBAR_X
             >= TerminalScreenLayout.INSET_X + TerminalScreenLayout.INSET_WIDTH,
         "the toolbar overlaps the recess");
-    assertEquals(TerminalScreenLayout.INSET_Y, TerminalScreenLayout.TOOLBAR_Y);
+    assertEquals(TerminalScreenLayout.SEARCH_Y, TerminalScreenLayout.TOOLBAR_Y);
   }
 
   @Test

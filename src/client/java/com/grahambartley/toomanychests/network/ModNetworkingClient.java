@@ -77,6 +77,10 @@ public final class ModNetworkingClient {
     ClientPlayNetworking.send(request);
   }
 
+  public static void sendQuickStackRequest() {
+    ClientPlayNetworking.send(new QuickStackRequestPayload());
+  }
+
   public static void sendDepositAllRequest(int syncId) {
     ClientPlayNetworking.send(new DepositAllRequestPayload(syncId));
   }

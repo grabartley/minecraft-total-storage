@@ -307,8 +307,9 @@ Default order: category by preset tag grouping, then registry identifier, then d
 | SORT-12 | `Filtered` containers receive only matching items during consolidation |
 | SORT-13 | Network sort and consolidate are explicit terminal actions, with confirmation above a size threshold, progress, and a summary naming containers touched and `Excluded` ones skipped |
 | SORT-14 | A long operation is budgeted per tick and continues across ticks rather than blocking the server |
-| SORT-15 | An in-progress operation can be cancelled, rolling back cleanly |
+| SORT-15 | An in-progress operation can be cancelled: the step in flight rolls back, nothing further is started, and no item is lost (ADR 0036) |
 | SORT-16 | The terminal stays responsive while a large operation runs |
+| SORT-17 | Both are rate limited and require owner or operator permission, checked when the request arrives rather than when the button is drawn |
 
 **Not supported:** a network-initiated operation writing to or reordering an `Excluded` container; consolidation pushing a non-matching item into a `Filtered` container; a manual sort being blocked on a container the player has open, `Excluded` included, since that is a deliberate act on a container in front of them.
 
@@ -405,6 +406,7 @@ An operator configures every behaviour from the console, with no client mod and 
 | Near-capacity warning threshold | 90% | 0 to 100 |
 | Expensive operation cooldown | 10 ticks | 0 to 200, where `0` disables |
 | Per-tick move budget | 64 | 1 to 1024, applied to sorting and consolidation |
+| Containers before an operation asks twice | 8 | 0 to 1024, where `0` never asks |
 | Container eligibility overrides | Empty | |
 
 ---

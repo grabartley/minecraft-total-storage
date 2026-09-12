@@ -51,11 +51,17 @@ public final class OperationMessages {
 
   public static Text rateLimited(ExpensiveOperation operation, long ticksLeft) {
     return line(
-        "cooldown." + operation.id(),
-        operation == ExpensiveOperation.RESCAN
-            ? "Give the last scan a moment, %ss left"
-            : "Give the last deposit a moment, %ss left",
-        Math.max(1L, (ticksLeft + 19L) / 20L));
+        "cooldown." + operation.id(), waitingOn(operation), Math.max(1L, (ticksLeft + 19L) / 20L));
+  }
+
+  private static String waitingOn(ExpensiveOperation operation) {
+    return switch (operation) {
+      case RESCAN -> "Give the last scan a moment, %ss left";
+      case SORT_NETWORK -> "Give the last sort a moment, %ss left";
+      case CONSOLIDATE -> "Give the last consolidation a moment, %ss left";
+      case QUICK_STACK -> "Give the last quick stack a moment, %ss left";
+      case DEPOSIT_ALL, ASSIGN_MATCHING -> "Give the last deposit a moment, %ss left";
+    };
   }
 
   private static Text leftovers(List<DepositLeftover> leftovers) {

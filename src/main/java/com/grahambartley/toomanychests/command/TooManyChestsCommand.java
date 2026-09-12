@@ -28,7 +28,8 @@ public final class TooManyChestsCommand {
                 .executes(TooManyChestsCommand::help)
                 .then(ConfigCommand.node())
                 .then(TerminalCommand.node())
-                .then(SortCommand.node()));
+                .then(SortCommand.node())
+                .then(QuickStackCommand.node()));
     dispatcher.register(
         CommandManager.literal(ALIAS).executes(TooManyChestsCommand::help).redirect(root));
   }
@@ -56,6 +57,7 @@ public final class TooManyChestsCommand {
         CommandMessages.helpTerminalInfo(),
         CommandMessages.helpTerminalRole(),
         CommandMessages.helpTerminalHighlight(),
-        CommandMessages.helpSort());
+        CommandMessages.helpSort(),
+        CommandMessages.helpQuickStack());
   }
 }

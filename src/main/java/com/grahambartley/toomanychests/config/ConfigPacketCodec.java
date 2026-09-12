@@ -21,6 +21,7 @@ public final class ConfigPacketCodec {
     buf.writeVarInt(config.nearCapacityWarningPercent());
     buf.writeVarInt(config.expensiveOperationCooldownTicks());
     buf.writeVarInt(config.movesPerTickBudget());
+    buf.writeVarInt(config.largeOperationContainers());
     buf.writeMap(
         config.containerEligibilityOverrides(),
         PacketByteBuf::writeString,
@@ -37,6 +38,7 @@ public final class ConfigPacketCodec {
         buf.readBoolean(),
         buf.readVarInt(),
         buf.readBoolean(),
+        buf.readVarInt(),
         buf.readVarInt(),
         buf.readVarInt(),
         buf.readVarInt(),

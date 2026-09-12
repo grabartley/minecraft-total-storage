@@ -102,6 +102,7 @@ class ConfigPacketCodecTest {
     buffer.writeVarInt(90);
     buffer.writeVarInt(10);
     buffer.writeVarInt(64);
+    buffer.writeVarInt(8);
     buffer.writeMap(overrides, PacketByteBuf::writeString, PacketByteBuf::writeBoolean);
     return buffer;
   }

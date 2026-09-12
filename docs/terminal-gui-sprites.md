@@ -41,10 +41,12 @@ The set is named for the chrome it draws, not for the widget that draws it, so a
 | `icon/clear_all` | 8x8 | stretch | Clear every active filter |
 | `icon/items` | 12x12 | stretch | Item view tab |
 | `icon/settings` | 12x12 | stretch | Settings tab |
+| `icon/sort_network` | 12x12 | stretch | Sort every container in the network |
+| `icon/consolidate` | 12x12 | stretch | Gather scattered stacks together |
 | `empty/network` | 32x32 | stretch | The network holds no containers |
 | `empty/no_results` | 32x32 | stretch | The search and filters match nothing |
 
-`slot/locked`, `icon/sort` and `sort_button/*` belong to their own features rather than to the terminal screen, and are documented in [`locked-slot-art.md`](locked-slot-art.md) and [`sort-button-art.md`](sort-button-art.md). They ship in this same tree, use this same palette, and are held to it by the same test.
+`slot/locked`, `icon/sort`, `sort_button/*` and `quick_stack_button/*` belong to their own features rather than to the terminal screen, and are documented in [`locked-slot-art.md`](locked-slot-art.md) and [`sort-button-art.md`](sort-button-art.md). They ship in this same tree, use this same palette, and are held to it by the same test.
 
 ## Layout Rules
 

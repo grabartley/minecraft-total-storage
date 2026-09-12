@@ -18,6 +18,7 @@ public final class ConfigSerializer {
   static final String KEY_NEAR_CAPACITY_WARNING_PERCENT = "nearCapacityWarningPercent";
   static final String KEY_EXPENSIVE_OPERATION_COOLDOWN_TICKS = "expensiveOperationCooldownTicks";
   static final String KEY_MOVES_PER_TICK_BUDGET = "movesPerTickBudget";
+  static final String KEY_LARGE_OPERATION_CONTAINERS = "largeOperationContainers";
   static final String KEY_CONTAINER_ELIGIBILITY_OVERRIDES = "containerEligibilityOverrides";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ConfigSerializer.class);
@@ -37,6 +38,7 @@ public final class ConfigSerializer {
     root.addProperty(
         KEY_EXPENSIVE_OPERATION_COOLDOWN_TICKS, config.expensiveOperationCooldownTicks());
     root.addProperty(KEY_MOVES_PER_TICK_BUDGET, config.movesPerTickBudget());
+    root.addProperty(KEY_LARGE_OPERATION_CONTAINERS, config.largeOperationContainers());
     final JsonObject overrides = new JsonObject();
     config.containerEligibilityOverrides().forEach(overrides::addProperty);
     root.add(KEY_CONTAINER_ELIGIBILITY_OVERRIDES, overrides);
@@ -91,6 +93,12 @@ public final class ConfigSerializer {
             defaults.movesPerTickBudget(),
             TooManyChestsConfig.MOVES_PER_TICK_BUDGET_MIN,
             TooManyChestsConfig.MOVES_PER_TICK_BUDGET_MAX),
+        boundedInt(
+            root,
+            KEY_LARGE_OPERATION_CONTAINERS,
+            defaults.largeOperationContainers(),
+            TooManyChestsConfig.LARGE_OPERATION_CONTAINERS_MIN,
+            TooManyChestsConfig.LARGE_OPERATION_CONTAINERS_MAX),
         overrides(root));
   }
 

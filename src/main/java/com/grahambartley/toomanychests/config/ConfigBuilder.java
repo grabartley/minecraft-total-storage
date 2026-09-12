@@ -14,6 +14,7 @@ public final class ConfigBuilder {
   private int nearCapacityWarningPercent;
   private int expensiveOperationCooldownTicks;
   private int movesPerTickBudget;
+  private int largeOperationContainers;
   private Map<String, Boolean> containerEligibilityOverrides;
 
   private ConfigBuilder(TooManyChestsConfig config) {
@@ -27,6 +28,7 @@ public final class ConfigBuilder {
     nearCapacityWarningPercent = config.nearCapacityWarningPercent();
     expensiveOperationCooldownTicks = config.expensiveOperationCooldownTicks();
     movesPerTickBudget = config.movesPerTickBudget();
+    largeOperationContainers = config.largeOperationContainers();
     containerEligibilityOverrides = config.containerEligibilityOverrides();
   }
 
@@ -84,6 +86,11 @@ public final class ConfigBuilder {
     return this;
   }
 
+  public ConfigBuilder largeOperationContainers(int value) {
+    largeOperationContainers = value;
+    return this;
+  }
+
   public ConfigBuilder containerEligibilityOverrides(Map<String, Boolean> value) {
     containerEligibilityOverrides = value;
     return this;
@@ -101,6 +108,7 @@ public final class ConfigBuilder {
         nearCapacityWarningPercent,
         expensiveOperationCooldownTicks,
         movesPerTickBudget,
+        largeOperationContainers,
         containerEligibilityOverrides);
   }
 }

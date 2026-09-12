@@ -3,9 +3,12 @@ package com.grahambartley.toomanychests.mixin.client;
 import com.grahambartley.toomanychests.lock.LockClicks;
 import com.grahambartley.toomanychests.lock.LockGesture;
 import com.grahambartley.toomanychests.lock.LockedSlotOverlay;
+import com.grahambartley.toomanychests.network.ModNetworkingClient;
+import com.grahambartley.toomanychests.screen.ModKeyBindings;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
+import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.screen.slot.Slot;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -26,6 +29,17 @@ public abstract class HandledScreenMixin {
       return;
     }
     LockClicks.requestToggle(getSlotAt(mouseX, mouseY));
+    callback.setReturnValue(true);
+  }
+
+  @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
+  private void tooManyChests$quickStackFromTheInventory(
+      int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> callback) {
+    if (!((Object) this instanceof InventoryScreen)
+        || !ModKeyBindings.isQuickStack(keyCode, scanCode)) {
+      return;
+    }
+    ModNetworkingClient.sendQuickStackRequest();
     callback.setReturnValue(true);
   }
 

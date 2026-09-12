@@ -11,65 +11,43 @@ public final class TestConfigs {
       int nearCapacityWarningPercent,
       int expensiveOperationCooldownTicks,
       int movesPerTickBudget) {
-    return new TooManyChestsConfig(
-        maxTerminalRadius,
-        TooManyChestsConfig.DEFAULT_TERMINAL_ACCESS_MODE,
-        TooManyChestsConfig.DEFAULT_SORT_ORDERING,
-        TooManyChestsConfig.DEFAULT_SORT_BUTTON_ENABLED,
-        TooManyChestsConfig.DEFAULT_MIDDLE_CLICK_SORT_ENABLED,
-        quickStackRadius,
-        TooManyChestsConfig.DEFAULT_DEPOSIT_ALL_SKIPS_HOTBAR,
-        nearCapacityWarningPercent,
-        expensiveOperationCooldownTicks,
-        movesPerTickBudget,
-        Map.of());
+    return ConfigBuilder.from(TooManyChestsConfig.defaults())
+        .maxTerminalRadius(maxTerminalRadius)
+        .quickStackRadius(quickStackRadius)
+        .nearCapacityWarningPercent(nearCapacityWarningPercent)
+        .expensiveOperationCooldownTicks(expensiveOperationCooldownTicks)
+        .movesPerTickBudget(movesPerTickBudget)
+        .build();
   }
 
   public static TooManyChestsConfig withOverrides(Map<String, Boolean> overrides) {
-    TooManyChestsConfig defaults = TooManyChestsConfig.defaults();
-    return new TooManyChestsConfig(
-        defaults.maxTerminalRadius(),
-        defaults.defaultTerminalAccessMode(),
-        defaults.sortOrdering(),
-        defaults.sortButtonEnabled(),
-        defaults.middleClickSortEnabled(),
-        defaults.quickStackRadius(),
-        defaults.depositAllSkipsHotbar(),
-        defaults.nearCapacityWarningPercent(),
-        defaults.expensiveOperationCooldownTicks(),
-        defaults.movesPerTickBudget(),
-        overrides);
+    return ConfigBuilder.from(TooManyChestsConfig.defaults())
+        .containerEligibilityOverrides(overrides)
+        .build();
   }
 
   public static TooManyChestsConfig withModes(
       TerminalAccessMode accessMode, SortOrdering ordering) {
-    TooManyChestsConfig defaults = TooManyChestsConfig.defaults();
-    return new TooManyChestsConfig(
-        defaults.maxTerminalRadius(),
-        accessMode,
-        ordering,
-        defaults.sortButtonEnabled(),
-        defaults.middleClickSortEnabled(),
-        defaults.quickStackRadius(),
-        defaults.depositAllSkipsHotbar(),
-        defaults.nearCapacityWarningPercent(),
-        defaults.expensiveOperationCooldownTicks(),
-        defaults.movesPerTickBudget(),
-        Map.of());
+    return ConfigBuilder.from(TooManyChestsConfig.defaults())
+        .defaultTerminalAccessMode(accessMode)
+        .sortOrdering(ordering)
+        .build();
   }
 
   public static TooManyChestsConfig everythingNonDefault() {
-    return new TooManyChestsConfig(
-        32,
-        TerminalAccessMode.OPEN,
-        SortOrdering.DISPLAY_NAME,
-        false,
-        false,
-        4,
-        true,
-        50,
-        40,
-        128,
-        Map.of("minecraft:furnace", true, "minecraft:barrel", false));
+    return ConfigBuilder.from(TooManyChestsConfig.defaults())
+        .maxTerminalRadius(32)
+        .defaultTerminalAccessMode(TerminalAccessMode.OPEN)
+        .sortOrdering(SortOrdering.DISPLAY_NAME)
+        .sortButtonEnabled(false)
+        .middleClickSortEnabled(false)
+        .quickStackRadius(4)
+        .depositAllSkipsHotbar(true)
+        .nearCapacityWarningPercent(50)
+        .expensiveOperationCooldownTicks(40)
+        .movesPerTickBudget(128)
+        .largeOperationContainers(24)
+        .containerEligibilityOverrides(Map.of("minecraft:furnace", true, "minecraft:barrel", false))
+        .build();
   }
 }

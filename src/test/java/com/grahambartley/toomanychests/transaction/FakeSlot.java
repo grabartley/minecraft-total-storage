@@ -5,20 +5,20 @@ import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 
-final class FakeSlot extends SnapshotParticipant<ResourceAmount<String>>
+public final class FakeSlot extends SnapshotParticipant<ResourceAmount<String>>
     implements SingleSlotStorage<String> {
-  static final String BLANK = "";
+  public static final String BLANK = "";
 
   private final long capacity;
 
   private String resource = BLANK;
   private long amount;
 
-  FakeSlot(long capacity) {
+  public FakeSlot(long capacity) {
     this.capacity = capacity;
   }
 
-  void set(String held, long heldAmount) {
+  public void set(String held, long heldAmount) {
     this.resource = held;
     this.amount = heldAmount;
   }

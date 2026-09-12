@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests.network;
 
+import com.grahambartley.toomanychests.screenhandler.TerminalActions;
 import com.grahambartley.toomanychests.screenhandler.TerminalListingService;
 import com.grahambartley.toomanychests.screenhandler.TerminalSettingsEdits;
 import com.grahambartley.toomanychests.screenhandler.TerminalSettingsService;
@@ -11,6 +12,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 public final class TerminalSettingsNetworking {
   private static final TerminalSettingsService PANELS = new TerminalSettingsService();
   private static final TerminalSettingsEdits EDITS = new TerminalSettingsEdits(PANELS);
+  private static final TerminalActions ACTIONS = new TerminalActions(EDITS);
   private static final TerminalTagPanelService TAG_PANELS = new TerminalTagPanelService();
   private static final TerminalTagEdits TAG_EDITS =
       new TerminalTagEdits(TAG_PANELS, new TerminalListingService());
@@ -60,7 +62,8 @@ public final class TerminalSettingsNetworking {
             context.server().execute(() -> EDITS.setRole(context.player(), payload)));
     ServerPlayNetworking.registerGlobalReceiver(
         TerminalActionPayload.ID,
-        (payload, context) -> context.server().execute(() -> EDITS.act(context.player(), payload)));
+        (payload, context) ->
+            context.server().execute(() -> ACTIONS.act(context.player(), payload)));
     ServerPlayNetworking.registerGlobalReceiver(
         TagPanelRequestPayload.ID,
         (payload, context) ->
