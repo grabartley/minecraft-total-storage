@@ -47,7 +47,7 @@
   "screen.too-many-chests.terminal.tags.copy": "Copy tags from another terminal",
   "screen.too-many-chests.terminal.tags.copy.title": "Copy tags from",
   "screen.too-many-chests.terminal.tags.copy.replace.confirm": "Click again to replace every tag here",
-  "screen.too-many-chests.terminal.tags.copy.hint": "Click to merge, shift-click twice to replace",
+  "screen.too-many-chests.terminal.tags.copy.hint": "Click merges, shift replaces",
   "screen.too-many-chests.terminal.tags.copy.none": "You own no other powered terminal here",
   "screen.too-many-chests.terminal.tags.copy.row": "%s, %s, %s (%s tags)",
   "screen.too-many-chests.terminal.tags.copy.row.one": "%s, %s, %s (1 tag)",

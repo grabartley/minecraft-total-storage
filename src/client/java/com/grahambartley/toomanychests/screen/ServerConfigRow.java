@@ -11,6 +11,7 @@ import net.minecraft.text.Text;
 
 public final class ServerConfigRow extends ServerConfigEntry {
   private static final int BOUNDS_TOP = 14;
+  private static final int TEXT_GAP = 6;
   private static final int BOUNDS_COLOUR = 0xFFA0A0A0;
 
   private final Text label;
@@ -38,8 +39,9 @@ public final class ServerConfigRow extends ServerConfigEntry {
       int mouseY,
       boolean hovered,
       float delta) {
-    drawLabel(context, label, x, y + LABEL_TOP, LABEL_COLOUR);
-    drawLabel(context, bounds, x, y + BOUNDS_TOP, BOUNDS_COLOUR);
+    final int textWidth = entryWidth - ServerConfigControls.WIDTH - TEXT_GAP;
+    drawLabel(context, label, x, y + LABEL_TOP, textWidth, LABEL_COLOUR);
+    drawLabel(context, bounds, x, y + BOUNDS_TOP, textWidth, BOUNDS_COLOUR);
     control.setPosition(x + entryWidth - ServerConfigControls.WIDTH, y);
     control.render(context, mouseX, mouseY, delta);
   }

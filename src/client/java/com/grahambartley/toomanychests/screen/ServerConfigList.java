@@ -7,7 +7,8 @@ import net.minecraft.client.gui.widget.ElementListWidget;
 
 public final class ServerConfigList extends ElementListWidget<ServerConfigEntry> {
   private static final int ROW_HEIGHT = 26;
-  private static final int ROW_WIDTH = 310;
+  private static final int WIDEST_ROW = 340;
+  private static final int EDGE_MARGIN = 20;
 
   public ServerConfigList(
       MinecraftClient client,
@@ -27,6 +28,6 @@ public final class ServerConfigList extends ElementListWidget<ServerConfigEntry>
 
   @Override
   public int getRowWidth() {
-    return ROW_WIDTH;
+    return Math.min(WIDEST_ROW, getWidth() - EDGE_MARGIN);
   }
 }

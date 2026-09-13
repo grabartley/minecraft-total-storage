@@ -15,7 +15,13 @@ public abstract class ServerConfigEntry extends ElementListWidget.Entry<ServerCo
     this.textRenderer = textRenderer;
   }
 
-  protected final void drawLabel(DrawContext context, Text label, int x, int y, int colour) {
-    context.drawTextWithShadow(textRenderer, label, x, y, colour);
+  protected final void drawLabel(
+      DrawContext context, Text label, int x, int y, int width, int colour) {
+    context.drawText(
+        textRenderer, TrimmedText.toWidth(textRenderer, label, width), x, y, colour, true);
+  }
+
+  protected final void drawHeading(DrawContext context, Text heading, int centreX, int y) {
+    context.drawCenteredTextWithShadow(textRenderer, heading, centreX, y, LABEL_COLOUR);
   }
 }

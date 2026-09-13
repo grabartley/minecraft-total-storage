@@ -28,7 +28,7 @@ public final class ServerConfigHeading extends ServerConfigEntry {
       int mouseY,
       boolean hovered,
       float delta) {
-    drawLabel(context, heading, x, y + LABEL_TOP, LABEL_COLOUR);
+    drawHeading(context, heading, x + entryWidth / 2, y + LABEL_TOP);
   }
 
   @Override
