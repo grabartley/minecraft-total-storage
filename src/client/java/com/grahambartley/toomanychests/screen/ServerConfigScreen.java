@@ -47,6 +47,7 @@ public final class ServerConfigScreen extends Screen {
   @Override
   protected void init() {
     final int footerTop = height - FOOTER_HEIGHT + (FOOTER_HEIGHT - BUTTON_HEIGHT) / 2;
+    list = null;
     if (!ClientConfigMirror.hasReceived()) {
       addDrawableChild(
           ButtonWidget.builder(ScreenTexts.BACK, button -> close())

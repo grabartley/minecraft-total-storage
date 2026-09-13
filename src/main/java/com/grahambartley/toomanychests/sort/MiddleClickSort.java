@@ -23,7 +23,7 @@ public final class MiddleClickSort {
       return false;
     }
     final SortOutcome outcome = SORTING.sort(serverPlayer, handler.syncId);
-    if (outcome.wasRefused() && outcome != SortOutcome.RATE_LIMITED) {
+    if (outcome.fallsThroughToVanilla()) {
       return false;
     }
     if (outcome != SortOutcome.ALREADY_SORTED && outcome != SortOutcome.NOTHING_TO_SORT) {

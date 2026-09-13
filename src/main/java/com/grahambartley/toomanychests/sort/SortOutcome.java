@@ -14,6 +14,10 @@ public enum SortOutcome {
     return this == SORTED;
   }
 
+  public boolean fallsThroughToVanilla() {
+    return wasRefused() && this != RATE_LIMITED;
+  }
+
   public boolean wasRefused() {
     return this == NOT_OFFERED
         || this == NO_OPEN_SCREEN

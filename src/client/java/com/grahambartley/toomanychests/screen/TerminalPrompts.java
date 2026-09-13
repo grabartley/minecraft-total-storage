@@ -142,6 +142,10 @@ public final class TerminalPrompts {
       send(source, TagSetImportMode.MERGE);
       return true;
     }
+    if (!source.holdsAnythingToCopy()) {
+      copying.disarm();
+      return true;
+    }
     if (copying.isArmed(source)) {
       send(source, TagSetImportMode.REPLACE);
       return true;
