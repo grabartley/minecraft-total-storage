@@ -7,22 +7,23 @@ import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 
-public final class QuickStackButton extends ClickableWidget {
-  public static final int SIZE = 14;
-
+public final class ScreenIconButton extends ClickableWidget {
+  private final IconButtonSprites sprites;
   private final Runnable onPress;
 
   private boolean held;
 
-  public QuickStackButton(int x, int y, Text label, Runnable onPress) {
-    super(x, y, SIZE, SIZE, label);
+  public ScreenIconButton(IconButtonSprites sprites, Text label, Runnable onPress) {
+    super(0, 0, ScreenButtonRow.SIZE, ScreenButtonRow.SIZE, label);
+    this.sprites = Objects.requireNonNull(sprites, "sprites");
     this.onPress = Objects.requireNonNull(onPress, "onPress");
     setTooltip(Tooltip.of(label));
   }
 
   @Override
   protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
-    QuickStackButtonSprite.of(active, isSelected(), held)
+    sprites
+        .select(active, isSelected(), held)
         .draw(context, getX(), getY(), getWidth(), getHeight());
   }
 

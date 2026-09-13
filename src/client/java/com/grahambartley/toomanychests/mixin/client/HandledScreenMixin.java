@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests.mixin.client;
 
 import com.grahambartley.toomanychests.lock.LockClicks;
 import com.grahambartley.toomanychests.lock.LockGesture;
+import com.grahambartley.toomanychests.lock.LockedSlotBadge;
 import com.grahambartley.toomanychests.lock.LockedSlotOverlay;
 import com.grahambartley.toomanychests.screen.ModKeyBindings;
 import com.grahambartley.toomanychests.screen.QuickStackRequests;
@@ -47,5 +48,11 @@ public abstract class HandledScreenMixin {
   private void tooManyChests$paintLockedSlots(
       DrawContext context, Slot slot, CallbackInfo callback) {
     LockedSlotOverlay.draw(context, slot);
+  }
+
+  @Inject(method = "drawSlot", at = @At("TAIL"))
+  private void tooManyChests$badgeLockedSlots(
+      DrawContext context, Slot slot, CallbackInfo callback) {
+    LockedSlotBadge.draw(context, slot);
   }
 }

@@ -102,11 +102,37 @@ Everything these operations have to say is said **inside the terminal**, on a st
 
 Only the owner and operators can run either, checked when the request arrives rather than when the button is drawn, and both are rate limited like deposit all.
 
+## Sorting a container you are standing at
+
+A chest does not need a terminal to be worth tidying, so **every container screen carries a sort button of its own**, in the clean band vanilla leaves above the first slot row. It is on the player inventory too, and on any modded screen that extends the vanilla container screen, without that mod knowing about this one. Screens whose slots mean something, a furnace or an anvil among them, never get one: rearranging an input into a fuel slot is not tidying. See [ADR 0018](docs/adr/0018-two-gates-decide-what-may-be-sorted.md).
+
+The button sends nothing but the intent to sort the screen that is open, and the server decides what that means, so a modified client cannot use it to reach a container it does not have open. It reports what happened on the action bar: sorted, already sorted, or nothing to sort. A server that would rather not offer it sets `sortButtonEnabled` to `false`, which greys the button out and refuses what the button sends, checked on the server rather than trusted to the client. `/tmc sort` is a separate surface and keeps working, which is what a player with no client mod uses.
+
+**Locked slots stay where they are.** Sorting the player inventory sorts around them rather than through them, which is what makes it safe to press with a pickaxe pinned to a slot you know by muscle memory.
+
+## Locking a slot
+
+**Alt-click a slot in your inventory to lock it.** A locked slot is never deposited, never quick stacked, never used to land a withdrawal, and never moved by sorting, and every one of those is enforced on the server rather than filtered on the client.
+
+A locked slot wears a padlock badge in the top-left corner of the item, over the item and its decorations, and an amber wash behind it. **The badge carries the state and the wash only reinforces it**, so a player who cannot separate the colours loses nothing. That ordering is why the wash can be turned off and the badge cannot: set `lockedSlotTintVisible` to `false` for a quieter inventory. The badge leaves the stack count and the durability bar alone, both of which vanilla draws along the bottom. See [`docs/locked-slot-art.md`](docs/locked-slot-art.md).
+
 ## Quick stacking into what is nearby
 
 Quick stack takes what you are carrying and tops up the containers around you. It is on a button in your inventory screen, on a keybind bound to `V` by default, and on `/tmc quickstack` for a player with no client mod. It works on plain chests with no terminal anywhere: this is a convenience, not a network feature.
 
 It is deliberately conservative. **Quick stack only tops up a container that already holds the item**, never introduces a new one, which is what makes it safe to press without looking. It offers the whole inventory, hotbar included, since topping up an existing stack cannot cost you a tool: locking a slot is how you keep something out of it, and a locked slot is never quick stacked. Containers out of `quickStackRadius` are not considered, eight blocks by default, and neither are containers in unloaded chunks. Where a terminal does claim a container nearby, its role is honoured: `Excluded` is skipped and a `Filtered` container still only takes what it accepts. It is rate limited like the other operations that read a lot of containers at once, and it says how much it moved, or that there was nothing nearby that wanted anything. A server that would rather not offer it at all sets `quickStackEnabled` to `false`, which greys the button out and refuses the keybind and the command.
+
+## Client options
+
+Everything above is the server's to decide, because everything above moves items. Where a mod button sits and whether a wash is drawn move nothing, so those are yours, and they live in `config/too-many-chests/client.json` on your own machine. The file is written with its defaults the first time the mod starts, and read at startup.
+
+| Setting | Default | What it does |
+|---|---|---|
+| `sortButtonVisible` | `true` | Draws the sort button in container screens; turn it off if you would rather use the command |
+| `screenButtonAnchor` | `inside_top_right` | Where this mod's screen buttons sit: in the band above the slots, or `outside_top_right` / `outside_bottom_right` beside the panel |
+| `lockedSlotTintVisible` | `true` | Draws the amber wash behind a locked slot; the badge stays either way |
+
+Only one button fits the band vanilla leaves, so where a screen carries two, the player inventory being the one that does, the second moves outside the panel rather than crowding the title. See [`docs/sort-button-art.md`](docs/sort-button-art.md).
 
 ## Configuring a network
 

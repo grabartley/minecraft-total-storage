@@ -242,6 +242,10 @@ public final class CommandMessages {
         at(pos));
   }
 
+  public static Text sortButtonDisabled() {
+    return line("sort.button-disabled", "The sort button is switched off on this server");
+  }
+
   public static Text sorted() {
     return line("sort.sorted", "Sorted");
   }

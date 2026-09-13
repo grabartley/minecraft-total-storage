@@ -1,6 +1,7 @@
 package com.grahambartley.toomanychests.command;
 
 import com.grahambartley.toomanychests.sort.ContainerSortService;
+import com.grahambartley.toomanychests.sort.SortFeedback;
 import com.grahambartley.toomanychests.sort.SortOutcome;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -9,6 +10,7 @@ import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 
 public final class SortCommand {
   private static final ContainerSortService SORTING = new ContainerSortService();
@@ -32,22 +34,12 @@ public final class SortCommand {
   }
 
   private static int report(ServerCommandSource source, SortOutcome outcome) {
-    switch (outcome) {
-      case SORTED -> {
-        source.sendFeedback(CommandMessages::sorted, false);
-        return 1;
-      }
-      case ALREADY_SORTED -> {
-        source.sendFeedback(CommandMessages::alreadySorted, false);
-        return 0;
-      }
-      case NOTHING_TO_SORT -> {
-        source.sendFeedback(CommandMessages::nothingToSort, false);
-        return 0;
-      }
-      case FAILED -> source.sendError(CommandMessages.sortFailed());
-      default -> source.sendError(CommandMessages.nothingOpenToSort());
+    final Text message = SortFeedback.messageFor(outcome);
+    if (outcome.wasRefused() || outcome == SortOutcome.FAILED) {
+      source.sendError(message);
+      return 0;
     }
-    return 0;
+    source.sendFeedback(() -> message, false);
+    return outcome.wasSorted() ? 1 : 0;
   }
 }

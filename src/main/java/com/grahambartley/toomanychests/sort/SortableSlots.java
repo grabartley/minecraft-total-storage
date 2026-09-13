@@ -9,11 +9,9 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.registry.Registries;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
-import net.minecraft.util.Identifier;
 
 public final class SortableSlots {
   private static final int MIN_SLOTS = 2;
@@ -29,17 +27,9 @@ public final class SortableSlots {
     if (handler instanceof PlayerScreenHandler) {
       return playerInventory(player, locks == null ? LockedSlots.empty() : locks);
     }
-    return ScreenSortPolicy.allows(typeIdOf(handler))
+    return ScreenSortPolicy.allows(ScreenSortPolicy.typeIdOf(handler))
         ? container(handler, player)
         : Optional.empty();
-  }
-
-  private static Identifier typeIdOf(ScreenHandler handler) {
-    try {
-      return Registries.SCREEN_HANDLER.getId(handler.getType());
-    } catch (UnsupportedOperationException noType) {
-      return null;
-    }
   }
 
   private static Optional<SortTarget> playerInventory(PlayerEntity player, LockedSlots locks) {

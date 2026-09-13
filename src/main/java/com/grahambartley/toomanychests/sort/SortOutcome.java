@@ -1,6 +1,7 @@
 package com.grahambartley.toomanychests.sort;
 
 public enum SortOutcome {
+  NOT_OFFERED,
   NO_OPEN_SCREEN,
   SCREEN_NOT_SORTABLE,
   NOTHING_TO_SORT,
@@ -13,6 +14,6 @@ public enum SortOutcome {
   }
 
   public boolean wasRefused() {
-    return this == NO_OPEN_SCREEN || this == SCREEN_NOT_SORTABLE;
+    return this == NOT_OFFERED || this == NO_OPEN_SCREEN || this == SCREEN_NOT_SORTABLE;
   }
 }
