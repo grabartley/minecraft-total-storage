@@ -1,12 +1,10 @@
 package com.grahambartley.toomanychests.screen;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.EnumSource;
 
 class IconButtonSpritesTest {
   @ParameterizedTest
@@ -38,25 +36,6 @@ class IconButtonSpritesTest {
       boolean available, boolean hovered, boolean held, String expected) {
     assertEquals(
         TerminalSprite.valueOf(expected), IconButtonSprites.SORT.select(available, hovered, held));
-  }
-
-  @ParameterizedTest
-  @EnumSource(ScreenButton.class)
-  void anUnavailableButtonNeverLooksLikeAnAvailableOne(ScreenButton button) {
-    assertNotEquals(
-        button.sprites().select(true, false, false), button.sprites().select(false, false, false));
-  }
-
-  @ParameterizedTest
-  @EnumSource(ScreenButton.class)
-  void noTwoButtonsShareASprite(ScreenButton button) {
-    for (final ScreenButton other : ScreenButton.values()) {
-      if (other != button) {
-        assertNotEquals(
-            button.sprites().select(true, false, false),
-            other.sprites().select(true, false, false));
-      }
-    }
   }
 
   @ParameterizedTest

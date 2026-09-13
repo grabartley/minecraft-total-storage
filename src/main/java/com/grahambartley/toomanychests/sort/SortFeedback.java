@@ -14,12 +14,13 @@ public final class SortFeedback {
     player.sendMessage(messageFor(outcome), true);
   }
 
-  static Text messageFor(SortOutcome outcome) {
+  public static Text messageFor(SortOutcome outcome) {
     return switch (outcome) {
       case SORTED -> CommandMessages.sorted();
       case ALREADY_SORTED -> CommandMessages.alreadySorted();
       case NOTHING_TO_SORT -> CommandMessages.nothingToSort();
       case FAILED -> CommandMessages.sortFailed();
+      case NOT_OFFERED -> CommandMessages.sortButtonDisabled();
       case NO_OPEN_SCREEN, SCREEN_NOT_SORTABLE -> CommandMessages.nothingOpenToSort();
     };
   }

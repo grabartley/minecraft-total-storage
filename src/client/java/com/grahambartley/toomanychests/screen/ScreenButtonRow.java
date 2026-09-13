@@ -7,7 +7,6 @@ public final class ScreenButtonRow {
   public static final int GAP = 2;
   public static final int BAND_INSET_X = 8;
   public static final int BAND_INSET_Y = 3;
-  public static final int OUTSIDE_GAP = 2;
 
   private static final int STEP = SIZE + GAP;
 
@@ -28,12 +27,12 @@ public final class ScreenButtonRow {
 
   private static ScreenButtonSpot downTheSide(ScreenPanel panel, int place) {
     return new ScreenButtonSpot(
-        panel.x() + panel.width() + OUTSIDE_GAP, panel.y() + BAND_INSET_Y + place * STEP);
+        panel.x() + panel.width() + GAP, panel.y() + BAND_INSET_Y + place * STEP);
   }
 
   private static ScreenButtonSpot upTheSide(ScreenPanel panel, int place) {
     return new ScreenButtonSpot(
-        panel.x() + panel.width() + OUTSIDE_GAP,
+        panel.x() + panel.width() + GAP,
         panel.y() + panel.height() - BAND_INSET_Y - SIZE - place * STEP);
   }
 }

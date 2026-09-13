@@ -135,6 +135,7 @@
   "command.too-many-chests.sort.sorted": "Sorted",
   "command.too-many-chests.sort.empty": "There is nothing in there to sort",
   "command.too-many-chests.sort.refused": "That is not something this mod will sort",
+  "command.too-many-chests.sort.button-disabled": "The sort button is switched off on this server",
   "command.too-many-chests.sort.failed": "The sort was rolled back and nothing moved",
   "command.too-many-chests.terminal.missing": "There is no storage terminal at %s",
   "command.too-many-chests.terminal.radius": "The terminal at %s has a radius of %s",

@@ -27,7 +27,7 @@ public final class ScreenSortPolicy {
           vanilla("smithing"),
           vanilla("smoker"),
           vanilla("stonecutter"),
-          Identifier.of(TooManyChests.MOD_ID, "terminal"));
+          mod("terminal"));
 
   private ScreenSortPolicy() {}
 
@@ -57,5 +57,9 @@ public final class ScreenSortPolicy {
 
   private static Identifier vanilla(String path) {
     return Identifier.ofVanilla(path);
+  }
+
+  private static Identifier mod(String path) {
+    return Identifier.of(TooManyChests.MOD_ID, path);
   }
 }

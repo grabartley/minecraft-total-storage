@@ -8,15 +8,13 @@ import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 
 public final class ScreenIconButton extends ClickableWidget {
-  public static final int SIZE = ScreenButtonRow.SIZE;
-
   private final IconButtonSprites sprites;
   private final Runnable onPress;
 
   private boolean held;
 
   public ScreenIconButton(IconButtonSprites sprites, Text label, Runnable onPress) {
-    super(0, 0, SIZE, SIZE, label);
+    super(0, 0, ScreenButtonRow.SIZE, ScreenButtonRow.SIZE, label);
     this.sprites = Objects.requireNonNull(sprites, "sprites");
     this.onPress = Objects.requireNonNull(onPress, "onPress");
     setTooltip(Tooltip.of(label));

@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests.sort;
 
+import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.lock.LockedSlotsAttachment;
 import com.grahambartley.toomanychests.mutation.ContainerMutationWitness;
 import com.grahambartley.toomanychests.mutation.ContainerMutations;
@@ -27,6 +28,12 @@ public final class ContainerSortService {
 
   public ContainerSortService(SortCandidateFactory candidates) {
     this.candidates = Objects.requireNonNull(candidates, "candidates");
+  }
+
+  public SortOutcome sortFromButton(ServerPlayerEntity player, int syncId) {
+    return ServerConfigService.current().sortButtonEnabled()
+        ? sort(player, syncId)
+        : SortOutcome.NOT_OFFERED;
   }
 
   public SortOutcome sort(ServerPlayerEntity player, int syncId) {

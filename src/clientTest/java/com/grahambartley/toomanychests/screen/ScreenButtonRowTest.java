@@ -102,7 +102,7 @@ class ScreenButtonRowTest {
   void anOutsideAnchorKeepsTheButtonBesideThePanelRatherThanOffIt(ScreenButtonAnchor anchor) {
     final ScreenButtonSpot spot = ScreenButtonRow.at(anchor, CHEST, 0);
 
-    assertEquals(CHEST.x() + CHEST.width() + ScreenButtonRow.OUTSIDE_GAP, spot.x());
+    assertEquals(CHEST.x() + CHEST.width() + ScreenButtonRow.GAP, spot.x());
     assertTrue(spot.y() >= CHEST.y());
     assertTrue(spot.y() + ScreenButtonRow.SIZE <= CHEST.y() + CHEST.height());
   }

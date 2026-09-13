@@ -53,7 +53,8 @@ public final class ModNetworking {
                 .execute(
                     () ->
                         SortFeedback.report(
-                            context.player(), SORTING.sort(context.player(), payload.syncId()))));
+                            context.player(),
+                            SORTING.sortFromButton(context.player(), payload.syncId()))));
     ServerPlayNetworking.registerGlobalReceiver(
         ConfigEditPayload.ID,
         (payload, context) ->

@@ -27,10 +27,10 @@ public final class ClientPreferencesSerializer {
       return defaults;
     }
     return new ClientPreferences(
-        bool(root, KEY_SORT_BUTTON_VISIBLE, defaults.sortButtonVisible()),
-        ScreenButtonAnchor.fromId(string(root, KEY_SCREEN_BUTTON_ANCHOR))
+        JsonValues.bool(root, KEY_SORT_BUTTON_VISIBLE, defaults.sortButtonVisible()),
+        ScreenButtonAnchor.fromId(JsonValues.string(root, KEY_SCREEN_BUTTON_ANCHOR))
             .orElseGet(() -> warnUnknown(root, defaults.screenButtonAnchor())),
-        bool(root, KEY_LOCKED_SLOT_TINT_VISIBLE, defaults.lockedSlotTintVisible()));
+        JsonValues.bool(root, KEY_LOCKED_SLOT_TINT_VISIBLE, defaults.lockedSlotTintVisible()));
   }
 
   private static ScreenButtonAnchor warnUnknown(JsonObject root, ScreenButtonAnchor fallback) {
@@ -41,20 +41,5 @@ public final class ClientPreferencesSerializer {
           fallback.id());
     }
     return fallback;
-  }
-
-  private static String string(JsonObject root, String key) {
-    return root.has(key) && root.get(key).isJsonPrimitive() ? root.get(key).getAsString() : null;
-  }
-
-  private static boolean bool(JsonObject root, String key, boolean fallback) {
-    try {
-      return root.has(key) && root.get(key).isJsonPrimitive()
-          ? root.get(key).getAsBoolean()
-          : fallback;
-    } catch (RuntimeException unreadable) {
-      LOGGER.warn("Unreadable Too Many Chests client value for {}, using {}", key, fallback);
-      return fallback;
-    }
   }
 }

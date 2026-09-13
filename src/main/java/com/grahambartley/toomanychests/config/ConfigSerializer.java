@@ -59,25 +59,25 @@ public final class ConfigSerializer {
             defaults.maxTerminalRadius(),
             TooManyChestsConfig.MAX_TERMINAL_RADIUS_MIN,
             TooManyChestsConfig.MAX_TERMINAL_RADIUS_MAX),
-        TerminalAccessMode.fromId(string(root, KEY_DEFAULT_TERMINAL_ACCESS_MODE))
+        TerminalAccessMode.fromId(JsonValues.string(root, KEY_DEFAULT_TERMINAL_ACCESS_MODE))
             .orElseGet(
                 () ->
                     warnUnknown(
                         KEY_DEFAULT_TERMINAL_ACCESS_MODE,
                         root,
                         defaults.defaultTerminalAccessMode())),
-        SortOrdering.fromId(string(root, KEY_SORT_ORDERING))
+        SortOrdering.fromId(JsonValues.string(root, KEY_SORT_ORDERING))
             .orElseGet(() -> warnUnknown(KEY_SORT_ORDERING, root, defaults.sortOrdering())),
-        bool(root, KEY_SORT_BUTTON_ENABLED, defaults.sortButtonEnabled()),
-        bool(root, KEY_MIDDLE_CLICK_SORT_ENABLED, defaults.middleClickSortEnabled()),
+        JsonValues.bool(root, KEY_SORT_BUTTON_ENABLED, defaults.sortButtonEnabled()),
+        JsonValues.bool(root, KEY_MIDDLE_CLICK_SORT_ENABLED, defaults.middleClickSortEnabled()),
         boundedInt(
             root,
             KEY_QUICK_STACK_RADIUS,
             defaults.quickStackRadius(),
             TooManyChestsConfig.QUICK_STACK_RADIUS_MIN,
             TooManyChestsConfig.QUICK_STACK_RADIUS_MAX),
-        bool(root, KEY_QUICK_STACK_ENABLED, defaults.quickStackEnabled()),
-        bool(root, KEY_DEPOSIT_ALL_SKIPS_HOTBAR, defaults.depositAllSkipsHotbar()),
+        JsonValues.bool(root, KEY_QUICK_STACK_ENABLED, defaults.quickStackEnabled()),
+        JsonValues.bool(root, KEY_DEPOSIT_ALL_SKIPS_HOTBAR, defaults.depositAllSkipsHotbar()),
         boundedInt(
             root,
             KEY_NEAR_CAPACITY_WARNING_PERCENT,
@@ -110,21 +110,6 @@ public final class ConfigSerializer {
       LOGGER.warn("Unrecognised Too Many Chests config value for {}, using {}", key, fallback);
     }
     return fallback;
-  }
-
-  private static String string(JsonObject root, String key) {
-    return root.has(key) && root.get(key).isJsonPrimitive() ? root.get(key).getAsString() : null;
-  }
-
-  private static boolean bool(JsonObject root, String key, boolean fallback) {
-    try {
-      return root.has(key) && root.get(key).isJsonPrimitive()
-          ? root.get(key).getAsBoolean()
-          : fallback;
-    } catch (RuntimeException ex) {
-      LOGGER.warn("Unreadable Too Many Chests config value for {}, using {}", key, fallback);
-      return fallback;
-    }
   }
 
   private static int boundedInt(JsonObject root, String key, int fallback, int min, int max) {

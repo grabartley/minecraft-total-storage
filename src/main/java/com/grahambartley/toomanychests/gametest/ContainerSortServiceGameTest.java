@@ -1,5 +1,8 @@
 package com.grahambartley.toomanychests.gametest;
 
+import com.grahambartley.toomanychests.config.ConfigBuilder;
+import com.grahambartley.toomanychests.config.ServerConfigService;
+import com.grahambartley.toomanychests.config.TooManyChestsConfig;
 import com.grahambartley.toomanychests.lock.LockedSlots;
 import com.grahambartley.toomanychests.lock.LockedSlotsAttachment;
 import com.grahambartley.toomanychests.sort.ContainerSortService;
@@ -305,6 +308,34 @@ public final class ContainerSortServiceGameTest implements FabricGameTest {
         outcome == SortOutcome.SCREEN_NOT_SORTABLE,
         block.getName().getString() + " must refuse sorting, reported " + outcome);
     finish(context, player);
+  }
+
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void aServerThatSwitchedOffTheButtonRefusesWhatTheButtonSends(TestContext context) {
+    ServerPlayerEntity player = openContainer(context, Blocks.CHEST);
+    Inventory chest = context.getBlockEntity(CONTAINER);
+    chest.setStack(0, new ItemStack(Items.COBBLESTONE, 20));
+    chest.setStack(5, new ItemStack(Items.COBBLESTONE, 30));
+    TooManyChestsConfig original = ServerConfigService.current();
+    ServerConfigService.update(context.getWorld().getServer(), withSortButton(original, false));
+
+    SortOutcome refused = sorting.sortFromButton(player, player.currentScreenHandler.syncId);
+    int leftAlone = chest.getStack(5).getCount();
+    ServerConfigService.update(context.getWorld().getServer(), withSortButton(original, true));
+    SortOutcome offered = sorting.sortFromButton(player, player.currentScreenHandler.syncId);
+    ServerConfigService.update(context.getWorld().getServer(), original);
+
+    context.assertTrue(
+        refused == SortOutcome.NOT_OFFERED,
+        "A switched off sort button should refuse rather than sort, but reported " + refused);
+    context.assertEquals(leftAlone, 30, "Nothing should have moved while it was switched off");
+    context.assertTrue(
+        offered.wasSorted(), "Switching the button back on should sort but reported " + offered);
+    finish(context, player);
+  }
+
+  private static TooManyChestsConfig withSortButton(TooManyChestsConfig config, boolean enabled) {
+    return ConfigBuilder.from(config).sortButtonEnabled(enabled).build();
   }
 
   private static ServerPlayerEntity openContainer(TestContext context, Block block) {
