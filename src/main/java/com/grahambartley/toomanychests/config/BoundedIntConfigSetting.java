@@ -51,6 +51,11 @@ final class BoundedIntConfigSetting implements ConfigSetting {
   }
 
   @Override
+  public Optional<ConfigRange> range() {
+    return Optional.of(new ConfigRange(min, max));
+  }
+
+  @Override
   public String allowedValues() {
     return "a whole number from " + min + " to " + max;
   }

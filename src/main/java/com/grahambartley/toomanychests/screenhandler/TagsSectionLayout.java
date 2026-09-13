@@ -35,18 +35,24 @@ public final class TagsSectionLayout {
     if (row == TerminalSettingsLayout.NO_ROW || row < FIRST_TAG_ROW) {
       return TagRowRegion.NONE;
     }
+    return isOverControl(windowX, windowY, row) ? TagRowRegion.DELETE : TagRowRegion.NAME;
+  }
+
+  private static boolean isOverControl(int windowX, int windowY, int row) {
     final int top = deleteY(row);
-    if (windowX >= DELETE_X
+    return windowX >= DELETE_X
         && windowX < DELETE_X + CONTROL_SIZE
         && windowY >= top
-        && windowY < top + CONTROL_SIZE) {
-      return TagRowRegion.DELETE;
-    }
-    return TagRowRegion.NAME;
+        && windowY < top + CONTROL_SIZE;
   }
 
   public static boolean isOverNewTag(int windowX, int windowY) {
     return TerminalSettingsLayout.rowAt(windowX, windowY) == NEW_TAG_ROW;
+  }
+
+  public static boolean isOverCopy(int windowX, int windowY) {
+    return TerminalSettingsLayout.rowAt(windowX, windowY) == NEW_TAG_ROW
+        && isOverControl(windowX, windowY, NEW_TAG_ROW);
   }
 
   public static int tagIndexAt(int windowX, int windowY, int firstVisible) {

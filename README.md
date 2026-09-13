@@ -4,9 +4,18 @@ A Fabric mod for Minecraft 1.21.1.
 
 A better item storage solution for Minecraft.
 
-## Planned features
+## Dependencies
 
-- Better item storage solution
+| Mod | Required | Side | Why |
+|---|---|---|---|
+| [Fabric API](https://modrinth.com/mod/fabric-api) `>=0.116.12+1.21.1` | Yes | Client and server | Networking, item transfer, entity attachments, screen events and gametest all come from it. The floor is the version whose transfer and attachment APIs this mod calls. |
+| [Mod Menu](https://modrinth.com/mod/modmenu) | No | Client | Adds the button that opens this mod's server settings screen. Without it the same settings are reachable from `/tmc config`. |
+| [JEI](https://modrinth.com/mod/jei) | No | Client | The terminal's recipe shows up in it, and this mod keeps its overlay clear of the buttons it draws. |
+| [EMI](https://modrinth.com/mod/emi) | No | Client | The same, for players who use EMI instead. |
+
+**The mod has to be on the server.** Every operation that moves an item is decided server-side, which is what lets a completely vanilla client sort a chest by middle-clicking it. Installing it on the client as well adds the terminal screen, the sort and quick stack buttons, slot locking, and the keybinds.
+
+There are no other hard dependencies. Mod Menu, JEI and EMI are each loaded through a guarded integration, so a dedicated server that has none of them loads none of their classes.
 
 ## The storage terminal
 
@@ -60,6 +69,10 @@ Ctrl-click any cell in the grid to file that item. The panel lists your custom t
 
 Filing a large storage area one item at a time is not a plan, so **shift-clicking a tag in that panel files everything the grid is currently showing**. Narrow with the search box or the other tags first, and the panel tells you how many items that is before you do it. That is what makes tagging an existing base something you finish rather than abandon.
 
+**A tag set moves between terminals rather than being rebuilt.** The copy control on the `+ New tag` row lists every other powered terminal you may administer, nearest first, with how many custom tags each one holds. Clicking one merges its custom tags into this network. Shift-clicking replaces this network's set with it, and asks once before it does, since replacing unfiles everything you had. Only custom tags move, because preset tags are worked out from the item and every network already has them, and the items filed under each tag come with it. An item this world has never heard of is kept rather than dropped, so a temporarily missing mod does not destroy how you filed things.
+
+The same set can be written to and read from a file, which is how a server owner seeds a standard set or moves one between worlds: `/tmc terminal <pos> tags export <file>` writes it to `too-many-chests/tag-sets/<file>.json` in the world directory, and `/tmc terminal <pos> tags import <file> <merge|replace>` reads it back. `/tmc terminal <pos> tags copy <pos> <merge|replace>` is the command form of the copy control. Every one of them needs administer permission on **both** terminals, so a tag set can never be lifted off a network you cannot already edit. A name a network cannot address is skipped and counted rather than failing the whole import.
+
 Making, renaming, deleting and assigning all need the same permission as any other network setting: the terminal's owner, or an operator. Someone who can merely open the terminal can filter by your tags but cannot restructure them, and that is enforced on the server rather than by hiding the controls, so a modified client cannot rename a tag on a network it does not own.
 
 ## Taking things out
@@ -108,6 +121,10 @@ A chest does not need a terminal to be worth tidying, so **every container scree
 
 The button sends nothing but the intent to sort the screen that is open, and the server decides what that means, so a modified client cannot use it to reach a container it does not have open. It reports what happened on the action bar: sorted, already sorted, or nothing to sort. A server that would rather not offer it sets `sortButtonEnabled` to `false`, which greys the button out and refuses what the button sends, checked on the server rather than trusted to the client. `/tmc sort` is a separate surface and keeps working, which is what a player with no client mod uses.
 
+**Middle-click a slot in any sortable container and it sorts, with no client mod at all.** The server reads the vanilla slot-click packet, so this works from a completely unmodified client connecting to a modded server, which is the thing that makes this mod worth putting on a public server. Creative middle-click keeps its vanilla meaning and clones the stack, so the gesture is only ever read in survival and adventure. A server that would rather not reinterpret a vanilla input sets `middleClickSortEnabled` to `false`, which leaves `/tmc sort` and the button working.
+
+There is also a **sort keybind**, bound to `B` by default and rebindable under Too Many Chests in the controls screen. It sorts the container screen in front of you, or your inventory, and it keeps working with the button hidden, which is the point of having it.
+
 **Locked slots stay where they are.** Sorting the player inventory sorts around them rather than through them, which is what makes it safe to press with a pickaxe pinned to a slot you know by muscle memory.
 
 ## Locking a slot
@@ -133,6 +150,16 @@ Everything above is the server's to decide, because everything above moves items
 | `lockedSlotTintVisible` | `true` | Draws the amber wash behind a locked slot; the badge stays either way |
 
 Only one button fits the band vanilla leaves, so where a screen carries two, the player inventory being the one that does, the second moves outside the panel rather than crowding the title. See [`docs/sort-button-art.md`](docs/sort-button-art.md).
+
+Three keybinds live under Too Many Chests in the vanilla controls screen, all rebindable, and none of them takes a key vanilla already uses.
+
+| Key | Default | What it does |
+|---|---|---|
+| Sort container | `B` | Sorts the container screen in front of you, or your inventory. Keeps working with the button hidden |
+| Deposit all | `R` | Empties your inventory into the terminal you have open. Yields to the search box while it has focus |
+| Quick stack | `V` | Tops up the containers around you, from the inventory screen or with no screen open at all |
+
+**The server settings have a screen too.** With [Mod Menu](https://modrinth.com/mod/modmenu) installed, the configure button beside Too Many Chests opens every server-wide setting grouped by what it affects, each one showing its range and its default. An operator can change them and the change goes to the server, which checks the permission again before applying it. Everybody else sees the same screen read-only, because knowing what the radius cap is on the server you are playing on is reasonable even when changing it is not. Values follow the server, so a setting moved by command updates the screen under you as long as you have not started editing.
 
 ## Configuring a network
 
@@ -199,6 +226,46 @@ A terminal reaches every container around it through one screen, so on a shared 
 - A refused right-click says so instead of doing nothing.
 - `defaultTerminalAccessMode` sets what newly placed terminals start as, so a friendly server can switch to `open` once rather than every player changing every terminal. Changing it never touches a terminal already placed.
 
+## Configuration reference
+
+Server settings live in `too-many-chests/server-config.json` inside the world directory, so two worlds hold two independent sets. They are read at world load, written back with their defaults the first time, and every one of them is editable from `/tmc config` or from the Mod Menu settings screen. A value outside its range is clamped as the file loads and refused outright by the command, so a typo never silently half-applies. A malformed file is preserved beside itself and the defaults are loaded, rather than the broken file being overwritten.
+
+**Defaults for new terminals**
+
+| Setting | Default | Range | What it affects |
+|---|---|---|---|
+| `maxTerminalRadius` | `16` | 1 to 64 | The furthest any terminal on this server may reach. Lowering it pulls in every terminal already running; raising it hands the reach back. This is the main lever on how much a single scan costs. |
+| `defaultTerminalAccessMode` | `owner` | `owner`, `trusted`, `open` | What a newly placed terminal starts as. Changing it never touches a terminal already placed. |
+| `quickStackRadius` | `8` | 1 to 64 | How far quick stack looks for containers to top up. |
+
+**Sorting**
+
+| Setting | Default | Range | What it affects |
+|---|---|---|---|
+| `sortOrdering` | `registry_id` | `registry_id`, `display_name` | How sorted containers are ordered. |
+| `sortButtonEnabled` | `true` | true or false | Whether the sort button and the sort keybind are offered. `/tmc sort` and middle-click are separate surfaces. |
+| `middleClickSortEnabled` | `true` | true or false | Whether a survival middle-click in a container is read as a sort. Switching it off leaves the command and the button working. |
+
+**Features**
+
+| Setting | Default | Range | What it affects |
+|---|---|---|---|
+| `quickStackEnabled` | `true` | true or false | Whether quick stack is offered at all, on the button, the keybind and the command. |
+| `depositAllSkipsHotbar` | `false` | true or false | Keeps the whole hotbar out of deposit all, bluntly, for servers whose players would rather not learn about locking first. |
+| `nearCapacityWarningPercent` | `90` | 0 to 100 | How full a network has to be before the terminal colours its remaining capacity as a warning. |
+
+**Performance**
+
+These are the three settings a pack author should look at, because they are what stands between a very large storage area and a tick spike.
+
+| Setting | Default | Range | What it affects |
+|---|---|---|---|
+| `expensiveOperationCooldownTicks` | `10` | 0 to 200 | Per player and per operation cooldown on rescan, deposit all, quick stack, network sort, consolidation and container sort. `0` switches it off. Raise it on a busy server before you lower anything else. |
+| `movesPerTickBudget` | `64` | 1 to 1024 | How much work one network-wide operation may do in a single tick before continuing on the next. Lower means smoother ticks and slower operations. |
+| `largeOperationContainers` | `8` | 0 to 1024 | How many containers a network sort or consolidation may touch before the first press asks instead of starting. `0` never asks. |
+
+Container eligibility overrides are stored alongside these and edited with `/tmc config eligibility`. They force a block into or out of every network on the server, which is how you admit a modded container the rules do not recognise, or keep one out.
+
 ## Commands
 
 Every server-wide setting is configurable from the console, so a server can be set up without a client mod and without editing files. `/toomanychests` and its alias `/tmc` are the same tree.
@@ -227,6 +294,9 @@ Every server-wide setting is configurable from the console, so a server can be s
 | `/tmc terminal <pos> role <container> <general\|filtered\|excluded>` | owner or operators | Sets it, refusing a container the terminal does not reach |
 | `/tmc terminal <pos> rescan` | owner or operators | Makes the terminal walk its region again, rate limited like the panel button |
 | `/tmc terminal <pos> highlight` | anyone who may open it | Outlines the containers it is holding |
+| `/tmc terminal <pos> tags export <file>` | owner or operators | Writes its custom tag set to the world directory |
+| `/tmc terminal <pos> tags import <file> <merge\|replace>` | owner or operators | Reads a tag set back into it |
+| `/tmc terminal <pos> tags copy <pos> <merge\|replace>` | owner or operators on both | Copies another terminal's custom tag set into it |
 | `/tmc sort` | anyone | Sorts the container you have open |
 | `/tmc quickstack` | anyone | Tops up matching stacks in the containers around you |
 

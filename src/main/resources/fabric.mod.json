@@ -25,6 +25,9 @@
     "modmenu": [
       "com.grahambartley.toomanychests.compat.TooManyChestsModMenu"
     ],
+    "emi": [
+      "com.grahambartley.toomanychests.compat.TooManyChestsEmiPlugin"
+    ],
     "fabric-gametest": [
       "com.grahambartley.toomanychests.gametest.NetworkSortGameTest",
       "com.grahambartley.toomanychests.gametest.StorageSortGameTest",
@@ -85,7 +88,9 @@
       "com.grahambartley.toomanychests.gametest.NetworkMutationGameTest",
       "com.grahambartley.toomanychests.gametest.NetworkFilterCandidatesGameTest",
       "com.grahambartley.toomanychests.gametest.TerminalTagEditsGameTest",
-      "com.grahambartley.toomanychests.gametest.NetworkTagViewServiceGameTest"
+      "com.grahambartley.toomanychests.gametest.NetworkTagViewServiceGameTest",
+      "com.grahambartley.toomanychests.gametest.MiddleClickSortGameTest",
+      "com.grahambartley.toomanychests.gametest.TerminalTagTransferGameTest"
     ]
   },
   "mixins": [
@@ -100,8 +105,7 @@
     "fabricloader": ">=0.16.5",
     "minecraft": "~1.21.1",
     "java": ">=21",
-    "fabric-api": ">=0.116.12+1.21.1",
-    "geckolib": ">=4.7"
+    "fabric-api": ">=0.116.12+1.21.1"
   },
   "suggests": {
     "modmenu": "*",

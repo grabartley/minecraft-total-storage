@@ -20,6 +20,7 @@ public final class SortFeedback {
       case ALREADY_SORTED -> CommandMessages.alreadySorted();
       case NOTHING_TO_SORT -> CommandMessages.nothingToSort();
       case FAILED -> CommandMessages.sortFailed();
+      case RATE_LIMITED -> CommandMessages.sortTooFast();
       case NOT_OFFERED -> CommandMessages.sortButtonDisabled();
       case NO_OPEN_SCREEN, SCREEN_NOT_SORTABLE -> CommandMessages.nothingOpenToSort();
     };

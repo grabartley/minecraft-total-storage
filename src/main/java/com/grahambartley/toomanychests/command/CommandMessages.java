@@ -258,6 +258,10 @@ public final class CommandMessages {
     return line("sort.refused", "That is not something this mod will sort");
   }
 
+  public static Text sortTooFast() {
+    return line("sort.cooldown", "Give the last sort a moment before asking again");
+  }
+
   public static Text sortFailed() {
     return line("sort.failed", "The sort was rolled back and nothing moved");
   }

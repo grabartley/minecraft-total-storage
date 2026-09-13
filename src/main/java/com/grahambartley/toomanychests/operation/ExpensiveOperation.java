@@ -9,6 +9,8 @@ public enum ExpensiveOperation {
 
   ASSIGN_MATCHING,
 
+  SORT_CONTAINER,
+
   SORT_NETWORK,
 
   CONSOLIDATE,

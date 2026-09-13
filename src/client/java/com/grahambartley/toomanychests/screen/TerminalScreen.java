@@ -64,7 +64,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     this.playerInventoryTitleX = TerminalScreenLayout.INVENTORY_LABEL_X;
     this.playerInventoryTitleY = TerminalScreenLayout.INVENTORY_LABEL_Y;
     this.prompts = new TerminalPrompts(handler.syncId);
-    this.settingsClicks = new TerminalSettingsClicks(settings, tagsPanel, prompts.naming());
+    this.settingsClicks =
+        new TerminalSettingsClicks(settings, tagsPanel, prompts.naming(), prompts.copying());
   }
 
   @Override
@@ -170,6 +171,15 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
         mouseX,
         mouseY);
     if (tab.isSettings()) {
+      TerminalTooltips.copyTags(
+          context,
+          textRenderer,
+          tagsThisFrame,
+          settings.section(),
+          hoveredWindowX,
+          hoveredWindowY,
+          mouseX,
+          mouseY);
       TerminalTooltips.container(
           context,
           textRenderer,

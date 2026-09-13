@@ -59,7 +59,7 @@ public final class ServerConfigService {
         current.sortOrdering().id());
   }
 
-  private static ConfigPaths pathsFor(final MinecraftServer server) {
+  public static ConfigPaths pathsFor(final MinecraftServer server) {
     return new ConfigPaths(server.getSavePath(WorldSavePath.ROOT).normalize());
   }
 }

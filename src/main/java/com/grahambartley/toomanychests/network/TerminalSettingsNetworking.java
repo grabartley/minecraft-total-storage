@@ -6,6 +6,7 @@ import com.grahambartley.toomanychests.screenhandler.TerminalSettingsEdits;
 import com.grahambartley.toomanychests.screenhandler.TerminalSettingsService;
 import com.grahambartley.toomanychests.screenhandler.TerminalTagEdits;
 import com.grahambartley.toomanychests.screenhandler.TerminalTagPanelService;
+import com.grahambartley.toomanychests.screenhandler.TerminalTagTransfers;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
@@ -14,8 +15,10 @@ public final class TerminalSettingsNetworking {
   private static final TerminalSettingsEdits EDITS = new TerminalSettingsEdits(PANELS);
   private static final TerminalActions ACTIONS = new TerminalActions(EDITS);
   private static final TerminalTagPanelService TAG_PANELS = new TerminalTagPanelService();
-  private static final TerminalTagEdits TAG_EDITS =
-      new TerminalTagEdits(TAG_PANELS, new TerminalListingService());
+  private static final TerminalListingService LISTINGS = new TerminalListingService();
+  private static final TerminalTagEdits TAG_EDITS = new TerminalTagEdits(TAG_PANELS, LISTINGS);
+  private static final TerminalTagTransfers TAG_TRANSFERS =
+      new TerminalTagTransfers(TAG_PANELS, LISTINGS);
 
   private TerminalSettingsNetworking() {}
 
@@ -39,6 +42,10 @@ public final class TerminalSettingsNetworking {
     PayloadTypeRegistry.playC2S().register(TerminalActionPayload.ID, TerminalActionPayload.CODEC);
     PayloadTypeRegistry.playC2S().register(TagPanelRequestPayload.ID, TagPanelRequestPayload.CODEC);
     PayloadTypeRegistry.playC2S().register(TagEditPayload.ID, TagEditPayload.CODEC);
+    PayloadTypeRegistry.playC2S()
+        .register(TagSourcesRequestPayload.ID, TagSourcesRequestPayload.CODEC);
+    PayloadTypeRegistry.playC2S().register(TagSetCopyPayload.ID, TagSetCopyPayload.CODEC);
+    PayloadTypeRegistry.playS2C().register(TagSourcesPayload.ID, TagSourcesPayload.CODEC);
     PayloadTypeRegistry.playS2C().register(TagPanelPayload.ID, TagPanelPayload.CODEC);
     PayloadTypeRegistry.playS2C().register(TerminalNoticePayload.ID, TerminalNoticePayload.CODEC);
     PayloadTypeRegistry.playS2C().register(NetworkSettingsPayload.ID, NetworkSettingsPayload.CODEC);
@@ -73,5 +80,13 @@ public final class TerminalSettingsNetworking {
         TagEditPayload.ID,
         (payload, context) ->
             context.server().execute(() -> TAG_EDITS.edit(context.player(), payload)));
+    ServerPlayNetworking.registerGlobalReceiver(
+        TagSourcesRequestPayload.ID,
+        (payload, context) ->
+            context.server().execute(() -> TAG_TRANSFERS.listSources(context.player(), payload)));
+    ServerPlayNetworking.registerGlobalReceiver(
+        TagSetCopyPayload.ID,
+        (payload, context) ->
+            context.server().execute(() -> TAG_TRANSFERS.copy(context.player(), payload)));
   }
 }

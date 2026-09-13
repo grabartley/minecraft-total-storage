@@ -16,6 +16,7 @@ public enum TerminalSprite {
   CHECK("icon/check"),
   CLEAR_ALL("icon/clear_all"),
   CONSOLIDATE("icon/consolidate"),
+  COPY_TAGS("icon/copy_tags"),
   DEPOSIT_ALL("icon/deposit_all"),
   HIGHLIGHT("icon/highlight"),
   ITEMS("icon/items"),

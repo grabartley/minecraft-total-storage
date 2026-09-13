@@ -46,32 +46,47 @@ public final class TerminalTagsPanel {
       int originY,
       int mouseX,
       int mouseY) {
-    drawNewTagRow(context, textRenderer, view, originX, originY, mouseX, mouseY);
+    drawFixedRow(
+        context,
+        textRenderer,
+        view,
+        TagsSectionLayout.NEW_TAG_ROW,
+        TagsSectionLayout.isOverNewTag(mouseX, mouseY)
+            && !TagsSectionLayout.isOverCopy(mouseX, mouseY),
+        view.mayAdminister()
+            ? TerminalScreenText.of("tags.new")
+            : TerminalScreenText.of("tags.read_only"),
+        originX,
+        originY);
+    drawControl(
+        context,
+        view,
+        TerminalSprite.COPY_TAGS,
+        TagsSectionLayout.NEW_TAG_ROW,
+        TagsSectionLayout.isOverCopy(mouseX, mouseY),
+        originX,
+        originY);
     drawTagRows(context, textRenderer, view, firstVisible, originX, originY, mouseX, mouseY);
   }
 
-  private static void drawNewTagRow(
+  private static void drawFixedRow(
       DrawContext context,
       TextRenderer textRenderer,
       NetworkTagView view,
+      int row,
+      boolean over,
+      Text label,
       int originX,
-      int originY,
-      int mouseX,
-      int mouseY) {
+      int originY) {
     final int left = originX + TerminalSettingsLayout.PANEL_X;
-    final int top = originY + TerminalSettingsLayout.rowY(TagsSectionLayout.NEW_TAG_ROW);
-    final boolean hovered = view.mayAdminister() && TagsSectionLayout.isOverNewTag(mouseX, mouseY);
+    final int top = originY + TerminalSettingsLayout.rowY(row);
     TerminalChrome.drawRow(
         context,
-        hovered,
+        view.mayAdminister() && over,
         left,
         top,
         TerminalSettingsLayout.ROW_WIDTH,
         TerminalSettingsLayout.ROW_HEIGHT);
-    final Text label =
-        view.mayAdminister()
-            ? TerminalScreenText.of("tags.new")
-            : TerminalScreenText.of("tags.read_only");
     context.drawText(
         textRenderer,
         label,
@@ -153,15 +168,25 @@ public final class TerminalTagsPanel {
       int row,
       int mouseX,
       int mouseY) {
+    final boolean hovered =
+        TagsSectionLayout.regionAt(mouseX, mouseY) == TagRowRegion.DELETE
+            && TerminalSettingsLayout.rowAt(mouseX, mouseY) == row;
+    drawControl(context, view, TerminalSprite.CLEAR_ALL, row, hovered, originX, originY);
+  }
+
+  private static void drawControl(
+      DrawContext context,
+      NetworkTagView view,
+      TerminalSprite icon,
+      int row,
+      boolean hovered,
+      int originX,
+      int originY) {
     final int left = originX + TagsSectionLayout.DELETE_X;
     final int top = originY + TagsSectionLayout.deleteY(row);
-    final boolean hovered =
-        view.mayAdminister()
-            && TagsSectionLayout.regionAt(mouseX, mouseY) == TagRowRegion.DELETE
-            && TerminalSettingsLayout.rowAt(mouseX, mouseY) == row;
-    TerminalChrome.controlOrUnavailable(view.mayAdminister(), hovered)
+    TerminalChrome.controlOrUnavailable(view.mayAdminister(), view.mayAdminister() && hovered)
         .draw(context, left, top, TagsSectionLayout.CONTROL_SIZE, TagsSectionLayout.CONTROL_SIZE);
     final int inset = (TagsSectionLayout.CONTROL_SIZE - ICON_SIZE) / 2;
-    TerminalSprite.CLEAR_ALL.draw(context, left + inset, top + inset, ICON_SIZE, ICON_SIZE);
+    icon.draw(context, left + inset, top + inset, ICON_SIZE, ICON_SIZE);
   }
 }
