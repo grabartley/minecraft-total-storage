@@ -21,7 +21,7 @@ The choice was between enforcing the second copy and removing it. Enforcing it m
 
 Removing the copy costs the readable diff. That is the thing being traded away, knowingly, and it is recoverable per change: the authoring workflow is unchanged, since `tools/gui_sprite.py` takes its input path as an argument and renders a scratch file straight into place. A reviewer who wants to see which pixels moved can be shown the source in the pull request, where it is evidence attached to one change rather than a permanent second source of truth.
 
-`tools/gui_sprite.py` stays. It is the renderer and the previewer, and its `zoom`, `sheet`, `slice` and `scales` modes are how a sprite is checked at GUI scale without launching the game.
+`tools/gui_sprite.py` stays. It is the renderer and the previewer, and its `zoom`, `sheet`, `slice` and `scales` modes are how a sprite is checked at GUI scale without launching the game. Its `buildall` mode stays with it: mirroring a tree of sources into a tree of textures is as useful against a scratch tree as it was against a committed one, and a set of sprites is usually edited together.
 
 ## Consequences
 

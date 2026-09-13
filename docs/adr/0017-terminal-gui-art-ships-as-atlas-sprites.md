@@ -31,7 +31,7 @@ The screen implementation cannot get a sprite's geometry wrong, because it never
 
 Chrome adapts to content instead of content being cut to fit chrome. The filter column can be any width, the thumb any height, and the search field any span, with no per-widget stretching code and no clipped grid.
 
-Because the sources are text, an art change and a code change review the same way, and a reviewer can see that a hover state gained an outline without opening an image editor.
+Because the sources are text, an art change and a code change review the same way, and a reviewer can see that a hover state gained an outline without opening an image editor. [ADR 0037](0037-the-shipped-png-is-a-textures-only-source.md) gave this up: a texture change reviews as a binary diff, and the source is attached to the pull request that makes it rather than committed.
 
 Accepted drawback: sprite lookups go through the atlas by identifier, so a typo in an identifier fails at draw time with a missing-texture square rather than at compile time. The reference table exists to keep those strings in one place, but it is a document, not a compiler. [ADR 0035](0035-the-terminal-wears-vanillas-chrome.md) closed this: the screen draws through a `TerminalSprite` catalogue rather than through strings, and a test asserts every entry in it resolves to a texture that ships.
 

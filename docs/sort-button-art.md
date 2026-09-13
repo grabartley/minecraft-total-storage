@@ -112,7 +112,7 @@ This is the same palette every other sprite in the mod uses, and it is listed in
 The PNGs that ship are the sprites, exactly as they are for the terminal. Author an edit as a palette-mapped file kept outside the repository and rendered straight into place; [`terminal-gui-sprites.md`](terminal-gui-sprites.md) sets out the format:
 
 ```bash
-python3 tools/gui_sprite.py build <scratch>/normal.sprite.txt \
+python3 tools/gui_sprite.py build <scratch>/sort_button/normal.sprite.txt \
 	src/client/resources/assets/too-many-chests/textures/gui/sprites/sort_button/normal.png
 ```
 
@@ -120,10 +120,10 @@ Check any change at the size it ships at, not zoomed in:
 
 ```bash
 # 1x through 4x legibility strip
-python3 tools/gui_sprite.py scales <scratch>/normal.sprite.txt <scratch>/sort.png
+python3 tools/gui_sprite.py scales <scratch>/sort_button/normal.sprite.txt <scratch>/sort.png
 
 # every state side by side
-python3 tools/gui_sprite.py sheet <scratch>/states.png <scratch>/*.sprite.txt
+python3 tools/gui_sprite.py sheet <scratch>/states.png <scratch>/sort_button/*.sprite.txt
 ```
 
 Nothing here is nine-sliced, so `slice` has nothing to say about it. The check that matters is the one above at GUI scale 1, where the glyph has eight pixels to work with and every pixel is load bearing.
