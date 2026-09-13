@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests.terminal;
 
 import com.grahambartley.toomanychests.access.TerminalCaller;
 import com.grahambartley.toomanychests.block.entity.TerminalBlockEntity;
+import com.grahambartley.toomanychests.lifecycle.LoadedChunks;
 import com.grahambartley.toomanychests.network.PayloadCapLog;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -21,7 +22,9 @@ public final class OwnedTerminals {
     }
     final List<OwnedTerminal> found = new ArrayList<>();
     for (final TerminalAddress address : TerminalNetworks.registry().addresses()) {
-      if (!address.worldKey().equals(world.getRegistryKey()) || address.pos().equals(excluding)) {
+      if (!address.worldKey().equals(world.getRegistryKey())
+          || address.pos().equals(excluding)
+          || !LoadedChunks.holds(world, address.pos())) {
         continue;
       }
       final TerminalBlockEntity block = TerminalLookup.at(world, address.pos()).orElse(null);
@@ -30,13 +33,13 @@ public final class OwnedTerminals {
       }
       found.add(new OwnedTerminal(address.pos(), block.settings().tags().custom().size()));
     }
+    if (found.size() > MAX_LISTED) {
+      PayloadCapLog.reached("terminals to copy tags from", MAX_LISTED, found.size());
+    }
     return nearestFirst(found, excluding);
   }
 
   private static List<OwnedTerminal> nearestFirst(List<OwnedTerminal> found, BlockPos origin) {
-    if (found.size() > MAX_LISTED) {
-      PayloadCapLog.reached("terminals to copy tags from", MAX_LISTED, found.size());
-    }
     final Comparator<OwnedTerminal> byDistance =
         origin == null
             ? Comparator.comparingLong(terminal -> terminal.pos().asLong())

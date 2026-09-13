@@ -85,6 +85,15 @@ public final class ServerConfigScreen extends Screen {
   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
     super.render(context, mouseX, mouseY, delta);
     context.drawCenteredTextWithShadow(textRenderer, title, width / 2, TITLE_TOP, 0xFFFFFFFF);
+    if (list == null) {
+      context.drawCenteredTextWithShadow(
+          textRenderer,
+          ServerConfigText.notConnectedNotice(),
+          width / 2,
+          height / 2,
+          NOTICE_COLOUR);
+      return;
+    }
     if (!editable) {
       context.drawCenteredTextWithShadow(
           textRenderer, ServerConfigText.readOnlyNotice(), width / 2, NOTICE_TOP, NOTICE_COLOUR);

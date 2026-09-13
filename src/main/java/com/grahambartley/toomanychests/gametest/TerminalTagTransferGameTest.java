@@ -121,6 +121,30 @@ public final class TerminalTagTransferGameTest implements FabricGameTest {
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
       tickLimit = TICK_LIMIT)
+  public void aTerminalThePlayerCannotAdministerIsNeverWrittenTo(TestContext context) {
+    final ServerPlayerEntity stranger = NetworkOperationFixture.openTerminal(context);
+    final ServerPlayerEntity owner = NetworkOperationFixture.openNorthTerminal(context);
+    fileOnNorth(context, "castle", "minecraft:stone");
+
+    final TagTransferResult result =
+        transfers.copy(
+            context.getWorld(),
+            context.getAbsolutePos(NetworkOperationFixture.TERMINAL),
+            context.getAbsolutePos(NetworkOperationFixture.NORTH_TERMINAL),
+            TerminalCaller.of(owner),
+            TagSetImportMode.MERGE);
+
+    context.assertFalse(result.isChange(), "A tag set landed on a terminal they do not own");
+    context.assertFalse(
+        tagsOn(context, NetworkOperationFixture.TERMINAL).contains("castle"),
+        "A stranger's terminal gained a tag");
+    NetworkOperationFixture.finish(context, owner, stranger);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
   public void exportingThenImportingReproducesTheTagSet(TestContext context) {
     final ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
     NetworkOperationFixture.fileUnderCustomTag(context, "castle", "minecraft:stone");

@@ -10,6 +10,7 @@ import com.grahambartley.toomanychests.sort.ContainerSortService;
 import com.grahambartley.toomanychests.sort.SortOutcome;
 import java.util.List;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
@@ -116,6 +117,23 @@ public final class MiddleClickSortGameTest implements FabricGameTest {
   }
 
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void aMiddleClickOnAScreenThisModWillNotSortFallsThroughToVanilla(TestContext context) {
+    final ServerPlayerEntity player = openContainer(context, Blocks.FURNACE, GameMode.SURVIVAL);
+    final Inventory furnace = context.getBlockEntity(CONTAINER);
+    furnace.setStack(0, new ItemStack(Items.COBBLESTONE, 20));
+    furnace.setStack(1, new ItemStack(Items.COAL, 30));
+
+    middleClick(player);
+
+    context.assertEquals(furnace.getStack(0).getCount(), 20, "A furnace must never be rearranged");
+    context.assertEquals(furnace.getStack(1).getCount(), 30, "A furnace must never be rearranged");
+    context.assertTrue(
+        player.currentScreenHandler.getCursorStack().isEmpty(),
+        "Survival cloning is a vanilla no-op, so the cursor should still be empty");
+    finish(context, player);
+  }
+
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void aMiddleClickSortOfTheInventoryLeavesALockedSlotWhereItIs(TestContext context) {
     final ServerPlayerEntity player = survivalPlayer(context);
     LockedSlotsAttachment.set(player, LockedSlots.of(List.of(0)));
@@ -166,10 +184,14 @@ public final class MiddleClickSortGameTest implements FabricGameTest {
   }
 
   private static ServerPlayerEntity openChest(TestContext context, GameMode mode) {
+    return openContainer(context, Blocks.CHEST, mode);
+  }
+
+  private static ServerPlayerEntity openContainer(TestContext context, Block block, GameMode mode) {
     final ServerPlayerEntity player = context.createMockCreativeServerPlayerInWorld();
     player.changeGameMode(mode);
     player.getInventory().clear();
-    context.setBlockState(CONTAINER, Blocks.CHEST.getDefaultState());
+    context.setBlockState(CONTAINER, block.getDefaultState());
     final NamedScreenHandlerFactory factory =
         context
             .getBlockState(CONTAINER)

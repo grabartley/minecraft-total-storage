@@ -2,7 +2,7 @@ package com.grahambartley.toomanychests.compat;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 import com.grahambartley.toomanychests.screen.ServerConfigScreen;
 import com.grahambartley.toomanychests.screen.ServerConfigText;
@@ -26,9 +26,11 @@ class TooManyChestsModMenuTest {
   }
 
   @Test
-  void closingTheScreenGoesBackToWhicheverScreenOpenedIt() {
-    final Screen built = new TooManyChestsModMenu().getModConfigScreenFactory().create(null);
+  void theFactoryThreadsTheScreenThatOpenedItThroughAsTheParent() {
+    final Screen opener = new ServerConfigScreen(null);
 
-    assertNull(((ServerConfigScreen) built).parent());
+    final Screen built = new TooManyChestsModMenu().getModConfigScreenFactory().create(opener);
+
+    assertSame(opener, ((ServerConfigScreen) built).parent());
   }
 }
