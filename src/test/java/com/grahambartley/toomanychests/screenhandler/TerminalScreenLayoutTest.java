@@ -228,6 +228,32 @@ class TerminalScreenLayoutTest {
   }
 
   @Test
+  void aNoticeIsDrawnAcrossTheListingItInterrupts() {
+    assertEquals(TerminalScreenLayout.GRID_X, TerminalScreenLayout.NOTICE_X);
+    assertEquals(TerminalScreenLayout.GRID_Y, TerminalScreenLayout.NOTICE_Y);
+    assertTrue(
+        TerminalScreenLayout.NOTICE_X + TerminalScreenLayout.NOTICE_WIDTH
+            <= TerminalScreenLayout.INSET_X + TerminalScreenLayout.INSET_WIDTH,
+        "a notice runs past the recess it is drawn in");
+    assertTrue(
+        TerminalScreenLayout.noticeHeight(TerminalScreenLayout.NOTICE_MAX_LINES)
+            <= TerminalScreenLayout.GRID_HEIGHT,
+        "the tallest notice covers more than the listing it interrupts");
+    assertEquals(
+        TerminalScreenLayout.noticeRows(2) * TerminalScreenLayout.SLOT_SIZE,
+        TerminalScreenLayout.noticeHeight(2),
+        "a notice must end on a slot boundary so no half row shows under it");
+  }
+
+  @Test
+  void aNoticeCannotBeTallerThanTheLinesItIsAllowed() {
+    assertThrows(IllegalArgumentException.class, () -> TerminalScreenLayout.noticeRows(0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> TerminalScreenLayout.noticeRows(TerminalScreenLayout.NOTICE_MAX_LINES + 1));
+  }
+
+  @Test
   void theActionColumnHoldsEveryActionTheTerminalDraws() {
     assertTrue(
         TerminalScreenLayout.actionY(2) + TerminalScreenLayout.BUTTON_SIZE

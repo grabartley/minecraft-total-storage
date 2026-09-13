@@ -44,7 +44,7 @@ public final class NetworkJobs {
         NetworkOperationMessages.cancelled(stopped.job.operation(), stopped.job.report());
     tell(server, stopped.job, message);
     if (asking != null && !asking.getUuid().equals(stopped.job.actor())) {
-      asking.sendMessage(message, true);
+      TerminalNotice.tell(asking, message);
     }
     return true;
   }
@@ -106,10 +106,7 @@ public final class NetworkJobs {
     if (server == null) {
       return;
     }
-    final ServerPlayerEntity player = server.getPlayerManager().getPlayer(job.actor());
-    if (player != null) {
-      player.sendMessage(message, true);
-    }
+    TerminalNotice.tell(server.getPlayerManager().getPlayer(job.actor()), message);
   }
 
   private static final class Running {

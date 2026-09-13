@@ -10,6 +10,7 @@ import com.grahambartley.toomanychests.operation.WithdrawDestination;
 import com.grahambartley.toomanychests.render.ContainerHighlights;
 import com.grahambartley.toomanychests.screen.NetworkSettingsMirror;
 import com.grahambartley.toomanychests.screen.NetworkTagMirror;
+import com.grahambartley.toomanychests.screen.TerminalNoticeMirror;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.TerminalAction;
 import java.util.Set;
@@ -50,6 +51,15 @@ public final class ModNetworkingClient {
             context
                 .client()
                 .execute(() -> NetworkTagMirror.accept(payload.syncId(), payload.view())));
+    ClientPlayNetworking.registerGlobalReceiver(
+        TerminalNoticePayload.ID,
+        (payload, context) ->
+            context
+                .client()
+                .execute(
+                    () ->
+                        TerminalNoticeMirror.accept(
+                            payload.syncId(), payload.message(), payload.needsAnAnswer())));
     ClientPlayConnectionEvents.DISCONNECT.register(
         (handler, client) -> {
           ClientConfigMirror.clear();
@@ -57,6 +67,7 @@ public final class ModNetworkingClient {
           NetworkSettingsMirror.closed();
           NetworkTagMirror.closed();
           ContainerHighlights.clear();
+          TerminalNoticeMirror.clear();
         });
   }
 

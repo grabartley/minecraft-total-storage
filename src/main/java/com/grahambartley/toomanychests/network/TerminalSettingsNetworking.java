@@ -40,6 +40,7 @@ public final class TerminalSettingsNetworking {
     PayloadTypeRegistry.playC2S().register(TagPanelRequestPayload.ID, TagPanelRequestPayload.CODEC);
     PayloadTypeRegistry.playC2S().register(TagEditPayload.ID, TagEditPayload.CODEC);
     PayloadTypeRegistry.playS2C().register(TagPanelPayload.ID, TagPanelPayload.CODEC);
+    PayloadTypeRegistry.playS2C().register(TerminalNoticePayload.ID, TerminalNoticePayload.CODEC);
     PayloadTypeRegistry.playS2C().register(NetworkSettingsPayload.ID, NetworkSettingsPayload.CODEC);
     PayloadTypeRegistry.playS2C()
         .register(ContainerHighlightPayload.ID, ContainerHighlightPayload.CODEC);

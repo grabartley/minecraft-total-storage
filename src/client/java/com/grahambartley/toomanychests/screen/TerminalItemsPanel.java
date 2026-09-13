@@ -86,11 +86,17 @@ public final class TerminalItemsPanel {
   }
 
   public void drawRows(DrawContext context, TextRenderer textRenderer, int hovered) {
+    drawRows(context, textRenderer, hovered, 0);
+  }
+
+  public void drawRows(
+      DrawContext context, TextRenderer textRenderer, int hovered, int hiddenRows) {
     placeholder.ifPresent(shown -> drawPlaceholder(context, textRenderer, shown));
     if (!page.status().hasRows()) {
       return;
     }
-    for (int cell = 0; cell < TerminalScreenLayout.LISTING_PAGE_SIZE; cell++) {
+    final int firstDrawn = Math.max(0, hiddenRows) * TerminalScreenLayout.LISTING_COLUMNS;
+    for (int cell = firstDrawn; cell < TerminalScreenLayout.LISTING_PAGE_SIZE; cell++) {
       final ListingRow<ItemVariant> row = rowAt(cell);
       if (row == null) {
         continue;
