@@ -43,6 +43,7 @@ Shared engineering standards across all the mods in this family live in [`../sta
 | [0033](0033-renaming-a-tag-moves-its-id.md) | Renaming a tag moves its id |
 | [0034](0034-a-linter-forbids-comments-rather-than-a-formatter-stripping-them.md) | A linter forbids comments rather than a formatter stripping them |
 | [0035](0035-the-terminal-wears-vanillas-chrome.md) | The terminal wears vanilla's chrome rather than its own |
+| [0036](0036-a-long-operation-commits-one-step-at-a-time.md) | A long operation commits one step at a time |
 
 ## Writing A New Record
 

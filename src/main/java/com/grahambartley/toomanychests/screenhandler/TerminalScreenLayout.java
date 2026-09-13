@@ -71,7 +71,7 @@ public final class TerminalScreenLayout {
 
   public static final int TOOLBAR_X = INSET_X + INSET_WIDTH + TOOLBAR_GAP;
 
-  public static final int TOOLBAR_Y = INSET_Y;
+  public static final int TOOLBAR_Y = SEARCH_Y;
 
   public static final int TAB_COUNT = 2;
 
@@ -182,6 +182,32 @@ public final class TerminalScreenLayout {
       return NO_CELL;
     }
     return row * LISTING_COLUMNS + column;
+  }
+
+  public static final int NOTICE_PADDING = 3;
+
+  public static final int NOTICE_LINE_HEIGHT = 9;
+
+  public static final int NOTICE_MAX_LINES = 3;
+
+  public static final int NOTICE_X = GRID_X;
+
+  public static final int NOTICE_Y = GRID_Y;
+
+  public static final int NOTICE_WIDTH = GRID_WIDTH + SCROLLBAR_GAP + SCROLLBAR_WIDTH;
+
+  public static final int NOTICE_TEXT_WIDTH = NOTICE_WIDTH - 2 * NOTICE_PADDING;
+
+  public static int noticeRows(int lines) {
+    if (lines < 1 || lines > NOTICE_MAX_LINES) {
+      throw new IllegalArgumentException("a notice cannot be " + lines + " lines tall");
+    }
+    final int text = 2 * NOTICE_PADDING + lines * NOTICE_LINE_HEIGHT;
+    return Math.min(LISTING_ROWS, (text + SLOT_SIZE - 1) / SLOT_SIZE);
+  }
+
+  public static int noticeHeight(int lines) {
+    return noticeRows(lines) * SLOT_SIZE;
   }
 
   public static boolean isOverSearch(int windowX, int windowY) {

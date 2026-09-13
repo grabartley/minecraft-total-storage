@@ -40,6 +40,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   private TerminalTab tab = TerminalTab.ITEMS;
   private TerminalSearchBox search;
   private TerminalIconButton depositAll;
+  private TerminalIconButton sortNetwork;
+  private TerminalIconButton consolidate;
   private TerminalIconButton rescan;
   private TerminalIconButton highlight;
 
@@ -71,6 +73,11 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     search = new TerminalSearchBox(textRenderer, x, y, search == null ? "" : search.text());
     addDrawableChild(search.widget());
     depositAll = action(0, TerminalSprite.DEPOSIT_ALL, "deposit_all", this::depositEverything);
+    sortNetwork =
+        action(
+            1, TerminalSprite.SORT_NETWORK, "sort_network", () -> act(TerminalAction.SORT_NETWORK));
+    consolidate =
+        action(2, TerminalSprite.CONSOLIDATE, "consolidate", () -> act(TerminalAction.CONSOLIDATE));
     rescan = action(0, TerminalSprite.RESCAN, "rescan", () -> act(TerminalAction.RESCAN));
     highlight =
         action(1, TerminalSprite.HIGHLIGHT, "highlight", () -> act(TerminalAction.HIGHLIGHT));
@@ -99,8 +106,15 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   }
 
   @Override
+  protected void handledScreenTick() {
+    super.handledScreenTick();
+    TerminalNoticeMirror.tick();
+  }
+
+  @Override
   public void removed() {
     super.removed();
+    TerminalNoticeMirror.clear();
     TerminalListingMirror.closed();
     NetworkSettingsMirror.closed();
     NetworkTagMirror.closed();
@@ -145,6 +159,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
         hoveredWindowY)) {
       return;
     }
+    drawNotice(context);
     drawMouseoverTooltip(context, mouseX, mouseY);
     TerminalTooltips.cell(
         context,
@@ -176,6 +191,26 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
           mouseY);
     }
     TerminalTooltips.tab(context, textRenderer, hoveredTab, mouseX, mouseY);
+  }
+
+  private int noticeRows() {
+    if (tab.isSettings() || !TerminalNoticeMirror.isShowingOn(handler.syncId)) {
+      return 0;
+    }
+    return TerminalNoticeBanner.rowsCovered(textRenderer, TerminalNoticeMirror.message());
+  }
+
+  private void drawNotice(DrawContext context) {
+    if (tab.isSettings() || !TerminalNoticeMirror.isShowingOn(handler.syncId)) {
+      return;
+    }
+    TerminalNoticeBanner.draw(
+        context,
+        textRenderer,
+        TerminalNoticeMirror.message(),
+        TerminalNoticeMirror.needsAnAnswer(),
+        x,
+        y);
   }
 
   private void updateHovered(int mouseX, int mouseY) {
@@ -261,7 +296,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     }
     filters.draw(
         context, textRenderer, tagsThisFrame, selection, 0, 0, hoveredWindowX, hoveredWindowY);
-    items.drawRows(context, textRenderer, hoveredCell);
+    items.drawRows(context, textRenderer, hoveredCell, noticeRows());
   }
 
   @Override
@@ -423,8 +458,13 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   private void updateWidgets(ListingStatus status) {
     final boolean settingsShowing = tab.isSettings();
-    depositAll.active = status != ListingStatus.OFFLINE;
+    final boolean online = status != ListingStatus.OFFLINE;
+    depositAll.active = online;
     depositAll.visible = !prompts.isAnyOpen() && !settingsShowing;
+    sortNetwork.visible = depositAll.visible;
+    consolidate.visible = depositAll.visible;
+    sortNetwork.active = online && tagsThisFrame.mayAdminister();
+    consolidate.active = sortNetwork.active;
     rescan.visible = !prompts.isAnyOpen() && settingsShowing;
     highlight.visible = rescan.visible;
     rescan.active = settingsThisFrame.powered() && settingsThisFrame.mayAdminister();
@@ -433,7 +473,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   }
 
   private boolean isDepositAllKey(int keyCode, int scanCode) {
-    return TerminalKeyBindings.isDepositAll(keyCode, scanCode)
+    return ModKeyBindings.isDepositAll(keyCode, scanCode)
         && !tab.isSettings()
         && !prompts.isTagging()
         && !search.isFocused();

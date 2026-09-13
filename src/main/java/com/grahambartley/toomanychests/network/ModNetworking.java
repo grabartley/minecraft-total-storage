@@ -2,6 +2,8 @@ package com.grahambartley.toomanychests.network;
 
 import com.grahambartley.toomanychests.lock.LockToggleService;
 import com.grahambartley.toomanychests.operation.DepositService;
+import com.grahambartley.toomanychests.operation.QuickStackFeedback;
+import com.grahambartley.toomanychests.operation.QuickStackService;
 import com.grahambartley.toomanychests.operation.WithdrawService;
 import com.grahambartley.toomanychests.screenhandler.TerminalListingService;
 import com.grahambartley.toomanychests.sort.ContainerSortService;
@@ -13,6 +15,11 @@ public final class ModNetworking {
   private static final TerminalListingService LISTINGS = new TerminalListingService();
   private static final WithdrawService WITHDRAWALS = new WithdrawService();
   private static final DepositService DEPOSITS = new DepositService();
+  private static final QuickStackService QUICK_STACKS = new QuickStackService();
+
+  public static QuickStackService quickStacks() {
+    return QUICK_STACKS;
+  }
 
   public static TerminalListingService listings() {
     return LISTINGS;
@@ -29,6 +36,8 @@ public final class ModNetworking {
     PayloadTypeRegistry.playC2S().register(DepositRequestPayload.ID, DepositRequestPayload.CODEC);
     PayloadTypeRegistry.playC2S()
         .register(DepositAllRequestPayload.ID, DepositAllRequestPayload.CODEC);
+    PayloadTypeRegistry.playC2S()
+        .register(QuickStackRequestPayload.ID, QuickStackRequestPayload.CODEC);
     PayloadTypeRegistry.playS2C().register(ConfigSyncPayload.ID, ConfigSyncPayload.CODEC);
     PayloadTypeRegistry.playS2C().register(ListingPayload.ID, ListingPayload.CODEC);
 
@@ -64,6 +73,16 @@ public final class ModNetworking {
             context
                 .server()
                 .execute(() -> DEPOSITS.depositAll(context.player(), payload.syncId())));
+
+    ServerPlayNetworking.registerGlobalReceiver(
+        QuickStackRequestPayload.ID,
+        (payload, context) ->
+            context
+                .server()
+                .execute(
+                    () ->
+                        QuickStackFeedback.report(
+                            context.player(), QUICK_STACKS.quickStack(context.player()))));
 
     TerminalSettingsNetworking.register();
     ConfigSync.register();

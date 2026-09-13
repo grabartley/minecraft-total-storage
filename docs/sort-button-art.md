@@ -1,6 +1,6 @@
-# Sort Button Art
+# In-Screen Button Art
 
-The button that sorts a container from inside that container's own screen. Unlike every other piece of art in this mod, it is drawn on top of a screen the mod does not own, so it is the one place where the terminal palette is the wrong answer. It wears vanilla's greys instead. The reasoning is recorded in [ADR 0020](adr/0020-the-sort-button-wears-vanilla-chrome.md).
+The buttons this mod draws inside screens it does not own: the one that sorts a container from inside that container's own screen, and the one that quick stacks from inside the player inventory. Unlike every other piece of art in this mod, it is drawn on top of a screen the mod does not own, so it is the one place where the terminal palette is the wrong answer. It wears vanilla's greys instead. The reasoning is recorded in [ADR 0020](adr/0020-the-sort-button-wears-vanilla-chrome.md).
 
 ## Sprite Reference
 
@@ -14,6 +14,10 @@ Every one is drawn at its native size and carries no `.png.mcmeta`, so the defau
 | `sort_button/hover` | 14x14 | stretch | Sort button, hovered |
 | `sort_button/pressed` | 14x14 | stretch | Sort button, held |
 | `sort_button/disabled` | 14x14 | stretch | Sort button, sorting unavailable |
+| `quick_stack_button/normal` | 14x14 | stretch | Quick stack button, resting |
+| `quick_stack_button/hover` | 14x14 | stretch | Quick stack button, hovered |
+| `quick_stack_button/pressed` | 14x14 | stretch | Quick stack button, held |
+| `quick_stack_button/disabled` | 14x14 | stretch | Quick stack button, unavailable |
 
 ## Why 14x14
 
@@ -39,7 +43,9 @@ Four concentric rings, which is what keeps the four states describing one object
 | Outline | 0 | Separates the button from the container face behind it |
 | Bevel | 1 | Raised when resting, inverted when held, absent when disabled |
 | Gutter | 2 | Empty until hover, when the highlight ring closes through it |
-| Glyph | 3 to 10, an 8x8 area | Three descending bars and a downward arrow |
+| Glyph | 3 to 10, an 8x8 area | Three descending bars and a downward arrow, or two items dropping into a tray |
+
+The quick stack button is the same object wearing a different glyph. Every ring is identical, so the two sit beside each other as one control family rather than as two buttons that happen to be the same size, and only the 8x8 glyph area differs: two shafts with arrowheads falling into an open tray, which is the deposit mark doubled rather than a new vocabulary.
 
 ## Placement
 
@@ -51,6 +57,10 @@ y = 3
 ```
 
 On every vanilla container that is `x = 154, y = 3` relative to the panel origin, clear of the title text, which ends well short of it, and clear of the slot grid, whose right edge stops at `x = 169`.
+
+The quick stack button takes the same anchor on the player inventory, `x = 154, y = 3`, because on that screen it is the only place in the band that is free. The `Crafting` label starts at `x = 97` and runs to roughly `x = 133`, so a button at `x = 136` lands hard against the final letter, which is exactly what it looked like the first time: a control dropped on top of the title rather than built into the panel. Everything from the label's end to `x = 154` is too narrow for 14 pixels plus a gutter.
+
+The consequence for a screen that eventually wants two of these: they cannot both live in the band on the player inventory, and the second one belongs outside the panel rather than over the label or a slot. The inventory panel also moves when the recipe book opens, so the button follows the panel every frame rather than being placed once.
 
 The button must never overlap a slot. It is a click target sitting in someone else's screen, and a click that lands on both is a click that does the wrong thing.
 
@@ -87,7 +97,7 @@ This is the same palette every other sprite in the mod uses, and it is listed in
 
 ## Editing A Sprite
 
-The PNGs are generated from palette-mapped text sources under `art/gui/sort_button/`, mirroring the sprite path, exactly as the terminal sprites are. See [`terminal-gui-sprites.md`](terminal-gui-sprites.md) for the source format.
+The PNGs are generated from palette-mapped text sources under `art/gui/sort_button/` and `art/gui/quick_stack_button/`, mirroring the sprite path, exactly as the terminal sprites are. See [`terminal-gui-sprites.md`](terminal-gui-sprites.md) for the source format.
 
 ```bash
 python3 tools/gui_sprite.py buildall art/gui \

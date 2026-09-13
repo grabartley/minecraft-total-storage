@@ -98,10 +98,12 @@ class ConfigPacketCodecTest {
     buffer.writeBoolean(true);
     buffer.writeBoolean(true);
     buffer.writeVarInt(8);
+    buffer.writeBoolean(true);
     buffer.writeBoolean(false);
     buffer.writeVarInt(90);
     buffer.writeVarInt(10);
     buffer.writeVarInt(64);
+    buffer.writeVarInt(8);
     buffer.writeMap(overrides, PacketByteBuf::writeString, PacketByteBuf::writeBoolean);
     return buffer;
   }

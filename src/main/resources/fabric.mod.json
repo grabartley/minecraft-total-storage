@@ -26,6 +26,12 @@
       "com.grahambartley.toomanychests.compat.TooManyChestsModMenu"
     ],
     "fabric-gametest": [
+      "com.grahambartley.toomanychests.gametest.NetworkSortGameTest",
+      "com.grahambartley.toomanychests.gametest.StorageSortGameTest",
+      "com.grahambartley.toomanychests.gametest.NetworkJobsGameTest",
+      "com.grahambartley.toomanychests.gametest.NetworkOperationServiceGameTest",
+      "com.grahambartley.toomanychests.gametest.ConsolidationGameTest",
+      "com.grahambartley.toomanychests.gametest.QuickStackServiceGameTest",
       "com.grahambartley.toomanychests.gametest.StorageProviderResolverGameTest",
       "com.grahambartley.toomanychests.gametest.ServerConfigServiceGameTest",
       "com.grahambartley.toomanychests.gametest.ConfigSyncGameTest",

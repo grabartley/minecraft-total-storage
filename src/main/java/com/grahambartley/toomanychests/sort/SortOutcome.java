@@ -4,6 +4,7 @@ public enum SortOutcome {
   NO_OPEN_SCREEN,
   SCREEN_NOT_SORTABLE,
   NOTHING_TO_SORT,
+  ALREADY_SORTED,
   FAILED,
   SORTED;
 

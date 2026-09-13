@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.stream.IntStream;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.CombinedSlottedStorage;
 
-final class FakeContainer extends CombinedSlottedStorage<String, FakeSlot> {
+public final class FakeContainer extends CombinedSlottedStorage<String, FakeSlot> {
   private final List<FakeSlot> slots;
 
   private FakeContainer(List<FakeSlot> slots) {
@@ -14,12 +14,12 @@ final class FakeContainer extends CombinedSlottedStorage<String, FakeSlot> {
     this.slots = slots;
   }
 
-  static FakeContainer withSlots(int slotCount, long slotCapacity) {
+  public static FakeContainer withSlots(int slotCount, long slotCapacity) {
     return new FakeContainer(
         IntStream.range(0, slotCount).mapToObj(slot -> new FakeSlot(slotCapacity)).toList());
   }
 
-  FakeContainer holding(String resource, long amount) {
+  public FakeContainer holding(String resource, long amount) {
     long remaining = amount;
     for (final FakeSlot slot : slots) {
       if (remaining <= 0L) {
@@ -38,14 +38,14 @@ final class FakeContainer extends CombinedSlottedStorage<String, FakeSlot> {
     return this;
   }
 
-  long amountOf(String resource) {
+  public long amountOf(String resource) {
     return slots.stream()
         .filter(slot -> !slot.isResourceBlank() && slot.getResource().equals(resource))
         .mapToLong(FakeSlot::getAmount)
         .sum();
   }
 
-  long total() {
+  public long total() {
     return slots.stream().mapToLong(FakeSlot::getAmount).sum();
   }
 

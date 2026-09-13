@@ -1,14 +1,12 @@
 package com.grahambartley.toomanychests.gametest;
 
+import com.grahambartley.toomanychests.config.ConfigBuilder;
 import com.grahambartley.toomanychests.config.ConfigFile;
 import com.grahambartley.toomanychests.config.ConfigPaths;
 import com.grahambartley.toomanychests.config.ServerConfigService;
-import com.grahambartley.toomanychests.config.SortOrdering;
-import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.config.TooManyChestsConfig;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.test.GameTest;
@@ -59,18 +57,9 @@ public final class ServerConfigServiceGameTest implements FabricGameTest {
   }
 
   private static TooManyChestsConfig radiusOf(int maxTerminalRadius) {
-    return new TooManyChestsConfig(
-        maxTerminalRadius,
-        TerminalAccessMode.OWNER,
-        SortOrdering.REGISTRY_ID,
-        true,
-        true,
-        8,
-        false,
-        90,
-        10,
-        64,
-        Map.of());
+    return ConfigBuilder.from(TooManyChestsConfig.defaults())
+        .maxTerminalRadius(maxTerminalRadius)
+        .build();
   }
 
   private static Path worldRoot(TestContext context) {

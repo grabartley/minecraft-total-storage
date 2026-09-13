@@ -14,10 +14,12 @@ public final class ConfigSerializer {
   static final String KEY_SORT_BUTTON_ENABLED = "sortButtonEnabled";
   static final String KEY_MIDDLE_CLICK_SORT_ENABLED = "middleClickSortEnabled";
   static final String KEY_QUICK_STACK_RADIUS = "quickStackRadius";
+  static final String KEY_QUICK_STACK_ENABLED = "quickStackEnabled";
   static final String KEY_DEPOSIT_ALL_SKIPS_HOTBAR = "depositAllSkipsHotbar";
   static final String KEY_NEAR_CAPACITY_WARNING_PERCENT = "nearCapacityWarningPercent";
   static final String KEY_EXPENSIVE_OPERATION_COOLDOWN_TICKS = "expensiveOperationCooldownTicks";
   static final String KEY_MOVES_PER_TICK_BUDGET = "movesPerTickBudget";
+  static final String KEY_LARGE_OPERATION_CONTAINERS = "largeOperationContainers";
   static final String KEY_CONTAINER_ELIGIBILITY_OVERRIDES = "containerEligibilityOverrides";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ConfigSerializer.class);
@@ -32,11 +34,13 @@ public final class ConfigSerializer {
     root.addProperty(KEY_SORT_BUTTON_ENABLED, config.sortButtonEnabled());
     root.addProperty(KEY_MIDDLE_CLICK_SORT_ENABLED, config.middleClickSortEnabled());
     root.addProperty(KEY_QUICK_STACK_RADIUS, config.quickStackRadius());
+    root.addProperty(KEY_QUICK_STACK_ENABLED, config.quickStackEnabled());
     root.addProperty(KEY_DEPOSIT_ALL_SKIPS_HOTBAR, config.depositAllSkipsHotbar());
     root.addProperty(KEY_NEAR_CAPACITY_WARNING_PERCENT, config.nearCapacityWarningPercent());
     root.addProperty(
         KEY_EXPENSIVE_OPERATION_COOLDOWN_TICKS, config.expensiveOperationCooldownTicks());
     root.addProperty(KEY_MOVES_PER_TICK_BUDGET, config.movesPerTickBudget());
+    root.addProperty(KEY_LARGE_OPERATION_CONTAINERS, config.largeOperationContainers());
     final JsonObject overrides = new JsonObject();
     config.containerEligibilityOverrides().forEach(overrides::addProperty);
     root.add(KEY_CONTAINER_ELIGIBILITY_OVERRIDES, overrides);
@@ -72,6 +76,7 @@ public final class ConfigSerializer {
             defaults.quickStackRadius(),
             TooManyChestsConfig.QUICK_STACK_RADIUS_MIN,
             TooManyChestsConfig.QUICK_STACK_RADIUS_MAX),
+        bool(root, KEY_QUICK_STACK_ENABLED, defaults.quickStackEnabled()),
         bool(root, KEY_DEPOSIT_ALL_SKIPS_HOTBAR, defaults.depositAllSkipsHotbar()),
         boundedInt(
             root,
@@ -91,6 +96,12 @@ public final class ConfigSerializer {
             defaults.movesPerTickBudget(),
             TooManyChestsConfig.MOVES_PER_TICK_BUDGET_MIN,
             TooManyChestsConfig.MOVES_PER_TICK_BUDGET_MAX),
+        boundedInt(
+            root,
+            KEY_LARGE_OPERATION_CONTAINERS,
+            defaults.largeOperationContainers(),
+            TooManyChestsConfig.LARGE_OPERATION_CONTAINERS_MIN,
+            TooManyChestsConfig.LARGE_OPERATION_CONTAINERS_MAX),
         overrides(root));
   }
 

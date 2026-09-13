@@ -1,6 +1,7 @@
 package com.grahambartley.toomanychests.screenhandler;
 
 import com.grahambartley.toomanychests.access.TerminalAccessControl;
+import com.grahambartley.toomanychests.access.TerminalAdmin;
 import com.grahambartley.toomanychests.access.TerminalCaller;
 import com.grahambartley.toomanychests.network.ContainerRoleEditPayload;
 import com.grahambartley.toomanychests.network.TerminalAccessEditPayload;
@@ -13,9 +14,7 @@ import com.grahambartley.toomanychests.operation.TerminalOperationGate;
 import com.grahambartley.toomanychests.terminal.ContainerHighlightService;
 import com.grahambartley.toomanychests.terminal.ContainerRoleService;
 import com.grahambartley.toomanychests.terminal.RoleChangeOutcome;
-import com.grahambartley.toomanychests.terminal.TerminalAction;
 import com.grahambartley.toomanychests.terminal.TerminalAddress;
-import com.grahambartley.toomanychests.terminal.TerminalLookup;
 import com.grahambartley.toomanychests.terminal.TerminalMessages;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import com.grahambartley.toomanychests.terminal.TerminalPower;
@@ -24,8 +23,6 @@ import com.grahambartley.toomanychests.terminal.TerminalRadiusService;
 import java.util.Objects;
 import java.util.Optional;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
 
 public final class TerminalSettingsEdits {
   private final TerminalSettingsService panels;
@@ -113,16 +110,25 @@ public final class TerminalSettingsEdits {
     if (payload == null) {
       return false;
     }
-    if (payload.action() != TerminalAction.RESCAN) {
-      final TerminalOperationContext context =
-          TerminalOperationGate.open(player, payload.syncId()).orElse(null);
-      if (context == null) {
-        return false;
-      }
-      ContainerHighlightService.highlight(player, context.world(), context.terminal());
-      return true;
+    return switch (payload.action()) {
+      case HIGHLIGHT -> highlight(player, payload.syncId());
+      case RESCAN -> rescan(player, payload.syncId());
+      case SORT_NETWORK, CONSOLIDATE -> false;
+    };
+  }
+
+  private boolean highlight(ServerPlayerEntity player, int syncId) {
+    final TerminalOperationContext context =
+        TerminalOperationGate.open(player, syncId).orElse(null);
+    if (context == null) {
+      return false;
     }
-    final TerminalOperationContext context = administrable(player, payload.syncId());
+    ContainerHighlightService.highlight(player, context.world(), context.terminal());
+    return true;
+  }
+
+  private boolean rescan(ServerPlayerEntity player, int syncId) {
+    final TerminalOperationContext context = administrable(player, syncId);
     if (context == null) {
       return false;
     }
@@ -150,18 +156,11 @@ public final class TerminalSettingsEdits {
     if (context == null) {
       return null;
     }
-    if (mayAdminister(context.world(), context.terminal(), player)) {
+    if (TerminalAdmin.mayAdminister(context.world(), context.terminal(), player)) {
       return context;
     }
     player.sendMessage(TerminalMessages.notYours(), true);
     panels.refresh(player);
     return null;
-  }
-
-  private static boolean mayAdminister(
-      ServerWorld world, BlockPos terminal, ServerPlayerEntity player) {
-    return TerminalLookup.settingsAt(world, terminal)
-        .map(TerminalCaller.of(player)::mayAdminister)
-        .orElse(false);
   }
 }

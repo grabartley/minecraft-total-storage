@@ -16,10 +16,12 @@ public record TooManyChestsConfig(
     boolean sortButtonEnabled,
     boolean middleClickSortEnabled,
     int quickStackRadius,
+    boolean quickStackEnabled,
     boolean depositAllSkipsHotbar,
     int nearCapacityWarningPercent,
     int expensiveOperationCooldownTicks,
     int movesPerTickBudget,
+    int largeOperationContainers,
     Map<String, Boolean> containerEligibilityOverrides) {
   private static final Logger LOGGER = LoggerFactory.getLogger(TooManyChestsConfig.class);
 
@@ -33,6 +35,8 @@ public record TooManyChestsConfig(
   public static final int EXPENSIVE_OPERATION_COOLDOWN_TICKS_MAX = 200;
   public static final int MOVES_PER_TICK_BUDGET_MIN = 1;
   public static final int MOVES_PER_TICK_BUDGET_MAX = 1024;
+  public static final int LARGE_OPERATION_CONTAINERS_MIN = 0;
+  public static final int LARGE_OPERATION_CONTAINERS_MAX = 1024;
 
   public static final int DEFAULT_MAX_TERMINAL_RADIUS = 16;
   public static final TerminalAccessMode DEFAULT_TERMINAL_ACCESS_MODE = TerminalAccessMode.OWNER;
@@ -40,10 +44,12 @@ public record TooManyChestsConfig(
   public static final boolean DEFAULT_SORT_BUTTON_ENABLED = true;
   public static final boolean DEFAULT_MIDDLE_CLICK_SORT_ENABLED = true;
   public static final int DEFAULT_QUICK_STACK_RADIUS = 8;
+  public static final boolean DEFAULT_QUICK_STACK_ENABLED = true;
   public static final boolean DEFAULT_DEPOSIT_ALL_SKIPS_HOTBAR = false;
   public static final int DEFAULT_NEAR_CAPACITY_WARNING_PERCENT = 90;
   public static final int DEFAULT_EXPENSIVE_OPERATION_COOLDOWN_TICKS = 10;
   public static final int DEFAULT_MOVES_PER_TICK_BUDGET = 64;
+  public static final int DEFAULT_LARGE_OPERATION_CONTAINERS = 8;
 
   public TooManyChestsConfig {
     maxTerminalRadius = clamp(maxTerminalRadius, MAX_TERMINAL_RADIUS_MIN, MAX_TERMINAL_RADIUS_MAX);
@@ -60,6 +66,11 @@ public record TooManyChestsConfig(
             EXPENSIVE_OPERATION_COOLDOWN_TICKS_MAX);
     movesPerTickBudget =
         clamp(movesPerTickBudget, MOVES_PER_TICK_BUDGET_MIN, MOVES_PER_TICK_BUDGET_MAX);
+    largeOperationContainers =
+        clamp(
+            largeOperationContainers,
+            LARGE_OPERATION_CONTAINERS_MIN,
+            LARGE_OPERATION_CONTAINERS_MAX);
     defaultTerminalAccessMode =
         defaultTerminalAccessMode == null
             ? DEFAULT_TERMINAL_ACCESS_MODE
@@ -76,10 +87,12 @@ public record TooManyChestsConfig(
         DEFAULT_SORT_BUTTON_ENABLED,
         DEFAULT_MIDDLE_CLICK_SORT_ENABLED,
         DEFAULT_QUICK_STACK_RADIUS,
+        DEFAULT_QUICK_STACK_ENABLED,
         DEFAULT_DEPOSIT_ALL_SKIPS_HOTBAR,
         DEFAULT_NEAR_CAPACITY_WARNING_PERCENT,
         DEFAULT_EXPENSIVE_OPERATION_COOLDOWN_TICKS,
         DEFAULT_MOVES_PER_TICK_BUDGET,
+        DEFAULT_LARGE_OPERATION_CONTAINERS,
         Map.of());
   }
 
@@ -91,10 +104,12 @@ public record TooManyChestsConfig(
         sortButtonEnabled,
         middleClickSortEnabled,
         quickStackRadius,
+        quickStackEnabled,
         depositAllSkipsHotbar,
         nearCapacityWarningPercent,
         expensiveOperationCooldownTicks,
         movesPerTickBudget,
+        largeOperationContainers,
         overrides);
   }
 

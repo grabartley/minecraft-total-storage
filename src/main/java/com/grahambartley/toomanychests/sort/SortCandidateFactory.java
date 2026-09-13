@@ -6,7 +6,7 @@ import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 
-public final class SortCandidateFactory {
+public final class SortCandidateFactory implements SortCandidates<ItemVariant> {
   private final PresetTagResolver presetTags;
 
   public SortCandidateFactory() {
@@ -17,6 +17,7 @@ public final class SortCandidateFactory {
     this.presetTags = Objects.requireNonNull(presetTags, "presetTags");
   }
 
+  @Override
   public SortCandidate of(ItemVariant variant, long count) {
     Objects.requireNonNull(variant, "variant");
     final ItemStack stack = variant.toStack();

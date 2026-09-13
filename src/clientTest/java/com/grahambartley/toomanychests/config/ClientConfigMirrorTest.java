@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -67,18 +66,8 @@ class ClientConfigMirrorTest {
   }
 
   private static TooManyChestsConfig serverSaid(int maxTerminalRadius) {
-    TooManyChestsConfig defaults = TooManyChestsConfig.defaults();
-    return new TooManyChestsConfig(
-        maxTerminalRadius,
-        defaults.defaultTerminalAccessMode(),
-        defaults.sortOrdering(),
-        defaults.sortButtonEnabled(),
-        defaults.middleClickSortEnabled(),
-        defaults.quickStackRadius(),
-        defaults.depositAllSkipsHotbar(),
-        defaults.nearCapacityWarningPercent(),
-        defaults.expensiveOperationCooldownTicks(),
-        defaults.movesPerTickBudget(),
-        Map.of());
+    return ConfigBuilder.from(TooManyChestsConfig.defaults())
+        .maxTerminalRadius(maxTerminalRadius)
+        .build();
   }
 }

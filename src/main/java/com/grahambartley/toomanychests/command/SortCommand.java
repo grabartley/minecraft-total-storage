@@ -37,6 +37,10 @@ public final class SortCommand {
         source.sendFeedback(CommandMessages::sorted, false);
         return 1;
       }
+      case ALREADY_SORTED -> {
+        source.sendFeedback(CommandMessages::alreadySorted, false);
+        return 0;
+      }
       case NOTHING_TO_SORT -> {
         source.sendFeedback(CommandMessages::nothingToSort, false);
         return 0;

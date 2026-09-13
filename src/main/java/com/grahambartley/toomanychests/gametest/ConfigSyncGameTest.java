@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests.gametest;
 
+import com.grahambartley.toomanychests.config.ConfigBuilder;
 import com.grahambartley.toomanychests.config.ServerConfigChanges;
 import com.grahambartley.toomanychests.config.ServerConfigListener;
 import com.grahambartley.toomanychests.config.ServerConfigService;
@@ -7,7 +8,6 @@ import com.grahambartley.toomanychests.config.TooManyChestsConfig;
 import com.grahambartley.toomanychests.network.ConfigSync;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.OperatorEntry;
@@ -96,19 +96,9 @@ public final class ConfigSyncGameTest implements FabricGameTest {
   }
 
   private static TooManyChestsConfig radiusOf(int maxTerminalRadius) {
-    TooManyChestsConfig defaults = TooManyChestsConfig.defaults();
-    return new TooManyChestsConfig(
-        maxTerminalRadius,
-        defaults.defaultTerminalAccessMode(),
-        defaults.sortOrdering(),
-        defaults.sortButtonEnabled(),
-        defaults.middleClickSortEnabled(),
-        defaults.quickStackRadius(),
-        defaults.depositAllSkipsHotbar(),
-        defaults.nearCapacityWarningPercent(),
-        defaults.expensiveOperationCooldownTicks(),
-        defaults.movesPerTickBudget(),
-        Map.of());
+    return ConfigBuilder.from(TooManyChestsConfig.defaults())
+        .maxTerminalRadius(maxTerminalRadius)
+        .build();
   }
 
   private static void disconnectAndComplete(TestContext context, ServerPlayerEntity... players) {

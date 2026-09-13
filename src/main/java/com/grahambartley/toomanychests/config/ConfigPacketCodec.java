@@ -17,10 +17,12 @@ public final class ConfigPacketCodec {
     buf.writeBoolean(config.sortButtonEnabled());
     buf.writeBoolean(config.middleClickSortEnabled());
     buf.writeVarInt(config.quickStackRadius());
+    buf.writeBoolean(config.quickStackEnabled());
     buf.writeBoolean(config.depositAllSkipsHotbar());
     buf.writeVarInt(config.nearCapacityWarningPercent());
     buf.writeVarInt(config.expensiveOperationCooldownTicks());
     buf.writeVarInt(config.movesPerTickBudget());
+    buf.writeVarInt(config.largeOperationContainers());
     buf.writeMap(
         config.containerEligibilityOverrides(),
         PacketByteBuf::writeString,
@@ -37,6 +39,8 @@ public final class ConfigPacketCodec {
         buf.readBoolean(),
         buf.readVarInt(),
         buf.readBoolean(),
+        buf.readBoolean(),
+        buf.readVarInt(),
         buf.readVarInt(),
         buf.readVarInt(),
         buf.readVarInt(),

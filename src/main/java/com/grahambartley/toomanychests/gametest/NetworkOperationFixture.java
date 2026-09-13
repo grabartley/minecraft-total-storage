@@ -7,6 +7,9 @@ import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.filter.TagCombinationMode;
 import com.grahambartley.toomanychests.network.ListingRequestPayload;
 import com.grahambartley.toomanychests.network.ModNetworking;
+import com.grahambartley.toomanychests.operation.NetworkJob;
+import com.grahambartley.toomanychests.operation.NetworkOperationContext;
+import com.grahambartley.toomanychests.operation.OperationReport;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenHandler;
 import com.grahambartley.toomanychests.storage.ContainerAssignment;
 import com.grahambartley.toomanychests.storage.ContainerRole;
@@ -41,6 +44,25 @@ final class NetworkOperationFixture {
   private static final int RADIUS = 1;
 
   private NetworkOperationFixture() {}
+
+  static final int BUDGET = 64;
+
+  private static final int MOST_STEPS_A_TEST_NEEDS = 64;
+
+  static NetworkOperationContext operationContext(TestContext context, ServerPlayerEntity player) {
+    return new NetworkOperationContext(
+        context.getWorld(), context.getAbsolutePos(TERMINAL), player.getUuid());
+  }
+
+  static OperationReport runToCompletion(TestContext context, NetworkJob job) {
+    int steps = 0;
+    while (job.advance(BUDGET).isRunning()) {
+      steps++;
+      context.assertTrue(
+          steps < MOST_STEPS_A_TEST_NEEDS, "The operation never finished, it is still running");
+    }
+    return job.report();
+  }
 
   static BarrelBlockEntity placeBarrel(TestContext context, BlockPos where) {
     context.setBlockState(where, Blocks.BARREL.getDefaultState());

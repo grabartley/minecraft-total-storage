@@ -1,13 +1,21 @@
 package com.grahambartley.toomanychests.operation;
 
+import java.util.Locale;
+
 public enum ExpensiveOperation {
   RESCAN,
 
   DEPOSIT_ALL,
 
-  ASSIGN_MATCHING;
+  ASSIGN_MATCHING,
+
+  SORT_NETWORK,
+
+  CONSOLIDATE,
+
+  QUICK_STACK;
 
   public String id() {
-    return name().toLowerCase(java.util.Locale.ROOT);
+    return name().toLowerCase(Locale.ROOT);
   }
 }

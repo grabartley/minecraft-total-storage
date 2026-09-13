@@ -51,6 +51,23 @@ public final class CommandMessages {
     return line("help.sort", "/tmc sort sorts the container you have open");
   }
 
+  public static Text helpQuickStack() {
+    return line(
+        "help.quickstack", "/tmc quickstack tops up matching stacks in the containers around you");
+  }
+
+  public static Text quickStacked(long items, int containers) {
+    return line("quickstack.done", "Stacked %s items into %s nearby containers", items, containers);
+  }
+
+  public static Text quickStackDisabled() {
+    return line("quickstack.disabled", "Quick stack is switched off on this server");
+  }
+
+  public static Text alreadySorted() {
+    return line("sort.unchanged", "That was already sorted");
+  }
+
   public static Text configHeader() {
     return line("config.header", "Too Many Chests settings:");
   }

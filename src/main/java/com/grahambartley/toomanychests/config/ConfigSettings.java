@@ -43,6 +43,11 @@ public final class ConfigSettings {
               TooManyChestsConfig::quickStackRadius,
               ConfigBuilder::quickStackRadius),
           new BooleanConfigSetting(
+              "quickStackEnabled",
+              TooManyChestsConfig::quickStackEnabled,
+              ConfigBuilder::quickStackEnabled,
+              TooManyChestsConfig.DEFAULT_QUICK_STACK_ENABLED),
+          new BooleanConfigSetting(
               "depositAllSkipsHotbar",
               TooManyChestsConfig::depositAllSkipsHotbar,
               ConfigBuilder::depositAllSkipsHotbar,
@@ -67,7 +72,14 @@ public final class ConfigSettings {
               TooManyChestsConfig.MOVES_PER_TICK_BUDGET_MAX,
               TooManyChestsConfig.DEFAULT_MOVES_PER_TICK_BUDGET,
               TooManyChestsConfig::movesPerTickBudget,
-              ConfigBuilder::movesPerTickBudget));
+              ConfigBuilder::movesPerTickBudget),
+          new BoundedIntConfigSetting(
+              "largeOperationContainers",
+              TooManyChestsConfig.LARGE_OPERATION_CONTAINERS_MIN,
+              TooManyChestsConfig.LARGE_OPERATION_CONTAINERS_MAX,
+              TooManyChestsConfig.DEFAULT_LARGE_OPERATION_CONTAINERS,
+              TooManyChestsConfig::largeOperationContainers,
+              ConfigBuilder::largeOperationContainers));
 
   private static final List<String> NAMES = ALL.stream().map(ConfigSetting::name).toList();
 

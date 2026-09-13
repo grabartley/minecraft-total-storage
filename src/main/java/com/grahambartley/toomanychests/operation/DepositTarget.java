@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests.operation;
 
+import com.grahambartley.toomanychests.storage.ContainerAcceptance;
 import com.grahambartley.toomanychests.storage.ContainerFilter;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import java.util.Collection;
@@ -16,10 +17,6 @@ public record DepositTarget(
   }
 
   public boolean accepts(String itemId, Collection<String> itemTagIds) {
-    return switch (role) {
-      case GENERAL -> true;
-      case FILTERED -> filter.accepts(itemId, itemTagIds);
-      case EXCLUDED -> false;
-    };
+    return ContainerAcceptance.accepts(role, filter, itemId, itemTagIds);
   }
 }
