@@ -19,7 +19,7 @@ Since 1.20.2 the game stitches `textures/gui/sprites/` into a GUI atlas on its o
 
 Nothing in the screen code names a pixel offset. A widget names a sprite and a rectangle, and the border comes out the right width whatever that rectangle is.
 
-The sprites are generated from palette-mapped text sources under `art/gui/`, and both the source and the PNG are committed. A text source reviews as a diff that shows which pixels moved; a PNG reviews as "1 file changed".
+The sprites are generated from palette-mapped text sources under `art/gui/`, and both the source and the PNG are committed. A text source reviews as a diff that shows which pixels moved; a PNG reviews as "1 file changed". Those sources were deleted later, by [ADR 0037](0037-the-shipped-png-is-a-textures-only-source.md): the PNG that ships is now the only copy.
 
 Every state pair differs by shape and not only by colour: a bevel that appears, a bevel that inverts, a bevel that is removed. Accent detailing is placed so that it lands in a nine-slice band that tiles along the axis it runs, so a bar stays a bar at any height. Which colours those sprites are allowed to use was settled later, by [ADR 0035](0035-the-terminal-wears-vanillas-chrome.md).
 
@@ -35,7 +35,7 @@ Because the sources are text, an art change and a code change review the same wa
 
 Accepted drawback: sprite lookups go through the atlas by identifier, so a typo in an identifier fails at draw time with a missing-texture square rather than at compile time. The reference table exists to keep those strings in one place, but it is a document, not a compiler. [ADR 0035](0035-the-terminal-wears-vanillas-chrome.md) closed this: the screen draws through a `TerminalSprite` catalogue rather than through strings, and a test asserts every entry in it resolves to a texture that ships.
 
-Accepted drawback: the PNGs are generated, so the repository holds the same art twice. The two can drift if someone edits a PNG directly. The regeneration command is one line and is documented next to the sources, but nothing enforces it.
+Accepted drawback: the PNGs are generated, so the repository holds the same art twice. The two can drift if someone edits a PNG directly. The regeneration command is one line and is documented next to the sources, but nothing enforces it. [ADR 0037](0037-the-shipped-png-is-a-textures-only-source.md) closed this by removing the second copy rather than by gating it: a sprite that had already lost its source is what made the case.
 
 Accepted drawback: nine-slice needs a border small enough to leave a centre, which puts a floor under how small a piece of chrome can be drawn. The scrollbar thumb cannot go below six pixels tall without its own borders overlapping.
 
