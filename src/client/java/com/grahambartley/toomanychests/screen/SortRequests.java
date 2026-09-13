@@ -15,15 +15,19 @@ public final class SortRequests {
     return ClientConfigMirror.current().sortButtonEnabled();
   }
 
-  public static void send(int syncId) {
-    if (isOffered() && isAvailable()) {
-      ModNetworkingClient.sendSortRequest(syncId);
-    }
+  public static boolean send(int syncId) {
+    return send(syncId, isOffered());
   }
 
-  public static void sendFromKey(int syncId) {
-    if (ClientConfigMirror.hasReceived() && isAvailable()) {
-      ModNetworkingClient.sendSortRequest(syncId);
+  public static boolean sendFromKey(int syncId) {
+    return send(syncId, ClientConfigMirror.hasReceived());
+  }
+
+  private static boolean send(int syncId, boolean drawn) {
+    if (!drawn || !isAvailable()) {
+      return false;
     }
+    ModNetworkingClient.sendSortRequest(syncId);
+    return true;
   }
 }

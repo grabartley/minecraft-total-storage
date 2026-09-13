@@ -20,7 +20,7 @@ public final class ServerConfigList extends ElementListWidget<ServerConfigEntry>
     for (final ConfigSection section : ConfigSection.values()) {
       addEntry(new ServerConfigHeading(client.textRenderer, section));
       for (final ConfigSetting setting : section.settings()) {
-        addEntry(new ServerConfigEntry(client.textRenderer, setting, edits, editable));
+        addEntry(new ServerConfigRow(client.textRenderer, setting, edits, editable));
       }
     }
   }

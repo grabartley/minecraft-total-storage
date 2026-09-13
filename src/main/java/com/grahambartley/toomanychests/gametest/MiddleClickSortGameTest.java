@@ -19,6 +19,7 @@ import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.test.AfterBatch;
 import net.minecraft.test.BeforeBatch;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
@@ -36,9 +37,17 @@ public final class MiddleClickSortGameTest implements FabricGameTest {
 
   private final ContainerSortService sorting = new ContainerSortService();
 
+  private TooManyChestsConfig original = TooManyChestsConfig.defaults();
+
   @BeforeBatch(batchId = BATCH)
-  public void clearCooldowns(ServerWorld world) {
+  public void rememberTheConfigAndClearCooldowns(ServerWorld world) {
     OperationGuards.cooldowns().clear();
+    original = ServerConfigService.current();
+  }
+
+  @AfterBatch(batchId = BATCH)
+  public void restoreTheConfig(ServerWorld world) {
+    ServerConfigService.update(world.getServer(), original);
   }
 
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
@@ -74,8 +83,8 @@ public final class MiddleClickSortGameTest implements FabricGameTest {
 
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void aServerThatSwitchedTheGestureOffLeavesTheChestAlone(TestContext context) {
-    final TooManyChestsConfig original = ServerConfigService.current();
-    ServerConfigService.update(context.getWorld().getServer(), withGesture(original, false));
+    ServerConfigService.update(
+        context.getWorld().getServer(), withGesture(ServerConfigService.current(), false));
     final ServerPlayerEntity player = openChest(context, GameMode.SURVIVAL);
     final Inventory chest = context.getBlockEntity(CONTAINER);
     chest.setStack(0, new ItemStack(Items.COBBLESTONE, 20));
@@ -83,16 +92,16 @@ public final class MiddleClickSortGameTest implements FabricGameTest {
 
     middleClick(player);
 
-    context.assertEquals(
-        chest.getStack(5).getCount(), 30, "A switched off gesture must move nothing");
+    final int leftAlone = chest.getStack(5).getCount();
     ServerConfigService.update(context.getWorld().getServer(), original);
+    context.assertEquals(leftAlone, 30, "A switched off gesture must move nothing");
     finish(context, player);
   }
 
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void aServerThatSwitchedTheGestureOffLeavesTheSortCommandWorking(TestContext context) {
-    final TooManyChestsConfig original = ServerConfigService.current();
-    ServerConfigService.update(context.getWorld().getServer(), withGesture(original, false));
+    ServerConfigService.update(
+        context.getWorld().getServer(), withGesture(ServerConfigService.current(), false));
     final ServerPlayerEntity player = openChest(context, GameMode.SURVIVAL);
     final Inventory chest = context.getBlockEntity(CONTAINER);
     chest.setStack(0, new ItemStack(Items.COBBLESTONE, 20));
@@ -100,9 +109,9 @@ public final class MiddleClickSortGameTest implements FabricGameTest {
 
     final SortOutcome outcome = sorting.sort(player, player.currentScreenHandler.syncId);
 
+    ServerConfigService.update(context.getWorld().getServer(), original);
     context.assertTrue(
         outcome.wasSorted(), "The command path should still sort, but reported " + outcome);
-    ServerConfigService.update(context.getWorld().getServer(), original);
     finish(context, player);
   }
 

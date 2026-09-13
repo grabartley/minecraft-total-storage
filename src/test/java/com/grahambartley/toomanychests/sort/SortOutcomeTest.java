@@ -20,16 +20,16 @@ class SortOutcomeTest {
   @ParameterizedTest
   @EnumSource(
       value = SortOutcome.class,
-      names = {"NOT_OFFERED", "NO_OPEN_SCREEN", "SCREEN_NOT_SORTABLE"})
-  void anOutcomeDecidedBeforeTheItemsWereReachedIsARefusal(SortOutcome outcome) {
+      names = {"NOT_OFFERED", "NO_OPEN_SCREEN", "SCREEN_NOT_SORTABLE", "RATE_LIMITED"})
+  void anOutcomeWhereTheModDeclinedToActIsARefusal(SortOutcome outcome) {
     assertTrue(outcome.wasRefused());
   }
 
   @ParameterizedTest
   @EnumSource(
       value = SortOutcome.class,
-      names = {"NOTHING_TO_SORT", "ALREADY_SORTED", "FAILED", "RATE_LIMITED", "SORTED"})
-  void anOutcomeReachedAfterInspectingTheContainerIsNotARefusal(SortOutcome outcome) {
+      names = {"NOTHING_TO_SORT", "ALREADY_SORTED", "FAILED", "SORTED"})
+  void anOutcomeWhereTheModActuallyLookedAtTheContainerIsNotARefusal(SortOutcome outcome) {
     assertFalse(outcome.wasRefused());
   }
 

@@ -1,22 +1,27 @@
 package com.grahambartley.toomanychests.tag;
 
 import java.util.List;
+import java.util.Objects;
 
 public final class TagSetImport {
   private TagSetImport() {}
 
   public static TagSetImportResult into(
       NetworkTagSet target, NetworkTagSet source, TagSetImportMode mode) {
-    if (target == null || source == null || mode == null) {
-      return new TagSetImportResult(target == null ? NetworkTagSet.defaults() : target, 0, 0);
+    Objects.requireNonNull(target, "target");
+    if (source == null || mode == null) {
+      return new TagSetImportResult(target, 0, 0);
     }
     NetworkTagSet running = mode.clearsWhatIsThere() ? new NetworkTagSet(List.of()) : target;
     int imported = 0;
     int skipped = 0;
     for (final NetworkTag tag : source.custom()) {
       if (running.contains(tag.id())) {
-        running = running.withItems(tag.id(), tag.items());
-        imported++;
+        final NetworkTagSet grown = running.withItems(tag.id(), tag.items());
+        if (!grown.equals(running)) {
+          imported++;
+        }
+        running = grown;
       } else if (hasRoomFor(running, tag)) {
         running = running.withTag(NetworkTag.custom(tag.id(), tag.displayName(), tag.items()));
         imported++;

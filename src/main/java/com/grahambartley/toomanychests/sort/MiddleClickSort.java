@@ -22,7 +22,13 @@ public final class MiddleClickSort {
         ServerConfigService.current().middleClickSortEnabled())) {
       return false;
     }
-    SortFeedback.report(serverPlayer, SORTING.sort(serverPlayer, handler.syncId));
+    final SortOutcome outcome = SORTING.sort(serverPlayer, handler.syncId);
+    if (outcome.wasRefused()) {
+      return false;
+    }
+    if (outcome != SortOutcome.ALREADY_SORTED && outcome != SortOutcome.NOTHING_TO_SORT) {
+      SortFeedback.report(serverPlayer, outcome);
+    }
     return true;
   }
 }

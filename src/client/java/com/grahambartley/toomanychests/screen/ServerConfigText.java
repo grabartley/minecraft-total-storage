@@ -18,6 +18,12 @@ public final class ServerConfigText {
     return line("read-only", "These are this server's settings. Only an operator can change them.");
   }
 
+  public static Text notConnectedNotice() {
+    return line(
+        "not-connected",
+        "These are a server's settings, so they are only readable while you are on one.");
+  }
+
   public static Text section(ConfigSection section) {
     return switch (section) {
       case DEFAULTS -> line("section.defaults", "Defaults for new terminals");
@@ -28,7 +34,7 @@ public final class ServerConfigText {
   }
 
   public static Text label(ConfigSetting setting) {
-    return Text.literal(setting.name());
+    return line("setting." + setting.name(), setting.name());
   }
 
   public static Text bounds(ConfigSetting setting) {

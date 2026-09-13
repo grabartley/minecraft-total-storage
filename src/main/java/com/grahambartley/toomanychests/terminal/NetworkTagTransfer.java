@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests.terminal;
 
 import com.grahambartley.toomanychests.access.TerminalCaller;
 import com.grahambartley.toomanychests.block.entity.TerminalBlockEntity;
+import com.grahambartley.toomanychests.lifecycle.LoadedChunks;
 import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import com.grahambartley.toomanychests.tag.TagEditOutcome;
 import com.grahambartley.toomanychests.tag.TagSetImport;
@@ -57,6 +58,9 @@ public final class NetworkTagTransfer {
 
   private static TerminalBlockEntity administrable(
       ServerWorld world, BlockPos terminal, TerminalCaller caller) {
+    if (!LoadedChunks.holds(world, terminal)) {
+      return null;
+    }
     final TerminalBlockEntity block = TerminalLookup.at(world, terminal).orElse(null);
     if (block == null || caller == null || !caller.mayAdminister(block.settings())) {
       return null;
@@ -64,8 +68,8 @@ public final class NetworkTagTransfer {
     return block;
   }
 
-  private static TagEditOutcome refusalFor(ServerWorld world, BlockPos terminal) {
-    return TerminalLookup.at(world, terminal).isPresent()
+  public static TagEditOutcome refusalFor(ServerWorld world, BlockPos terminal) {
+    return LoadedChunks.holds(world, terminal) && TerminalLookup.at(world, terminal).isPresent()
         ? TagEditOutcome.DENIED
         : TagEditOutcome.NO_TERMINAL;
   }

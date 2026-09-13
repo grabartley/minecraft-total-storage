@@ -43,7 +43,7 @@ public final class TerminalPrompts {
   }
 
   public boolean isTagging() {
-    return tagging.isOpen() || copying.isOpen();
+    return tagging.isOpen();
   }
 
   public void openAmount(ListingRow<ItemVariant> row) {
@@ -134,12 +134,25 @@ public final class TerminalPrompts {
     }
     final OwnedTerminal source = copying.sourceAt(sources(), windowX, windowY);
     if (source == null) {
+      copying.disarm();
       return true;
     }
-    ModNetworkingClient.sendTagSetCopy(
-        syncId, source.pos(), shiftDown ? TagSetImportMode.REPLACE : TagSetImportMode.MERGE);
-    copying.close();
+    if (!shiftDown) {
+      copying.disarm();
+      send(source, TagSetImportMode.MERGE);
+      return true;
+    }
+    if (copying.isArmed(source)) {
+      send(source, TagSetImportMode.REPLACE);
+      return true;
+    }
+    copying.armForReplace(source);
     return true;
+  }
+
+  private void send(OwnedTerminal source, TagSetImportMode mode) {
+    ModNetworkingClient.sendTagSetCopy(syncId, source.pos(), mode);
+    copying.close();
   }
 
   public boolean keyPressed(int keyCode) {

@@ -15,6 +15,9 @@ public enum SortOutcome {
   }
 
   public boolean wasRefused() {
-    return this == NOT_OFFERED || this == NO_OPEN_SCREEN || this == SCREEN_NOT_SORTABLE;
+    return this == NOT_OFFERED
+        || this == NO_OPEN_SCREEN
+        || this == SCREEN_NOT_SORTABLE
+        || this == RATE_LIMITED;
   }
 }

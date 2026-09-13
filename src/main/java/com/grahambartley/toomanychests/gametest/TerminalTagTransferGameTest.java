@@ -18,6 +18,7 @@ import java.util.List;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.test.AfterBatch;
 import net.minecraft.test.BeforeBatch;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
@@ -33,6 +34,11 @@ public final class TerminalTagTransferGameTest implements FabricGameTest {
   @BeforeBatch(batchId = BATCH)
   public void clearCooldowns(ServerWorld world) {
     OperationGuards.cooldowns().clear();
+  }
+
+  @AfterBatch(batchId = BATCH)
+  public void removeAnythingExported(ServerWorld world) {
+    delete(ServerConfigService.pathsFor(world.getServer()).getTagSetPath(EXPORT_NAME));
   }
 
   @GameTest(
@@ -144,7 +150,6 @@ public final class TerminalTagTransferGameTest implements FabricGameTest {
             .orElseThrow()
             .contains("minecraft:stone"),
         "The imported tag lost the items filed under it");
-    delete(file);
     NetworkOperationFixture.finish(context, owner);
   }
 

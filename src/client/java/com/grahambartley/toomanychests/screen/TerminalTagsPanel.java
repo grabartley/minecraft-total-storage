@@ -51,7 +51,8 @@ public final class TerminalTagsPanel {
         textRenderer,
         view,
         TagsSectionLayout.NEW_TAG_ROW,
-        TagsSectionLayout.isOverNewTag(mouseX, mouseY),
+        TagsSectionLayout.isOverNewTag(mouseX, mouseY)
+            && !TagsSectionLayout.isOverCopy(mouseX, mouseY),
         view.mayAdminister()
             ? TerminalScreenText.of("tags.new")
             : TerminalScreenText.of("tags.read_only"),

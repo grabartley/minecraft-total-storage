@@ -35,9 +35,7 @@ public final class SortCommand {
 
   private static int report(ServerCommandSource source, SortOutcome outcome) {
     final Text message = SortFeedback.messageFor(outcome);
-    if (outcome.wasRefused()
-        || outcome == SortOutcome.FAILED
-        || outcome == SortOutcome.RATE_LIMITED) {
+    if (outcome.wasRefused() || outcome == SortOutcome.FAILED) {
       source.sendError(message);
       return 0;
     }

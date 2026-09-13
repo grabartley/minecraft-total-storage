@@ -51,8 +51,8 @@ public abstract class HandledScreenMixin {
     if (!ModKeyBindings.isSort(keyCode, scanCode)) {
       return;
     }
-    SortRequests.sendFromKey(((HandledScreen<?>) (Object) this).getScreenHandler().syncId);
-    callback.setReturnValue(true);
+    callback.setReturnValue(
+        SortRequests.sendFromKey(((HandledScreen<?>) (Object) this).getScreenHandler().syncId));
   }
 
   @Inject(method = "drawSlot", at = @At("HEAD"))

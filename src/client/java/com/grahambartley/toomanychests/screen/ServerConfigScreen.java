@@ -32,14 +32,28 @@ public final class ServerConfigScreen extends Screen {
     this.editable = canEdit();
   }
 
+  @Nullable
+  public Screen parent() {
+    return parent;
+  }
+
   private static boolean canEdit() {
     final MinecraftClient client = MinecraftClient.getInstance();
-    return client.player != null
+    return client != null
+        && client.player != null
         && client.player.hasPermissionLevel(ServerConfigService.OP_PERMISSION_LEVEL);
   }
 
   @Override
   protected void init() {
+    final int footerTop = height - FOOTER_HEIGHT + (FOOTER_HEIGHT - BUTTON_HEIGHT) / 2;
+    if (!ClientConfigMirror.hasReceived()) {
+      addDrawableChild(
+          ButtonWidget.builder(ScreenTexts.BACK, button -> close())
+              .dimensions(width / 2 - BUTTON_WIDTH / 2, footerTop, BUTTON_WIDTH, BUTTON_HEIGHT)
+              .build());
+      return;
+    }
     list =
         addDrawableChild(
             new ServerConfigList(
@@ -49,15 +63,14 @@ public final class ServerConfigScreen extends Screen {
                 HEADER_HEIGHT,
                 edits,
                 editable));
-    final int footerY = height - FOOTER_HEIGHT + (FOOTER_HEIGHT - BUTTON_HEIGHT) / 2;
     final int left = width / 2 - BUTTON_WIDTH - BUTTON_GAP / 2;
     addDrawableChild(
         ButtonWidget.builder(ScreenTexts.DONE, button -> submitAndClose())
-            .dimensions(left, footerY, BUTTON_WIDTH, BUTTON_HEIGHT)
+            .dimensions(left, footerTop, BUTTON_WIDTH, BUTTON_HEIGHT)
             .build());
     addDrawableChild(
         ButtonWidget.builder(ScreenTexts.CANCEL, button -> close())
-            .dimensions(left + BUTTON_WIDTH + BUTTON_GAP, footerY, BUTTON_WIDTH, BUTTON_HEIGHT)
+            .dimensions(left + BUTTON_WIDTH + BUTTON_GAP, footerTop, BUTTON_WIDTH, BUTTON_HEIGHT)
             .build());
   }
 

@@ -6,6 +6,7 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.BlockPos;
 
 public final class TagSourcePrompt {
   private static final float ELEVATION = 300.0F;
@@ -13,14 +14,29 @@ public final class TagSourcePrompt {
   private final ListingScroll scroll = new ListingScroll(1, TagPromptLayout.VISIBLE_ROWS);
 
   private boolean open;
+  private BlockPos armedForReplace;
 
   public void open() {
     open = true;
+    armedForReplace = null;
     scroll.scrollTo(0);
   }
 
   public void close() {
     open = false;
+    armedForReplace = null;
+  }
+
+  public boolean isArmed(OwnedTerminal source) {
+    return source != null && source.pos().equals(armedForReplace);
+  }
+
+  public void armForReplace(OwnedTerminal source) {
+    armedForReplace = source == null ? null : source.pos();
+  }
+
+  public void disarm() {
+    armedForReplace = null;
   }
 
   public boolean isOpen() {
@@ -97,8 +113,10 @@ public final class TagSourcePrompt {
       final OwnedTerminal source = sources.get(index);
       final int left = originX + TagPromptLayout.left() + TagPromptLayout.PADDING;
       final int top = originY + TagPromptLayout.rowY(row);
-      TerminalChrome.drawRow(
+      final boolean armed = isArmed(source);
+      TerminalChrome.drawActiveRow(
           context,
+          armed,
           source.equals(hovered),
           left,
           top,
@@ -107,10 +125,12 @@ public final class TagSourcePrompt {
       drawLine(
           context,
           textRenderer,
-          TagText.source(source),
+          armed ? TerminalScreenText.of("tags.copy.replace.confirm") : TagText.source(source),
           left + TagPromptLayout.TEXT_MARGIN,
           top + (TagPromptLayout.ROW_HEIGHT - TagPromptLayout.LINE_HEIGHT) / 2 + 1,
-          source.holdsAnythingToCopy() ? VanillaPalette.LABEL : VanillaPalette.MUTED);
+          armed
+              ? VanillaPalette.WARNING
+              : source.holdsAnythingToCopy() ? VanillaPalette.LABEL : VanillaPalette.MUTED);
     }
   }
 

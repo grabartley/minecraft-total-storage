@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -33,7 +34,7 @@ class ConfigSectionTest {
   @ParameterizedTest
   @EnumSource(ConfigSection.class)
   void aSectionIsAddressableByALowerCaseId(ConfigSection section) {
-    assertEquals(section.name().toLowerCase(java.util.Locale.ROOT), section.id());
+    assertEquals(section.name().toLowerCase(Locale.ROOT), section.id());
   }
 
   @Test
