@@ -1,7 +1,12 @@
 package com.grahambartley.toomanychests.sort;
 
+import com.grahambartley.toomanychests.TooManyChests;
 import java.util.Set;
+import net.minecraft.registry.Registries;
+import net.minecraft.screen.PlayerScreenHandler;
+import net.minecraft.screen.ScreenHandler;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.Nullable;
 
 public final class ScreenSortPolicy {
   private static final Set<Identifier> DENIED =
@@ -21,12 +26,29 @@ public final class ScreenSortPolicy {
           vanilla("merchant"),
           vanilla("smithing"),
           vanilla("smoker"),
-          vanilla("stonecutter"));
+          vanilla("stonecutter"),
+          Identifier.of(TooManyChests.MOD_ID, "terminal"));
 
   private ScreenSortPolicy() {}
 
   public static boolean allows(Identifier screenTypeId) {
     return screenTypeId != null && !DENIED.contains(screenTypeId);
+  }
+
+  public static boolean allowsHandler(ScreenHandler handler) {
+    return handler != null && (handler instanceof PlayerScreenHandler || allows(typeIdOf(handler)));
+  }
+
+  @Nullable
+  public static Identifier typeIdOf(ScreenHandler handler) {
+    if (handler == null) {
+      return null;
+    }
+    try {
+      return Registries.SCREEN_HANDLER.getId(handler.getType());
+    } catch (UnsupportedOperationException noType) {
+      return null;
+    }
   }
 
   public static Set<Identifier> deniedTypes() {

@@ -64,6 +64,18 @@ The consequence for a screen that eventually wants two of these: they cannot bot
 
 The button must never overlap a slot. It is a click target sitting in someone else's screen, and a click that lands on both is a click that does the wrong thing.
 
+## Anchors
+
+A player who wants these buttons somewhere else moves them with `screenButtonAnchor` in `config/too-many-chests/client.json`. The anchor moves every button this mod draws on a screen it does not own, so they stay one control family wherever they land:
+
+| Anchor | First button | Every button after it |
+|---|---|---|
+| `inside_top_right` | In the band, `x = backgroundWidth - 8 - 14`, `y = 3` | Down the right side, outside the panel |
+| `outside_top_right` | Down the right side, aligned with the band | Down the right side |
+| `outside_bottom_right` | Up the right side, aligned with the panel's bottom inset | Up the right side |
+
+Every anchor is measured from the panel origin and re-read every frame, so the buttons follow the panel when the recipe book opens and at every GUI scale. The outside column sits two pixels clear of the panel and never crosses it, and the left side is not offered: that is where vanilla opens the recipe book.
+
 ## State Cues
 
 Every state differs from its neighbour by shape and not only by colour, the same rule the terminal sprites follow, so the button stays readable for a player who cannot separate the greys.

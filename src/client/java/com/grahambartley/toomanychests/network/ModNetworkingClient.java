@@ -88,6 +88,10 @@ public final class ModNetworkingClient {
     ClientPlayNetworking.send(request);
   }
 
+  public static void sendSortRequest(int syncId) {
+    ClientPlayNetworking.send(new SortRequestPayload(syncId));
+  }
+
   public static void sendQuickStackRequest() {
     ClientPlayNetworking.send(new QuickStackRequestPayload());
   }

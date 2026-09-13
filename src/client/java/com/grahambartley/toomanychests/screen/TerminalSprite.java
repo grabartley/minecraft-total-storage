@@ -26,6 +26,11 @@ public enum TerminalSprite {
   QUICK_STACK_HOVERED("quick_stack_button/hover"),
   QUICK_STACK_PRESSED("quick_stack_button/pressed"),
   QUICK_STACK_UNAVAILABLE("quick_stack_button/disabled"),
+  SORT("sort_button/normal"),
+  SORT_HOVERED("sort_button/hover"),
+  SORT_PRESSED("sort_button/pressed"),
+  SORT_UNAVAILABLE("sort_button/disabled"),
+  LOCKED_SLOT("slot/locked"),
   EMPTY_NETWORK("empty/network"),
   NO_RESULTS("empty/no_results");
 

@@ -7,6 +7,7 @@ import com.grahambartley.toomanychests.operation.QuickStackService;
 import com.grahambartley.toomanychests.operation.WithdrawService;
 import com.grahambartley.toomanychests.screenhandler.TerminalListingService;
 import com.grahambartley.toomanychests.sort.ContainerSortService;
+import com.grahambartley.toomanychests.sort.SortFeedback;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
@@ -47,7 +48,12 @@ public final class ModNetworking {
     ServerPlayNetworking.registerGlobalReceiver(
         SortRequestPayload.ID,
         (payload, context) ->
-            context.server().execute(() -> SORTING.sort(context.player(), payload.syncId())));
+            context
+                .server()
+                .execute(
+                    () ->
+                        SortFeedback.report(
+                            context.player(), SORTING.sort(context.player(), payload.syncId()))));
     ServerPlayNetworking.registerGlobalReceiver(
         ConfigEditPayload.ID,
         (payload, context) ->

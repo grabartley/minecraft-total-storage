@@ -11,4 +11,10 @@ public interface HandledScreenAccessor {
 
   @Accessor("y")
   int tooManyChests$panelY();
+
+  @Accessor("backgroundWidth")
+  int tooManyChests$panelWidth();
+
+  @Accessor("backgroundHeight")
+  int tooManyChests$panelHeight();
 }

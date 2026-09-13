@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests.lock;
 
+import com.grahambartley.toomanychests.config.ClientPreferencesStore;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.entity.player.PlayerEntity;
@@ -13,7 +14,9 @@ public final class LockedSlotOverlay {
   public static void draw(DrawContext context, Slot slot) {
     final PlayerEntity player = MinecraftClient.getInstance().player;
     final int index = LockSlotTarget.lockableIndex(slot);
-    if (player == null || index == LockSlotTarget.NONE) {
+    if (player == null
+        || index == LockSlotTarget.NONE
+        || !ClientPreferencesStore.current().lockedSlotTintVisible()) {
       return;
     }
     final int colour = LockedSlotTint.colour(LockedSlotsAttachment.get(player).isLocked(index));

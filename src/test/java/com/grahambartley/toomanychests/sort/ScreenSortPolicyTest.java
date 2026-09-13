@@ -66,6 +66,17 @@ class ScreenSortPolicyTest {
   }
 
   @Test
+  void theModsOwnTerminalIsLeftToItsOwnControls() {
+    assertFalse(ScreenSortPolicy.allows(Identifier.of("too-many-chests", "terminal")));
+  }
+
+  @Test
+  void aScreenWithNoHandlerAtAllIsRefused() {
+    assertFalse(ScreenSortPolicy.allowsHandler(null));
+    org.junit.jupiter.api.Assertions.assertNull(ScreenSortPolicy.typeIdOf(null));
+  }
+
+  @Test
   void theDenyListCannotBeChangedByCallers() {
     assertTrue(ScreenSortPolicy.deniedTypes().contains(Identifier.ofVanilla("anvil")));
     org.junit.jupiter.api.Assertions.assertThrows(
