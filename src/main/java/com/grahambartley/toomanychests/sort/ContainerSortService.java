@@ -4,6 +4,8 @@ import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.lock.LockedSlotsAttachment;
 import com.grahambartley.toomanychests.mutation.ContainerMutationWitness;
 import com.grahambartley.toomanychests.mutation.ContainerMutations;
+import com.grahambartley.toomanychests.operation.ExpensiveOperation;
+import com.grahambartley.toomanychests.operation.OperationGuards;
 import com.grahambartley.toomanychests.screenhandler.ContainerViewerSync;
 import com.grahambartley.toomanychests.storage.StorageOrigin;
 import com.grahambartley.toomanychests.transaction.NetworkTransactions;
@@ -61,6 +63,9 @@ public final class ContainerSortService {
     }
     if (SortArrangement.matches(slots, plan)) {
       return SortOutcome.ALREADY_SORTED;
+    }
+    if (OperationGuards.refuse(player, ExpensiveOperation.SORT_CONTAINER).isPresent()) {
+      return SortOutcome.RATE_LIMITED;
     }
     final OperationResult<Long> result;
     final List<StorageOrigin> changed;

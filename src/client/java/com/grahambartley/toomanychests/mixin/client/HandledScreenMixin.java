@@ -6,6 +6,7 @@ import com.grahambartley.toomanychests.lock.LockedSlotBadge;
 import com.grahambartley.toomanychests.lock.LockedSlotOverlay;
 import com.grahambartley.toomanychests.screen.ModKeyBindings;
 import com.grahambartley.toomanychests.screen.QuickStackRequests;
+import com.grahambartley.toomanychests.screen.SortRequests;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
@@ -41,6 +42,16 @@ public abstract class HandledScreenMixin {
       return;
     }
     QuickStackRequests.send();
+    callback.setReturnValue(true);
+  }
+
+  @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
+  private void tooManyChests$sortTheScreenInFront(
+      int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> callback) {
+    if (!ModKeyBindings.isSort(keyCode, scanCode)) {
+      return;
+    }
+    SortRequests.sendFromKey(((HandledScreen<?>) (Object) this).getScreenHandler().syncId);
     callback.setReturnValue(true);
   }
 

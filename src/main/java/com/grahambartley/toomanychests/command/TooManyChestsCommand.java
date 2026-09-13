@@ -57,6 +57,7 @@ public final class TooManyChestsCommand {
         CommandMessages.helpTerminalInfo(),
         CommandMessages.helpTerminalRole(),
         CommandMessages.helpTerminalHighlight(),
+        CommandMessages.helpTerminalTags(),
         CommandMessages.helpSort(),
         CommandMessages.helpQuickStack());
   }

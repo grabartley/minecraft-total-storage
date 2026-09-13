@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests.screen;
 
 import com.grahambartley.toomanychests.listing.ListingRow;
 import com.grahambartley.toomanychests.screenhandler.FilterColumnLayout;
+import com.grahambartley.toomanychests.screenhandler.TagsSectionLayout;
 import com.grahambartley.toomanychests.screenhandler.TerminalSettingsLayout;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
@@ -68,6 +69,23 @@ public final class TerminalTooltips {
       lines.add(TerminalScreenText.of("settings.role.hint").formatted(Formatting.GRAY));
     }
     context.drawTooltip(textRenderer, lines, mouseX, mouseY);
+  }
+
+  public static void copyTags(
+      DrawContext context,
+      TextRenderer textRenderer,
+      NetworkTagView view,
+      SettingsSection section,
+      int windowX,
+      int windowY,
+      int mouseX,
+      int mouseY) {
+    if (section != SettingsSection.TAGS
+        || !view.mayAdminister()
+        || !TagsSectionLayout.isOverCopy(windowX, windowY)) {
+      return;
+    }
+    context.drawTooltip(textRenderer, TerminalScreenText.of("tags.copy"), mouseX, mouseY);
   }
 
   public static void filterTag(

@@ -4,8 +4,11 @@ import com.grahambartley.toomanychests.listing.ListingRow;
 import com.grahambartley.toomanychests.network.ModNetworkingClient;
 import com.grahambartley.toomanychests.operation.WithdrawAmount;
 import com.grahambartley.toomanychests.operation.WithdrawDestination;
+import com.grahambartley.toomanychests.tag.TagSetImportMode;
 import com.grahambartley.toomanychests.terminal.NetworkTagEntry;
 import com.grahambartley.toomanychests.terminal.NetworkTagView;
+import com.grahambartley.toomanychests.terminal.OwnedTerminal;
+import java.util.List;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -15,6 +18,7 @@ public final class TerminalPrompts {
   private final WithdrawAmountPrompt amount = new WithdrawAmountPrompt();
   private final TagNamePrompt naming = new TagNamePrompt();
   private final TagAssignmentPrompt tagging = new TagAssignmentPrompt();
+  private final TagSourcePrompt copying = new TagSourcePrompt();
 
   private final int syncId;
 
@@ -26,8 +30,12 @@ public final class TerminalPrompts {
     return naming;
   }
 
+  public TagSourcePrompt copying() {
+    return copying;
+  }
+
   public boolean isAnyOpen() {
-    return amount.isOpen() || naming.isOpen() || tagging.isOpen();
+    return amount.isOpen() || naming.isOpen() || tagging.isOpen() || copying.isOpen();
   }
 
   public boolean ownsTheKeyboard() {
@@ -35,7 +43,7 @@ public final class TerminalPrompts {
   }
 
   public boolean isTagging() {
-    return tagging.isOpen();
+    return tagging.isOpen() || copying.isOpen();
   }
 
   public void openAmount(ListingRow<ItemVariant> row) {
@@ -49,6 +57,11 @@ public final class TerminalPrompts {
 
   public void fit(NetworkTagView tags) {
     tagging.fit(tags);
+    copying.fit(sources());
+  }
+
+  private List<OwnedTerminal> sources() {
+    return TagSourceMirror.sourcesFor(syncId);
   }
 
   public boolean draw(
@@ -72,11 +85,21 @@ public final class TerminalPrompts {
       tagging.draw(context, textRenderer, tags, matching, originX, originY, mouseX, mouseY);
       return true;
     }
+    if (copying.isOpen()) {
+      copying.draw(context, textRenderer, sources(), originX, originY, mouseX, mouseY);
+      return true;
+    }
     return false;
   }
 
   public boolean scrolled(double verticalAmount) {
     if (ownsTheKeyboard()) {
+      return true;
+    }
+    if (copying.isOpen()) {
+      if (verticalAmount != 0.0) {
+        copying.scrollBy(verticalAmount > 0.0 ? -1 : 1);
+      }
       return true;
     }
     if (!tagging.isOpen()) {
@@ -98,7 +121,25 @@ public final class TerminalPrompts {
       naming.close();
       return true;
     }
+    if (copying.isOpen()) {
+      return copyingClicked(shiftDown, windowX, windowY, button);
+    }
     return tagging.isOpen() && taggingClicked(tags, shiftDown, windowX, windowY, button);
+  }
+
+  private boolean copyingClicked(boolean shiftDown, int windowX, int windowY, int button) {
+    if (button != GridClick.LEFT_BUTTON || !TagPromptLayout.isOverPrompt(windowX, windowY)) {
+      copying.close();
+      return true;
+    }
+    final OwnedTerminal source = copying.sourceAt(sources(), windowX, windowY);
+    if (source == null) {
+      return true;
+    }
+    ModNetworkingClient.sendTagSetCopy(
+        syncId, source.pos(), shiftDown ? TagSetImportMode.REPLACE : TagSetImportMode.MERGE);
+    copying.close();
+    return true;
   }
 
   public boolean keyPressed(int keyCode) {
@@ -107,6 +148,12 @@ public final class TerminalPrompts {
     }
     if (naming.isOpen()) {
       return handleNameKey(naming.keyPressed(keyCode));
+    }
+    if (copying.isOpen()) {
+      if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+        copying.close();
+      }
+      return true;
     }
     if (!tagging.isOpen()) {
       return false;

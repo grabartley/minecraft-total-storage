@@ -10,8 +10,10 @@ import com.grahambartley.toomanychests.operation.WithdrawDestination;
 import com.grahambartley.toomanychests.render.ContainerHighlights;
 import com.grahambartley.toomanychests.screen.NetworkSettingsMirror;
 import com.grahambartley.toomanychests.screen.NetworkTagMirror;
+import com.grahambartley.toomanychests.screen.TagSourceMirror;
 import com.grahambartley.toomanychests.screen.TerminalNoticeMirror;
 import com.grahambartley.toomanychests.storage.ContainerRole;
+import com.grahambartley.toomanychests.tag.TagSetImportMode;
 import com.grahambartley.toomanychests.terminal.TerminalAction;
 import java.util.Set;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -52,6 +54,9 @@ public final class ModNetworkingClient {
                 .client()
                 .execute(() -> NetworkTagMirror.accept(payload.syncId(), payload.view())));
     ClientPlayNetworking.registerGlobalReceiver(
+        TagSourcesPayload.ID,
+        (payload, context) -> context.client().execute(() -> TagSourceMirror.accept(payload)));
+    ClientPlayNetworking.registerGlobalReceiver(
         TerminalNoticePayload.ID,
         (payload, context) ->
             context
@@ -66,6 +71,7 @@ public final class ModNetworkingClient {
           TerminalListingMirror.closed();
           NetworkSettingsMirror.closed();
           NetworkTagMirror.closed();
+          TagSourceMirror.clear();
           ContainerHighlights.clear();
           TerminalNoticeMirror.clear();
         });
@@ -141,6 +147,14 @@ public final class ModNetworkingClient {
 
   public static void sendTagAssign(int syncId, String tagId, ItemVariant item, boolean assigned) {
     ClientPlayNetworking.send(TagEditPayload.assign(syncId, tagId, item, assigned));
+  }
+
+  public static void sendTagSourcesRequest(int syncId) {
+    ClientPlayNetworking.send(new TagSourcesRequestPayload(syncId));
+  }
+
+  public static void sendTagSetCopy(int syncId, BlockPos source, TagSetImportMode mode) {
+    ClientPlayNetworking.send(new TagSetCopyPayload(syncId, source, mode));
   }
 
   public static void sendTagAssignMatching(int syncId, String tagId) {

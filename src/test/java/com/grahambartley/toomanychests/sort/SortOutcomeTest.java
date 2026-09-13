@@ -28,7 +28,7 @@ class SortOutcomeTest {
   @ParameterizedTest
   @EnumSource(
       value = SortOutcome.class,
-      names = {"NOTHING_TO_SORT", "ALREADY_SORTED", "FAILED", "SORTED"})
+      names = {"NOTHING_TO_SORT", "ALREADY_SORTED", "FAILED", "RATE_LIMITED", "SORTED"})
   void anOutcomeReachedAfterInspectingTheContainerIsNotARefusal(SortOutcome outcome) {
     assertFalse(outcome.wasRefused());
   }

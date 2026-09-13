@@ -20,4 +20,10 @@ public final class SortRequests {
       ModNetworkingClient.sendSortRequest(syncId);
     }
   }
+
+  public static void sendFromKey(int syncId) {
+    if (ClientConfigMirror.hasReceived() && isAvailable()) {
+      ModNetworkingClient.sendSortRequest(syncId);
+    }
+  }
 }

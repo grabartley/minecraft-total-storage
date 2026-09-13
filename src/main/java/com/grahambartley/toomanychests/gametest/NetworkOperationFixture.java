@@ -103,7 +103,10 @@ final class NetworkOperationFixture {
   }
 
   static ServerPlayerEntity openNorthTerminal(TestContext context) {
-    final ServerPlayerEntity player = standingPlayer(context);
+    return openNorthTerminalFor(context, standingPlayer(context));
+  }
+
+  static ServerPlayerEntity openNorthTerminalFor(TestContext context, ServerPlayerEntity player) {
     context.setBlockState(NORTH_TERMINAL, ModBlocks.TERMINAL.getDefaultState());
     ModBlocks.TERMINAL.onPlaced(
         context.getWorld(),

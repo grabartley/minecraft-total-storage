@@ -11,12 +11,14 @@ public final class ModKeyBindings {
 
   private static KeyBinding depositAll;
   private static KeyBinding quickStack;
+  private static KeyBinding sort;
 
   private ModKeyBindings() {}
 
   public static void register() {
     depositAll = bind("deposit_all", GLFW.GLFW_KEY_R);
     quickStack = bind("quick_stack", GLFW.GLFW_KEY_V);
+    sort = bind("sort", GLFW.GLFW_KEY_B);
   }
 
   public static KeyBinding quickStack() {
@@ -29,6 +31,10 @@ public final class ModKeyBindings {
 
   public static boolean isQuickStack(int keyCode, int scanCode) {
     return quickStack != null && quickStack.matchesKey(keyCode, scanCode);
+  }
+
+  public static boolean isSort(int keyCode, int scanCode) {
+    return sort != null && sort.matchesKey(keyCode, scanCode);
   }
 
   private static KeyBinding bind(String name, int key) {

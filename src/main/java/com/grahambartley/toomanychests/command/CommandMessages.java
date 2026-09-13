@@ -149,6 +149,59 @@ public final class CommandMessages {
     return line("eligibility.cleared.all", "Cleared every container eligibility override");
   }
 
+  public static Text helpTerminalTags() {
+    return line(
+        "help.terminal.tags",
+        "/tmc terminal <pos> tags export <file> | import <file> <merge|replace> | copy <pos>"
+            + " <merge|replace> moves a custom tag set between networks");
+  }
+
+  public static Text tagSetExported(int tags, String file) {
+    return line("terminal.tags.exported", "Exported %s custom tags to %s", tags, file);
+  }
+
+  public static Text tagSetExportFailed() {
+    return line(
+        "terminal.tags.export.failed", "Could not write that tag set, see the server log for why");
+  }
+
+  public static Text tagSetFileUnreadable(String file) {
+    return line("terminal.tags.file.unreadable", "There is no readable tag set called %s", file);
+  }
+
+  public static Text tagSetFileNameRejected(String file) {
+    return line(
+        "terminal.tags.file.rejected",
+        "'%s' is not a tag set name. Use letters, digits, dashes and underscores",
+        file);
+  }
+
+  public static Text tagSetImported(int imported, int skipped) {
+    return skipped == 0
+        ? line("terminal.tags.imported", "Brought %s tags across", imported)
+        : line(
+            "terminal.tags.imported.partial",
+            "Brought %s tags across and skipped %s",
+            imported,
+            skipped);
+  }
+
+  public static Text tagSetImportedNothing(int skipped) {
+    return skipped == 0
+        ? line("terminal.tags.imported.none", "That tag set was already there")
+        : line("terminal.tags.imported.all-skipped", "Skipped every one of the %s tags", skipped);
+  }
+
+  public static Text tagSetTransferRefused() {
+    return line(
+        "terminal.tags.refused", "Both terminals have to be yours before a tag set can move");
+  }
+
+  public static Text unknownTagSetMode(String requested) {
+    return line(
+        "terminal.tags.mode.unknown", "'%s' is not a mode. Modes are: merge, replace", requested);
+  }
+
   public static Text noTerminalAt(BlockPos pos) {
     return line("terminal.missing", "There is no storage terminal at %s", at(pos));
   }
@@ -256,6 +309,10 @@ public final class CommandMessages {
 
   public static Text nothingOpenToSort() {
     return line("sort.refused", "That is not something this mod will sort");
+  }
+
+  public static Text sortTooFast() {
+    return line("sort.cooldown", "Give the last sort a moment before asking again");
   }
 
   public static Text sortFailed() {

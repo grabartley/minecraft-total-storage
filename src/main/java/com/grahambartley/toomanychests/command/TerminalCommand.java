@@ -44,7 +44,8 @@ public final class TerminalCommand {
                 .then(TerminalNetworkCommand.infoNode())
                 .then(TerminalNetworkCommand.roleNode())
                 .then(TerminalNetworkCommand.rescanNode())
-                .then(TerminalNetworkCommand.highlightNode()));
+                .then(TerminalNetworkCommand.highlightNode())
+                .then(TerminalTagCommand.tagsNode()));
   }
 
   static BlockPos terminalPos(CommandContext<ServerCommandSource> context)

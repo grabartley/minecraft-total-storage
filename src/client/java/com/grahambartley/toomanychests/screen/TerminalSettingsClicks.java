@@ -14,12 +14,17 @@ public final class TerminalSettingsClicks {
   private final TerminalSettingsPanel settings;
   private final TerminalTagsPanel tags;
   private final TagNamePrompt naming;
+  private final TagSourcePrompt copying;
 
   public TerminalSettingsClicks(
-      TerminalSettingsPanel settings, TerminalTagsPanel tags, TagNamePrompt naming) {
+      TerminalSettingsPanel settings,
+      TerminalTagsPanel tags,
+      TagNamePrompt naming,
+      TagSourcePrompt copying) {
     this.settings = Objects.requireNonNull(settings, "settings");
     this.tags = Objects.requireNonNull(tags, "tags");
     this.naming = Objects.requireNonNull(naming, "naming");
+    this.copying = Objects.requireNonNull(copying, "copying");
   }
 
   public boolean handle(
@@ -97,6 +102,13 @@ public final class TerminalSettingsClicks {
       int syncId, NetworkTagView view, int firstVisibleTag, int windowX, int windowY, int button) {
     if (button != GridClick.LEFT_BUTTON) {
       return false;
+    }
+    if (TagsSectionLayout.isOverCopy(windowX, windowY)) {
+      if (view.mayAdminister()) {
+        copying.open();
+        ModNetworkingClient.sendTagSourcesRequest(syncId);
+      }
+      return true;
     }
     if (TagsSectionLayout.isOverNewTag(windowX, windowY)) {
       if (view.mayAdminister()) {

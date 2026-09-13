@@ -14,6 +14,10 @@ public interface ConfigSetting {
 
   String allowedValues();
 
+  default Optional<ConfigRange> range() {
+    return Optional.empty();
+  }
+
   Optional<TooManyChestsConfig> withValue(TooManyChestsConfig config, String rawValue);
 
   default TooManyChestsConfig reset(TooManyChestsConfig config) {

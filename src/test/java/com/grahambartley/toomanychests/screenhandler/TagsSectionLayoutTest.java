@@ -52,6 +52,30 @@ class TagsSectionLayoutTest {
   }
 
   @Test
+  void theCopyControlSitsOnTheNewTagRowSoNoTagRowIsSpentOnIt() {
+    assertTrue(
+        TagsSectionLayout.isOverCopy(
+            TagsSectionLayout.DELETE_X + 1,
+            TagsSectionLayout.deleteY(TagsSectionLayout.NEW_TAG_ROW) + 1));
+  }
+
+  @Test
+  void aClickOnTheRestOfTheNewTagRowIsNotAClickOnTheCopyControl() {
+    assertFalse(
+        TagsSectionLayout.isOverCopy(
+            TerminalSettingsLayout.PANEL_X + 1,
+            TerminalSettingsLayout.rowY(TagsSectionLayout.NEW_TAG_ROW) + 1));
+  }
+
+  @Test
+  void theCopyControlBelongsToTheNewTagRowAlone() {
+    assertFalse(
+        TagsSectionLayout.isOverCopy(
+            TagsSectionLayout.DELETE_X + 1,
+            TagsSectionLayout.deleteY(TagsSectionLayout.FIRST_TAG_ROW) + 1));
+  }
+
+  @Test
   void theNewTagRowIsNeverATagRow() {
     assertEquals(
         TagRowRegion.NONE,

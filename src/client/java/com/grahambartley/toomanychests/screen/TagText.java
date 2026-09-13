@@ -1,6 +1,7 @@
 package com.grahambartley.toomanychests.screen;
 
 import com.grahambartley.toomanychests.terminal.NetworkTagEntry;
+import com.grahambartley.toomanychests.terminal.OwnedTerminal;
 import net.minecraft.text.Text;
 
 public final class TagText {
@@ -10,6 +11,18 @@ public final class TagText {
     return tag.assignedItems() == 1
         ? TerminalScreenText.of("tags.row.one", tag.displayName())
         : TerminalScreenText.of("tags.row", tag.displayName(), tag.assignedItems());
+  }
+
+  public static Text source(OwnedTerminal source) {
+    return source.customTags() == 1
+        ? TerminalScreenText.of(
+            "tags.copy.row.one", source.pos().getX(), source.pos().getY(), source.pos().getZ())
+        : TerminalScreenText.of(
+            "tags.copy.row",
+            source.pos().getX(),
+            source.pos().getY(),
+            source.pos().getZ(),
+            source.customTags());
   }
 
   public static Text bulkHint(int matching) {

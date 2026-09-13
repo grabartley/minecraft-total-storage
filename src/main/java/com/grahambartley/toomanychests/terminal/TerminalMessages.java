@@ -77,6 +77,20 @@ public final class TerminalMessages {
         PREFIX + "tag-deleted", "Deleted the tag and cleared it from %s items", items);
   }
 
+  public static Text tagsCopied(int imported, int skipped) {
+    return skipped == 0
+        ? Text.translatableWithFallback(PREFIX + "tags-copied", "Copied %s tags across", imported)
+        : Text.translatableWithFallback(
+            PREFIX + "tags-copied-partial",
+            "Copied %s tags across and skipped %s",
+            imported,
+            skipped);
+  }
+
+  public static Text tagsCopiedNothing() {
+    return line("tags-copied-none", "That terminal had nothing this one was missing");
+  }
+
   private static Text line(String key, String english) {
     return Text.translatableWithFallback(PREFIX + key, english);
   }
