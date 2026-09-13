@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests.operation;
 
+import com.grahambartley.toomanychests.lifecycle.LoadedChunks;
 import com.grahambartley.toomanychests.lifecycle.NetworkMembership;
 import com.grahambartley.toomanychests.storage.BlockStorageOrigin;
 import com.grahambartley.toomanychests.storage.ContainerAssignment;
@@ -76,7 +77,8 @@ public final class QuickStackTargets {
       ServerWorld world, List<StorageOrigin> nearby) {
     final Map<BlockPos, QuickStackClaim> claims = new HashMap<>();
     for (final TerminalAddress address : HOLDING.any(nearby)) {
-      if (!address.worldKey().equals(world.getRegistryKey())) {
+      if (!address.worldKey().equals(world.getRegistryKey())
+          || !LoadedChunks.holds(world, address.pos())) {
         continue;
       }
       final NetworkMembership network = TerminalNetworks.registry().find(address).orElse(null);

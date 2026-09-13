@@ -1,9 +1,11 @@
 package com.grahambartley.toomanychests.operation;
 
+import com.grahambartley.toomanychests.lifecycle.LoadedChunks;
 import com.grahambartley.toomanychests.sort.ConfiguredSortOrder;
 import com.grahambartley.toomanychests.sort.StorageSort;
 import com.grahambartley.toomanychests.sort.StorageSortOutcome;
 import com.grahambartley.toomanychests.sort.StorageSortResult;
+import com.grahambartley.toomanychests.storage.BlockStorageOrigin;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.storage.StorageOrigin;
 import com.grahambartley.toomanychests.storage.StorageProvider;
@@ -28,6 +30,10 @@ public final class ContainerSortStep {
   public StorageSortResult sortOne(NetworkOperationContext context, StorageOrigin origin) {
     Objects.requireNonNull(context, "context");
     Objects.requireNonNull(origin, "origin");
+    if (!(origin instanceof BlockStorageOrigin block)
+        || !LoadedChunks.holds(context.world(), block.pos())) {
+      return StorageSortResult.of(StorageSortOutcome.GONE);
+    }
     final ContainerRole role = context.roleFor(origin);
     if (role == ContainerRole.EXCLUDED) {
       return StorageSortResult.of(StorageSortOutcome.EXCLUDED);
