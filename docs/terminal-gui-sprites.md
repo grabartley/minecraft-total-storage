@@ -102,35 +102,29 @@ Text reuses chrome rather than inventing greys: secondary text is the chassis sh
 
 ## Editing A Sprite
 
-The PNGs are generated. The reviewable source for each one is a palette-mapped text file under `art/gui/`, mirroring the sprite path:
+The PNG that ships is the sprite, and the repository holds no second copy of it. Nothing stands between an edit and what the game loads, so what a reviewer sees under `textures/gui/sprites/` is exactly what a player gets. [ADR 0037](adr/0037-the-shipped-png-is-a-textures-only-source.md) records why the text sources that used to sit beside these PNGs are gone.
 
-```
-art/gui/chrome/panel.sprite.txt  ->  .../textures/gui/sprites/chrome/panel.png
-```
-
-Every source carries the same palette block and a `# size = WxH` line, so a change to one reviews as a text diff showing exactly which pixels moved.
-
-Edit the source, then regenerate every PNG:
+Pixel art is still easier to write as text than to push around in an editor, so `tools/gui_sprite.py` renders a palette-mapped file into place. Keep that file wherever scratch work lives, outside the repository, and commit only the PNG:
 
 ```bash
-python3 tools/gui_sprite.py buildall art/gui \
-	src/client/resources/assets/too-many-chests/textures/gui/sprites
+python3 tools/gui_sprite.py build <scratch>/panel.sprite.txt \
+	src/client/resources/assets/too-many-chests/textures/gui/sprites/chrome/panel.png
 ```
 
-`tools/gui_sprite.py` also previews without launching the game:
+A source is a palette block of `# k = RRGGBB[AA]` lines, a `# size = WxH` line, and one line per pixel row, each character a palette key or `.` for transparent. An unknown character or the wrong row count is an error rather than a silent crop. The tool also previews without launching the game:
 
 ```bash
 # blow one sprite up
-python3 tools/gui_sprite.py zoom art/gui/chrome/sunken.sprite.txt /tmp/sunken.png 12
+python3 tools/gui_sprite.py zoom <scratch>/sunken.sprite.txt <scratch>/sunken.png 12
 
 # a labelled contact sheet of several
-python3 tools/gui_sprite.py sheet /tmp/sheet.png art/gui/icon/*.sprite.txt
+python3 tools/gui_sprite.py sheet <scratch>/sheet.png <scratch>/*.sprite.txt
 
 # apply the game's nine-slice rule at a real widget size
-python3 tools/gui_sprite.py slice art/gui/chrome/panel.sprite.txt /tmp/panel.png 176 120 4
+python3 tools/gui_sprite.py slice <scratch>/panel.sprite.txt <scratch>/panel.png 176 120 4
 
 # 1x through 4x legibility strip
-python3 tools/gui_sprite.py scales art/gui/icon/sort.sprite.txt /tmp/sort.png
+python3 tools/gui_sprite.py scales <scratch>/sort.sprite.txt <scratch>/sort.png
 ```
 
 Use `slice` on anything nine-sliced before committing. A detail that sits in a stretched band smears, and this is where that shows up rather than in a screenshot.

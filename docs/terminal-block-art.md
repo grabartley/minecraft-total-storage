@@ -79,13 +79,13 @@ Three constraints hold across the set, and a replacement asset has to keep them:
 
 ## Regenerating The Assets
 
-Both the textures and the sounds are generated, and both generators are committed so an edit is a text edit rather than a binary one.
+The sounds are generated and their generator is committed. The textures are not: the PNG that ships is the only copy of a texture this repository holds, for the reasons in [ADR 0037](adr/0037-the-shipped-png-is-a-textures-only-source.md).
 
-Textures come from palette-mapped sources under `art/block/`, one character per pixel, rendered by the same tool the GUI sprites use:
+Pixel art is still easier to write as text, and the GUI sprite tool renders a palette-mapped file, using the palette above, straight into place. Keep that file outside the repository and commit only the PNG:
 
 ```bash
-python3 tools/gui_sprite.py buildall art/block \
-	src/main/resources/assets/too-many-chests/textures/block
+python3 tools/gui_sprite.py build <scratch>/terminal_front.sprite.txt \
+	src/main/resources/assets/too-many-chests/textures/block/terminal_front.png
 ```
 
 Sounds are synthesised rather than recorded, so the source of truth is the synthesis itself:

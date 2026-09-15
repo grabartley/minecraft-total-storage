@@ -52,19 +52,15 @@ Amber is the vanilla language for a soft warning, and the alpha is deliberately 
 
 ## Editing The Badge
 
-The PNG is generated. Its reviewable source is a palette-mapped text file, the same pipeline the terminal sprites use:
-
-```
-art/gui/slot/locked.sprite.txt  ->  .../textures/gui/sprites/slot/locked.png
-```
+The PNG that ships is the badge, and the repository holds nothing else that describes it. Author an edit the way the terminal sprites are authored, as a palette-mapped file kept outside the repository and rendered straight into place. [`terminal-gui-sprites.md`](terminal-gui-sprites.md) sets out the format:
 
 ```bash
-python3 tools/gui_sprite.py buildall art/gui \
-	src/client/resources/assets/too-many-chests/textures/gui/sprites
+python3 tools/gui_sprite.py build <scratch>/locked.sprite.txt \
+	src/client/resources/assets/too-many-chests/textures/gui/sprites/slot/locked.png
 ```
 
 Check any edit at every GUI scale before committing, since the badge is the smallest art in the mod and a pixel moved at 4x can close the arch at 1x:
 
 ```bash
-python3 tools/gui_sprite.py scales art/gui/slot/locked.sprite.txt /tmp/locked.png
+python3 tools/gui_sprite.py scales <scratch>/locked.sprite.txt <scratch>/locked.png
 ```
