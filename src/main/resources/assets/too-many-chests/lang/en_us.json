@@ -83,6 +83,7 @@
   "block.too-many-chests.terminal.container-out-of-range": "This terminal does not reach that container",
   "block.too-many-chests.terminal.radius-clamped": "The server caps this terminal at %s",
   "block.too-many-chests.terminal.rescanned": "Scanned the region again and found %s",
+  "block.too-many-chests.terminal.highlighted": "Outlining %s in the world",
   "block.too-many-chests.terminal.tag-blank": "A tag needs a name",
   "block.too-many-chests.terminal.tag-too-long": "A tag name may be at most %s",
   "block.too-many-chests.terminal.tag-illegal": "A tag name takes letters, digits, spaces, dashes and underscores",

@@ -44,6 +44,11 @@ public final class TerminalMessages {
         CountedNoun.CONTAINERS.of(containers));
   }
 
+  public static Text highlighted(int containers) {
+    return Text.translatableWithFallback(
+        PREFIX + "highlighted", "Outlining %s in the world", CountedNoun.CONTAINERS.of(containers));
+  }
+
   public static Text tagNameRejected(TagNameOutcome why) {
     return switch (why) {
       case BLANK -> line("tag-blank", "A tag needs a name");
