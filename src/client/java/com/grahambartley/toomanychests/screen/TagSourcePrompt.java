@@ -4,7 +4,6 @@ import com.grahambartley.toomanychests.terminal.OwnedTerminal;
 import java.util.List;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 
@@ -136,7 +135,7 @@ public final class TagSourcePrompt {
 
   private static void drawLine(
       DrawContext context, TextRenderer textRenderer, Text text, int left, int top, int colour) {
-    final OrderedText trimmed = TrimmedText.toWidth(textRenderer, text, TagPromptLayout.ROW_WIDTH);
+    final String trimmed = TrimmedText.toWidth(textRenderer, text, TagPromptLayout.ROW_WIDTH);
     context.drawText(textRenderer, trimmed, left, top, colour, false);
   }
 }

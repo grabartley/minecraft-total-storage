@@ -6,6 +6,7 @@ import com.grahambartley.toomanychests.config.TooManyChestsConfig;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.RoleTally;
 import com.grahambartley.toomanychests.terminal.TerminalRadius;
+import com.grahambartley.toomanychests.text.CountedNoun;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 
@@ -54,10 +55,6 @@ public final class CommandMessages {
   public static Text helpQuickStack() {
     return line(
         "help.quickstack", "/tmc quickstack tops up matching stacks in the containers around you");
-  }
-
-  public static Text quickStacked(long items, int containers) {
-    return line("quickstack.done", "Stacked %s items into %s nearby containers", items, containers);
   }
 
   public static Text quickStackDisabled() {
@@ -312,8 +309,8 @@ public final class CommandMessages {
   public static Text terminalInfoContainers(RoleTally tally) {
     return line(
         "terminal.info.containers",
-        "- %s containers: %s general, %s filtered, %s excluded",
-        tally.total(),
+        "- %s: %s general, %s filtered, %s excluded",
+        CountedNoun.CONTAINERS.of(tally.total()),
         tally.general(),
         tally.filtered(),
         tally.excluded());
@@ -347,9 +344,9 @@ public final class CommandMessages {
   public static Text terminalRescanned(BlockPos pos, int containers) {
     return line(
         "terminal.rescanned",
-        "The terminal at %s scanned its region again and found %s containers",
+        "The terminal at %s scanned its region again and found %s",
         at(pos),
-        containers);
+        CountedNoun.CONTAINERS.of(containers));
   }
 
   public static Text terminalUnpowered(BlockPos pos) {
@@ -362,8 +359,8 @@ public final class CommandMessages {
   public static Text terminalHighlighted(BlockPos pos, int containers) {
     return line(
         "terminal.highlighted",
-        "Showing the %s containers the terminal at %s holds",
-        containers,
+        "Showing the %s the terminal at %s holds",
+        CountedNoun.CONTAINERS.of(containers),
         at(pos));
   }
 

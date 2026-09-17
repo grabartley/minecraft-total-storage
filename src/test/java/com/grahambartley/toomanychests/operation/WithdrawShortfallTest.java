@@ -18,49 +18,29 @@ class WithdrawShortfallTest {
   private static final long A_STACK = 64L;
 
   @ParameterizedTest
-  @CsvSource({
-    "64, NOTHING_AVAILABLE",
-    "63, NOTHING_AVAILABLE",
-    "1, NOTHING_AVAILABLE",
-    "0, NO_ROOM"
-  })
-  void theRoomLeftAtTheDestinationDecidesWhichEndingItWas(long room, WithdrawResult expected) {
-    assertEquals(expected, resultOf(new FixedRoom(room)));
-  }
-
-  @Test
-  void everyEndingKeepsTheAmountThatWasAskedFor() {
-    assertEquals(A_STACK, outcomeOf(new FixedRoom(A_STACK)).requested());
-    assertEquals(A_STACK, outcomeOf(new FixedRoom(0L)).requested());
-  }
-
-  @Test
-  void nothingIsEverReportedAsMovedByAnEmptyHandedWithdrawal() {
-    assertEquals(0L, outcomeOf(new FixedRoom(A_STACK)).moved());
-    assertEquals(0L, outcomeOf(new FixedRoom(0L)).moved());
+  @CsvSource({"64, NO_STOCK", "63, NO_STOCK", "1, NO_STOCK", "0, NO_ROOM"})
+  void theRoomLeftAtTheDestinationDecidesWhichSideRanOut(long room, ShortfallCause expected) {
+    assertEquals(expected, causeOf(new FixedRoom(room)));
   }
 
   @Test
   void aShortfallCannotBeDecidedWithoutTheThingsItIsDecidedFrom() {
     try (Transaction outer = Transaction.openOuter()) {
       assertThrows(
-          NullPointerException.class, () -> WithdrawShortfall.of(null, DIAMOND, A_STACK, outer));
+          NullPointerException.class,
+          () -> WithdrawShortfall.causeOf(null, DIAMOND, A_STACK, outer));
       assertThrows(
           NullPointerException.class,
-          () -> WithdrawShortfall.of(new FixedRoom(1L), null, A_STACK, outer));
+          () -> WithdrawShortfall.causeOf(new FixedRoom(1L), null, A_STACK, outer));
       assertThrows(
           NullPointerException.class,
-          () -> WithdrawShortfall.of(new FixedRoom(1L), DIAMOND, A_STACK, null));
+          () -> WithdrawShortfall.causeOf(new FixedRoom(1L), DIAMOND, A_STACK, null));
     }
   }
 
-  private static WithdrawResult resultOf(Storage<String> destination) {
-    return outcomeOf(destination).result();
-  }
-
-  private static WithdrawOutcome outcomeOf(Storage<String> destination) {
+  private static ShortfallCause causeOf(Storage<String> destination) {
     try (Transaction outer = Transaction.openOuter()) {
-      return WithdrawShortfall.of(destination, DIAMOND, A_STACK, outer);
+      return WithdrawShortfall.causeOf(destination, DIAMOND, A_STACK, outer);
     }
   }
 

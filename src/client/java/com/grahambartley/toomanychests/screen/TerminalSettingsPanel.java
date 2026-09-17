@@ -310,10 +310,13 @@ public final class TerminalSettingsPanel {
     final int iconY = top + (TerminalSettingsLayout.ROW_HEIGHT - 1 - ICON_SIZE) / 2;
     entry.icon().ifPresent(icon -> context.drawItem(icon.toStack(), left + TEXT_INSET, iconY));
     final int textY = top + (TerminalSettingsLayout.ROW_HEIGHT - 1 - LINE_HEIGHT) / 2;
+    final int contentsLeft = left + TEXT_INSET + ICON_SIZE + TEXT_INSET;
+    final int contentsWidth =
+        left + TerminalSettingsLayout.ROW_WIDTH - CHIP_WIDTH - TEXT_INSET - contentsLeft;
     context.drawText(
         textRenderer,
-        ContainerRowText.contents(entry),
-        left + TEXT_INSET + ICON_SIZE + TEXT_INSET,
+        TrimmedText.toWidth(textRenderer, ContainerRowText.contents(entry), contentsWidth),
+        contentsLeft,
         textY,
         changeable ? VanillaPalette.LABEL : VanillaPalette.MUTED,
         false);

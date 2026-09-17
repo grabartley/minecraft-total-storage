@@ -9,21 +9,46 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 class WithdrawOutcomeTest {
   @ParameterizedTest
-  @CsvSource({"64, 64, WITHDRAWN", "64, 9, PARTIAL", "1, 1, WITHDRAWN"})
-  void whatMovedDecidesWhetherTheWithdrawalWasWhole(
-      long requested, long moved, WithdrawResult expected) {
-    assertEquals(expected, WithdrawOutcome.moved(requested, moved).result());
+  @CsvSource({"NO_STOCK, PARTIAL_NO_STOCK", "NO_ROOM, PARTIAL_NO_ROOM"})
+  void aShortWithdrawalSaysWhichSideRanOut(ShortfallCause cause, WithdrawResult expected) {
+    assertEquals(expected, WithdrawOutcome.partial(64L, 9L, cause).result());
+  }
+
+  @ParameterizedTest
+  @CsvSource({"NO_STOCK, NOTHING_AVAILABLE", "NO_ROOM, NO_ROOM"})
+  void anEmptyHandedWithdrawalSaysWhichSideRanOut(ShortfallCause cause, WithdrawResult expected) {
+    assertEquals(expected, WithdrawOutcome.nothingMoved(64L, cause).result());
+  }
+
+  @Test
+  void aWithdrawalThatMetItsRequestIsWholeAndNamesNoCause() {
+    WithdrawOutcome outcome = WithdrawOutcome.filled(64L);
+
+    assertEquals(WithdrawResult.WITHDRAWN, outcome.result());
+    assertEquals(64L, outcome.moved());
+    assertEquals(0L, outcome.shortfall());
   }
 
   @Test
   void theShortfallIsWhatThePlayerDidNotGet() {
-    assertEquals(55L, WithdrawOutcome.moved(64L, 9L).shortfall());
-    assertEquals(0L, WithdrawOutcome.moved(64L, 64L).shortfall());
+    assertEquals(55L, WithdrawOutcome.partial(64L, 9L, ShortfallCause.NO_STOCK).shortfall());
+    assertEquals(64L, WithdrawOutcome.nothingMoved(64L, ShortfallCause.NO_ROOM).shortfall());
   }
 
   @Test
-  void aWithdrawalThatMovedNothingHasToSayWhy() {
-    assertThrows(IllegalArgumentException.class, () -> WithdrawOutcome.moved(64L, 0L));
+  void aPartialWithdrawalHasToHaveMovedSomethingShortOfTheRequest() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> WithdrawOutcome.partial(64L, 0L, ShortfallCause.NO_STOCK));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> WithdrawOutcome.partial(64L, 64L, ShortfallCause.NO_STOCK));
+  }
+
+  @Test
+  void aShortfallCannotBeReportedWithoutACause() {
+    assertThrows(NullPointerException.class, () -> WithdrawOutcome.nothingMoved(64L, null));
+    assertThrows(NullPointerException.class, () -> WithdrawOutcome.partial(64L, 9L, null));
   }
 
   @Test
@@ -33,18 +58,6 @@ class WithdrawOutcomeTest {
     assertEquals(WithdrawResult.REFUSED, refused.result());
     assertEquals(0L, refused.requested());
     assertEquals(0L, refused.moved());
-  }
-
-  @ParameterizedTest
-  @CsvSource({"NOTHING_AVAILABLE, 64", "NO_ROOM, 64"})
-  void anEmptyHandedEndingStillRemembersWhatWasAskedFor(WithdrawResult result, long requested) {
-    WithdrawOutcome outcome =
-        result == WithdrawResult.NO_ROOM
-            ? WithdrawOutcome.noRoom(requested)
-            : WithdrawOutcome.nothingAvailable(requested);
-
-    assertEquals(result, outcome.result());
-    assertEquals(requested, outcome.shortfall());
   }
 
   @Test

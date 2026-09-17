@@ -41,4 +41,14 @@ class TagTextTest {
         TerminalScreenText.of("tags.assign.bulk", matching).getString(),
         TagText.bulkHint(matching).getString());
   }
+
+  @Test
+  void theTaggingHintNamesTheModifierKeyThePlatformActuallyUses() {
+    assertEquals(
+        TerminalScreenText.of("tags.assign.hint.mac").getString(),
+        TagText.assignHint(true).getString());
+    assertEquals(
+        TerminalScreenText.of("tags.assign.hint").getString(),
+        TagText.assignHint(false).getString());
+  }
 }

@@ -27,15 +27,16 @@ class OperationMessagesTest {
 
   @Test
   void aWholeWithdrawalAndAWholeDepositSayNothing() {
-    assertTrue(OperationMessages.forWithdrawal(WithdrawOutcome.moved(64L, 64L)).isEmpty());
+    assertTrue(OperationMessages.forWithdrawal(WithdrawOutcome.filled(64L)).isEmpty());
     assertTrue(OperationMessages.forDeposit(DepositOutcome.stored(64L, 64L, List.of())).isEmpty());
   }
 
-  @Test
-  void aPartialWithdrawalNamesBothWhatArrivedAndWhatWasAskedFor() {
-    Optional<Text> line = OperationMessages.forWithdrawal(WithdrawOutcome.moved(64L, 9L));
+  @ParameterizedTest
+  @CsvSource({"NO_STOCK, withdraw.partial.stock", "NO_ROOM, withdraw.partial.room"})
+  void aPartialWithdrawalBlamesTheSideThatActuallyRanOut(ShortfallCause cause, String key) {
+    Optional<Text> line = OperationMessages.forWithdrawal(WithdrawOutcome.partial(64L, 9L, cause));
 
-    assertEquals(PREFIX + "withdraw.partial", keyOf(line));
+    assertEquals(PREFIX + key, keyOf(line));
     assertEquals(9L, argumentsOf(line)[0]);
     assertEquals(64L, argumentsOf(line)[1]);
   }
@@ -44,10 +45,14 @@ class OperationMessagesTest {
   void everyEmptyHandedEndingGetsAReasonOfItsOwn() {
     assertEquals(
         PREFIX + "withdraw.gone",
-        keyOf(OperationMessages.forWithdrawal(WithdrawOutcome.nothingAvailable(64L))));
+        keyOf(
+            OperationMessages.forWithdrawal(
+                WithdrawOutcome.nothingMoved(64L, ShortfallCause.NO_STOCK))));
     assertEquals(
         PREFIX + "withdraw.full",
-        keyOf(OperationMessages.forWithdrawal(WithdrawOutcome.noRoom(64L))));
+        keyOf(
+            OperationMessages.forWithdrawal(
+                WithdrawOutcome.nothingMoved(64L, ShortfallCause.NO_ROOM))));
     assertEquals(
         PREFIX + "deposit.empty",
         keyOf(OperationMessages.forDeposit(DepositOutcome.nothingToDeposit())));
@@ -114,10 +119,11 @@ class OperationMessagesTest {
 
   private static WithdrawOutcome withdrawalEnding(WithdrawResult result) {
     return switch (result) {
-      case WITHDRAWN -> WithdrawOutcome.moved(64L, 64L);
-      case PARTIAL -> WithdrawOutcome.moved(64L, 9L);
-      case NOTHING_AVAILABLE -> WithdrawOutcome.nothingAvailable(64L);
-      case NO_ROOM -> WithdrawOutcome.noRoom(64L);
+      case WITHDRAWN -> WithdrawOutcome.filled(64L);
+      case PARTIAL_NO_STOCK -> WithdrawOutcome.partial(64L, 9L, ShortfallCause.NO_STOCK);
+      case PARTIAL_NO_ROOM -> WithdrawOutcome.partial(64L, 9L, ShortfallCause.NO_ROOM);
+      case NOTHING_AVAILABLE -> WithdrawOutcome.nothingMoved(64L, ShortfallCause.NO_STOCK);
+      case NO_ROOM -> WithdrawOutcome.nothingMoved(64L, ShortfallCause.NO_ROOM);
       case REFUSED -> WithdrawOutcome.refused();
     };
   }

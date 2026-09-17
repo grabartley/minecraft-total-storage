@@ -97,7 +97,8 @@ public final class WithdrawServiceGameTest implements FabricGameTest {
     WithdrawOutcome outcome = take(player, STACK, WithdrawDestination.CURSOR);
 
     context.assertTrue(
-        outcome.result() == WithdrawResult.PARTIAL, "The withdrawal should report as partial");
+        outcome.result() == WithdrawResult.PARTIAL_NO_STOCK,
+        "The withdrawal should report as partial on stock, got " + outcome.result());
     context.assertTrue(outcome.moved() == 9L, "It took " + outcome.moved() + " rather than nine");
     context.assertTrue(
         outcome.shortfall() == STACK - 9L,
@@ -212,6 +213,9 @@ public final class WithdrawServiceGameTest implements FabricGameTest {
     WithdrawOutcome outcome = take(player, STACK, WithdrawDestination.INVENTORY);
 
     context.assertTrue(outcome.moved() == 10L, "Only ten diamonds fit, moved " + outcome.moved());
+    context.assertTrue(
+        outcome.result() == WithdrawResult.PARTIAL_NO_ROOM,
+        "A shortfall the player had no room for should say so, got " + outcome.result());
     context.assertTrue(
         NetworkOperationFixture.countIn(barrel, Items.DIAMOND) == STACK - 10L,
         "The rest should still be in the network");

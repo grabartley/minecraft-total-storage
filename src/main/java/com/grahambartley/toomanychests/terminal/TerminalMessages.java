@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests.terminal;
 
 import com.grahambartley.toomanychests.tag.TagNameOutcome;
 import com.grahambartley.toomanychests.tag.TagNameRule;
+import com.grahambartley.toomanychests.text.CountedNoun;
 import net.minecraft.text.Text;
 
 public final class TerminalMessages {
@@ -31,12 +32,16 @@ public final class TerminalMessages {
 
   public static Text radiusClamped(int blocks) {
     return Text.translatableWithFallback(
-        PREFIX + "radius-clamped", "The server caps this terminal at %s blocks", blocks);
+        PREFIX + "radius-clamped",
+        "The server caps this terminal at %s",
+        CountedNoun.BLOCKS.of(blocks));
   }
 
   public static Text rescanned(int containers) {
     return Text.translatableWithFallback(
-        PREFIX + "rescanned", "Scanned the region again and found %s containers", containers);
+        PREFIX + "rescanned",
+        "Scanned the region again and found %s",
+        CountedNoun.CONTAINERS.of(containers));
   }
 
   public static Text tagNameRejected(TagNameOutcome why) {
@@ -45,8 +50,8 @@ public final class TerminalMessages {
       case TOO_LONG ->
           Text.translatableWithFallback(
               PREFIX + "tag-too-long",
-              "A tag name may be at most %s characters",
-              TagNameRule.MAX_LENGTH);
+              "A tag name may be at most %s",
+              CountedNoun.CHARACTERS.of(TagNameRule.MAX_LENGTH));
       case ILLEGAL_CHARACTER ->
           line("tag-illegal", "A tag name takes letters, digits, spaces, dashes and underscores");
       case DUPLICATE -> line("tag-duplicate", "This network already has a tag by that name");
@@ -57,7 +62,9 @@ public final class TerminalMessages {
 
   public static Text tagLimitReached(int limit) {
     return Text.translatableWithFallback(
-        PREFIX + "tag-limit", "This network already holds its %s custom tags", limit);
+        PREFIX + "tag-limit",
+        "This network already holds its %s",
+        CountedNoun.CUSTOM_TAGS.of(limit));
   }
 
   public static Text tagUnknown() {
@@ -69,21 +76,25 @@ public final class TerminalMessages {
   }
 
   public static Text tagAssignedTo(int items) {
-    return Text.translatableWithFallback(PREFIX + "tag-assigned", "Tagged %s items", items);
+    return Text.translatableWithFallback(
+        PREFIX + "tag-assigned", "Tagged %s", CountedNoun.ITEMS.of(items));
   }
 
   public static Text tagDeleted(int items) {
     return Text.translatableWithFallback(
-        PREFIX + "tag-deleted", "Deleted the tag and cleared it from %s items", items);
+        PREFIX + "tag-deleted",
+        "Deleted the tag and cleared it from %s",
+        CountedNoun.ITEMS.of(items));
   }
 
   public static Text tagsCopied(int imported, int skipped) {
     return skipped == 0
-        ? Text.translatableWithFallback(PREFIX + "tags-copied", "Copied %s tags across", imported)
+        ? Text.translatableWithFallback(
+            PREFIX + "tags-copied", "Copied %s across", CountedNoun.TAGS.of(imported))
         : Text.translatableWithFallback(
             PREFIX + "tags-copied-partial",
-            "Copied %s tags across and skipped %s",
-            imported,
+            "Copied %s across and skipped %s",
+            CountedNoun.TAGS.of(imported),
             skipped);
   }
 
