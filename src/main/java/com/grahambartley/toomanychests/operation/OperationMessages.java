@@ -1,6 +1,7 @@
 package com.grahambartley.toomanychests.operation;
 
 import com.grahambartley.toomanychests.TooManyChests;
+import com.grahambartley.toomanychests.text.CountedNoun;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.text.MutableText;
@@ -16,10 +17,17 @@ public final class OperationMessages {
   public static Optional<Text> forWithdrawal(WithdrawOutcome outcome) {
     return switch (outcome.result()) {
       case WITHDRAWN -> Optional.empty();
-      case PARTIAL ->
+      case PARTIAL_NO_STOCK ->
           Optional.of(
               line(
-                  "withdraw.partial",
+                  "withdraw.partial.stock",
+                  "Took %s of %s, that was all the network had",
+                  outcome.moved(),
+                  outcome.requested()));
+      case PARTIAL_NO_ROOM ->
+          Optional.of(
+              line(
+                  "withdraw.partial.room",
                   "Took %s of %s, the rest would not fit",
                   outcome.moved(),
                   outcome.requested()));
@@ -38,7 +46,7 @@ public final class OperationMessages {
               line(
                   "deposit.partial",
                   "Stored %s, with no room for %s",
-                  outcome.moved(),
+                  CountedNoun.ITEMS.of(outcome.moved()),
                   leftovers(outcome.leftovers())));
       case NOTHING_TO_DEPOSIT -> Optional.of(line("deposit.empty", "There is nothing to store"));
       case SLOT_LOCKED ->

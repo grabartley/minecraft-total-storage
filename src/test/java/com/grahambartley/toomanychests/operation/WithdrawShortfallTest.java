@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
@@ -15,64 +16,59 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 class WithdrawShortfallTest {
   private static final String DIAMOND = "diamond";
-  private static final long A_STACK = 64L;
+  private static final long OUTSTANDING = 55L;
 
   @ParameterizedTest
-  @CsvSource({
-    "64, NOTHING_AVAILABLE",
-    "63, NOTHING_AVAILABLE",
-    "1, NOTHING_AVAILABLE",
-    "0, NO_ROOM"
-  })
-  void theRoomLeftAtTheDestinationDecidesWhichEndingItWas(long room, WithdrawResult expected) {
-    assertEquals(expected, resultOf(new FixedRoom(room)));
+  @CsvSource({"64, NO_ROOM", "1, NO_ROOM", "0, NO_STOCK"})
+  void whatTheNetworkStillHoldsDecidesWhichSideRanOut(long stock, ShortfallCause expected) {
+    assertEquals(expected, causeOf(List.of(new FixedStock(stock))));
   }
 
   @Test
-  void everyEndingKeepsTheAmountThatWasAskedFor() {
-    assertEquals(A_STACK, outcomeOf(new FixedRoom(A_STACK)).requested());
-    assertEquals(A_STACK, outcomeOf(new FixedRoom(0L)).requested());
+  void aNetworkThatIsEmptyEverywhereBlamesTheStockRatherThanTheRoom() {
+    assertEquals(ShortfallCause.NO_STOCK, causeOf(List.of(new FixedStock(0L), new FixedStock(0L))));
   }
 
   @Test
-  void nothingIsEverReportedAsMovedByAnEmptyHandedWithdrawal() {
-    assertEquals(0L, outcomeOf(new FixedRoom(A_STACK)).moved());
-    assertEquals(0L, outcomeOf(new FixedRoom(0L)).moved());
+  void stockLeftInAnySourceAtAllMeansTheRoomIsWhatStoppedIt() {
+    assertEquals(ShortfallCause.NO_ROOM, causeOf(List.of(new FixedStock(0L), new FixedStock(3L))));
+  }
+
+  @Test
+  void aNetworkWithNoSourcesLeftHasNothingToBlameButItsStock() {
+    assertEquals(ShortfallCause.NO_STOCK, causeOf(List.of()));
   }
 
   @Test
   void aShortfallCannotBeDecidedWithoutTheThingsItIsDecidedFrom() {
     try (Transaction outer = Transaction.openOuter()) {
       assertThrows(
-          NullPointerException.class, () -> WithdrawShortfall.of(null, DIAMOND, A_STACK, outer));
+          NullPointerException.class,
+          () -> WithdrawShortfall.causeOf(null, DIAMOND, OUTSTANDING, outer));
       assertThrows(
           NullPointerException.class,
-          () -> WithdrawShortfall.of(new FixedRoom(1L), null, A_STACK, outer));
+          () -> WithdrawShortfall.causeOf(List.of(new FixedStock(1L)), null, OUTSTANDING, outer));
       assertThrows(
           NullPointerException.class,
-          () -> WithdrawShortfall.of(new FixedRoom(1L), DIAMOND, A_STACK, null));
+          () -> WithdrawShortfall.causeOf(List.of(new FixedStock(1L)), DIAMOND, OUTSTANDING, null));
     }
   }
 
-  private static WithdrawResult resultOf(Storage<String> destination) {
-    return outcomeOf(destination).result();
-  }
-
-  private static WithdrawOutcome outcomeOf(Storage<String> destination) {
+  private static ShortfallCause causeOf(List<Storage<String>> sources) {
     try (Transaction outer = Transaction.openOuter()) {
-      return WithdrawShortfall.of(destination, DIAMOND, A_STACK, outer);
+      return WithdrawShortfall.causeOf(sources, DIAMOND, OUTSTANDING, outer);
     }
   }
 
-  private record FixedRoom(long room) implements Storage<String> {
+  private record FixedStock(long stock) implements Storage<String> {
     @Override
     public long insert(String resource, long maxAmount, TransactionContext transaction) {
-      return Math.min(room, maxAmount);
+      return 0L;
     }
 
     @Override
     public long extract(String resource, long maxAmount, TransactionContext transaction) {
-      return 0L;
+      return Math.min(stock, maxAmount);
     }
 
     @Override

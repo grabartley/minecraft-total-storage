@@ -48,8 +48,8 @@ public final class StaleIndexGameTest implements FabricGameTest {
     WithdrawOutcome outcome = take(player, STACK);
 
     context.assertTrue(
-        outcome.result() == WithdrawResult.PARTIAL,
-        "Ten of sixty-four should report as partial, got " + outcome.result());
+        outcome.result() == WithdrawResult.PARTIAL_NO_STOCK,
+        "Ten of sixty-four should report as partial on stock, got " + outcome.result());
     context.assertTrue(
         outcome.moved() == 10L, "It granted " + outcome.moved() + " rather than ten");
     context.assertTrue(

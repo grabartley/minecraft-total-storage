@@ -8,6 +8,7 @@ import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
 import com.grahambartley.toomanychests.terminal.NetworkTagEntry;
 import com.grahambartley.toomanychests.terminal.NetworkTagView;
+import com.grahambartley.toomanychests.text.CountedNoun;
 import java.util.ArrayList;
 import java.util.List;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
@@ -44,7 +45,7 @@ public final class TerminalTooltips {
     final List<Text> lines = new ArrayList<>(Screen.getTooltipFromItem(client, stack));
     lines.addAll(ListingTooltip.extraLines(row));
     if (mayTag) {
-      lines.add(TerminalScreenText.of("tags.assign.hint").formatted(Formatting.DARK_GRAY));
+      lines.add(TagText.assignHint(MinecraftClient.IS_SYSTEM_MAC).formatted(Formatting.DARK_GRAY));
     }
     context.drawTooltip(textRenderer, lines, mouseX, mouseY);
   }
@@ -65,6 +66,9 @@ public final class TerminalTooltips {
     }
     final List<Text> lines = new ArrayList<>();
     lines.add(ContainerRowText.position(entry));
+    if (!entry.isEmpty()) {
+      lines.add(ContainerRowText.itemTotal(entry).formatted(Formatting.GRAY));
+    }
     if (view.mayAdminister()) {
       lines.add(TerminalScreenText.of("settings.role.hint").formatted(Formatting.GRAY));
     }
@@ -107,7 +111,9 @@ public final class TerminalTooltips {
     final List<Text> lines = new ArrayList<>();
     lines.add(FilterColumnText.nameOf(tag));
     lines.add(
-        TerminalScreenText.of("filter.tag.matching", tag.matchingItems())
+        TerminalScreenText.of(
+                "filter.tag.matching",
+                CountedNoun.ITEMS.ofFormatted(FilterColumnText.count(tag), tag.matchingItems()))
             .formatted(Formatting.GRAY));
     context.drawTooltip(textRenderer, lines, mouseX, mouseY);
   }

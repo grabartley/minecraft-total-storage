@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests.command;
 
+import com.grahambartley.toomanychests.text.CountedNoun;
 import net.minecraft.text.Text;
 
 public final class TagSetMessages {
@@ -15,7 +16,7 @@ public final class TagSetMessages {
   }
 
   public static Text exported(int tags, String file) {
-    return line("exported", "Exported %s custom tags to %s", tags, file);
+    return line("exported", "Exported %s to %s", CountedNoun.CUSTOM_TAGS.of(tags), file);
   }
 
   public static Text exportFailed() {
@@ -35,14 +36,18 @@ public final class TagSetMessages {
 
   public static Text imported(int imported, int skipped) {
     return skipped == 0
-        ? line("imported", "Brought %s tags across", imported)
-        : line("imported.partial", "Brought %s tags across and skipped %s", imported, skipped);
+        ? line("imported", "Brought %s across", CountedNoun.TAGS.of(imported))
+        : line(
+            "imported.partial",
+            "Brought %s across and skipped %s",
+            CountedNoun.TAGS.of(imported),
+            skipped);
   }
 
   public static Text importedNothing(int skipped) {
     return skipped == 0
         ? line("imported.none", "That tag set was already there")
-        : line("imported.all-skipped", "Skipped every one of the %s tags", skipped);
+        : line("imported.all-skipped", "Skipped every one of the %s", CountedNoun.TAGS.of(skipped));
   }
 
   public static Text transferRefused() {

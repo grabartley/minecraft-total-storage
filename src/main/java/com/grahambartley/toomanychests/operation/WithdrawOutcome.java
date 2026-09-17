@@ -23,20 +23,24 @@ public record WithdrawOutcome(WithdrawResult result, long requested, long moved)
     return new WithdrawOutcome(WithdrawResult.REFUSED, 0L, 0L);
   }
 
-  public static WithdrawOutcome nothingAvailable(long requested) {
-    return new WithdrawOutcome(WithdrawResult.NOTHING_AVAILABLE, requested, 0L);
+  public static WithdrawOutcome filled(long requested) {
+    return new WithdrawOutcome(WithdrawResult.WITHDRAWN, requested, requested);
   }
 
-  public static WithdrawOutcome noRoom(long requested) {
-    return new WithdrawOutcome(WithdrawResult.NO_ROOM, requested, 0L);
+  public static WithdrawOutcome nothingMoved(long requested, ShortfallCause cause) {
+    Objects.requireNonNull(cause, "cause");
+    return new WithdrawOutcome(cause.emptyHanded(), requested, 0L);
   }
 
-  public static WithdrawOutcome moved(long requested, long moved) {
+  public static WithdrawOutcome partial(long requested, long moved, ShortfallCause cause) {
+    Objects.requireNonNull(cause, "cause");
     if (moved <= 0L) {
-      throw new IllegalArgumentException("a withdrawal that moved nothing needs a reason");
+      throw new IllegalArgumentException("a partial withdrawal has to have moved something");
     }
-    return new WithdrawOutcome(
-        moved >= requested ? WithdrawResult.WITHDRAWN : WithdrawResult.PARTIAL, requested, moved);
+    if (moved >= requested) {
+      throw new IllegalArgumentException("a withdrawal that met its request is not partial");
+    }
+    return new WithdrawOutcome(cause.partial(), requested, moved);
   }
 
   public long shortfall() {

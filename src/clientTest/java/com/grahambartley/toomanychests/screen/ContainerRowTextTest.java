@@ -16,6 +16,8 @@ import org.junit.jupiter.params.provider.EnumSource;
 class ContainerRowTextTest {
   private static final String PREFIX = "screen.too-many-chests.terminal.";
 
+  private static final String COUNT_PREFIX = "count.too-many-chests.";
+
   private static ContainerRoleEntry entry(int variants, long items) {
     return new ContainerRoleEntry(
         new BlockPos(12, 64, -8),
@@ -40,16 +42,29 @@ class ContainerRowTextTest {
   void aContainerHoldingOneKindIsNotDescribedInThePlural() {
     Text row = ContainerRowText.contents(entry(1, 32L));
 
-    assertEquals(PREFIX + "settings.container.one", keyOf(row));
-    assertEquals(1, argumentsOf(row).length);
+    assertEquals(COUNT_PREFIX + "kinds.one", keyOf(row));
+    assertEquals(0, argumentsOf(row).length);
   }
 
   @Test
   void aContainerHoldingSeveralKindsCountsThem() {
     Text row = ContainerRowText.contents(entry(2, 32L));
 
-    assertEquals(PREFIX + "settings.container", keyOf(row));
-    assertEquals(2, argumentsOf(row)[0]);
+    assertEquals(COUNT_PREFIX + "kinds", keyOf(row));
+    assertEquals(2L, argumentsOf(row)[0]);
+  }
+
+  @Test
+  void whatAContainerHoldsIsCountedForTheTooltipRatherThanCrowdingTheRow() {
+    Text total = ContainerRowText.itemTotal(entry(51, 12_300L));
+
+    assertEquals(COUNT_PREFIX + "items", keyOf(total));
+    assertEquals("12.3k", argumentsOf(total)[0]);
+  }
+
+  @Test
+  void aContainerHoldingASingleItemIsNotDescribedInThePlural() {
+    assertEquals(COUNT_PREFIX + "items.one", keyOf(ContainerRowText.itemTotal(entry(1, 1L))));
   }
 
   @Test

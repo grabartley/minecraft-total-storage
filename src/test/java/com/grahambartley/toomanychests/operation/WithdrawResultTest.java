@@ -8,14 +8,16 @@ import org.junit.jupiter.params.provider.CsvSource;
 class WithdrawResultTest {
   @ParameterizedTest
   @CsvSource({
-    "WITHDRAWN, true",
-    "PARTIAL, true",
-    "NOTHING_AVAILABLE, false",
-    "NO_ROOM, false",
-    "REFUSED, false"
+    "WITHDRAWN, true, false",
+    "PARTIAL_NO_STOCK, true, true",
+    "PARTIAL_NO_ROOM, true, true",
+    "NOTHING_AVAILABLE, false, false",
+    "NO_ROOM, false, false",
+    "REFUSED, false, false"
   })
-  void onlyTheEndingsThatDeliveredSomethingCountAsHavingMovedItems(
-      WithdrawResult result, boolean moved) {
+  void everyEndingKnowsWhetherItMovedAnythingAndWhetherItFellShort(
+      WithdrawResult result, boolean moved, boolean partial) {
     assertEquals(moved, result.movedAnything());
+    assertEquals(partial, result.isPartial());
   }
 }

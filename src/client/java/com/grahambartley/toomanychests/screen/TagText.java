@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests.screen;
 
 import com.grahambartley.toomanychests.terminal.NetworkTagEntry;
 import com.grahambartley.toomanychests.terminal.OwnedTerminal;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 
 public final class TagText {
@@ -23,6 +24,10 @@ public final class TagText {
             source.pos().getY(),
             source.pos().getZ(),
             source.customTags());
+  }
+
+  public static MutableText assignHint(boolean onMac) {
+    return TerminalScreenText.of(onMac ? "tags.assign.hint.mac" : "tags.assign.hint");
   }
 
   public static Text bulkHint(int matching) {

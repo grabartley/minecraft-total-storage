@@ -21,6 +21,8 @@ There are no other hard dependencies. Mod Menu, JEI and EMI are each loaded thro
 
 The storage terminal runs on redstone. A terminal reached by a signal is active: it indexes the containers around it once, keeps that listing current as they change, and can be opened. A terminal with no signal is completely inert, holding no listing and doing no work at all, and it says so when you try to open it. The block reports its own state, with a lit screen, vents and dust run when it is running.
 
+Powering one takes a moment's care, because the block answers a right-click by opening rather than by taking what you are holding. Sneak while you place a lever on it and the lever goes on the block, or put any solid block beside the terminal and attach the lever to that, which powers the terminal through its neighbour. A redstone torch, a button or any other signal reaching the block works the same way.
+
 Cutting power is an off switch rather than a factory reset. A terminal's radius, roles, tags and access settings live on the block and survive a power cut, a chunk unload, and a world reload.
 
 Each terminal reaches as far as its own radius, a cube centred on the block, and a fresh terminal starts at 16 blocks. The server sets a maximum no terminal may exceed, and the maximum wins: a radius set above it is clamped as it is written and the clamp is reported, and lowering the maximum pulls in every terminal already running. What a terminal asked for is kept whatever the maximum does, so raising the maximum again hands its reach straight back. See [ADR 0021](docs/adr/0021-a-lowered-maximum-clamps-without-rewriting.md).
@@ -65,7 +67,7 @@ Custom tags live on the terminal, in the `Tags` section of the settings tab, and
 
 A name has to be something the query language can address: not empty, at most 32 characters, letters, digits, spaces, dashes and underscores only, not already taken on this network, and not the name of a preset. A refused name says which of those it broke rather than failing quietly. Renaming moves the tag's id along with its name, so `#castle` finds the tag called Castle the moment you rename it, and the items it held come with it. See [ADR 0033](docs/adr/0033-renaming-a-tag-moves-its-id.md).
 
-Ctrl-click any cell in the grid to file that item. The panel lists your custom tags with the ones the item already carries ticked, and clicking one files or unfiles it immediately. Tags apply by item identifier, so filing a pickaxe files every pickaxe, damaged or not.
+Ctrl-click any cell in the grid, or Cmd-click on macOS, to file that item. The panel lists your custom tags with the ones the item already carries ticked, and clicking one files or unfiles it immediately. Tags apply by item identifier, so filing a pickaxe files every pickaxe, damaged or not.
 
 Filing a large storage area one item at a time is not a plan, so **shift-clicking a tag in that panel files everything the grid is currently showing**. Narrow with the search box or the other tags first, and the panel tells you how many items that is before you do it. That is what makes tagging an existing base something you finish rather than abandon.
 

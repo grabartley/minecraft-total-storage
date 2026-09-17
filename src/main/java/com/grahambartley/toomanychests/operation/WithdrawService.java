@@ -42,13 +42,13 @@ public final class WithdrawService {
         WithdrawAmount.resolve(
             payload.amount(), variant.toStack().getMaxCount(), payload.destination());
     if (wanted <= 0L) {
-      return WithdrawOutcome.nothingAvailable(0L);
+      return WithdrawOutcome.nothingMoved(0L, ShortfallCause.NO_STOCK);
     }
     final List<Storage<ItemVariant>> from =
         sources.holding(context.world(), context.network(), variant);
     final WithdrawOutcome outcome =
         from.isEmpty()
-            ? WithdrawOutcome.nothingAvailable(wanted)
+            ? WithdrawOutcome.nothingMoved(wanted, ShortfallCause.NO_STOCK)
             : gather(
                 context, variant, wanted, destinationFor(context, payload.destination()), from);
     if (outcome.result() == WithdrawResult.NOTHING_AVAILABLE) {
@@ -67,16 +67,24 @@ public final class WithdrawService {
       long wanted,
       Storage<ItemVariant> to,
       List<Storage<ItemVariant>> from) {
-    final WithdrawOutcome[] settled = {WithdrawOutcome.nothingAvailable(wanted)};
+    final WithdrawOutcome[] settled = {
+      WithdrawOutcome.nothingMoved(wanted, ShortfallCause.NO_STOCK)
+    };
     NetworkMutation.run(
         context,
         transaction -> {
           final long moved = StorageTransfers.gather(from, to, variant, wanted, transaction);
-          if (moved > 0L) {
-            settled[0] = WithdrawOutcome.moved(wanted, moved);
+          if (moved >= wanted) {
+            settled[0] = WithdrawOutcome.filled(wanted);
             return OperationResult.committed(moved);
           }
-          settled[0] = WithdrawShortfall.of(to, variant, wanted, transaction);
+          final ShortfallCause cause =
+              WithdrawShortfall.causeOf(from, variant, wanted - moved, transaction);
+          if (moved > 0L) {
+            settled[0] = WithdrawOutcome.partial(wanted, moved, cause);
+            return OperationResult.committed(moved);
+          }
+          settled[0] = WithdrawOutcome.nothingMoved(wanted, cause);
           return OperationResult.rolledBack("nothing could be taken");
         });
     return settled[0];
