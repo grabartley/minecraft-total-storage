@@ -23,7 +23,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class TerminalSettingsPanelTest {
   private static NetworkSettingsView viewOf(int total) {
-    return new NetworkSettingsView(
+    return NetworkSettingsView.answered(
         16,
         16,
         32,
@@ -219,6 +219,17 @@ class TerminalSettingsPanelTest {
     panel.coverTopRows(TerminalSettingsLayout.ROWS);
 
     assertFalse(panel.isCoveredAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.PANEL_Y));
+  }
+
+  @Test
+  void theScrollbarUnderTheNoticeStripIsCoveredTooRatherThanGrabbable() {
+    TerminalSettingsPanel panel = containers();
+
+    panel.coverTopRows(2);
+
+    assertTrue(panel.isCoveredAt(TerminalScreenLayout.SCROLLBAR_X, TerminalSettingsLayout.rowY(0)));
+    assertFalse(
+        panel.isCoveredAt(TerminalScreenLayout.SCROLLBAR_X, TerminalSettingsLayout.rowY(2)));
   }
 
   @Test

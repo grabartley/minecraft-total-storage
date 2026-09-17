@@ -3,17 +3,47 @@ package com.grahambartley.toomanychests.screen;
 import com.grahambartley.toomanychests.filter.TagCombinationMode;
 import com.grahambartley.toomanychests.listing.ListingWindow;
 import com.grahambartley.toomanychests.network.ModNetworkingClient;
+import java.util.Objects;
 import java.util.Set;
 
 public final class TerminalRequests {
+  private static final TerminalRequestSender NETWORKING =
+      new TerminalRequestSender() {
+        @Override
+        public void rows(
+            int syncId,
+            ListingWindow window,
+            String search,
+            TagCombinationMode mode,
+            Set<String> tags) {
+          ModNetworkingClient.sendListingRequest(syncId, window, search, mode, tags);
+        }
+
+        @Override
+        public void settingsShowing(int syncId, int offset, int length) {
+          ModNetworkingClient.sendSettingsRequest(syncId, offset, length);
+        }
+
+        @Override
+        public void settingsClosed(int syncId) {
+          ModNetworkingClient.sendSettingsClosed(syncId);
+        }
+      };
+
   private final int syncId;
+  private final TerminalRequestSender sender;
   private final ListingCriteria listing = new ListingCriteria();
 
   private ListingWindow containers = ListingWindow.EMPTY;
   private boolean settingsShowing;
 
   public TerminalRequests(int syncId) {
+    this(syncId, NETWORKING);
+  }
+
+  TerminalRequests(int syncId, TerminalRequestSender sender) {
     this.syncId = syncId;
+    this.sender = Objects.requireNonNull(sender, "sender");
   }
 
   public boolean isNewListing(String search, Set<String> tags, TagCombinationMode mode) {
@@ -27,8 +57,11 @@ public final class TerminalRequests {
 
   public void rows(ListingWindow window, String search, Set<String> tags, TagCombinationMode mode) {
     listing.requested(window, search, tags, mode);
-    ModNetworkingClient.sendListingRequest(
-        syncId, listing.window(), listing.search(), listing.mode(), listing.tags());
+    sender.rows(syncId, listing.window(), listing.search(), listing.mode(), listing.tags());
+  }
+
+  public boolean isSettingsShowing() {
+    return settingsShowing;
   }
 
   public boolean needsContainers(ListingWindow window) {
@@ -38,7 +71,7 @@ public final class TerminalRequests {
   public void showSettings(ListingWindow window) {
     settingsShowing = true;
     containers = window == null ? ListingWindow.EMPTY : window;
-    ModNetworkingClient.sendSettingsRequest(syncId, containers.offset(), containers.length());
+    sender.settingsShowing(syncId, containers.offset(), containers.length());
   }
 
   public void hideSettings() {
@@ -47,6 +80,6 @@ public final class TerminalRequests {
     }
     settingsShowing = false;
     containers = ListingWindow.EMPTY;
-    ModNetworkingClient.sendSettingsClosed(syncId);
+    sender.settingsClosed(syncId);
   }
 }

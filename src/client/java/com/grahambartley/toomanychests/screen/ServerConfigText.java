@@ -15,8 +15,7 @@ public final class ServerConfigText {
   }
 
   public static Text readOnlyNotice() {
-    return line(
-        "read-only", "These are this server's settings, and changing them is not yours to do.");
+    return line("read-only", "These are this server's settings. Only an operator can change them.");
   }
 
   public static Text notConnectedNotice() {

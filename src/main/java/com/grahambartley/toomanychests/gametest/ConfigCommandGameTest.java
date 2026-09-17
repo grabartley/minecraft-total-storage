@@ -148,7 +148,7 @@ public final class ConfigCommandGameTest implements FabricGameTest {
 
     context.assertTrue(result == 0, "A non-operator should be refused rather than unable to parse");
     context.assertTrue(
-        said.stream().anyMatch(line -> line.getString().contains("not yours to do")),
+        said.stream().anyMatch(line -> line.getString().contains("only an operator")),
         "The refusal should say why, but said " + said.stream().map(Text::getString).toList());
     context.complete();
   }
@@ -165,33 +165,9 @@ public final class ConfigCommandGameTest implements FabricGameTest {
 
     context.assertTrue(result == 0, "A non-operator should be refused rather than unable to parse");
     context.assertTrue(
-        said.stream().anyMatch(line -> line.getString().contains("not yours to do")),
+        said.stream().anyMatch(line -> line.getString().contains("only an operator")),
         "The refusal should say why, but said " + said.stream().map(Text::getString).toList());
     context.complete();
-  }
-
-  private static CommandOutput collecting(List<Text> said) {
-    return new CommandOutput() {
-      @Override
-      public void sendMessage(Text message) {
-        said.add(message);
-      }
-
-      @Override
-      public boolean shouldReceiveFeedback() {
-        return true;
-      }
-
-      @Override
-      public boolean shouldTrackOutput() {
-        return true;
-      }
-
-      @Override
-      public boolean shouldBroadcastConsoleToOps() {
-        return false;
-      }
-    };
   }
 
   @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = TICK_LIMIT)
@@ -304,6 +280,30 @@ public final class ConfigCommandGameTest implements FabricGameTest {
         .stream()
         .map(Suggestion::getText)
         .toList();
+  }
+
+  private static CommandOutput collecting(List<Text> said) {
+    return new CommandOutput() {
+      @Override
+      public void sendMessage(Text message) {
+        said.add(message);
+      }
+
+      @Override
+      public boolean shouldReceiveFeedback() {
+        return true;
+      }
+
+      @Override
+      public boolean shouldTrackOutput() {
+        return true;
+      }
+
+      @Override
+      public boolean shouldBroadcastConsoleToOps() {
+        return false;
+      }
+    };
   }
 
   private static int runAsConsole(TestContext context, String command) {

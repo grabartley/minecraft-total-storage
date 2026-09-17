@@ -45,7 +45,7 @@ public final class NetworkSettingsService {
     final List<ContainerRoleEntry> all = roles.containers(world, terminal);
     final ListingWindow window = page == null ? ListingWindow.EMPTY : page;
     final int maximum = ServerConfigService.current().maxTerminalRadius();
-    return new NetworkSettingsView(
+    return NetworkSettingsView.answered(
         settings.radius(),
         TerminalRadius.effective(settings.radius(), maximum),
         maximum,

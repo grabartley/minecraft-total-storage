@@ -23,7 +23,7 @@ class NetworkSettingsPayloadTest {
   }
 
   private static NetworkSettingsView view(TerminalAccessMode mode, List<ContainerRoleEntry> rows) {
-    return new NetworkSettingsView(
+    return NetworkSettingsView.answered(
         24,
         16,
         32,
@@ -108,7 +108,7 @@ class NetworkSettingsPayloadTest {
   }
 
   @Test
-  void aForgedRowUsingMoreSlotsThanItHasReadsAsEmptyRatherThanThrowing() {
+  void aForgedRowUsingMoreSlotsThanItHasIsClampedRatherThanThrowing() {
     RegistryByteBuf buffer = buffer();
     writeHeader(buffer);
     buffer.writeVarInt(0);
@@ -129,7 +129,9 @@ class NetworkSettingsPayloadTest {
 
     assertEquals(27, received.totalSlots());
     assertEquals(
-        0, received.usedSlots(), "Impossible counts should read as nothing, not as brim full");
+        27,
+        received.usedSlots(),
+        "A forged used count should be clamped to the total, as a forged capacity is");
   }
 
   @Test

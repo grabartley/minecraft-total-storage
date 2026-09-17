@@ -87,7 +87,7 @@ public final class NetworkSettingsPayloadGameTest implements FabricGameTest {
   private static NetworkSettingsPayload payload(ContainerRoleEntry row) {
     return new NetworkSettingsPayload(
         SYNC_ID,
-        new NetworkSettingsView(
+        NetworkSettingsView.answered(
             16,
             16,
             32,

@@ -22,7 +22,7 @@ class NetworkSettingsViewTest {
 
   private static NetworkSettingsView view(
       int radius, int effective, int offset, int total, int rows) {
-    return new NetworkSettingsView(
+    return NetworkSettingsView.answered(
         radius,
         effective,
         32,
@@ -85,7 +85,7 @@ class NetworkSettingsViewTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new NetworkSettingsView(
+            NetworkSettingsView.answered(
                 16,
                 16,
                 32,
@@ -110,7 +110,7 @@ class NetworkSettingsViewTest {
   @Test
   void aViewMissingItsPartsFallsBackRatherThanCarryingNulls() {
     NetworkSettingsView view =
-        new NetworkSettingsView(16, 16, 32, null, false, false, null, null, 0, 0, null);
+        NetworkSettingsView.answered(16, 16, 32, null, false, false, null, null, 0, 0, null);
 
     assertEquals(TerminalAccessMode.OWNER, view.accessMode());
     assertTrue(view.trusted().isEmpty());

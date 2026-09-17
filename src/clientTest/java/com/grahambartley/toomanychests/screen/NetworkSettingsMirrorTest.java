@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 
 class NetworkSettingsMirrorTest {
   private static NetworkSettingsView answered(int radius) {
-    return new NetworkSettingsView(
+    return NetworkSettingsView.answered(
         radius,
         radius,
         32,

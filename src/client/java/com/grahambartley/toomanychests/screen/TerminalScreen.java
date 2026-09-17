@@ -169,7 +169,17 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
         tagsThisFrame.mayAdminister(),
         mouseX,
         mouseY);
-    if (tab.isSettings() && !settings.isCoveredAt(hoveredWindowX, hoveredWindowY)) {
+    if (!tab.isSettings()) {
+      TerminalTooltips.filterTag(
+          context,
+          textRenderer,
+          tagsThisFrame,
+          filters,
+          hoveredWindowX,
+          hoveredWindowY,
+          mouseX,
+          mouseY);
+    } else if (!settings.isCoveredAt(hoveredWindowX, hoveredWindowY)) {
       TerminalTooltips.copyTags(
           context,
           textRenderer,
@@ -184,16 +194,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
           textRenderer,
           settingsThisFrame,
           settings,
-          hoveredWindowX,
-          hoveredWindowY,
-          mouseX,
-          mouseY);
-    } else {
-      TerminalTooltips.filterTag(
-          context,
-          textRenderer,
-          tagsThisFrame,
-          filters,
           hoveredWindowX,
           hoveredWindowY,
           mouseX,
@@ -356,6 +356,9 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
       return true;
     }
     if (tab.isSettings()) {
+      if (settings.isCoveredAt(windowX, windowY)) {
+        return true;
+      }
       if (button == GridClick.LEFT_BUTTON
           && settings.isOverScrollbar(windowX, windowY)
           && settings.grabScrollbar(windowY)) {

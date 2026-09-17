@@ -36,7 +36,7 @@ public record NetworkSettingsView(
           0,
           List.of());
 
-  public NetworkSettingsView(
+  public static NetworkSettingsView answered(
       int radius,
       int effectiveRadius,
       int maxRadius,
@@ -48,7 +48,7 @@ public record NetworkSettingsView(
       int containerOffset,
       int containerTotal,
       List<ContainerRoleEntry> containers) {
-    this(
+    return new NetworkSettingsView(
         true,
         radius,
         effectiveRadius,

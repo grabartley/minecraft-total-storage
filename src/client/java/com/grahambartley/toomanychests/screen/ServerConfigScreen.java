@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests.screen;
 
+import com.grahambartley.toomanychests.access.ServerSettingsAccessRule;
 import com.grahambartley.toomanychests.config.ClientConfigMirror;
 import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.network.ModNetworkingClient;
@@ -42,8 +43,11 @@ public final class ServerConfigScreen extends Screen {
     if (client == null || client.player == null) {
       return false;
     }
-    return client.player.hasPermissionLevel(ServerConfigService.OP_PERMISSION_LEVEL)
-        || client.isInSingleplayer();
+    final boolean ownsTheWorld = client.isInSingleplayer();
+    return ServerSettingsAccessRule.mayEdit(
+        client.player.hasPermissionLevel(ServerConfigService.OP_PERMISSION_LEVEL),
+        !ownsTheWorld,
+        ownsTheWorld);
   }
 
   @Override
