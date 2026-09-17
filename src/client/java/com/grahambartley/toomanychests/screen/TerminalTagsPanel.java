@@ -29,7 +29,11 @@ public final class TerminalTagsPanel {
     armedForDelete = tagId == null ? "" : tagId;
   }
 
-  public NetworkTagEntry tagAt(NetworkTagView view, int firstVisible, int windowX, int windowY) {
+  public NetworkTagEntry tagAt(
+      NetworkTagView view, int firstVisible, int hiddenRows, int windowX, int windowY) {
+    if (TerminalSettingsLayout.rowAt(windowX, windowY) < hiddenRows) {
+      return null;
+    }
     final int index = TagsSectionLayout.tagIndexAt(windowX, windowY, firstVisible);
     final List<NetworkTagEntry> custom = view.custom();
     return index == TerminalSettingsLayout.NO_ROW || index >= custom.size()
@@ -122,7 +126,7 @@ public final class TerminalTagsPanel {
       int mouseX,
       int mouseY) {
     final List<NetworkTagEntry> custom = view.custom();
-    final NetworkTagEntry hovered = tagAt(view, firstVisible, mouseX, mouseY);
+    final NetworkTagEntry hovered = tagAt(view, firstVisible, hiddenRows, mouseX, mouseY);
     final int firstDrawn = Math.max(0, hiddenRows - TagsSectionLayout.FIRST_TAG_ROW);
     for (int row = firstDrawn; row < TagsSectionLayout.TAG_ROWS; row++) {
       final int index = firstVisible + row;

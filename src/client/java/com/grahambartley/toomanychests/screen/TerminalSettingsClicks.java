@@ -35,14 +35,12 @@ public final class TerminalSettingsClicks {
       int windowX,
       int windowY,
       int button) {
-    if (settings.isCoveredAt(windowX, windowY)) {
-      return true;
-    }
     final boolean mayAdminister = view.mayAdminister();
     return switch (settings.section()) {
       case TERMINAL -> terminal(syncId, view, windowX, windowY, button, mayAdminister);
       case CONTAINERS -> container(syncId, view, windowX, windowY, button, mayAdminister);
-      case TAGS -> tag(syncId, tagView, firstVisibleTag, windowX, windowY, button);
+      case TAGS ->
+          tag(syncId, tagView, firstVisibleTag, settings.hiddenRows(), windowX, windowY, button);
     };
   }
 
@@ -102,7 +100,13 @@ public final class TerminalSettingsClicks {
   }
 
   private boolean tag(
-      int syncId, NetworkTagView view, int firstVisibleTag, int windowX, int windowY, int button) {
+      int syncId,
+      NetworkTagView view,
+      int firstVisibleTag,
+      int hiddenRows,
+      int windowX,
+      int windowY,
+      int button) {
     if (button != GridClick.LEFT_BUTTON) {
       return false;
     }
@@ -120,7 +124,7 @@ public final class TerminalSettingsClicks {
       return true;
     }
     final TagRowRegion region = TagsSectionLayout.regionAt(windowX, windowY);
-    final NetworkTagEntry tag = tags.tagAt(view, firstVisibleTag, windowX, windowY);
+    final NetworkTagEntry tag = tags.tagAt(view, firstVisibleTag, hiddenRows, windowX, windowY);
     if (!region.isSomething() || tag == null) {
       return false;
     }

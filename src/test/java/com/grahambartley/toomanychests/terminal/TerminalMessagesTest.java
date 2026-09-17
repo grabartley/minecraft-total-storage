@@ -1,6 +1,7 @@
 package com.grahambartley.toomanychests.terminal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -17,10 +18,7 @@ class TerminalMessagesTest {
 
   @Test
   void aRescanAndAHighlightReadAsDifferentThings() {
-    assertEquals(
-        false,
-        TerminalMessages.highlighted(2)
-            .getString()
-            .equals(TerminalMessages.rescanned(2).getString()));
+    assertNotEquals(
+        TerminalMessages.rescanned(2).getString(), TerminalMessages.highlighted(2).getString());
   }
 }

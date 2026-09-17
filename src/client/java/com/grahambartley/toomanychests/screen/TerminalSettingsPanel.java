@@ -41,7 +41,7 @@ public final class TerminalSettingsPanel {
     hiddenRows = Math.max(0, Math.min(TerminalSettingsLayout.ROWS, rows));
   }
 
-  int hiddenRows() {
+  public int hiddenRows() {
     return hiddenRows;
   }
 

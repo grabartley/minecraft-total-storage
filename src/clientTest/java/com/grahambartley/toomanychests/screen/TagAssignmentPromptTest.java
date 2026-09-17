@@ -27,7 +27,7 @@ class TagAssignmentPromptTest {
     return new NetworkTagView(true, tags, Optional.empty(), Set.of());
   }
 
-  private static TagAssignmentPrompt opened() {
+  private static TagAssignmentPrompt scrolledToTheTop() {
     TagAssignmentPrompt prompt = new TagAssignmentPrompt();
     prompt.open(null);
     return prompt;
@@ -35,7 +35,7 @@ class TagAssignmentPromptTest {
 
   @Test
   void theFirstRowIsTheFirstCustomTagRatherThanAPreset() {
-    TagAssignmentPrompt prompt = opened();
+    TagAssignmentPrompt prompt = scrolledToTheTop();
     NetworkTagView view = viewOf(List.of(preset("wood"), custom("castle"), preset("stone")));
     prompt.fit(view);
 
@@ -44,7 +44,7 @@ class TagAssignmentPromptTest {
 
   @Test
   void aPresetIsNotOfferedOnAnyRow() {
-    TagAssignmentPrompt prompt = opened();
+    TagAssignmentPrompt prompt = scrolledToTheTop();
     NetworkTagView view = viewOf(List.of(preset("wood"), custom("castle"), preset("stone")));
     prompt.fit(view);
 
@@ -55,7 +55,7 @@ class TagAssignmentPromptTest {
 
   @Test
   void aNetworkOfPresetsAloneOffersNoRowsToTick() {
-    TagAssignmentPrompt prompt = opened();
+    TagAssignmentPrompt prompt = scrolledToTheTop();
     NetworkTagView view = viewOf(List.of(preset("wood"), preset("stone")));
     prompt.fit(view);
 
@@ -65,7 +65,7 @@ class TagAssignmentPromptTest {
 
   @Test
   void thePanelOnlyScrollsOnceThereAreMoreCustomTagsThanRows() {
-    TagAssignmentPrompt prompt = opened();
+    TagAssignmentPrompt prompt = scrolledToTheTop();
     NetworkTagView tooMany =
         viewOf(
             List.of(

@@ -9,8 +9,6 @@ import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 
 public final class TerminalNoticeBanner {
-  private static final float ELEVATION = 300.0F;
-
   private TerminalNoticeBanner() {}
 
   public static int settingsDrop() {
