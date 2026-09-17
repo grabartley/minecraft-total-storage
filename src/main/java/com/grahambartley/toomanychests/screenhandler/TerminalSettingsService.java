@@ -25,7 +25,7 @@ public final class TerminalSettingsService {
     if (payload == null) {
       return false;
     }
-    if (payload.window().isEmpty()) {
+    if (!payload.showing()) {
       return closed(player, payload.syncId());
     }
     final TerminalOperationContext context =
@@ -33,7 +33,7 @@ public final class TerminalSettingsService {
     if (context == null) {
       return false;
     }
-    context.handler().settings().requested(payload.window());
+    context.handler().settings().showing(payload.window());
     send(player, context.handler());
     return true;
   }

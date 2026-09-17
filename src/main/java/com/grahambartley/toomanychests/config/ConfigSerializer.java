@@ -12,7 +12,6 @@ public final class ConfigSerializer {
   static final String KEY_DEFAULT_TERMINAL_ACCESS_MODE = "defaultTerminalAccessMode";
   static final String KEY_SORT_ORDERING = "sortOrdering";
   static final String KEY_SORT_BUTTON_ENABLED = "sortButtonEnabled";
-  static final String KEY_MIDDLE_CLICK_SORT_ENABLED = "middleClickSortEnabled";
   static final String KEY_QUICK_STACK_RADIUS = "quickStackRadius";
   static final String KEY_QUICK_STACK_ENABLED = "quickStackEnabled";
   static final String KEY_DEPOSIT_ALL_SKIPS_HOTBAR = "depositAllSkipsHotbar";
@@ -32,7 +31,6 @@ public final class ConfigSerializer {
     root.addProperty(KEY_DEFAULT_TERMINAL_ACCESS_MODE, config.defaultTerminalAccessMode().id());
     root.addProperty(KEY_SORT_ORDERING, config.sortOrdering().id());
     root.addProperty(KEY_SORT_BUTTON_ENABLED, config.sortButtonEnabled());
-    root.addProperty(KEY_MIDDLE_CLICK_SORT_ENABLED, config.middleClickSortEnabled());
     root.addProperty(KEY_QUICK_STACK_RADIUS, config.quickStackRadius());
     root.addProperty(KEY_QUICK_STACK_ENABLED, config.quickStackEnabled());
     root.addProperty(KEY_DEPOSIT_ALL_SKIPS_HOTBAR, config.depositAllSkipsHotbar());
@@ -69,7 +67,6 @@ public final class ConfigSerializer {
         SortOrdering.fromId(JsonValues.string(root, KEY_SORT_ORDERING))
             .orElseGet(() -> warnUnknown(KEY_SORT_ORDERING, root, defaults.sortOrdering())),
         JsonValues.bool(root, KEY_SORT_BUTTON_ENABLED, defaults.sortButtonEnabled()),
-        JsonValues.bool(root, KEY_MIDDLE_CLICK_SORT_ENABLED, defaults.middleClickSortEnabled()),
         boundedInt(
             root,
             KEY_QUICK_STACK_RADIUS,

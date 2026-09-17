@@ -10,13 +10,19 @@ public final class LockedSlotOverlay {
   private LockedSlotOverlay() {}
 
   public static void draw(DrawContext context, Slot slot) {
-    if (!ClientPreferencesStore.current().lockedSlotTintVisible()
-        || !LockedSlotState.isLocked(slot)) {
+    if (!LockedSlotState.isLocked(slot)) {
+      return;
+    }
+    drawAt(context, slot.x, slot.y);
+  }
+
+  public static void drawAt(DrawContext context, int left, int top) {
+    if (!ClientPreferencesStore.current().lockedSlotTintVisible()) {
       return;
     }
     final int colour = LockedSlotTint.colour(true);
     if (LockedSlotTint.isPaintable(colour)) {
-      context.fill(slot.x, slot.y, slot.x + SLOT_SIZE, slot.y + SLOT_SIZE, colour);
+      context.fill(left, top, left + SLOT_SIZE, top + SLOT_SIZE, colour);
     }
   }
 }

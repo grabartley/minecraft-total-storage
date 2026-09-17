@@ -41,7 +41,6 @@ public final class ConfigCommand {
                         .executes(ConfigCommand::get)))
         .then(
             CommandManager.literal("set")
-                .requires(TooManyChestsCommand::isOperator)
                 .then(
                     CommandManager.argument(SETTING, StringArgumentType.word())
                         .suggests(SETTING_NAMES)
@@ -51,7 +50,6 @@ public final class ConfigCommand {
                                 .executes(ConfigCommand::set))))
         .then(
             CommandManager.literal("reset")
-                .requires(TooManyChestsCommand::isOperator)
                 .then(CommandManager.literal("all").executes(ConfigCommand::resetAll))
                 .then(
                     CommandManager.argument(SETTING, StringArgumentType.word())
@@ -82,6 +80,9 @@ public final class ConfigCommand {
   }
 
   private static int set(CommandContext<ServerCommandSource> context) {
+    if (ConfigWriteGate.refuses(context)) {
+      return 0;
+    }
     final Optional<ConfigSetting> setting = named(context);
     if (setting.isEmpty()) {
       return unknown(context);
@@ -100,6 +101,9 @@ public final class ConfigCommand {
   }
 
   private static int reset(CommandContext<ServerCommandSource> context) {
+    if (ConfigWriteGate.refuses(context)) {
+      return 0;
+    }
     final Optional<ConfigSetting> setting = named(context);
     if (setting.isEmpty()) {
       return unknown(context);
@@ -112,6 +116,9 @@ public final class ConfigCommand {
   }
 
   private static int resetAll(CommandContext<ServerCommandSource> context) {
+    if (ConfigWriteGate.refuses(context)) {
+      return 0;
+    }
     return apply(context, TooManyChestsConfig.defaults(), CommandMessages.everySettingReset());
   }
 

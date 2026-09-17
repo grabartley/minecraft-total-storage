@@ -5,7 +5,7 @@ import java.util.Locale;
 
 public enum ConfigSection {
   DEFAULTS(List.of("maxTerminalRadius", "defaultTerminalAccessMode", "quickStackRadius")),
-  SORTING(List.of("sortOrdering", "sortButtonEnabled", "middleClickSortEnabled")),
+  SORTING(List.of("sortOrdering", "sortButtonEnabled")),
   FEATURES(List.of("quickStackEnabled", "depositAllSkipsHotbar", "nearCapacityWarningPercent")),
   PERFORMANCE(
       List.of("expensiveOperationCooldownTicks", "movesPerTickBudget", "largeOperationContainers"));

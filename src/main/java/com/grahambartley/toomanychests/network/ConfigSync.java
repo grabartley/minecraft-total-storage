@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests.network;
 
+import com.grahambartley.toomanychests.access.ServerSettingsAccess;
 import com.grahambartley.toomanychests.config.ServerConfigChanges;
 import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.config.TooManyChestsConfig;
@@ -34,7 +35,7 @@ public final class ConfigSync {
       return;
     }
     if (requested == null
-        || !player.hasPermissionLevel(ServerConfigService.OP_PERMISSION_LEVEL)
+        || !ServerSettingsAccess.mayEdit(player)
         || !ServerConfigService.update(player.getServer(), requested)) {
       sendTo(player);
     }

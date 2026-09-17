@@ -135,6 +135,58 @@ class TerminalSettingsPanelTest {
   }
 
   @Test
+  void aRowUnderTheNoticeStripCannotBeClicked() {
+    TerminalSettingsPanel panel = containers();
+
+    panel.coverTopRows(2);
+
+    assertTrue(
+        panel.containerRowAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(0)) < 0);
+    assertTrue(
+        panel.containerRowAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(1)) < 0);
+    assertEquals(
+        2, panel.containerRowAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(2)));
+  }
+
+  @Test
+  void aSettingUnderTheNoticeStripCannotBeClicked() {
+    TerminalSettingsPanel panel = new TerminalSettingsPanel();
+
+    panel.coverTopRows(1);
+
+    assertEquals(
+        null,
+        panel.settingAt(
+            TerminalSettingsLayout.PANEL_X,
+            TerminalSettingsLayout.rowY(TerminalSetting.RADIUS.row())));
+    assertEquals(
+        TerminalSetting.ACCESS,
+        panel.settingAt(
+            TerminalSettingsLayout.PANEL_X,
+            TerminalSettingsLayout.rowY(TerminalSetting.ACCESS.row())));
+  }
+
+  @Test
+  void aNoticeTallerThanThePanelCoversNoMoreRowsThanThereAre() {
+    TerminalSettingsPanel panel = containers();
+
+    panel.coverTopRows(Integer.MAX_VALUE);
+
+    assertEquals(TerminalSettingsLayout.ROWS, panel.hiddenRows());
+  }
+
+  @Test
+  void aNoticeThatHasGoneUncoversTheRowsAgain() {
+    TerminalSettingsPanel panel = containers();
+    panel.coverTopRows(2);
+
+    panel.coverTopRows(0);
+
+    assertEquals(
+        0, panel.containerRowAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(0)));
+  }
+
+  @Test
   void switchingSectionReturnsTheListToItsTop() {
     TerminalSettingsPanel panel = containers();
     panel.fit(viewOf(TerminalSettingsLayout.ROWS + 5), 0);

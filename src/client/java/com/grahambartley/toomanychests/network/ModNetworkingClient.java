@@ -107,7 +107,11 @@ public final class ModNetworkingClient {
   }
 
   public static void sendSettingsRequest(int syncId, int offset, int length) {
-    ClientPlayNetworking.send(new NetworkSettingsRequestPayload(syncId, offset, length));
+    ClientPlayNetworking.send(NetworkSettingsRequestPayload.showing(syncId, offset, length));
+  }
+
+  public static void sendSettingsClosed(int syncId) {
+    ClientPlayNetworking.send(NetworkSettingsRequestPayload.closed(syncId));
   }
 
   public static void sendRadiusEdit(int syncId, int blocks) {

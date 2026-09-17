@@ -116,4 +116,14 @@ class NetworkSettingsViewTest {
     assertTrue(view.trusted().isEmpty());
     assertTrue(view.containers().isEmpty());
   }
+
+  @Test
+  void aViewNobodyHasAnsweredYetSaysSo() {
+    assertFalse(NetworkSettingsView.pending().answered());
+  }
+
+  @Test
+  void aViewTheServerBuiltCountsAsAnswered() {
+    assertTrue(view(16, 16, 0, 1, 1).answered());
+  }
 }

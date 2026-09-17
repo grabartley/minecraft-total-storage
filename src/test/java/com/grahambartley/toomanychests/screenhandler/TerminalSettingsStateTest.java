@@ -14,10 +14,10 @@ class TerminalSettingsStateTest {
   }
 
   @Test
-  void askingForRowsIsWhatOpensThePanel() {
+  void showingThePanelIsWhatOpensIt() {
     TerminalSettingsState state = new TerminalSettingsState();
 
-    state.requested(new ListingWindow(4, 8));
+    state.showing(new ListingWindow(4, 8));
 
     assertTrue(state.isOpen());
     assertEquals(4, state.window().offset());
@@ -27,7 +27,7 @@ class TerminalSettingsStateTest {
   @Test
   void closingThePanelStopsItBeingSentAnything() {
     TerminalSettingsState state = new TerminalSettingsState();
-    state.requested(new ListingWindow(4, 8));
+    state.showing(new ListingWindow(4, 8));
 
     state.closed();
 
@@ -35,12 +35,12 @@ class TerminalSettingsStateTest {
   }
 
   @Test
-  void askingForNothingLeavesThePanelClosedRatherThanEmpty() {
+  void aSectionWantingNoRowsStillCountsAsOpen() {
     TerminalSettingsState state = new TerminalSettingsState();
 
-    state.requested(null);
+    state.showing(null);
 
-    assertFalse(state.isOpen());
+    assertTrue(state.isOpen());
     assertEquals(ListingWindow.EMPTY, state.window());
   }
 }

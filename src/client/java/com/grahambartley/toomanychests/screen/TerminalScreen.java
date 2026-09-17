@@ -35,7 +35,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   private final TerminalPrompts prompts;
   private final TerminalSettingsClicks settingsClicks;
 
-  private final ListingCriteria requested = new ListingCriteria();
+  private final TerminalRequests requests;
 
   private TerminalTab tab = TerminalTab.ITEMS;
   private TerminalSearchBox search;
@@ -47,8 +47,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   private NetworkSettingsView settingsThisFrame = NetworkSettingsView.pending();
   private NetworkTagView tagsThisFrame = NetworkTagView.pending();
-
-  private ListingWindow requestedContainers = ListingWindow.EMPTY;
 
   private TerminalTab hoveredTab;
   private int hoveredCell = TerminalScreenLayout.NO_CELL;
@@ -63,6 +61,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     this.titleY = TerminalScreenLayout.TITLE_Y;
     this.playerInventoryTitleX = TerminalScreenLayout.INVENTORY_LABEL_X;
     this.playerInventoryTitleY = TerminalScreenLayout.INVENTORY_LABEL_Y;
+    this.requests = new TerminalRequests(handler.syncId);
     this.prompts = new TerminalPrompts(handler.syncId);
     this.settingsClicks =
         new TerminalSettingsClicks(settings, tagsPanel, prompts.naming(), prompts.copying());
@@ -132,20 +131,20 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     if (tagsThisFrame.answered()) {
       selection.retainAll(knownTagIds());
     }
-    if (requested.isNewQuery(search.text())
-        || requested.isNewFilter(selection.active(), selection.mode())) {
+    if (requests.isNewListing(search.text(), selection.active(), selection.mode())) {
       items.scroll().scrollTo(0);
     }
     if (!tab.isSettings()
-        && requested.needsRequest(
+        && requests.needsRows(
             items.scroll().window(), search.text(), selection.active(), selection.mode())) {
       requestVisibleRows();
     }
     if (tab.isSettings()
         && settings.section() == SettingsSection.CONTAINERS
-        && !settings.scroll().window().equals(requestedContainers)) {
+        && requests.needsContainers(settings.scroll().window())) {
       requestVisibleContainers();
     }
+    settings.coverTopRows(tab.isSettings() ? noticeRows() : 0);
     updateWidgets(items.page().status());
     updateHovered(mouseX, mouseY);
     super.render(context, mouseX, mouseY, delta);
@@ -204,14 +203,14 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   }
 
   private int noticeRows() {
-    if (tab.isSettings() || !TerminalNoticeMirror.isShowingOn(handler.syncId)) {
+    if (!TerminalNoticeMirror.isShowingOn(handler.syncId)) {
       return 0;
     }
     return TerminalNoticeBanner.rowsCovered(textRenderer, TerminalNoticeMirror.message());
   }
 
   private void drawNotice(DrawContext context) {
-    if (tab.isSettings() || !TerminalNoticeMirror.isShowingOn(handler.syncId)) {
+    if (!TerminalNoticeMirror.isShowingOn(handler.syncId)) {
       return;
     }
     TerminalNoticeBanner.draw(
@@ -220,7 +219,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
         TerminalNoticeMirror.message(),
         TerminalNoticeMirror.needsAnAnswer(),
         x,
-        y);
+        tab.isSettings() ? y + TerminalNoticeBanner.settingsDrop() : y);
   }
 
   private void updateHovered(int mouseX, int mouseY) {
@@ -401,14 +400,10 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     }
     tab = shown;
     if (tab.isSettings()) {
-      if (settings.section() == SettingsSection.CONTAINERS) {
-        requestVisibleContainers();
-      } else {
-        stopAskingForContainers();
-      }
+      requestVisibleContainers();
       return;
     }
-    stopAskingForContainers();
+    requests.hideSettings();
     search.setVisible(true);
     setFocused(search.widget());
     requestVisibleRows();
@@ -420,10 +415,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     }
     tagsPanel.disarm();
     settings.show(shown);
-    if (shown == SettingsSection.TAGS) {
-      stopAskingForContainers();
-      return;
-    }
     requestVisibleContainers();
   }
 
@@ -477,16 +468,20 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     consolidate.active = sortNetwork.active;
     rescan.visible = !prompts.isAnyOpen() && settingsShowing;
     highlight.visible = rescan.visible;
-    rescan.active = settingsThisFrame.powered() && settingsThisFrame.mayAdminister();
-    highlight.active = settingsThisFrame.powered();
+    rescan.active =
+        settingsThisFrame.answered()
+            && settingsThisFrame.powered()
+            && settingsThisFrame.mayAdminister();
+    highlight.active = settingsThisFrame.answered() && settingsThisFrame.powered();
     search.setVisible(!settingsShowing);
   }
 
   private boolean isDepositAllKey(int keyCode, int scanCode) {
-    return ModKeyBindings.isDepositAll(keyCode, scanCode)
-        && !tab.isSettings()
-        && !prompts.isTagging()
-        && !search.isFocused();
+    return DepositAllKey.deposits(
+        ModKeyBindings.isDepositAll(keyCode, scanCode),
+        tab.isSettings(),
+        prompts.isTagging(),
+        search.isSearching());
   }
 
   private void depositEverything() {
@@ -524,6 +519,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
       return true;
     }
     if (isDepositAllKey(keyCode, scanCode)) {
+      setFocused(null);
       depositEverything();
       return true;
     }
@@ -570,10 +566,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   }
 
   private void requestVisibleRows() {
-    requested.requested(
-        items.scroll().window(), search.text(), selection.active(), selection.mode());
-    ModNetworkingClient.sendListingRequest(
-        handler.syncId, requested.window(), requested.search(), requested.mode(), requested.tags());
+    requests.rows(items.scroll().window(), search.text(), selection.active(), selection.mode());
   }
 
   private Set<String> knownTagIds() {
@@ -585,17 +578,10 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   }
 
   private void requestVisibleContainers() {
-    requestedContainers = settings.scroll().window();
-    ModNetworkingClient.sendSettingsRequest(
-        handler.syncId, requestedContainers.offset(), requestedContainers.length());
-  }
-
-  private void stopAskingForContainers() {
-    if (requestedContainers.isEmpty()) {
-      return;
-    }
-    requestedContainers = ListingWindow.EMPTY;
-    ModNetworkingClient.sendSettingsRequest(handler.syncId, 0, 0);
+    requests.showSettings(
+        settings.section() == SettingsSection.CONTAINERS
+            ? settings.scroll().window()
+            : ListingWindow.EMPTY);
   }
 
   private int windowX(double mouseX) {

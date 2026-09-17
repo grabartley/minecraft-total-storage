@@ -93,8 +93,49 @@ class NetworkSettingsPayloadTest {
     ContainerRoleEntry received = roundTrip(sent).view().containers().get(0);
 
     assertEquals(0.0, received.distanceSq());
-    assertEquals(0, received.usedSlots());
-    assertEquals(0, received.totalSlots());
+  }
+
+  @Test
+  void howFullEachContainerIsReachesTheRowsThePanelDraws() {
+    NetworkSettingsPayload sent =
+        new NetworkSettingsPayload(
+            1, view(TerminalAccessMode.OWNER, List.of(row(9, ContainerRole.GENERAL))));
+
+    ContainerRoleEntry received = roundTrip(sent).view().containers().get(0);
+
+    assertEquals(3, received.usedSlots());
+    assertEquals(27, received.totalSlots());
+  }
+
+  @Test
+  void aForgedRowUsingMoreSlotsThanItHasIsClampedRatherThanThrowing() {
+    RegistryByteBuf buffer = buffer();
+    writeHeader(buffer);
+    buffer.writeVarInt(0);
+    buffer.writeVarInt(0);
+    buffer.writeVarInt(0);
+    buffer.writeVarInt(1);
+    buffer.writeVarInt(1);
+    buffer.writeBlockPos(new BlockPos(1, 2, 3));
+    buffer.writeEnumConstant(ContainerRole.GENERAL);
+    buffer.writeVarInt(0);
+    buffer.writeVarLong(0L);
+    buffer.writeVarInt(900);
+    buffer.writeVarInt(27);
+    buffer.writeBoolean(false);
+
+    ContainerRoleEntry received =
+        NetworkSettingsPayload.CODEC.decode(buffer).view().containers().get(0);
+
+    assertEquals(27, received.totalSlots());
+    assertEquals(27, received.usedSlots());
+  }
+
+  @Test
+  void aPendingViewStaysPendingAcrossTheWire() {
+    assertEquals(
+        false,
+        roundTrip(new NetworkSettingsPayload(1, NetworkSettingsView.pending())).view().answered());
   }
 
   @Test
@@ -131,6 +172,7 @@ class NetworkSettingsPayloadTest {
 
   private static void writeHeader(RegistryByteBuf buffer) {
     buffer.writeVarInt(1);
+    buffer.writeBoolean(true);
     buffer.writeVarInt(16);
     buffer.writeVarInt(16);
     buffer.writeVarInt(32);

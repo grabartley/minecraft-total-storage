@@ -4,6 +4,7 @@ import com.grahambartley.toomanychests.access.TerminalCaller;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
 import com.grahambartley.toomanychests.terminal.ContainerRoleService;
+import com.grahambartley.toomanychests.terminal.NetworkCapacity;
 import com.grahambartley.toomanychests.terminal.RoleChangeOutcome;
 import com.grahambartley.toomanychests.terminal.RoleTally;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
@@ -232,6 +233,77 @@ public final class ContainerRoleServiceGameTest implements FabricGameTest {
         roles.containers(context.getWorld(), terminal(context)).isEmpty(),
         "An unpowered terminal listed containers");
     NetworkOperationFixture.finish(context, player);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aRowSaysHowManyOfItsSlotsAreInUse(TestContext context) {
+    BarrelBlockEntity barrel =
+        NetworkOperationFixture.stockedBarrel(
+            context, NetworkOperationFixture.EAST_BARREL, Items.DIAMOND, 12);
+    barrel.setStack(1, new ItemStack(Items.COBBLESTONE, 4));
+    barrel.markDirty();
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.WEST_BARREL);
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+
+    List<ContainerRoleEntry> listed = roles.containers(context.getWorld(), terminal(context));
+    ContainerRoleEntry stocked = rowFor(listed, east(context));
+    ContainerRoleEntry empty =
+        rowFor(listed, context.getAbsolutePos(NetworkOperationFixture.WEST_BARREL));
+
+    context.assertTrue(
+        stocked.usedSlots() == 2 && stocked.totalSlots() == barrel.size(),
+        "A barrel holding two stacks should report 2 of "
+            + barrel.size()
+            + " but reported "
+            + stocked.usedSlots()
+            + " of "
+            + stocked.totalSlots());
+    context.assertTrue(
+        empty.usedSlots() == 0 && empty.totalSlots() == barrel.size(),
+        "An empty barrel should report 0 of "
+            + barrel.size()
+            + " but reported "
+            + empty.usedSlots()
+            + " of "
+            + empty.totalSlots());
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void theRowsAddUpToTheCapacityTheTerminalSectionShows(TestContext context) {
+    NetworkOperationFixture.stockedBarrel(
+        context, NetworkOperationFixture.EAST_BARREL, Items.DIAMOND, 12);
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.WEST_BARREL);
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    roles.assign(
+        context.getWorld(),
+        terminal(context),
+        TerminalCaller.of(player),
+        east(context),
+        ContainerRole.EXCLUDED);
+
+    List<ContainerRoleEntry> listed = roles.containers(context.getWorld(), terminal(context));
+    NetworkCapacity capacity = NetworkCapacity.of(listed);
+    ContainerRoleEntry counted =
+        rowFor(listed, context.getAbsolutePos(NetworkOperationFixture.WEST_BARREL));
+
+    context.assertTrue(
+        capacity.totalSlots() == counted.totalSlots(),
+        "An excluded container should be left out of the capacity, got " + capacity);
+    context.assertTrue(
+        capacity.usedSlots() == counted.usedSlots(),
+        "The capacity should be the sum of the rows it counts, got " + capacity);
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  private static ContainerRoleEntry rowFor(List<ContainerRoleEntry> rows, BlockPos container) {
+    return rows.stream().filter(row -> row.container().equals(container)).findFirst().orElseThrow();
   }
 
   private static BlockPos terminal(TestContext context) {

@@ -8,10 +8,13 @@ public final class LockedSlotState {
   private LockedSlotState() {}
 
   public static boolean isLocked(Slot slot) {
+    return isLocked(LockSlotTarget.lockableIndex(slot));
+  }
+
+  public static boolean isLocked(int inventorySlot) {
     final PlayerEntity player = MinecraftClient.getInstance().player;
-    final int index = LockSlotTarget.lockableIndex(slot);
     return player != null
-        && index != LockSlotTarget.NONE
-        && LockedSlotsAttachment.get(player).isLocked(index);
+        && LockedSlots.isValidSlot(inventorySlot)
+        && LockedSlotsAttachment.get(player).isLocked(inventorySlot);
   }
 }

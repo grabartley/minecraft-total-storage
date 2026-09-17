@@ -35,7 +35,7 @@ Alongside it, two conveniences that work with no terminal at all: a **universal 
 | Safe in a modpack | Every item movement is one server-side transaction; conservation is asserted by adversarial gametests |
 | Costs nothing when idle | An unpowered terminal registers no listeners and does no per-tick work at all |
 | Works with the blocks players already own | Built on `ItemStorage.SIDED`, so vanilla and modded containers work with no per-block code |
-| Vanilla clients are not second-class | Sorting logic is server-side, reachable by command and middle-click with no client mod |
+| Vanilla clients are not second-class | Sorting logic is server-side, reachable by command with no client mod |
 | Trustworthy near a curated chest | The `Excluded` role means the network lists a container but never writes to or reorders it |
 
 ### 1.4 Non-goals
@@ -81,7 +81,7 @@ Recorded so the boundary is deliberate rather than accidental.
 |---|---|---|
 | **Player** | Anyone with the mod on their client or connecting to a server running it | Find items fast, deposit without deciding, keep their hotbar intact |
 | **Terminal owner** | The player who placed a given terminal | Control who reaches their storage and how it is organised |
-| **Server operator** | Permission level 2 | Configure the mod without a client, cap what players can cost the server, moderate |
+| **Server operator** | Permission level 2, or the owner of a singleplayer world | Configure the mod without a client, cap what players can cost the server, moderate |
 | **Pack author** | Assembles a modpack | Tune performance caps, override container eligibility, ship a standard configuration |
 | **Vanilla client** | A player with no client mod, connected to a modded server | Sorting still works; the terminal does not |
 
@@ -322,7 +322,7 @@ Default order: category by preset tag grouping, then registry identifier, then d
 
 **Actor:** Any player, including a vanilla client
 
-A sort button appears on every container screen and the player inventory. A keybind does the same without the mouse. A vanilla client with no mod installed sorts by command or middle-click, because the logic is server-side.
+A sort button appears on every container screen and the player inventory. A keybind does the same without the mouse. A vanilla client with no mod installed sorts by command, because the logic is server-side.
 
 | ID | Requirement |
 |---|---|
@@ -335,10 +335,9 @@ A sort button appears on every container screen and the player inventory. A keyb
 | BTN-7 | A rebindable keybind sorts the container the player has open, or their inventory |
 | BTN-8 | No default keybinding conflicts with a vanilla key |
 | BTN-9 | `/tmc sort` sorts the open container, or the inventory when none is open, for any player |
-| BTN-10 | Middle-click sorts the open container with no client mod, without disturbing creative stack cloning |
-| BTN-11 | The button and the middle-click gesture are each disableable in config, leaving the command working |
+| BTN-11 | The button is disableable in config, leaving the command working |
 
-**Not supported:** sorting a container the player does not have open; sorting by replaying simulated slot clicks; a client-only installation providing sorting.
+**Not supported:** sorting a container the player does not have open; sorting by replaying simulated slot clicks; a client-only installation providing sorting; reinterpreting a vanilla mouse gesture as a sort, which an unmodified survival client never sends.
 
 **Enforcement:** server, validated against the player's current screen handler. The client contributes the button, the keybind, and a packet.
 
@@ -386,7 +385,7 @@ An operator configures every behaviour from the console, with no client mod and 
 | CFG-6 | Value validation reports the valid range rather than silently clamping at the command |
 | CFG-7 | Config syncs to clients on join and on change |
 | CFG-8 | Every per-network setting reachable from the interface is also reachable by command, targeting a terminal by position |
-| CFG-9 | Every server-wide setting described in the settings model is editable from a Mod Menu screen, read-only for non-operators rather than hidden; container eligibility overrides stay command-only, being a set keyed by block rather than one value (ADR 0019) |
+| CFG-9 | Every server-wide setting described in the settings model is editable from a Mod Menu screen, read-only for non-operators rather than hidden; a refused write says why rather than failing to parse; container eligibility overrides stay command-only, being a set keyed by block rather than one value (ADR 0019) |
 | CFG-10 | Expensive operations are rate limited per player and per operation, with feedback naming the operation (ADR 0031) |
 | CFG-11 | Every server-to-client list payload is capped, and either paged or truncated, rather than built unbounded |
 | CFG-12 | Hitting a cap or budget logs once, not once per occurrence |
@@ -401,7 +400,6 @@ An operator configures every behaviour from the console, with no client mod and 
 | Default terminal access mode | `Owner` | Applies to newly placed terminals only |
 | Sort ordering strategy | Registry identifier | Display-name ordering is the alternative |
 | Sort button enabled | On | |
-| Middle-click sort gesture enabled | On | |
 | Quick-stack radius | 8 | 1 to 64 |
 | Quick stack enabled | On | Off refuses the button, the keybind and the command |
 | Deposit all skips hotbar | Off | |

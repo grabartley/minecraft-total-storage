@@ -39,9 +39,11 @@ public final class ServerConfigScreen extends Screen {
 
   private static boolean canEdit() {
     final MinecraftClient client = MinecraftClient.getInstance();
-    return client != null
-        && client.player != null
-        && client.player.hasPermissionLevel(ServerConfigService.OP_PERMISSION_LEVEL);
+    if (client == null || client.player == null) {
+      return false;
+    }
+    return client.player.hasPermissionLevel(ServerConfigService.OP_PERMISSION_LEVEL)
+        || client.isInSingleplayer();
   }
 
   @Override

@@ -198,7 +198,7 @@ public final class TerminalPrompts {
       return true;
     }
     final NetworkTagEntry tag = tagging.tagAt(tags, windowX, windowY);
-    if (tag == null || tag.immutable()) {
+    if (tag == null) {
       return true;
     }
     if (shiftDown) {

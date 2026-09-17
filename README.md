@@ -13,7 +13,7 @@ A better item storage solution for Minecraft.
 | [JEI](https://modrinth.com/mod/jei) | No | Client | The terminal's recipe shows up in it, and this mod keeps its overlay clear of the buttons it draws. |
 | [EMI](https://modrinth.com/mod/emi) | No | Client | The same, for players who use EMI instead. |
 
-**The mod has to be on the server.** Every operation that moves an item is decided server-side, which is what lets a completely vanilla client sort a chest by middle-clicking it. Installing it on the client as well adds the terminal screen, the sort and quick stack buttons, slot locking, and the keybinds.
+**The mod has to be on the server.** Every operation that moves an item is decided server-side, which is what lets a completely vanilla client sort a chest with `/tmc sort`. Installing it on the client as well adds the terminal screen, the sort and quick stack buttons, slot locking, and the keybinds.
 
 There are no other hard dependencies. Mod Menu, JEI and EMI are each loaded through a guarded integration, so a dedicated server that has none of them loads none of their classes.
 
@@ -113,7 +113,7 @@ Where the items go is decided by the same rules as a deposit. A `Filtered` conta
 
 A network-wide operation is the mod's longest-running piece of work, so each tick spends an allowance of `movesPerTickBudget`, counted in the containers and slots the work actually reads, and continues on the next tick instead of stalling the server. The terminal stays usable while it runs, and progress is reported as it goes.
 
-Everything these operations have to say is said **inside the terminal**, on a strip across the top of the listing, because a question you must answer is no use on the action bar behind an open screen. A strip that is asking wears the lit chrome and stays up for ten seconds; one that is reporting wears the plain chrome and goes after five. With no terminal open, the same words arrive on the action bar as before. Each step commits on its own, which is what "cancel" means here: nothing further is started, the step in flight settles or rolls back, and no item is ever lost. See [ADR 0036](docs/adr/0036-a-long-operation-commits-one-step-at-a-time.md).
+Everything these operations have to say is said **inside the terminal**, on a strip across the top of whichever tab is showing, because a question you must answer is no use on the action bar behind an open screen. On the settings tab the strip sits below the section tabs and the rows it covers step aside for it, so rescanning and highlighting report where you pressed them. A strip that is asking wears the lit chrome and stays up for ten seconds; one that is reporting wears the plain chrome and goes after five. With no terminal open, the same words arrive on the action bar as before. Each step commits on its own, which is what "cancel" means here: nothing further is started, the step in flight settles or rolls back, and no item is ever lost. See [ADR 0036](docs/adr/0036-a-long-operation-commits-one-step-at-a-time.md).
 
 Only the owner and operators can run either, checked when the request arrives rather than when the button is drawn, and both are rate limited like deposit all.
 
@@ -123,7 +123,7 @@ A chest does not need a terminal to be worth tidying, so **every container scree
 
 The button sends nothing but the intent to sort the screen that is open, and the server decides what that means, so a modified client cannot use it to reach a container it does not have open. It reports what happened on the action bar: sorted, already sorted, or nothing to sort. A server that would rather not offer it sets `sortButtonEnabled` to `false`, which greys the button out and refuses what the button sends, checked on the server rather than trusted to the client. `/tmc sort` is a separate surface and keeps working, which is what a player with no client mod uses.
 
-**Middle-click a slot in any sortable container and it sorts, with no client mod at all.** The server reads the vanilla slot-click packet, so this works from a completely unmodified client connecting to a modded server, which is the thing that makes this mod worth putting on a public server. Creative middle-click keeps its vanilla meaning and clones the stack, so the gesture is only ever read in survival and adventure. A server that would rather not reinterpret a vanilla input sets `middleClickSortEnabled` to `false`, which leaves `/tmc sort` and the button working.
+**`/tmc sort` sorts the container you have open, with no client mod at all.** That is the surface a completely unmodified client uses on a modded server, which is what makes this mod worth putting on a public one. There is no middle-click gesture: a survival client sends no slot-click packet for the pick-item button at all, so there is nothing for a server to read.
 
 There is also a **sort keybind**, bound to `B` by default and rebindable under Too Many Chests in the controls screen. It sorts the container screen in front of you, or your inventory, and it keeps working with the button hidden, which is the point of having it.
 
@@ -133,7 +133,7 @@ There is also a **sort keybind**, bound to `B` by default and rebindable under T
 
 **Alt-click a slot in your inventory to lock it.** A locked slot is never deposited, never quick stacked, never used to land a withdrawal, and never moved by sorting, and every one of those is enforced on the server rather than filtered on the client.
 
-A locked slot wears a padlock badge in the top-left corner of the item, over the item and its decorations, and an amber wash behind it. **The badge carries the state and the wash only reinforces it**, so a player who cannot separate the colours loses nothing. That ordering is why the wash can be turned off and the badge cannot: set `lockedSlotTintVisible` to `false` for a quieter inventory. The badge leaves the stack count and the durability bar alone, both of which vanilla draws along the bottom. See [`docs/locked-slot-art.md`](docs/locked-slot-art.md).
+A locked slot wears a padlock badge in the top-left corner of the item, over the item and its decorations, and an amber wash behind it. **The badge carries the state and the wash only reinforces it**, so a player who cannot separate the colours loses nothing. That ordering is why the wash can be turned off and the badge cannot: set `lockedSlotTintVisible` to `false` for a quieter inventory. The badge leaves the stack count and the durability bar alone, both of which vanilla draws along the bottom. It is drawn on the in-world hotbar too, so a pinned pickaxe reads as pinned while you are out mining and not only while a container is open. See [`docs/locked-slot-art.md`](docs/locked-slot-art.md).
 
 ## Quick stacking into what is nearby
 
@@ -158,10 +158,10 @@ Three keybinds live under Too Many Chests in the vanilla controls screen, all re
 | Key | Default | What it does |
 |---|---|---|
 | Sort container | `B` | Sorts the container screen in front of you, or your inventory. Keeps working with the button hidden |
-| Deposit all | `R` | Empties your inventory into the terminal you have open. Yields to the search box while it has focus |
+| Deposit all | `R` | Empties your inventory into the terminal you have open. Yields to the search box while it holds a query |
 | Quick stack | `V` | Tops up the containers around you, from the inventory screen or with no screen open at all |
 
-**The server settings have a screen too.** With [Mod Menu](https://modrinth.com/mod/modmenu) installed, the configure button beside Too Many Chests opens every server-wide setting grouped by what it affects, each one showing its range and its default. An operator can change them and the change goes to the server, which checks the permission again before applying it. Everybody else sees the same screen read-only, because knowing what the radius cap is on the server you are playing on is reasonable even when changing it is not. Values follow the server, so a setting moved by command updates the screen under you as long as you have not started editing.
+**The server settings have a screen too.** With [Mod Menu](https://modrinth.com/mod/modmenu) installed, the configure button beside Too Many Chests opens every server-wide setting grouped by what it affects, each one showing its range and its default. An operator, or the owner of a singleplayer world whether or not cheats are on, can change them and the change goes to the server, which checks the permission again before applying it. Everybody else sees the same screen read-only, because knowing what the radius cap is on the server you are playing on is reasonable even when changing it is not. Values follow the server, so a setting moved by command updates the screen under you as long as you have not started editing.
 
 ## Configuring a network
 
@@ -177,7 +177,7 @@ Only the owner and operators can change any of it. Everyone else sees the same p
 
 ## Seeing what a terminal reaches
 
-"Why isn't that chest included" is the question a radius always produces, so the terminal answers it by outlining the containers it is holding, in the world. The outlines appear when you change the radius, and whenever you ask for them from the settings view or with `/tmc terminal <pos> highlight`. They fade after a few seconds: this is feedback, not an overlay.
+"Why isn't that chest included" is the question a radius always produces, so the terminal answers it by outlining the containers it is holding, in the world. The outlines appear when you change the radius, and whenever you ask for them from the settings view or with `/tmc terminal <pos> highlight`. They fade after a few seconds: this is feedback, not an overlay. A double chest is outlined as the one container it is, across both of its blocks, and the outline follows the block state, so splitting a chest while the outline is up redraws it rather than leaving a stale box.
 
 Each outline is coloured by that container's role, and an `Excluded` one is drawn as a doubled line as well as a different colour, so the distinction survives a player who cannot separate the red from the green. An unpowered terminal outlines nothing, because it is holding nothing.
 
@@ -245,8 +245,7 @@ Server settings live in `too-many-chests/server-config.json` inside the world di
 | Setting | Default | Range | What it affects |
 |---|---|---|---|
 | `sortOrdering` | `registry_id` | `registry_id`, `display_name` | How sorted containers are ordered. |
-| `sortButtonEnabled` | `true` | true or false | Whether the sort button and the sort keybind are offered. `/tmc sort` and middle-click are separate surfaces. |
-| `middleClickSortEnabled` | `true` | true or false | Whether a survival middle-click in a container is read as a sort. Switching it off leaves the command and the button working. |
+| `sortButtonEnabled` | `true` | true or false | Whether the sort button and the sort keybind are offered. `/tmc sort` is a separate surface and keeps working. |
 
 **Features**
 
@@ -277,13 +276,13 @@ Every server-wide setting is configurable from the console, so a server can be s
 | `/tmc` | anyone | Lists the commands |
 | `/tmc config list` | anyone | Every setting, its value, and its default |
 | `/tmc config get <setting>` | anyone | One setting's value |
-| `/tmc config set <setting> <value>` | operators | Moves a setting, refusing a value outside its range |
-| `/tmc config reset <setting>` | operators | Restores one setting's default |
-| `/tmc config reset all` | operators | Restores every default |
+| `/tmc config set <setting> <value>` | operators, and a singleplayer host | Moves a setting, refusing a value outside its range |
+| `/tmc config reset <setting>` | operators, and a singleplayer host | Restores one setting's default |
+| `/tmc config reset all` | operators, and a singleplayer host | Restores every default |
 | `/tmc config eligibility list` | anyone | Blocks forced into or out of every network |
-| `/tmc config eligibility set <block> <true\|false>` | operators | Forces a block eligible or ineligible |
-| `/tmc config eligibility clear <block>` | operators | Stops forcing that block |
-| `/tmc config eligibility clear all` | operators | Stops forcing every block |
+| `/tmc config eligibility set <block> <true\|false>` | operators, and a singleplayer host | Forces a block eligible or ineligible |
+| `/tmc config eligibility clear <block>` | operators, and a singleplayer host | Stops forcing that block |
+| `/tmc config eligibility clear all` | operators, and a singleplayer host | Stops forcing every block |
 | `/tmc terminal <pos> radius` | anyone | One terminal's radius, and what it actually reaches |
 | `/tmc terminal <pos> radius <blocks>` | owner or operators | Sets one terminal's radius, clamped to the server maximum |
 | `/tmc terminal <pos> access` | anyone | Which access mode one terminal is in |

@@ -66,6 +66,9 @@ public final class TerminalTooltips {
     }
     final List<Text> lines = new ArrayList<>();
     lines.add(ContainerRowText.position(entry));
+    if (entry.totalSlots() > 0) {
+      lines.add(ContainerRowText.slotsUsed(entry).formatted(Formatting.GRAY));
+    }
     if (!entry.isEmpty()) {
       lines.add(ContainerRowText.itemTotal(entry).formatted(Formatting.GRAY));
     }

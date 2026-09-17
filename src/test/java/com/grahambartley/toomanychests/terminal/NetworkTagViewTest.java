@@ -73,45 +73,4 @@ class NetworkTagViewTest {
     assertEquals(Optional.empty(), view.subject());
     assertEquals(Set.of(), view.subjectTags());
   }
-
-  @Test
-  void thePromptIsOfferedTheEditableTagsBeforeTheComputedOnes() {
-    final NetworkTagView view =
-        new NetworkTagView(
-            true,
-            List.of(preset("wood"), custom("castle"), preset("stone"), custom("keep")),
-            Optional.empty(),
-            Set.of());
-
-    assertEquals(
-        List.of(custom("castle"), custom("keep"), preset("wood"), preset("stone")),
-        view.editableFirst());
-  }
-
-  @Test
-  void orderingForThePromptLosesNoTags() {
-    final NetworkTagView view =
-        new NetworkTagView(
-            true, List.of(preset("wood"), custom("castle")), Optional.empty(), Set.of());
-
-    assertEquals(view.tags().size(), view.editableFirst().size());
-  }
-
-  @Test
-  void aNetworkWithNoCustomTagsIsOfferedItsPresetsInTheOrderTheyCame() {
-    final NetworkTagView view =
-        new NetworkTagView(
-            true, List.of(preset("wood"), preset("stone")), Optional.empty(), Set.of());
-
-    assertEquals(view.tags(), view.editableFirst());
-  }
-
-  @Test
-  void aNetworkOfOnlyCustomTagsIsOfferedThemUnchanged() {
-    final NetworkTagView view =
-        new NetworkTagView(
-            true, List.of(custom("castle"), custom("keep")), Optional.empty(), Set.of());
-
-    assertEquals(view.tags(), view.editableFirst());
-  }
 }

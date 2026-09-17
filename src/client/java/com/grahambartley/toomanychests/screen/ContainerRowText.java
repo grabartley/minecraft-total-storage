@@ -20,6 +20,10 @@ public final class ContainerRowText {
         ItemCountFormat.cell(entry.itemCount()), entry.itemCount());
   }
 
+  public static MutableText slotsUsed(ContainerRoleEntry entry) {
+    return TerminalScreenText.of("settings.container.slots", entry.usedSlots(), entry.totalSlots());
+  }
+
   public static Text position(ContainerRoleEntry entry) {
     return TerminalScreenText.of(
         "settings.container.at",

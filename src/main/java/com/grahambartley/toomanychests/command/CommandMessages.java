@@ -107,6 +107,11 @@ public final class CommandMessages {
         setting.allowedValues());
   }
 
+  public static Text settingsRefused() {
+    return line(
+        "config.refused", "These are this server's settings, and only an operator can change them");
+  }
+
   public static Text updateFailed() {
     return line(
         "config.failed", "Could not save the Too Many Chests config, see the server log for why");

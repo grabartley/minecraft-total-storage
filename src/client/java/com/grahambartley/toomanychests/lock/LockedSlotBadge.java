@@ -16,9 +16,13 @@ public final class LockedSlotBadge {
     if (!LockedSlotState.isLocked(slot)) {
       return;
     }
+    drawAt(context, slot.x, slot.y);
+  }
+
+  public static void drawAt(DrawContext context, int left, int top) {
     context.getMatrices().push();
     context.getMatrices().translate(0.0f, 0.0f, ABOVE_THE_ITEM);
-    TerminalSprite.LOCKED_SLOT.draw(context, slot.x, slot.y, WIDTH, HEIGHT);
+    TerminalSprite.LOCKED_SLOT.draw(context, left, top, WIDTH, HEIGHT);
     context.getMatrices().pop();
   }
 }

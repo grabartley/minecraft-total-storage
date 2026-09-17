@@ -35,7 +35,7 @@ public final class TagAssignmentPrompt {
   }
 
   public void fit(NetworkTagView view) {
-    scroll.fit(view.tags().size());
+    scroll.fit(view.custom().size());
   }
 
   public boolean scrollBy(int notches) {
@@ -47,7 +47,7 @@ public final class TagAssignmentPrompt {
     if (row == TagPromptLayout.NO_ROW) {
       return null;
     }
-    final List<NetworkTagEntry> tags = view.editableFirst();
+    final List<NetworkTagEntry> tags = view.custom();
     final int index = scroll.firstIndex() + row;
     return index >= tags.size() ? null : tags.get(index);
   }
@@ -96,7 +96,7 @@ public final class TagAssignmentPrompt {
       int originY,
       int mouseX,
       int mouseY) {
-    final List<NetworkTagEntry> all = view.editableFirst();
+    final List<NetworkTagEntry> all = view.custom();
     final NetworkTagEntry hovered = tagAt(view, mouseX, mouseY);
     for (int row = 0; row < TagPromptLayout.VISIBLE_ROWS; row++) {
       final int index = scroll.firstIndex() + row;
@@ -109,7 +109,7 @@ public final class TagAssignmentPrompt {
           textRenderer,
           tag,
           view.subjectCarries(tag.id()),
-          tag.equals(hovered) && !tag.immutable(),
+          tag.equals(hovered),
           originX + TagPromptLayout.left() + TagPromptLayout.PADDING,
           originY + TagPromptLayout.rowY(row));
     }
@@ -152,9 +152,7 @@ public final class TagAssignmentPrompt {
         name,
         textLeft,
         top + (TagPromptLayout.ROW_HEIGHT - TagPromptLayout.LINE_HEIGHT) / 2 + 1,
-        tag.immutable()
-            ? VanillaPalette.DISABLED
-            : carried ? VanillaPalette.LABEL : VanillaPalette.MUTED,
+        carried ? VanillaPalette.LABEL : VanillaPalette.MUTED,
         false);
   }
 

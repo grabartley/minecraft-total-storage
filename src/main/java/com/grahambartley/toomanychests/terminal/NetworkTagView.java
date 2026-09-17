@@ -1,6 +1,5 @@
 package com.grahambartley.toomanychests.terminal;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -41,12 +40,6 @@ public record NetworkTagView(
 
   public List<NetworkTagEntry> custom() {
     return tags.stream().filter(tag -> !tag.immutable()).toList();
-  }
-
-  public List<NetworkTagEntry> editableFirst() {
-    final List<NetworkTagEntry> ordered = new ArrayList<>(custom());
-    ordered.addAll(tags.stream().filter(NetworkTagEntry::immutable).toList());
-    return List.copyOf(ordered);
   }
 
   public boolean subjectCarries(String tagId) {

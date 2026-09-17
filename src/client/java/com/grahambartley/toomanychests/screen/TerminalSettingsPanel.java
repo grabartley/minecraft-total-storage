@@ -31,8 +31,18 @@ public final class TerminalSettingsPanel {
 
   private SettingsSection section = SettingsSection.TERMINAL;
 
+  private int hiddenRows;
+
   public SettingsSection section() {
     return section;
+  }
+
+  public void coverTopRows(int rows) {
+    hiddenRows = Math.max(0, Math.min(TerminalSettingsLayout.ROWS, rows));
+  }
+
+  public int hiddenRows() {
+    return hiddenRows;
   }
 
   public boolean scrolls() {
@@ -87,7 +97,7 @@ public final class TerminalSettingsPanel {
         || TerminalSettingsLayout.isOverScrollbar(windowX, windowY)) {
       return TerminalSettingsLayout.NO_ROW;
     }
-    final int row = TerminalSettingsLayout.rowAt(windowX, windowY);
+    final int row = visibleRowAt(windowX, windowY);
     return row == TerminalSettingsLayout.NO_ROW ? row : scroll.firstIndex() + row;
   }
 
@@ -95,8 +105,19 @@ public final class TerminalSettingsPanel {
     if (section != SettingsSection.TERMINAL) {
       return null;
     }
-    final int row = TerminalSettingsLayout.rowAt(windowX, windowY);
+    final int row = visibleRowAt(windowX, windowY);
     return row == TerminalSettingsLayout.NO_ROW ? null : TerminalSetting.atRow(row);
+  }
+
+  private int visibleRowAt(int windowX, int windowY) {
+    final int row = TerminalSettingsLayout.rowAt(windowX, windowY);
+    return row == TerminalSettingsLayout.NO_ROW || row < hiddenRows
+        ? TerminalSettingsLayout.NO_ROW
+        : row;
+  }
+
+  private boolean isCovered(int row) {
+    return row < hiddenRows;
   }
 
   public void draw(
@@ -158,69 +179,94 @@ public final class TerminalSettingsPanel {
       int mouseY) {
     final TerminalSetting hovered = settingAt(mouseX, mouseY);
     final SettingsControl control = SettingsControl.at(mouseX, mouseY);
-    drawRow(context, TerminalSetting.RADIUS, originX, originY, false);
-    stepper(
-        context,
-        textRenderer,
-        "-",
-        originX + SettingsControl.radiusDownX(),
-        originY + SettingsControl.radiusY(),
-        view.mayAdminister() && view.radius() > view.minRadius(),
-        control == SettingsControl.RADIUS_DOWN);
-    stepper(
-        context,
-        textRenderer,
-        "+",
-        originX + SettingsControl.radiusUpX(),
-        originY + SettingsControl.radiusY(),
-        view.mayAdminister() && view.radius() < view.maxRadius(),
-        control == SettingsControl.RADIUS_UP);
-    centred(
-        context,
-        textRenderer,
-        view.isClamped()
-            ? TerminalScreenText.of(
-                "settings.radius.clamped", view.radius(), view.effectiveRadius())
-            : TerminalScreenText.of(
-                TerminalSetting.RADIUS.label(), view.radius(), view.maxRadius()),
-        originX,
-        originY + TerminalSettingsLayout.rowY(TerminalSetting.RADIUS.row()),
-        VanillaPalette.LABEL);
+    final boolean answered = view.answered();
+    if (!isCovered(TerminalSetting.RADIUS.row())) {
+      drawRow(context, TerminalSetting.RADIUS, originX, originY, false);
+      stepper(
+          context,
+          textRenderer,
+          "-",
+          originX + SettingsControl.radiusDownX(),
+          originY + SettingsControl.radiusY(),
+          answered && view.mayAdminister() && view.radius() > view.minRadius(),
+          control == SettingsControl.RADIUS_DOWN);
+      stepper(
+          context,
+          textRenderer,
+          "+",
+          originX + SettingsControl.radiusUpX(),
+          originY + SettingsControl.radiusY(),
+          answered && view.mayAdminister() && view.radius() < view.maxRadius(),
+          control == SettingsControl.RADIUS_UP);
+      centred(
+          context,
+          textRenderer,
+          radiusLine(view),
+          originX,
+          originY + TerminalSettingsLayout.rowY(TerminalSetting.RADIUS.row()),
+          VanillaPalette.LABEL);
+    }
 
-    drawRow(
-        context,
-        TerminalSetting.ACCESS,
-        originX,
-        originY,
-        hovered == TerminalSetting.ACCESS && view.mayAdminister());
-    labelled(
-        context,
-        textRenderer,
-        TerminalScreenText.of(TerminalSetting.ACCESS.label()),
-        TerminalScreenText.of("access." + view.accessMode().id()),
-        originX,
-        originY + TerminalSettingsLayout.rowY(TerminalSetting.ACCESS.row()),
-        view.mayAdminister());
+    if (!isCovered(TerminalSetting.ACCESS.row())) {
+      drawRow(
+          context,
+          TerminalSetting.ACCESS,
+          originX,
+          originY,
+          hovered == TerminalSetting.ACCESS && view.mayAdminister());
+      labelled(
+          context,
+          textRenderer,
+          TerminalScreenText.of(TerminalSetting.ACCESS.label()),
+          answered ? TerminalScreenText.of("access." + view.accessMode().id()) : pendingValue(),
+          originX,
+          originY + TerminalSettingsLayout.rowY(TerminalSetting.ACCESS.row()),
+          view.mayAdminister());
+    }
 
-    drawRow(context, TerminalSetting.TRUSTED, originX, originY, false);
-    labelled(
-        context,
-        textRenderer,
-        TerminalScreenText.of(TerminalSetting.TRUSTED.label()),
-        view.trusted().isEmpty()
-            ? TerminalScreenText.of("settings.trusted.none")
-            : Text.literal(String.join(", ", view.trusted())),
-        originX,
-        originY + TerminalSettingsLayout.rowY(TerminalSetting.TRUSTED.row()),
-        false);
+    if (!isCovered(TerminalSetting.TRUSTED.row())) {
+      drawRow(context, TerminalSetting.TRUSTED, originX, originY, false);
+      labelled(
+          context,
+          textRenderer,
+          TerminalScreenText.of(TerminalSetting.TRUSTED.label()),
+          trustedLine(view),
+          originX,
+          originY + TerminalSettingsLayout.rowY(TerminalSetting.TRUSTED.row()),
+          false);
+    }
 
-    drawRow(context, TerminalSetting.CAPACITY, originX, originY, false);
-    capacity(
-        context,
-        textRenderer,
-        view,
-        originX,
-        originY + TerminalSettingsLayout.rowY(TerminalSetting.CAPACITY.row()));
+    if (!isCovered(TerminalSetting.CAPACITY.row())) {
+      drawRow(context, TerminalSetting.CAPACITY, originX, originY, false);
+      capacity(
+          context,
+          textRenderer,
+          view,
+          originX,
+          originY + TerminalSettingsLayout.rowY(TerminalSetting.CAPACITY.row()));
+    }
+  }
+
+  private static Text radiusLine(NetworkSettingsView view) {
+    if (!view.answered()) {
+      return TerminalScreenText.of(TerminalSetting.RADIUS.label(), "-", "-");
+    }
+    return view.isClamped()
+        ? TerminalScreenText.of("settings.radius.clamped", view.radius(), view.effectiveRadius())
+        : TerminalScreenText.of(TerminalSetting.RADIUS.label(), view.radius(), view.maxRadius());
+  }
+
+  private static Text trustedLine(NetworkSettingsView view) {
+    if (!view.answered()) {
+      return pendingValue();
+    }
+    return view.trusted().isEmpty()
+        ? TerminalScreenText.of("settings.trusted.none")
+        : Text.literal(String.join(", ", view.trusted()));
+  }
+
+  private static Text pendingValue() {
+    return TerminalScreenText.of("settings.pending");
   }
 
   private static void capacity(
@@ -239,19 +285,26 @@ public final class TerminalSettingsPanel {
         textY,
         VanillaPalette.MUTED,
         false);
-    final Text value =
-        room.isUnknown()
-            ? TerminalScreenText.of("settings.capacity.unknown")
-            : TerminalScreenText.of("settings.capacity.slots", room.freeSlots(), room.totalSlots());
+    final Text value = capacityValue(view, room);
     context.drawText(
         textRenderer,
         value,
         left + TerminalSettingsLayout.FULL_ROW_WIDTH - TEXT_INSET - textRenderer.getWidth(value),
         textY,
-        room.isNearCapacity(ClientConfigMirror.current().nearCapacityWarningPercent())
+        view.answered()
+                && room.isNearCapacity(ClientConfigMirror.current().nearCapacityWarningPercent())
             ? VanillaPalette.WARNING
             : VanillaPalette.LABEL,
         false);
+  }
+
+  private static Text capacityValue(NetworkSettingsView view, NetworkCapacity room) {
+    if (!view.answered()) {
+      return pendingValue();
+    }
+    return room.isUnknown()
+        ? TerminalScreenText.of("settings.capacity.unknown")
+        : TerminalScreenText.of("settings.capacity.slots", room.freeSlots(), room.totalSlots());
   }
 
   private void drawContainerSection(
@@ -264,17 +317,19 @@ public final class TerminalSettingsPanel {
       int mouseY) {
     drawScrollbar(context, originX, originY);
     if (!view.hasContainers()) {
-      centred(
-          context,
-          textRenderer,
-          TerminalScreenText.of(view.powered() ? "settings.empty" : "settings.offline"),
-          originX,
-          originY + TerminalSettingsLayout.rowY(0),
-          VanillaPalette.MUTED);
+      if (!isCovered(0)) {
+        centred(
+            context,
+            textRenderer,
+            TerminalScreenText.of(emptyContainersKey(view)),
+            originX,
+            originY + TerminalSettingsLayout.rowY(0),
+            VanillaPalette.MUTED);
+      }
       return;
     }
     final int hovered = containerRowAt(mouseX, mouseY);
-    for (int row = 0; row < TerminalSettingsLayout.ROWS; row++) {
+    for (int row = hiddenRows; row < TerminalSettingsLayout.ROWS; row++) {
       final int index = scroll.firstIndex() + row;
       final ContainerRoleEntry entry = view.at(index);
       if (entry != null) {
@@ -289,6 +344,13 @@ public final class TerminalSettingsPanel {
             view.mayAdminister());
       }
     }
+  }
+
+  private static String emptyContainersKey(NetworkSettingsView view) {
+    if (!view.answered()) {
+      return "settings.pending";
+    }
+    return view.powered() ? "settings.empty" : "settings.offline";
   }
 
   private static void drawContainerRow(

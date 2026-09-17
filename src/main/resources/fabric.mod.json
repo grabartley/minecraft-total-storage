@@ -89,7 +89,6 @@
       "com.grahambartley.toomanychests.gametest.NetworkFilterCandidatesGameTest",
       "com.grahambartley.toomanychests.gametest.TerminalTagEditsGameTest",
       "com.grahambartley.toomanychests.gametest.NetworkTagViewServiceGameTest",
-      "com.grahambartley.toomanychests.gametest.MiddleClickSortGameTest",
       "com.grahambartley.toomanychests.gametest.TerminalTagTransferGameTest"
     ]
   },
