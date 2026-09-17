@@ -14,28 +14,40 @@ class DepositAllKeyTest {
   private static final boolean ITEMS = false;
   private static final boolean TAGGING = true;
   private static final boolean NO_PROMPT = false;
-  private static final boolean TYPING = true;
-  private static final boolean EMPTY_BOX = false;
+  private static final boolean SEARCH_TYPING = true;
+  private static final boolean SCREEN_LISTENING = false;
 
   static Stream<Arguments> theKeyTable() {
     return Stream.of(
         Arguments.of(
-            "an empty search box has nothing to protect", BOUND, ITEMS, NO_PROMPT, EMPTY_BOX, true),
-        Arguments.of("a query being typed keeps the key", BOUND, ITEMS, NO_PROMPT, TYPING, false),
+            "a screen that owns its own keyboard deposits",
+            BOUND,
+            ITEMS,
+            NO_PROMPT,
+            SCREEN_LISTENING,
+            true),
+        Arguments.of(
+            "a search box being typed into keeps the key",
+            BOUND,
+            ITEMS,
+            NO_PROMPT,
+            SEARCH_TYPING,
+            false),
         Arguments.of(
             "the settings tab has no inventory to deposit",
             BOUND,
             SETTINGS,
             NO_PROMPT,
-            EMPTY_BOX,
+            SCREEN_LISTENING,
             false),
-        Arguments.of("the tagging prompt owns the screen", BOUND, ITEMS, TAGGING, EMPTY_BOX, false),
+        Arguments.of(
+            "the tagging prompt owns the screen", BOUND, ITEMS, TAGGING, SCREEN_LISTENING, false),
         Arguments.of(
             "another key is not the deposit key",
             SOME_OTHER_KEY,
             ITEMS,
             NO_PROMPT,
-            EMPTY_BOX,
+            SCREEN_LISTENING,
             false));
   }
 
@@ -46,8 +58,11 @@ class DepositAllKeyTest {
       boolean bound,
       boolean settingsTab,
       boolean tagging,
-      boolean searching,
+      boolean searchHasTheKeyboard,
       boolean deposits) {
-    assertEquals(deposits, DepositAllKey.deposits(bound, settingsTab, tagging, searching), reason);
+    assertEquals(
+        deposits,
+        DepositAllKey.deposits(bound, settingsTab, tagging, searchHasTheKeyboard),
+        reason);
   }
 }

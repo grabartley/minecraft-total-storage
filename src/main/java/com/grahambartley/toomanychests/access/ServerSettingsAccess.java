@@ -14,24 +14,29 @@ public final class ServerSettingsAccess {
     if (source == null) {
       return false;
     }
-    return source.hasPermissionLevel(ServerConfigService.OP_PERMISSION_LEVEL)
-        || isWorldOwner(source.getServer(), source.getPlayer());
+    return decide(
+        source.hasPermissionLevel(ServerConfigService.OP_PERMISSION_LEVEL),
+        source.getServer(),
+        source.getPlayer());
   }
 
   public static boolean mayEdit(@Nullable ServerPlayerEntity player) {
     if (player == null) {
       return false;
     }
-    return player.hasPermissionLevel(ServerConfigService.OP_PERMISSION_LEVEL)
-        || isWorldOwner(player.getServer(), player);
+    return decide(
+        player.hasPermissionLevel(ServerConfigService.OP_PERMISSION_LEVEL),
+        player.getServer(),
+        player);
   }
 
-  private static boolean isWorldOwner(
-      @Nullable MinecraftServer server, @Nullable ServerPlayerEntity player) {
-    if (server == null || player == null || server.isDedicated()) {
-      return false;
+  private static boolean decide(
+      boolean operator, @Nullable MinecraftServer server, @Nullable ServerPlayerEntity player) {
+    if (server == null || player == null) {
+      return operator;
     }
     final GameProfile profile = player.getGameProfile();
-    return profile != null && server.isHost(profile);
+    return ServerSettingsAccessRule.mayEdit(
+        operator, server.isDedicated(), profile != null && server.isHost(profile));
   }
 }

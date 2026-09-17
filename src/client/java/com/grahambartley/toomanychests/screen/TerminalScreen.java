@@ -375,12 +375,13 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
               button)
           || super.mouseClicked(mouseX, mouseY, button);
     }
-    if (filters.click(tagsThisFrame, selection, windowX, windowY, button)) {
-      return true;
-    }
     if (button == GridClick.LEFT_BUTTON && TerminalScreenLayout.isOverSearch(windowX, windowY)) {
       setFocused(search.widget());
       search.widget().mouseClicked(mouseX, mouseY, button);
+      return true;
+    }
+    releaseTheSearchBox();
+    if (filters.click(tagsThisFrame, selection, windowX, windowY, button)) {
       return true;
     }
     if (button == GridClick.LEFT_BUTTON
@@ -392,6 +393,12 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
       return true;
     }
     return super.mouseClicked(mouseX, mouseY, button);
+  }
+
+  private void releaseTheSearchBox() {
+    if (search.isFocused()) {
+      setFocused(null);
+    }
   }
 
   private void showTab(TerminalTab shown) {
@@ -481,7 +488,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
         ModKeyBindings.isDepositAll(keyCode, scanCode),
         tab.isSettings(),
         prompts.isTagging(),
-        search.isSearching());
+        search.isFocused());
   }
 
   private void depositEverything() {
@@ -519,7 +526,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
       return true;
     }
     if (isDepositAllKey(keyCode, scanCode)) {
-      setFocused(null);
       depositEverything();
       return true;
     }

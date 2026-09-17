@@ -167,6 +167,35 @@ class TerminalSettingsPanelTest {
   }
 
   @Test
+  void aRadiusStepperUnderTheNoticeStripCannotBeClicked() {
+    TerminalSettingsPanel panel = new TerminalSettingsPanel();
+
+    panel.coverTopRows(1);
+
+    assertEquals(
+        SettingsControl.NONE,
+        panel.controlAt(SettingsControl.radiusDownX(), SettingsControl.radiusY()));
+    assertEquals(
+        SettingsControl.NONE,
+        panel.controlAt(SettingsControl.radiusUpX(), SettingsControl.radiusY()));
+  }
+
+  @Test
+  void anUncoveredRadiusStepperIsStillClickable() {
+    assertEquals(
+        SettingsControl.RADIUS_DOWN,
+        new TerminalSettingsPanel()
+            .controlAt(SettingsControl.radiusDownX(), SettingsControl.radiusY()));
+  }
+
+  @Test
+  void theContainersSectionHasNoRadiusSteppers() {
+    assertEquals(
+        SettingsControl.NONE,
+        containers().controlAt(SettingsControl.radiusDownX(), SettingsControl.radiusY()));
+  }
+
+  @Test
   void aNoticeTallerThanThePanelCoversNoMoreRowsThanThereAre() {
     TerminalSettingsPanel panel = containers();
 

@@ -50,7 +50,7 @@ public final class TerminalSettingsClicks {
       int windowY,
       int button,
       boolean mayAdminister) {
-    final SettingsControl control = SettingsControl.at(windowX, windowY);
+    final SettingsControl control = settings.controlAt(windowX, windowY);
     if (control.isSomething()) {
       if (mayAdminister && button == GridClick.LEFT_BUTTON) {
         ModNetworkingClient.sendRadiusEdit(

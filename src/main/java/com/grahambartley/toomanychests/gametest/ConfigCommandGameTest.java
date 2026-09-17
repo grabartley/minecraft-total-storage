@@ -148,7 +148,7 @@ public final class ConfigCommandGameTest implements FabricGameTest {
 
     context.assertTrue(result == 0, "A non-operator should be refused rather than unable to parse");
     context.assertTrue(
-        said.stream().anyMatch(line -> line.getString().contains("only an operator")),
+        said.stream().anyMatch(line -> line.getString().contains("not yours to do")),
         "The refusal should say why, but said " + said.stream().map(Text::getString).toList());
     context.complete();
   }
@@ -165,7 +165,7 @@ public final class ConfigCommandGameTest implements FabricGameTest {
 
     context.assertTrue(result == 0, "A non-operator should be refused rather than unable to parse");
     context.assertTrue(
-        said.stream().anyMatch(line -> line.getString().contains("only an operator")),
+        said.stream().anyMatch(line -> line.getString().contains("not yours to do")),
         "The refusal should say why, but said " + said.stream().map(Text::getString).toList());
     context.complete();
   }

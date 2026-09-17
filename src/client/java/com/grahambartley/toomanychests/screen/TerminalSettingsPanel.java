@@ -101,6 +101,13 @@ public final class TerminalSettingsPanel {
     return row == TerminalSettingsLayout.NO_ROW ? row : scroll.firstIndex() + row;
   }
 
+  public SettingsControl controlAt(int windowX, int windowY) {
+    if (section != SettingsSection.TERMINAL || isCovered(TerminalSetting.RADIUS.row())) {
+      return SettingsControl.NONE;
+    }
+    return SettingsControl.at(windowX, windowY);
+  }
+
   public TerminalSetting settingAt(int windowX, int windowY) {
     if (section != SettingsSection.TERMINAL) {
       return null;
@@ -178,7 +185,7 @@ public final class TerminalSettingsPanel {
       int mouseX,
       int mouseY) {
     final TerminalSetting hovered = settingAt(mouseX, mouseY);
-    final SettingsControl control = SettingsControl.at(mouseX, mouseY);
+    final SettingsControl control = controlAt(mouseX, mouseY);
     final boolean answered = view.answered();
     if (!isCovered(TerminalSetting.RADIUS.row())) {
       drawRow(context, TerminalSetting.RADIUS, originX, originY, false);
