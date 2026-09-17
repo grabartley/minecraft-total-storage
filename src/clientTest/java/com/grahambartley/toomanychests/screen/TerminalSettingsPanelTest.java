@@ -196,6 +196,32 @@ class TerminalSettingsPanelTest {
   }
 
   @Test
+  void theTagsSectionRowsUnderTheNoticeStripAreCoveredToo() {
+    TerminalSettingsPanel panel = new TerminalSettingsPanel();
+    panel.show(SettingsSection.TAGS);
+
+    panel.coverTopRows(2);
+
+    assertTrue(
+        panel.isCoveredAt(
+            TerminalSettingsLayout.PANEL_X,
+            TerminalSettingsLayout.rowY(TagsSectionLayout.NEW_TAG_ROW)));
+    assertTrue(
+        panel.isCoveredAt(
+            TerminalSettingsLayout.PANEL_X,
+            TerminalSettingsLayout.rowY(TagsSectionLayout.FIRST_TAG_ROW)));
+    assertFalse(panel.isCoveredAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(2)));
+  }
+
+  @Test
+  void aClickOutsideAnyRowIsNeverTreatedAsCovered() {
+    TerminalSettingsPanel panel = containers();
+    panel.coverTopRows(TerminalSettingsLayout.ROWS);
+
+    assertFalse(panel.isCoveredAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.PANEL_Y));
+  }
+
+  @Test
   void aNoticeTallerThanThePanelCoversNoMoreRowsThanThereAre() {
     TerminalSettingsPanel panel = containers();
 

@@ -1,6 +1,7 @@
 package com.grahambartley.toomanychests.render;
 
 import java.util.Optional;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ChestBlock;
 import net.minecraft.block.enums.ChestType;
@@ -28,18 +29,18 @@ public final class ContainerOutline {
     if (!(state.getBlock() instanceof ChestBlock)) {
       return Optional.empty();
     }
-    final Direction facing = state.get(ChestBlock.FACING);
     final ChestType type = state.get(ChestBlock.CHEST_TYPE);
-    return DoubleChestFootprint.partnerOf(container, facing, type)
-        .filter(partner -> stillJoined(world, partner, state.getBlock(), facing, type));
+    if (!DoubleChestFootprint.hasAPartner(type)) {
+      return Optional.empty();
+    }
+    final BlockPos partner = container.offset(ChestBlock.getFacing(state));
+    return stillJoined(world, partner, state.getBlock(), state.get(ChestBlock.FACING), type)
+        ? Optional.of(partner)
+        : Optional.empty();
   }
 
   private static boolean stillJoined(
-      BlockView world,
-      BlockPos partner,
-      net.minecraft.block.Block chest,
-      Direction facing,
-      ChestType type) {
+      BlockView world, BlockPos partner, Block chest, Direction facing, ChestType type) {
     final BlockState state = world.getBlockState(partner);
     if (state.getBlock() != chest) {
       return false;

@@ -35,6 +35,9 @@ public final class TerminalSettingsClicks {
       int windowX,
       int windowY,
       int button) {
+    if (settings.isCoveredAt(windowX, windowY)) {
+      return true;
+    }
     final boolean mayAdminister = view.mayAdminister();
     return switch (settings.section()) {
       case TERMINAL -> terminal(syncId, view, windowX, windowY, button, mayAdminister);

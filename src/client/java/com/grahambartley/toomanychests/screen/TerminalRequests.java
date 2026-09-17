@@ -31,10 +31,6 @@ public final class TerminalRequests {
         syncId, listing.window(), listing.search(), listing.mode(), listing.tags());
   }
 
-  public boolean isSettingsShowing() {
-    return settingsShowing;
-  }
-
   public boolean needsContainers(ListingWindow window) {
     return !containers.equals(window);
   }

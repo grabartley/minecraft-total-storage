@@ -169,7 +169,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
         tagsThisFrame.mayAdminister(),
         mouseX,
         mouseY);
-    if (tab.isSettings()) {
+    if (tab.isSettings() && !settings.isCoveredAt(hoveredWindowX, hoveredWindowY)) {
       TerminalTooltips.copyTags(
           context,
           textRenderer,
@@ -296,6 +296,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
             textRenderer,
             tagsThisFrame,
             settings.scroll().firstIndex(),
+            noticeRows(),
             0,
             0,
             hoveredWindowX,

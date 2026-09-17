@@ -41,8 +41,13 @@ public final class TerminalSettingsPanel {
     hiddenRows = Math.max(0, Math.min(TerminalSettingsLayout.ROWS, rows));
   }
 
-  public int hiddenRows() {
+  int hiddenRows() {
     return hiddenRows;
+  }
+
+  public boolean isCoveredAt(int windowX, int windowY) {
+    final int row = TerminalSettingsLayout.rowAt(windowX, windowY);
+    return row != TerminalSettingsLayout.NO_ROW && isCovered(row);
   }
 
   public boolean scrolls() {

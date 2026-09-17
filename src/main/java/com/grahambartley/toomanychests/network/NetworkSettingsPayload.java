@@ -138,7 +138,7 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
               icon,
               variants,
               items,
-              Math.min(usedSlots, totalSlots),
+              usedSlots > totalSlots ? 0 : usedSlots,
               totalSlots,
               0.0));
     }

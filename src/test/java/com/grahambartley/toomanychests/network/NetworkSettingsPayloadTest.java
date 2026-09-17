@@ -108,7 +108,7 @@ class NetworkSettingsPayloadTest {
   }
 
   @Test
-  void aForgedRowUsingMoreSlotsThanItHasIsClampedRatherThanThrowing() {
+  void aForgedRowUsingMoreSlotsThanItHasReadsAsEmptyRatherThanThrowing() {
     RegistryByteBuf buffer = buffer();
     writeHeader(buffer);
     buffer.writeVarInt(0);
@@ -128,7 +128,8 @@ class NetworkSettingsPayloadTest {
         NetworkSettingsPayload.CODEC.decode(buffer).view().containers().get(0);
 
     assertEquals(27, received.totalSlots());
-    assertEquals(27, received.usedSlots());
+    assertEquals(
+        0, received.usedSlots(), "Impossible counts should read as nothing, not as brim full");
   }
 
   @Test
