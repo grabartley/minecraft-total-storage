@@ -6,6 +6,7 @@ import com.grahambartley.toomanychests.terminal.NetworkTagView;
 import java.util.List;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 
 public final class TerminalFilterColumn {
@@ -188,7 +189,7 @@ public final class TerminalFilterColumn {
             - 2 * FilterColumnLayout.TEXT_MARGIN
             - countWidth
             - FilterColumnLayout.TEXT_MARGIN;
-    final String name =
+    final OrderedText name =
         TrimmedText.toWidth(textRenderer, FilterColumnText.columnNameOf(tag), nameWidth);
     context.drawText(
         textRenderer,

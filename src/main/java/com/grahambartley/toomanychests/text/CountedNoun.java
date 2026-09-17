@@ -2,13 +2,13 @@ package com.grahambartley.toomanychests.text;
 
 import com.grahambartley.toomanychests.TooManyChests;
 import java.util.Objects;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 
 public enum CountedNoun {
   ITEMS("items", "1 item", "%s items"),
   KINDS("kinds", "1 kind", "%s kinds"),
   STACKS("stacks", "1 stack", "%s stacks"),
-  SLOTS("slots", "1 slot", "%s slots"),
   CONTAINERS("containers", "1 container", "%s containers"),
   NEARBY_CONTAINERS("nearby-containers", "1 nearby container", "%s nearby containers"),
   TAGS("tags", "1 tag", "%s tags"),
@@ -34,16 +34,16 @@ public enum CountedNoun {
     return id;
   }
 
-  public Text of(long count) {
+  public MutableText of(long count) {
     return count == 1L ? one() : Text.translatableWithFallback(PREFIX + id, plural, count);
   }
 
-  public Text of(String amount, long count) {
+  public MutableText ofFormatted(String amount, long count) {
     Objects.requireNonNull(amount, "amount");
     return count == 1L ? one() : Text.translatableWithFallback(PREFIX + id, plural, amount);
   }
 
-  private Text one() {
+  private MutableText one() {
     return Text.translatableWithFallback(PREFIX + id + SINGULAR_SUFFIX, singular);
   }
 }

@@ -67,7 +67,7 @@ public final class TerminalTooltips {
     final List<Text> lines = new ArrayList<>();
     lines.add(ContainerRowText.position(entry));
     if (!entry.isEmpty()) {
-      lines.add(ContainerRowText.itemTotal(entry).copy().formatted(Formatting.GRAY));
+      lines.add(ContainerRowText.itemTotal(entry).formatted(Formatting.GRAY));
     }
     if (view.mayAdminister()) {
       lines.add(TerminalScreenText.of("settings.role.hint").formatted(Formatting.GRAY));

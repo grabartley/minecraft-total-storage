@@ -1,30 +1,32 @@
 package com.grahambartley.toomanychests.screen;
 
 import java.util.Objects;
-import java.util.function.ToIntFunction;
+import net.minecraft.text.StringVisitable;
 
 public final class EllipsisTrim {
   public static final String ELLIPSIS = "...";
 
+  public interface TextRoom {
+    int widthOf(StringVisitable text);
+
+    StringVisitable trimmedTo(StringVisitable text, int width);
+  }
+
   private EllipsisTrim() {}
 
-  public static String toWidth(String text, int width, ToIntFunction<String> measure) {
+  public static StringVisitable toWidth(StringVisitable text, int width, TextRoom room) {
     Objects.requireNonNull(text, "text");
-    Objects.requireNonNull(measure, "measure");
+    Objects.requireNonNull(room, "room");
     if (width <= 0) {
-      return "";
+      return StringVisitable.EMPTY;
     }
-    if (measure.applyAsInt(text) <= width) {
+    if (room.widthOf(text) <= width) {
       return text;
     }
-    final int room = width - measure.applyAsInt(ELLIPSIS);
-    if (room <= 0) {
-      return "";
+    final int kept = width - room.widthOf(StringVisitable.plain(ELLIPSIS));
+    if (kept <= 0) {
+      return StringVisitable.EMPTY;
     }
-    int kept = 0;
-    while (kept < text.length() && measure.applyAsInt(text.substring(0, kept + 1)) <= room) {
-      kept++;
-    }
-    return kept == 0 ? "" : text.substring(0, kept).stripTrailing() + ELLIPSIS;
+    return StringVisitable.concat(room.trimmedTo(text, kept), StringVisitable.plain(ELLIPSIS));
   }
 }

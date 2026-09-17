@@ -8,6 +8,7 @@ import com.grahambartley.toomanychests.terminal.NetworkTagView;
 import java.util.List;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 
 public final class TerminalTagsPanel {
@@ -148,7 +149,7 @@ public final class TerminalTagsPanel {
         TerminalSettingsLayout.ROW_WIDTH,
         TerminalSettingsLayout.ROW_HEIGHT);
     final Text label = armed ? TerminalScreenText.of("tags.delete.confirm") : TagText.row(tag);
-    final String name = TrimmedText.toWidth(textRenderer, label, TagsSectionLayout.NAME_WIDTH);
+    final OrderedText name = TrimmedText.toWidth(textRenderer, label, TagsSectionLayout.NAME_WIDTH);
     context.drawText(
         textRenderer,
         name,

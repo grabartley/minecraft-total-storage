@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests.operation;
 
+import java.util.List;
 import java.util.Objects;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageUtil;
@@ -9,12 +10,15 @@ public final class WithdrawShortfall {
   private WithdrawShortfall() {}
 
   public static <V> ShortfallCause causeOf(
-      Storage<V> destination, V resource, long outstanding, TransactionContext transaction) {
-    Objects.requireNonNull(destination, "destination");
+      List<Storage<V>> sources, V resource, long outstanding, TransactionContext transaction) {
+    Objects.requireNonNull(sources, "sources");
     Objects.requireNonNull(resource, "resource");
     Objects.requireNonNull(transaction, "transaction");
-    return StorageUtil.simulateInsert(destination, resource, outstanding, transaction) > 0L
-        ? ShortfallCause.NO_STOCK
-        : ShortfallCause.NO_ROOM;
+    for (final Storage<V> source : sources) {
+      if (StorageUtil.simulateExtract(source, resource, outstanding, transaction) > 0L) {
+        return ShortfallCause.NO_ROOM;
+      }
+    }
+    return ShortfallCause.NO_STOCK;
   }
 }

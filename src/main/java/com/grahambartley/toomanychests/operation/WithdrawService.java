@@ -79,7 +79,7 @@ public final class WithdrawService {
             return OperationResult.committed(moved);
           }
           final ShortfallCause cause =
-              WithdrawShortfall.causeOf(to, variant, wanted - moved, transaction);
+              WithdrawShortfall.causeOf(from, variant, wanted - moved, transaction);
           if (moved > 0L) {
             settled[0] = WithdrawOutcome.partial(wanted, moved, cause);
             return OperationResult.committed(moved);

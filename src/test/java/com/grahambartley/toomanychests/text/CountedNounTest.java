@@ -52,7 +52,7 @@ class CountedNounTest {
 
   @Test
   void aFormattedAmountIsShownInsteadOfTheRawNumberWhenOneIsGiven() {
-    TranslatableTextContent many = contentOf(CountedNoun.ITEMS.of("12.3k", 12_300L));
+    TranslatableTextContent many = contentOf(CountedNoun.ITEMS.ofFormatted("12.3k", 12_300L));
 
     assertEquals(PREFIX + "items", many.getKey());
     assertEquals("12.3k", many.getArgs()[0]);
@@ -60,12 +60,12 @@ class CountedNounTest {
 
   @Test
   void aFormattedAmountOfOneStillReadsAsTheSingular() {
-    assertEquals(PREFIX + "items.one", contentOf(CountedNoun.ITEMS.of("1", 1L)).getKey());
+    assertEquals(PREFIX + "items.one", contentOf(CountedNoun.ITEMS.ofFormatted("1", 1L)).getKey());
   }
 
   @Test
   void anAmountHasToBeGivenWhenOneIsAskedFor() {
-    assertThrows(NullPointerException.class, () -> CountedNoun.ITEMS.of(null, 4L));
+    assertThrows(NullPointerException.class, () -> CountedNoun.ITEMS.ofFormatted(null, 4L));
   }
 
   @ParameterizedTest
@@ -73,7 +73,6 @@ class CountedNounTest {
     "ITEMS, items",
     "KINDS, kinds",
     "STACKS, stacks",
-    "SLOTS, slots",
     "CONTAINERS, containers",
     "NEARBY_CONTAINERS, nearby-containers",
     "TAGS, tags",

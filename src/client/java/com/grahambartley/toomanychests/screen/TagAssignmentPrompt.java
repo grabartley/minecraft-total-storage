@@ -6,6 +6,7 @@ import java.util.List;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 
 public final class TagAssignmentPrompt {
@@ -76,7 +77,8 @@ public final class TagAssignmentPrompt {
 
   private void drawHeading(DrawContext context, TextRenderer textRenderer, int left, int top) {
     final Text heading = TerminalScreenText.of("tags.assign.title", subject.toStack().getName());
-    final String trimmed = TrimmedText.toWidth(textRenderer, heading, TagPromptLayout.ROW_WIDTH);
+    final OrderedText trimmed =
+        TrimmedText.toWidth(textRenderer, heading, TagPromptLayout.ROW_WIDTH);
     context.drawText(
         textRenderer,
         trimmed,
@@ -140,7 +142,7 @@ public final class TagAssignmentPrompt {
     }
     final int textLeft =
         left + checkInset + TagPromptLayout.CHECK_SIZE + TagPromptLayout.TEXT_MARGIN;
-    final String name =
+    final OrderedText name =
         TrimmedText.toWidth(
             textRenderer,
             FilterColumnText.nameOf(tag),
@@ -167,7 +169,8 @@ public final class TagAssignmentPrompt {
         view.custom().isEmpty()
             ? TerminalScreenText.of("tags.assign.none")
             : TagText.bulkHint(matching);
-    final String trimmed = TrimmedText.toWidth(textRenderer, footer, TagPromptLayout.ROW_WIDTH);
+    final OrderedText trimmed =
+        TrimmedText.toWidth(textRenderer, footer, TagPromptLayout.ROW_WIDTH);
     context.drawText(
         textRenderer,
         trimmed,

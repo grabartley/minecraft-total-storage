@@ -3,19 +3,21 @@ package com.grahambartley.toomanychests.screen;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
 import com.grahambartley.toomanychests.text.CountedNoun;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 
 public final class ContainerRowText {
   private ContainerRowText() {}
 
-  public static Text contents(ContainerRoleEntry entry) {
+  public static MutableText contents(ContainerRoleEntry entry) {
     return entry.isEmpty()
         ? TerminalScreenText.of("settings.container.empty")
         : CountedNoun.KINDS.of(entry.variantCount());
   }
 
-  public static Text itemTotal(ContainerRoleEntry entry) {
-    return CountedNoun.ITEMS.of(ItemCountFormat.cell(entry.itemCount()), entry.itemCount());
+  public static MutableText itemTotal(ContainerRoleEntry entry) {
+    return CountedNoun.ITEMS.ofFormatted(
+        ItemCountFormat.cell(entry.itemCount()), entry.itemCount());
   }
 
   public static Text position(ContainerRoleEntry entry) {
