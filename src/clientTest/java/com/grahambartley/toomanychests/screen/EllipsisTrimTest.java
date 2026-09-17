@@ -65,7 +65,7 @@ class EllipsisTrimTest {
 
   @ParameterizedTest
   @ValueSource(ints = {4, 8, 12, 18})
-  void aShortenedNameAlwaysEndsInTheEllipsisRatherThanMidWord(int characters) {
+  void aShortenedNameAlwaysEndsInTheEllipsis(int characters) {
     assertTrue(trim(LONG_NAME, characters).endsWith(EllipsisTrim.ELLIPSIS));
   }
 

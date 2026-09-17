@@ -111,7 +111,9 @@ public final class TerminalTooltips {
     final List<Text> lines = new ArrayList<>();
     lines.add(FilterColumnText.nameOf(tag));
     lines.add(
-        TerminalScreenText.of("filter.tag.matching", CountedNoun.ITEMS.of(tag.matchingItems()))
+        TerminalScreenText.of(
+                "filter.tag.matching",
+                CountedNoun.ITEMS.ofFormatted(FilterColumnText.count(tag), tag.matchingItems()))
             .formatted(Formatting.GRAY));
     context.drawTooltip(textRenderer, lines, mouseX, mouseY);
   }

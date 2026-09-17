@@ -105,8 +105,11 @@ class PresetTagTest {
     String typed = englishNameOf(preset).split("\\s+")[0];
 
     assertTrue(
-        MatchStrength.of(preset.id(), typed).isMatch(),
-        "typing #" + typed + " finds nothing, so the name on screen is not the name to search");
+        MatchStrength.of(preset.id(), typed).compareTo(MatchStrength.SUBSTRING) <= 0,
+        "typing #"
+            + typed
+            + " only fuzzily finds it, so the name on screen is not the name to"
+            + " search");
   }
 
   private static String englishNameOf(PresetTag preset) {

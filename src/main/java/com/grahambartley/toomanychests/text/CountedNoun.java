@@ -10,6 +10,7 @@ public enum CountedNoun {
   KINDS("kinds", "1 kind", "%s kinds"),
   STACKS("stacks", "1 stack", "%s stacks"),
   CONTAINERS("containers", "1 container", "%s containers"),
+  EXCLUDED_CONTAINERS("excluded-containers", "1 excluded container", "%s excluded containers"),
   NEARBY_CONTAINERS("nearby-containers", "1 nearby container", "%s nearby containers"),
   TAGS("tags", "1 tag", "%s tags"),
   CUSTOM_TAGS("custom-tags", "1 custom tag", "%s custom tags"),

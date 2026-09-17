@@ -97,4 +97,40 @@ class NetworkOperationMessagesTest {
     assertEquals(PREFIX + "sort.network.cancelled", contentOf(line).getKey());
     assertEquals(COUNT_PREFIX + key, keyOfArgument(line, 0));
   }
+
+  @ParameterizedTest
+  @CsvSource({"1, excluded-containers.one", "3, excluded-containers"})
+  void aSortThatLeftContainersAloneCountsThemInTheRightNumber(int excluded, String key) {
+    Text line =
+        NetworkOperationMessages.finished(
+            ExpensiveOperation.SORT_NETWORK,
+            new OperationReport(1, 1, 2, 0, 0L, excluded, 0, false));
+
+    assertEquals(PREFIX + "skipped.excluded", contentOf(line).getKey());
+    assertEquals(COUNT_PREFIX + key, keyOfArgument(line, 1));
+  }
+
+  @ParameterizedTest
+  @CsvSource({"1, containers.one", "3, containers"})
+  void aSortThatMetContainersItWillNotRearrangeCountsThemInTheRightNumber(
+      int restricted, String key) {
+    Text line =
+        NetworkOperationMessages.finished(
+            ExpensiveOperation.SORT_NETWORK,
+            new OperationReport(1, 1, 2, 0, 0L, 0, restricted, false));
+
+    assertEquals(PREFIX + "skipped.restricted", contentOf(line).getKey());
+    assertEquals(COUNT_PREFIX + key, keyOfArgument(line, 1));
+  }
+
+  @Test
+  void aSortThatSkippedBothKindsOfContainerCountsEachOfThem() {
+    Text line =
+        NetworkOperationMessages.finished(
+            ExpensiveOperation.SORT_NETWORK, new OperationReport(1, 1, 2, 0, 0L, 1, 4, false));
+
+    assertEquals(PREFIX + "skipped.both", contentOf(line).getKey());
+    assertEquals(COUNT_PREFIX + "excluded-containers.one", keyOfArgument(line, 1));
+    assertEquals(COUNT_PREFIX + "containers", keyOfArgument(line, 2));
+  }
 }

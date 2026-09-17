@@ -21,6 +21,9 @@ public final class TerminalSettingsPanel {
 
   private static final int CHIP_WIDTH = 52;
 
+  private static final int CONTENTS_WIDTH =
+      TerminalSettingsLayout.ROW_WIDTH - CHIP_WIDTH - 3 * TEXT_INSET - ICON_SIZE;
+
   private final ListingScroll scroll = new ListingScroll(1, TerminalSettingsLayout.ROWS);
 
   private final TerminalScrollbar scrollbar =
@@ -311,11 +314,9 @@ public final class TerminalSettingsPanel {
     entry.icon().ifPresent(icon -> context.drawItem(icon.toStack(), left + TEXT_INSET, iconY));
     final int textY = top + (TerminalSettingsLayout.ROW_HEIGHT - 1 - LINE_HEIGHT) / 2;
     final int contentsLeft = left + TEXT_INSET + ICON_SIZE + TEXT_INSET;
-    final int contentsWidth =
-        left + TerminalSettingsLayout.ROW_WIDTH - CHIP_WIDTH - TEXT_INSET - contentsLeft;
     context.drawText(
         textRenderer,
-        TrimmedText.toWidth(textRenderer, ContainerRowText.contents(entry), contentsWidth),
+        TrimmedText.toWidth(textRenderer, ContainerRowText.contents(entry), CONTENTS_WIDTH),
         contentsLeft,
         textY,
         changeable ? VanillaPalette.LABEL : VanillaPalette.MUTED,

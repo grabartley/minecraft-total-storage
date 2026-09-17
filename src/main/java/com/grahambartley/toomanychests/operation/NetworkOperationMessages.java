@@ -96,21 +96,24 @@ public final class NetworkOperationMessages {
   private static Text withSkipped(Text summary, OperationReport report) {
     if (report.restrictedSkipped() == 0) {
       return line(
-          "skipped.excluded", "%s, skipping %s excluded", summary, report.excludedSkipped());
+          "skipped.excluded",
+          "%s, skipping %s",
+          summary,
+          CountedNoun.EXCLUDED_CONTAINERS.of(report.excludedSkipped()));
     }
     if (report.excludedSkipped() == 0) {
       return line(
           "skipped.restricted",
           "%s, skipping %s this mod will not rearrange",
           summary,
-          report.restrictedSkipped());
+          CountedNoun.CONTAINERS.of(report.restrictedSkipped()));
     }
     return line(
         "skipped.both",
-        "%s, skipping %s excluded and %s this mod will not rearrange",
+        "%s, skipping %s and %s this mod will not rearrange",
         summary,
-        report.excludedSkipped(),
-        report.restrictedSkipped());
+        CountedNoun.EXCLUDED_CONTAINERS.of(report.excludedSkipped()),
+        CountedNoun.CONTAINERS.of(report.restrictedSkipped()));
   }
 
   private static Text line(String key, String english, Object... arguments) {
