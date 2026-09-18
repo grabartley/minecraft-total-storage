@@ -33,7 +33,7 @@ public record NetworkTagSet(List<NetworkTag> all) {
   }
 
   public Optional<NetworkTag> byId(String id) {
-    final String key = TagNameRule.idFor(id);
+    final String key = FilterText.tagId(id);
     return all.stream().filter(tag -> tag.id().equals(key)).findFirst();
   }
 
@@ -59,7 +59,7 @@ public record NetworkTagSet(List<NetworkTag> all) {
   }
 
   public NetworkTagSet withCustomTag(String id, String displayName) {
-    final String key = TagNameRule.idFor(id);
+    final String key = FilterText.tagId(id);
     if (key.isEmpty() || contains(key)) {
       return this;
     }
@@ -67,7 +67,7 @@ public record NetworkTagSet(List<NetworkTag> all) {
   }
 
   public NetworkTagSet withoutTag(String id) {
-    final String key = TagNameRule.idFor(id);
+    final String key = FilterText.tagId(id);
     if (byId(key).map(NetworkTag::immutable).orElse(true)) {
       return this;
     }
@@ -77,14 +77,14 @@ public record NetworkTagSet(List<NetworkTag> all) {
   }
 
   public NetworkTagSet withRenamedTag(String tagId, String newName) {
-    final String key = TagNameRule.idFor(tagId);
+    final String key = FilterText.tagId(tagId);
     final NetworkTag existing = byId(key).filter(tag -> !tag.immutable()).orElse(null);
     if (existing == null || !TagNameRule.check(newName, this, key).isAccepted()) {
       return this;
     }
     final List<NetworkTag> next = new ArrayList<>(custom());
     next.removeIf(tag -> tag.id().equals(key));
-    next.add(NetworkTag.custom(TagNameRule.idFor(newName), newName.trim(), existing.items()));
+    next.add(NetworkTag.custom(FilterText.tagId(newName), newName.trim(), existing.items()));
     return new NetworkTagSet(next);
   }
 

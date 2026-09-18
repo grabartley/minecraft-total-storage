@@ -3,7 +3,6 @@ package com.grahambartley.toomanychests.screen;
 import com.grahambartley.toomanychests.config.ConfigRange;
 import com.grahambartley.toomanychests.config.ConfigSetting;
 import java.util.List;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
@@ -29,31 +28,9 @@ public final class ServerConfigControls {
   }
 
   private static ClickableWidget readOnly(ConfigSetting setting, ServerConfigEdits edits) {
-    return new SettingValue(setting, edits);
-  }
-
-  private static final class SettingValue extends ButtonWidget {
-    private final ConfigSetting setting;
-    private final ServerConfigEdits edits;
-
-    private SettingValue(ConfigSetting setting, ServerConfigEdits edits) {
-      super(
-          0,
-          0,
-          WIDTH,
-          HEIGHT,
-          ServerConfigText.value(edits.valueOf(setting)),
-          button -> {},
-          ButtonWidget.DEFAULT_NARRATION_SUPPLIER);
-      this.setting = setting;
-      this.edits = edits;
-    }
-
-    @Override
-    public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
-      setMessage(ServerConfigText.value(edits.valueOf(setting)));
-      super.renderWidget(context, mouseX, mouseY, delta);
-    }
+    return ButtonWidget.builder(ServerConfigText.value(edits.valueOf(setting)), button -> {})
+        .dimensions(0, 0, WIDTH, HEIGHT)
+        .build();
   }
 
   private static ClickableWidget slider(

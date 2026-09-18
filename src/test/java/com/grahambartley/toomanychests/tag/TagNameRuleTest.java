@@ -75,33 +75,8 @@ class TagNameRuleTest {
         TagNameRule.check("keep", withCustom("castle", "keep"), "castle"));
   }
 
-  @ParameterizedTest
-  @CsvSource({
-    "Castle,castle",
-    "'  Base Build  ',base-build",
-    "REDSTONE-project,redstone-project",
-    "'Base   Kit',base-kit",
-    "'a b c',a-b-c"
-  })
-  void theIdIsTheNameNormalisedIntoOneSearchableToken(String name, String expected) {
-    assertEquals(expected, TagNameRule.idFor(name));
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"a\tb", "a\nb", "a\u000bb"})
-  void everyKindOfWhitespaceBecomesTheSameSeparator(String name) {
-    assertEquals("a-b", TagNameRule.idFor(name));
-  }
-
   @Test
-  void anIdWithNoWhitespaceIsHandedBackUntouched() {
-    assertEquals("base-kit", TagNameRule.idFor("Base-Kit"));
-    assertEquals("minecraft:stone", TagNameRule.idFor("minecraft:stone"));
-  }
-
-  @Test
-  void anIdNeverCarriesASpaceBecauseTheSearchBoxSplitsOnOne() {
-    assertFalse(TagNameRule.idFor("Base Kit").contains(" "));
+  void aMultiWordNameIsAcceptedBecauseItsIdCarriesNoSpace() {
     assertEquals(TagNameOutcome.OK, TagNameRule.check("Base Kit", NetworkTagSet.defaults()));
   }
 

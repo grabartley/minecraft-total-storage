@@ -5,20 +5,14 @@ import com.grahambartley.toomanychests.filter.FilterText;
 public final class TagNameRule {
   public static final int MAX_LENGTH = 32;
 
-  public static final String SPACE_REPLACEMENT = FilterText.TAG_SPACE_REPLACEMENT;
-
   private TagNameRule() {}
-
-  public static String idFor(String name) {
-    return FilterText.tagId(name);
-  }
 
   public static TagNameOutcome check(String name, NetworkTagSet existing) {
     return check(name, existing, "");
   }
 
   public static TagNameOutcome check(String name, NetworkTagSet existing, String replacing) {
-    final String id = idFor(name);
+    final String id = FilterText.tagId(name);
     if (id.isEmpty()) {
       return TagNameOutcome.BLANK;
     }
@@ -31,7 +25,7 @@ public final class TagNameRule {
     if (PresetTag.fromId(id).isPresent()) {
       return TagNameOutcome.PRESET_COLLISION;
     }
-    if (existing != null && existing.contains(id) && !id.equals(idFor(replacing))) {
+    if (existing != null && existing.contains(id) && !id.equals(FilterText.tagId(replacing))) {
       return TagNameOutcome.DUPLICATE;
     }
     return TagNameOutcome.OK;
