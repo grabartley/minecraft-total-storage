@@ -39,7 +39,9 @@ class TerminalSettingsPanelTest {
                 index ->
                     new ContainerRoleEntry(
                         new BlockPos(index, 64, 0),
+                        "",
                         ContainerRole.GENERAL,
+                        List.of(),
                         Optional.empty(),
                         0,
                         0L,

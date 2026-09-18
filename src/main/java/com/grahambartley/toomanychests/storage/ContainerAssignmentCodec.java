@@ -13,7 +13,7 @@ public final class ContainerAssignmentCodec {
           id -> ContainerRole.fromId(id).orElse(ContainerRole.DEFAULT), ContainerRole::id);
 
   private record StoredAssignment(
-      BlockPos container, ContainerRole role, List<String> tags, List<String> items) {
+      BlockPos container, ContainerRole role, List<String> tags, List<String> items, String name) {
     static final Codec<StoredAssignment> CODEC =
         RecordCodecBuilder.create(
             instance ->
@@ -29,7 +29,8 @@ public final class ContainerAssignmentCodec {
                         Codec.STRING
                             .listOf()
                             .optionalFieldOf("items", List.of())
-                            .forGetter(StoredAssignment::items))
+                            .forGetter(StoredAssignment::items),
+                        Codec.STRING.optionalFieldOf("name", "").forGetter(StoredAssignment::name))
                     .apply(instance, StoredAssignment::new));
   }
 
@@ -45,7 +46,8 @@ public final class ContainerAssignmentCodec {
     for (final StoredAssignment entry : stored) {
       assignments.put(
           entry.container(),
-          new ContainerAssignment(entry.role(), ContainerFilter.of(entry.tags(), entry.items())));
+          new ContainerAssignment(
+              entry.role(), ContainerFilter.of(entry.tags(), entry.items()), entry.name()));
     }
     return new ContainerAssignments(assignments);
   }
@@ -58,7 +60,8 @@ public final class ContainerAssignmentCodec {
                     entry.getKey(),
                     entry.getValue().role(),
                     List.copyOf(entry.getValue().filter().tagIds()),
-                    List.copyOf(entry.getValue().filter().itemIds())))
+                    List.copyOf(entry.getValue().filter().itemIds()),
+                    entry.getValue().name()))
         .toList();
   }
 }

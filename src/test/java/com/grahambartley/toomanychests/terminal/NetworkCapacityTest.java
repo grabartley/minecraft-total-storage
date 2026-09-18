@@ -83,7 +83,8 @@ class NetworkCapacityTest {
   }
 
   private static ContainerRoleEntry row(ContainerRole role, int used, int total) {
-    return new ContainerRoleEntry(BlockPos.ORIGIN, role, Optional.empty(), 0, 0L, used, total, 0.0);
+    return new ContainerRoleEntry(
+        BlockPos.ORIGIN, "", role, List.of(), Optional.empty(), 0, 0L, used, total, 0.0);
   }
 
   @Test

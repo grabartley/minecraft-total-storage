@@ -126,6 +126,15 @@ public final class ModNetworkingClient {
     ClientPlayNetworking.send(new ContainerRoleEditPayload(syncId, container, role));
   }
 
+  public static void sendContainerName(int syncId, BlockPos container, String name) {
+    ClientPlayNetworking.send(new ContainerNameEditPayload(syncId, container, name));
+  }
+
+  public static void sendContainerFilterTag(
+      int syncId, BlockPos container, String tagId, boolean accepted) {
+    ClientPlayNetworking.send(new ContainerFilterEditPayload(syncId, container, tagId, accepted));
+  }
+
   public static void sendTerminalAction(int syncId, TerminalAction action) {
     ClientPlayNetworking.send(new TerminalActionPayload(syncId, action));
   }

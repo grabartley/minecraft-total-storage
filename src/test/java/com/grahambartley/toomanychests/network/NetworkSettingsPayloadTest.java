@@ -39,7 +39,7 @@ class NetworkSettingsPayloadTest {
 
   private static ContainerRoleEntry row(int x, ContainerRole role) {
     return new ContainerRoleEntry(
-        new BlockPos(x, 64, -x), role, Optional.empty(), 3, 168L, 3, 27, 9.0);
+        new BlockPos(x, 64, -x), "", role, List.of(), Optional.empty(), 3, 168L, 3, 27, 9.0);
   }
 
   private static NetworkSettingsPayload roundTrip(NetworkSettingsPayload payload) {
@@ -117,7 +117,9 @@ class NetworkSettingsPayloadTest {
     buffer.writeVarInt(1);
     buffer.writeVarInt(1);
     buffer.writeBlockPos(new BlockPos(1, 2, 3));
+    buffer.writeString("");
     buffer.writeEnumConstant(ContainerRole.GENERAL);
+    buffer.writeVarInt(0);
     buffer.writeVarInt(0);
     buffer.writeVarLong(0L);
     buffer.writeVarInt(900);

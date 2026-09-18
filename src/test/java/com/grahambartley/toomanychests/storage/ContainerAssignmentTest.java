@@ -86,6 +86,42 @@ class ContainerAssignmentTest {
   }
 
   @Test
+  void aNameIsSanitisedIntoTheAssignmentRatherThanStoredRaw() {
+    assertEquals(
+        "Brewing stand",
+        new ContainerAssignment(ContainerRole.GENERAL, ContainerFilter.NONE, "  Brewing   stand ")
+            .name());
+  }
+
+  @Test
+  void anAssignmentThatOnlyCarriesANameIsNotTheDefault() {
+    ContainerAssignment named = ContainerAssignment.DEFAULT.withName("Potions");
+
+    assertTrue(named.isNamed());
+    assertFalse(named.isDefault());
+  }
+
+  @Test
+  void aNameSurvivesEveryRoleTheContainerIsCycledThrough() {
+    ContainerAssignment named = ContainerAssignment.DEFAULT.withName("Potions");
+
+    assertEquals(
+        "Potions", named.withRole(ContainerRole.FILTERED).withRole(ContainerRole.EXCLUDED).name());
+  }
+
+  @Test
+  void renamingToTheNameItAlreadyHasChangesNothing() {
+    ContainerAssignment named = ContainerAssignment.DEFAULT.withName("Potions");
+
+    assertSame(named, named.withName(" Potions "));
+  }
+
+  @Test
+  void clearingTheNameLeavesAnOtherwiseUntouchedContainerAtTheDefault() {
+    assertTrue(ContainerAssignment.DEFAULT.withName("Potions").withName("").isDefault());
+  }
+
+  @Test
   void twoContainersConfiguredTheSameWayCompareEqual() {
     ContainerAssignment first =
         ContainerAssignment.filtered(ContainerFilter.ofTags("ores", "wood"));

@@ -54,6 +54,7 @@ public final class TerminalTooltips {
       DrawContext context,
       TextRenderer textRenderer,
       NetworkSettingsView view,
+      NetworkTagView tags,
       TerminalSettingsPanel settings,
       int windowX,
       int windowY,
@@ -65,7 +66,12 @@ public final class TerminalTooltips {
       return;
     }
     final List<Text> lines = new ArrayList<>();
-    lines.add(ContainerRowText.position(entry));
+    if (entry.isNamed()) {
+      lines.add(Text.literal(entry.name()));
+      lines.add(ContainerRowText.position(entry).copy().formatted(Formatting.GRAY));
+    } else {
+      lines.add(ContainerRowText.position(entry));
+    }
     if (entry.totalSlots() > 0) {
       lines.add(ContainerRowText.slotsUsed(entry).formatted(Formatting.GRAY));
     }
@@ -74,8 +80,19 @@ public final class TerminalTooltips {
     }
     lines.add(ContainerRowText.role(entry.role()));
     lines.add(ContainerRowText.roleMeaning(entry.role()).formatted(Formatting.GRAY));
+    if (entry.isFiltered()) {
+      lines.add(ContainerRowText.acceptedTags(entry, tags).formatted(Formatting.GRAY));
+    }
     if (view.mayAdminister()) {
       lines.add(TerminalScreenText.of("settings.role.hint").formatted(Formatting.DARK_GRAY));
+      lines.add(
+          TerminalScreenText.of("settings.container.name.hint.row")
+              .formatted(Formatting.DARK_GRAY));
+      if (entry.isFiltered()) {
+        lines.add(
+            TerminalScreenText.of("settings.container.filter.hint")
+                .formatted(Formatting.DARK_GRAY));
+      }
     }
     context.drawTooltip(textRenderer, lines, mouseX, mouseY);
   }

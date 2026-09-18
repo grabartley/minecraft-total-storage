@@ -16,6 +16,7 @@ import com.grahambartley.toomanychests.screenhandler.TerminalListingBroadcast;
 import com.grahambartley.toomanychests.screenhandler.TerminalPanelRefresh;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLifecycle;
 import com.grahambartley.toomanychests.terminal.ContainerEligibilityRefresh;
+import com.grahambartley.toomanychests.terminal.TerminalCapacityBroadcast;
 import com.grahambartley.toomanychests.terminal.TerminalLifecycle;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import com.grahambartley.toomanychests.terminal.TerminalRadiusClamp;
@@ -47,6 +48,7 @@ public class TooManyChests implements ModInitializer {
     NetworkOperations.register();
     TerminalScreenLifecycle.register();
     new TerminalListingBroadcast(ModNetworking.listings()).register();
+    new TerminalCapacityBroadcast().register();
     TerminalRadiusClamp.register();
     ContainerEligibilityRefresh.register();
     TerminalPanelRefresh.register();

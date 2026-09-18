@@ -398,13 +398,12 @@ public final class TerminalSettingsPanel {
         textY,
         changeable ? VanillaPalette.LABEL : VanillaPalette.MUTED,
         false);
-    final Text chip = ContainerRowText.role(entry.role());
     context.drawText(
         textRenderer,
-        chip,
+        TrimmedText.toWidth(textRenderer, ContainerRowText.roleChip(entry), CHIP_WIDTH),
         left + TerminalSettingsLayout.ROW_WIDTH - CHIP_WIDTH,
         textY,
-        changeable ? ContainerRowText.roleColour(entry.role()) : VanillaPalette.MUTED,
+        changeable ? ContainerRowText.chipColour(entry) : VanillaPalette.MUTED,
         false);
   }
 

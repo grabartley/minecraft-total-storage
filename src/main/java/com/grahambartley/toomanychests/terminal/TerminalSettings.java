@@ -103,6 +103,10 @@ public record TerminalSettings(
     return containers.filterFor(container);
   }
 
+  public String nameFor(BlockPos container) {
+    return containers.nameFor(container);
+  }
+
   public TerminalSettings withContainers(ContainerAssignments updated) {
     if (updated == null || updated.equals(containers)) {
       return this;

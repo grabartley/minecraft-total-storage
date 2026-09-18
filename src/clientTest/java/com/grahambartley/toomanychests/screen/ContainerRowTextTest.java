@@ -5,7 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
+import com.grahambartley.toomanychests.terminal.NetworkTagEntry;
+import com.grahambartley.toomanychests.terminal.NetworkTagView;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableTextContent;
 import net.minecraft.util.math.BlockPos;
@@ -19,13 +23,33 @@ class ContainerRowTextTest {
   private static final String COUNT_PREFIX = "count.too-many-chests.";
 
   private static ContainerRoleEntry entry(int variants, long items) {
+    return named("", variants, items);
+  }
+
+  private static ContainerRoleEntry named(String name, int variants, long items) {
     return new ContainerRoleEntry(
         new BlockPos(12, 64, -8),
+        name,
         ContainerRole.GENERAL,
+        List.of(),
         Optional.empty(),
         variants,
         items,
         0,
+        27,
+        4.0);
+  }
+
+  private static ContainerRoleEntry filtered(List<String> accepted) {
+    return new ContainerRoleEntry(
+        new BlockPos(12, 64, -8),
+        "",
+        ContainerRole.FILTERED,
+        accepted,
+        Optional.empty(),
+        1,
+        1L,
+        1,
         27,
         4.0);
   }
@@ -106,5 +130,84 @@ class ContainerRowTextTest {
         keyOf(ContainerRowText.role(ContainerRole.DEFAULT)), keyOf(ContainerRowText.role(null)));
     assertEquals(
         ContainerRowText.roleColour(ContainerRole.DEFAULT), ContainerRowText.roleColour(null));
+  }
+
+  @Test
+  void anUnnamedContainerIsLabelledByWhereItIs() {
+    assertEquals("12 64 -8", ContainerRowText.label(entry(1, 1L)).getString());
+  }
+
+  @Test
+  void aNamedContainerIsLabelledByItsName() {
+    assertEquals("Potions", ContainerRowText.label(named("Potions", 1, 1L)).getString());
+  }
+
+  @Test
+  void theChipOfAFilteredContainerCountsWhatItAccepts() {
+    assertEquals(
+        PREFIX + "role.filtered.count",
+        keyOf(ContainerRowText.roleChip(filtered(List.of("ores", "wood")))));
+  }
+
+  @Test
+  void theChipOfAnyOtherRoleIsJustItsName() {
+    assertEquals(PREFIX + "role.general", keyOf(ContainerRowText.roleChip(entry(1, 1L))));
+  }
+
+  @Test
+  void aFilteredContainerAcceptingNothingIsColouredAsAWarning() {
+    assertEquals(VanillaPalette.WARNING, ContainerRowText.chipColour(filtered(List.of())));
+  }
+
+  @Test
+  void aFilteredContainerThatAcceptsSomethingKeepsItsRoleColour() {
+    assertEquals(
+        ContainerRowText.roleColour(ContainerRole.FILTERED),
+        ContainerRowText.chipColour(filtered(List.of("ores"))));
+  }
+
+  @Test
+  void whatAFilteredContainerAcceptsIsListedRatherThanCounted() {
+    assertEquals(
+        "ores, wood",
+        ContainerRowText.acceptedTags(filtered(List.of("ores", "wood")), tagsOf("ores", "wood"))
+            .getString());
+  }
+
+  @Test
+  void anAcceptedTagIsNamedTheWayTheEditorNamesIt() {
+    assertEquals(
+        "Ores and Minerals",
+        ContainerRowText.acceptedTags(filtered(List.of("ores")), named("ores", "Ores and Minerals"))
+            .getString());
+  }
+
+  @Test
+  void aTagTheViewHasNotHeardOfFallsBackToItsId() {
+    assertEquals(
+        "ores", ContainerRowText.acceptedTags(filtered(List.of("ores")), tagsOf()).getString());
+  }
+
+  @Test
+  void aFilteredContainerAcceptingNothingSaysSoRatherThanListingNothing() {
+    assertEquals(
+        PREFIX + "settings.container.filter.empty",
+        keyOf(ContainerRowText.acceptedTags(filtered(List.of()), tagsOf())));
+  }
+
+  private static NetworkTagView tagsOf(String... ids) {
+    return new NetworkTagView(
+        true,
+        java.util.Arrays.stream(ids).map(id -> new NetworkTagEntry(id, id, false, 0, 0)).toList(),
+        Optional.empty(),
+        Set.of());
+  }
+
+  private static NetworkTagView named(String id, String displayName) {
+    return new NetworkTagView(
+        true,
+        List.of(new NetworkTagEntry(id, displayName, false, 0, 0)),
+        Optional.empty(),
+        Set.of());
   }
 }

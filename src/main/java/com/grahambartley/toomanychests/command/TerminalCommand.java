@@ -43,6 +43,8 @@ public final class TerminalCommand {
                 .then(TerminalAccessCommand.untrustNode())
                 .then(TerminalNetworkCommand.infoNode())
                 .then(TerminalNetworkCommand.roleNode())
+                .then(ContainerNameCommand.nameNode())
+                .then(ContainerFilterCommand.filterNode())
                 .then(TerminalNetworkCommand.rescanNode())
                 .then(TerminalNetworkCommand.highlightNode())
                 .then(TerminalTagCommand.tagsNode()));

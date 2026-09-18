@@ -2,6 +2,8 @@ package com.grahambartley.toomanychests.screen;
 
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
+import com.grahambartley.toomanychests.terminal.NetworkTagEntry;
+import com.grahambartley.toomanychests.terminal.NetworkTagView;
 import com.grahambartley.toomanychests.text.CountedNoun;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
@@ -33,17 +35,51 @@ public final class ContainerRowText {
     return TerminalScreenText.of("settings.container.at", coordinates(entry.container()));
   }
 
+  public static Text label(ContainerRoleEntry entry) {
+    return entry.isNamed()
+        ? Text.literal(entry.name())
+        : Text.literal(coordinates(entry.container()));
+  }
+
   public static MutableText identity(ContainerRoleEntry entry) {
-    return TerminalScreenText.of(
-        "settings.container.identity", coordinates(entry.container()), contents(entry));
+    return TerminalScreenText.of("settings.container.identity", label(entry), contents(entry));
   }
 
   public static MutableText role(ContainerRole role) {
     return TerminalScreenText.of("role." + safe(role).id());
   }
 
+  public static MutableText roleChip(ContainerRoleEntry entry) {
+    return entry.isFiltered()
+        ? TerminalScreenText.of("role.filtered.count", entry.acceptedTags().size())
+        : role(entry.role());
+  }
+
   public static MutableText roleMeaning(ContainerRole role) {
     return TerminalScreenText.of("role." + safe(role).id() + ".meaning");
+  }
+
+  public static MutableText acceptedTags(ContainerRoleEntry entry, NetworkTagView tags) {
+    if (entry.acceptsNothing()) {
+      return TerminalScreenText.of("settings.container.filter.empty");
+    }
+    final MutableText listed = Text.empty();
+    for (final String tagId : entry.acceptedTags()) {
+      if (!listed.getSiblings().isEmpty()) {
+        listed.append(Text.literal(", "));
+      }
+      listed.append(nameOf(tagId, tags));
+    }
+    return listed;
+  }
+
+  private static Text nameOf(String tagId, NetworkTagView tags) {
+    for (final NetworkTagEntry tag : tags.tags()) {
+      if (tag.id().equals(tagId)) {
+        return FilterColumnText.nameOf(tag);
+      }
+    }
+    return Text.literal(tagId);
   }
 
   public static int roleColour(ContainerRole role) {
@@ -51,6 +87,10 @@ public final class ContainerRowText {
       case GENERAL, FILTERED -> VanillaPalette.LABEL;
       case EXCLUDED -> VanillaPalette.ACCENT;
     };
+  }
+
+  public static int chipColour(ContainerRoleEntry entry) {
+    return entry.acceptsNothing() ? VanillaPalette.WARNING : roleColour(entry.role());
   }
 
   private static ContainerRole safe(ContainerRole role) {

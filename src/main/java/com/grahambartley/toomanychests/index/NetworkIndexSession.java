@@ -151,4 +151,8 @@ public final class NetworkIndexSession<V> implements ContainerMutationListener {
   public int containerReadCount() {
     return cache.containerReadCount();
   }
+
+  public int invalidationCount() {
+    return cache.invalidationCount();
+  }
 }

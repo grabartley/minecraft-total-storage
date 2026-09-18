@@ -41,7 +41,10 @@ public final class TerminalPower {
     if (receiving == state.get(TerminalBlock.POWERED)) {
       return;
     }
-    world.setBlockState(pos, state.with(TerminalBlock.POWERED, receiving), Block.NOTIFY_ALL);
+    world.setBlockState(
+        pos,
+        state.with(TerminalBlock.POWERED, receiving).with(TerminalBlock.NEAR_CAPACITY, false),
+        Block.NOTIFY_ALL);
     if (receiving) {
       activate(world, pos);
     } else {
@@ -62,9 +65,10 @@ public final class TerminalPower {
     }
     if (state.get(TerminalBlock.POWERED)) {
       activate(world, pos);
-    } else {
-      deactivate(world, pos);
+      return;
     }
+    TerminalCapacitySignal.show(world, pos, false);
+    deactivate(world, pos);
   }
 
   public void unloaded(ServerWorld world, BlockPos pos) {

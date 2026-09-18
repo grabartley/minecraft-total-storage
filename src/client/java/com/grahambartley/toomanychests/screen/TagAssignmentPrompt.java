@@ -104,56 +104,15 @@ public final class TagAssignmentPrompt {
         return;
       }
       final NetworkTagEntry tag = all.get(index);
-      drawRow(
+      TagCheckRow.draw(
           context,
           textRenderer,
-          tag,
+          FilterColumnText.nameOf(tag),
           view.subjectCarries(tag.id()),
           tag.equals(hovered),
           originX + TagPromptLayout.left() + TagPromptLayout.PADDING,
           originY + TagPromptLayout.rowY(row));
     }
-  }
-
-  private static void drawRow(
-      DrawContext context,
-      TextRenderer textRenderer,
-      NetworkTagEntry tag,
-      boolean carried,
-      boolean hovered,
-      int left,
-      int top) {
-    TerminalChrome.drawRow(
-        context, hovered, left, top, TagPromptLayout.ROW_WIDTH, TagPromptLayout.ROW_HEIGHT);
-    final int checkInset = (TagPromptLayout.ROW_HEIGHT - TagPromptLayout.CHECK_SIZE) / 2;
-    TerminalSprite.SUNKEN.draw(
-        context,
-        left + checkInset,
-        top + checkInset,
-        TagPromptLayout.CHECK_SIZE,
-        TagPromptLayout.CHECK_SIZE);
-    if (carried) {
-      TerminalSprite.CHECK.draw(
-          context,
-          left + checkInset + TagPromptLayout.CHECK_BORDER,
-          top + checkInset + TagPromptLayout.CHECK_BORDER,
-          TagPromptLayout.TICK_SIZE,
-          TagPromptLayout.TICK_SIZE);
-    }
-    final int textLeft =
-        left + checkInset + TagPromptLayout.CHECK_SIZE + TagPromptLayout.TEXT_MARGIN;
-    final OrderedText name =
-        TrimmedText.toWidth(
-            textRenderer,
-            FilterColumnText.nameOf(tag),
-            left + TagPromptLayout.ROW_WIDTH - textLeft);
-    context.drawText(
-        textRenderer,
-        name,
-        textLeft,
-        top + (TagPromptLayout.ROW_HEIGHT - TagPromptLayout.LINE_HEIGHT) / 2 + 1,
-        carried ? VanillaPalette.LABEL : VanillaPalette.MUTED,
-        false);
   }
 
   private static void drawFooter(

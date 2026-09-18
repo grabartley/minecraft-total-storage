@@ -39,6 +39,10 @@ public final class TerminalSettingsNetworking {
         .register(TerminalAccessEditPayload.ID, TerminalAccessEditPayload.CODEC);
     PayloadTypeRegistry.playC2S()
         .register(ContainerRoleEditPayload.ID, ContainerRoleEditPayload.CODEC);
+    PayloadTypeRegistry.playC2S()
+        .register(ContainerNameEditPayload.ID, ContainerNameEditPayload.CODEC);
+    PayloadTypeRegistry.playC2S()
+        .register(ContainerFilterEditPayload.ID, ContainerFilterEditPayload.CODEC);
     PayloadTypeRegistry.playC2S().register(TerminalActionPayload.ID, TerminalActionPayload.CODEC);
     PayloadTypeRegistry.playC2S().register(TagPanelRequestPayload.ID, TagPanelRequestPayload.CODEC);
     PayloadTypeRegistry.playC2S().register(TagEditPayload.ID, TagEditPayload.CODEC);
@@ -68,6 +72,14 @@ public final class TerminalSettingsNetworking {
         ContainerRoleEditPayload.ID,
         (payload, context) ->
             context.server().execute(() -> EDITS.setRole(context.player(), payload)));
+    ServerPlayNetworking.registerGlobalReceiver(
+        ContainerNameEditPayload.ID,
+        (payload, context) ->
+            context.server().execute(() -> EDITS.setName(context.player(), payload)));
+    ServerPlayNetworking.registerGlobalReceiver(
+        ContainerFilterEditPayload.ID,
+        (payload, context) ->
+            context.server().execute(() -> EDITS.setFilterTag(context.player(), payload)));
     ServerPlayNetworking.registerGlobalReceiver(
         TerminalActionPayload.ID,
         (payload, context) ->
