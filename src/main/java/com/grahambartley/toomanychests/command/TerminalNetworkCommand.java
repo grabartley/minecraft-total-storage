@@ -84,7 +84,7 @@ public final class TerminalNetworkCommand {
     source.sendFeedback(() -> CommandMessages.terminalInfoRadius(radius), false);
     source.sendFeedback(
         () -> CommandMessages.terminalInfoAccess(settings.get().accessMode()), false);
-    if (!TerminalCommandGate.caller(source).mayOpen(settings.get())) {
+    if (!TerminalCommandGate.caller(source).maySeeMembership(settings.get())) {
       return 1;
     }
     final boolean powered = TerminalNetworks.power().isActive(source.getWorld(), pos);
