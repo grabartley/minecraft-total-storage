@@ -68,8 +68,10 @@ public final class TerminalTooltips {
     final List<Text> lines = new ArrayList<>();
     if (entry.isNamed()) {
       lines.add(Text.literal(entry.name()));
+      lines.add(ContainerRowText.position(entry).copy().formatted(Formatting.GRAY));
+    } else {
+      lines.add(ContainerRowText.position(entry));
     }
-    lines.add(ContainerRowText.position(entry).copy().formatted(Formatting.GRAY));
     if (entry.totalSlots() > 0) {
       lines.add(ContainerRowText.slotsUsed(entry).formatted(Formatting.GRAY));
     }

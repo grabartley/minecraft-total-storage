@@ -137,7 +137,9 @@ public final class ContainerFilterPrompt {
     return row.acceptsNothing()
         ? TerminalScreenText.of("settings.container.filter.empty")
         : TerminalScreenText.of(
-            "settings.container.filter.count", CountedNoun.TAGS.of(row.acceptedTags().size()));
+            "settings.container.filter.count",
+            row.acceptedTags().size(),
+            CountedNoun.TAGS.of(tags.tags().size()));
   }
 
   private static void drawLine(

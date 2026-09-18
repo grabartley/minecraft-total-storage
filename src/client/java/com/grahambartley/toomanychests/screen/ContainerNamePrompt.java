@@ -45,8 +45,7 @@ public final class ContainerNamePrompt {
     TextPromptPanel.draw(
         context,
         textRenderer,
-        TerminalScreenText.of(
-            "settings.container.name.title", ContainerRowText.coordinates(container)),
+        TerminalScreenText.of("settings.container.name.title"),
         TerminalScreenText.of("settings.container.name.hint"),
         entry.text(),
         originX,
