@@ -5,8 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
+import com.grahambartley.toomanychests.terminal.NetworkTagEntry;
+import com.grahambartley.toomanychests.terminal.NetworkTagView;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableTextContent;
 import net.minecraft.util.math.BlockPos;
@@ -166,13 +169,45 @@ class ContainerRowTextTest {
   @Test
   void whatAFilteredContainerAcceptsIsListedRatherThanCounted() {
     assertEquals(
-        "ores, wood", ContainerRowText.acceptedTags(filtered(List.of("ores", "wood"))).getString());
+        "ores, wood",
+        ContainerRowText.acceptedTags(filtered(List.of("ores", "wood")), tagsOf("ores", "wood"))
+            .getString());
+  }
+
+  @Test
+  void anAcceptedTagIsNamedTheWayTheEditorNamesIt() {
+    assertEquals(
+        "Ores and Minerals",
+        ContainerRowText.acceptedTags(filtered(List.of("ores")), named("ores", "Ores and Minerals"))
+            .getString());
+  }
+
+  @Test
+  void aTagTheViewHasNotHeardOfFallsBackToItsId() {
+    assertEquals(
+        "ores", ContainerRowText.acceptedTags(filtered(List.of("ores")), tagsOf()).getString());
   }
 
   @Test
   void aFilteredContainerAcceptingNothingSaysSoRatherThanListingNothing() {
     assertEquals(
         PREFIX + "settings.container.filter.empty",
-        keyOf(ContainerRowText.acceptedTags(filtered(List.of()))));
+        keyOf(ContainerRowText.acceptedTags(filtered(List.of()), tagsOf())));
+  }
+
+  private static NetworkTagView tagsOf(String... ids) {
+    return new NetworkTagView(
+        true,
+        java.util.Arrays.stream(ids).map(id -> new NetworkTagEntry(id, id, false, 0, 0)).toList(),
+        Optional.empty(),
+        Set.of());
+  }
+
+  private static NetworkTagView named(String id, String displayName) {
+    return new NetworkTagView(
+        true,
+        List.of(new NetworkTagEntry(id, displayName, false, 0, 0)),
+        Optional.empty(),
+        Set.of());
   }
 }

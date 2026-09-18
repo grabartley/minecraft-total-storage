@@ -15,6 +15,7 @@ import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.block.entity.BarrelBlockEntity;
 import net.minecraft.item.Items;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
@@ -186,7 +187,7 @@ public final class TerminalCapacityBroadcastGameTest implements FabricGameTest {
     return new TerminalCapacityBroadcast(new NetworkCapacityService(), new NetworkCapacityWatch());
   }
 
-  private static net.minecraft.server.MinecraftServer server(TestContext context) {
+  private static MinecraftServer server(TestContext context) {
     return context.getWorld().getServer();
   }
 

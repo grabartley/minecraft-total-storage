@@ -193,6 +193,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
           context,
           textRenderer,
           settingsThisFrame,
+          tagsThisFrame,
           settings,
           hoveredWindowX,
           hoveredWindowY,

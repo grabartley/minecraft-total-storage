@@ -21,10 +21,6 @@ public final class NetworkCapacityWatch {
     measuredAt.put(terminal, stamp);
   }
 
-  public void forget(TerminalAddress terminal) {
-    measuredAt.remove(terminal);
-  }
-
   public void retainOnly(Collection<TerminalAddress> running) {
     measuredAt.keySet().retainAll(running == null ? Set.of() : running);
   }
@@ -35,9 +31,5 @@ public final class NetworkCapacityWatch {
 
   public int watchedCount() {
     return measuredAt.size();
-  }
-
-  public void clear() {
-    measuredAt.clear();
   }
 }

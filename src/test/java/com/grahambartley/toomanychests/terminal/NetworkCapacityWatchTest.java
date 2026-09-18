@@ -125,24 +125,4 @@ class NetworkCapacityWatchTest {
 
     assertEquals(0, watch.watchedCount());
   }
-
-  @Test
-  void forgettingOneNetworkLeavesTheRestAlone() {
-    NetworkIndexSession<String> session = session();
-    watch.measured(HERE, stamp(session, 4, ContainerAssignments.empty()));
-    watch.measured(THERE, stamp(session, 4, ContainerAssignments.empty()));
-
-    watch.forget(HERE);
-
-    assertEquals(1, watch.watchedCount());
-    assertFalse(watch.needsMeasuring(THERE, stamp(session, 4, ContainerAssignments.empty())));
-  }
-
-  @Test
-  void clearingForgetsEverything() {
-    watch.measured(HERE, stamp(session(), 4, ContainerAssignments.empty()));
-    watch.clear();
-
-    assertEquals(0, watch.watchedCount());
-  }
 }

@@ -54,6 +54,7 @@ public final class TerminalTooltips {
       DrawContext context,
       TextRenderer textRenderer,
       NetworkSettingsView view,
+      NetworkTagView tags,
       TerminalSettingsPanel settings,
       int windowX,
       int windowY,
@@ -78,7 +79,7 @@ public final class TerminalTooltips {
     lines.add(ContainerRowText.role(entry.role()));
     lines.add(ContainerRowText.roleMeaning(entry.role()).formatted(Formatting.GRAY));
     if (entry.isFiltered()) {
-      lines.add(ContainerRowText.acceptedTags(entry).formatted(Formatting.GRAY));
+      lines.add(ContainerRowText.acceptedTags(entry, tags).formatted(Formatting.GRAY));
     }
     if (view.mayAdminister()) {
       lines.add(TerminalScreenText.of("settings.role.hint").formatted(Formatting.DARK_GRAY));

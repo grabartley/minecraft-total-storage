@@ -93,6 +93,9 @@ public final class ContainerFilterCommand {
     final BlockPos terminal = TerminalCommand.terminalPos(context);
     final BlockPos container = BlockPosArgumentType.getBlockPos(context, CONTAINER);
     final String tagId = FilterText.tagId(StringArgumentType.getString(context, TAG));
+    if (!hasTerminal(source, terminal)) {
+      return 0;
+    }
     if (!isFiltered(source, terminal, container)) {
       source.sendError(ContainerMessages.containerNotFiltered(container));
       return 0;
@@ -136,6 +139,9 @@ public final class ContainerFilterCommand {
     final ServerCommandSource source = context.getSource();
     final BlockPos terminal = TerminalCommand.terminalPos(context);
     final BlockPos container = BlockPosArgumentType.getBlockPos(context, CONTAINER);
+    if (!hasTerminal(source, terminal)) {
+      return 0;
+    }
     if (!isFiltered(source, terminal, container)) {
       source.sendError(ContainerMessages.containerNotFiltered(container));
       return 0;
@@ -165,7 +171,16 @@ public final class ContainerFilterCommand {
 
   private static boolean isFiltered(
       ServerCommandSource source, BlockPos terminal, BlockPos container) {
-    return ROLES.roleOf(source.getWorld(), terminal, container) == ContainerRole.FILTERED;
+    return TerminalLookup.at(source.getWorld(), terminal).isPresent()
+        && ROLES.roleOf(source.getWorld(), terminal, container) == ContainerRole.FILTERED;
+  }
+
+  private static boolean hasTerminal(ServerCommandSource source, BlockPos terminal) {
+    if (TerminalLookup.at(source.getWorld(), terminal).isPresent()) {
+      return true;
+    }
+    source.sendError(CommandMessages.noTerminalAt(terminal));
+    return false;
   }
 
   private static boolean knowsTag(ServerCommandSource source, BlockPos terminal, String tagId) {
