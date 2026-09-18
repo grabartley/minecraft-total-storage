@@ -5,6 +5,8 @@ import com.grahambartley.toomanychests.network.ModNetworkingClient;
 import com.grahambartley.toomanychests.operation.WithdrawAmount;
 import com.grahambartley.toomanychests.operation.WithdrawDestination;
 import com.grahambartley.toomanychests.tag.TagSetImportMode;
+import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
+import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
 import com.grahambartley.toomanychests.terminal.NetworkTagEntry;
 import com.grahambartley.toomanychests.terminal.NetworkTagView;
 import com.grahambartley.toomanychests.terminal.OwnedTerminal;
@@ -19,6 +21,8 @@ public final class TerminalPrompts {
   private final TagNamePrompt naming = new TagNamePrompt();
   private final TagAssignmentPrompt tagging = new TagAssignmentPrompt();
   private final TagSourcePrompt copying = new TagSourcePrompt();
+  private final ContainerNamePrompt renaming = new ContainerNamePrompt();
+  private final ContainerFilterPrompt filtering = new ContainerFilterPrompt();
 
   private final int syncId;
 
@@ -34,12 +38,25 @@ public final class TerminalPrompts {
     return copying;
   }
 
+  public ContainerNamePrompt renaming() {
+    return renaming;
+  }
+
+  public ContainerFilterPrompt filtering() {
+    return filtering;
+  }
+
   public boolean isAnyOpen() {
-    return amount.isOpen() || naming.isOpen() || tagging.isOpen() || copying.isOpen();
+    return amount.isOpen()
+        || naming.isOpen()
+        || renaming.isOpen()
+        || tagging.isOpen()
+        || filtering.isOpen()
+        || copying.isOpen();
   }
 
   public boolean ownsTheKeyboard() {
-    return amount.isOpen() || naming.isOpen();
+    return amount.isOpen() || naming.isOpen() || renaming.isOpen();
   }
 
   public boolean isTagging() {
@@ -57,6 +74,7 @@ public final class TerminalPrompts {
 
   public void fit(NetworkTagView tags) {
     tagging.fit(tags);
+    filtering.fit(tags);
     copying.fit(sources());
   }
 
@@ -67,6 +85,7 @@ public final class TerminalPrompts {
   public boolean draw(
       DrawContext context,
       TextRenderer textRenderer,
+      NetworkSettingsView settings,
       NetworkTagView tags,
       int matching,
       int originX,
@@ -79,6 +98,14 @@ public final class TerminalPrompts {
     }
     if (naming.isOpen()) {
       naming.draw(context, textRenderer, originX, originY);
+      return true;
+    }
+    if (renaming.isOpen()) {
+      renaming.draw(context, textRenderer, originX, originY);
+      return true;
+    }
+    if (filtering.isOpen()) {
+      filtering.draw(context, textRenderer, settings, tags, originX, originY, mouseX, mouseY);
       return true;
     }
     if (tagging.isOpen()) {
@@ -102,6 +129,12 @@ public final class TerminalPrompts {
       }
       return true;
     }
+    if (filtering.isOpen()) {
+      if (verticalAmount != 0.0) {
+        filtering.scrollBy(verticalAmount > 0.0 ? -1 : 1);
+      }
+      return true;
+    }
     if (!tagging.isOpen()) {
       return false;
     }
@@ -112,7 +145,12 @@ public final class TerminalPrompts {
   }
 
   public boolean mouseClicked(
-      NetworkTagView tags, boolean shiftDown, int windowX, int windowY, int button) {
+      NetworkSettingsView settings,
+      NetworkTagView tags,
+      boolean shiftDown,
+      int windowX,
+      int windowY,
+      int button) {
     if (amount.isOpen()) {
       amount.close();
       return true;
@@ -121,10 +159,37 @@ public final class TerminalPrompts {
       naming.close();
       return true;
     }
+    if (renaming.isOpen()) {
+      renaming.close();
+      return true;
+    }
+    if (filtering.isOpen()) {
+      return filteringClicked(settings, tags, windowX, windowY, button);
+    }
     if (copying.isOpen()) {
       return copyingClicked(shiftDown, windowX, windowY, button);
     }
     return tagging.isOpen() && taggingClicked(tags, shiftDown, windowX, windowY, button);
+  }
+
+  private boolean filteringClicked(
+      NetworkSettingsView settings, NetworkTagView tags, int windowX, int windowY, int button) {
+    if (button != GridClick.LEFT_BUTTON || !TagPromptLayout.isOverPrompt(windowX, windowY)) {
+      filtering.close();
+      return true;
+    }
+    final ContainerRoleEntry row = filtering.rowIn(settings);
+    final NetworkTagEntry tag = filtering.tagAt(tags, windowX, windowY);
+    if (row == null || tag == null) {
+      return true;
+    }
+    if (!settings.mayAdminister()) {
+      PromptRefusal.sound();
+      return true;
+    }
+    ModNetworkingClient.sendContainerFilterTag(
+        syncId, row.container(), tag.id(), !row.accepts(tag.id()));
+    return true;
   }
 
   private boolean copyingClicked(boolean shiftDown, int windowX, int windowY, int button) {
@@ -167,6 +232,15 @@ public final class TerminalPrompts {
     if (naming.isOpen()) {
       return handleNameKey(naming.keyPressed(keyCode, selectAllHeld));
     }
+    if (renaming.isOpen()) {
+      return handleContainerNameKey(renaming.keyPressed(keyCode, selectAllHeld));
+    }
+    if (filtering.isOpen()) {
+      if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+        filtering.close();
+      }
+      return true;
+    }
     if (copying.isOpen()) {
       if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
         copying.close();
@@ -189,7 +263,10 @@ public final class TerminalPrompts {
     if (naming.isOpen()) {
       return handleNameKey(naming.charTyped(typed));
     }
-    return tagging.isOpen();
+    if (renaming.isOpen()) {
+      return handleContainerNameKey(renaming.charTyped(typed));
+    }
+    return tagging.isOpen() || filtering.isOpen();
   }
 
   private boolean taggingClicked(
@@ -263,6 +340,21 @@ public final class TerminalPrompts {
       ModNetworkingClient.sendTagCreate(syncId, naming.name());
     }
     naming.close();
+  }
+
+  private boolean handleContainerNameKey(PromptKey outcome) {
+    if (outcome == PromptKey.REFUSED) {
+      PromptRefusal.sound();
+      return true;
+    }
+    if (outcome == PromptKey.CONFIRM) {
+      ModNetworkingClient.sendContainerName(syncId, renaming.container(), renaming.name());
+      renaming.close();
+    }
+    if (outcome == PromptKey.CANCEL) {
+      renaming.close();
+    }
+    return true;
   }
 
   private static int ceilingFor(ListingRow<ItemVariant> row) {

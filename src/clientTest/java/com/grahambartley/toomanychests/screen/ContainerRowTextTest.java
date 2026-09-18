@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
+import java.util.List;
 import java.util.Optional;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableTextContent;
@@ -19,13 +20,33 @@ class ContainerRowTextTest {
   private static final String COUNT_PREFIX = "count.too-many-chests.";
 
   private static ContainerRoleEntry entry(int variants, long items) {
+    return named("", variants, items);
+  }
+
+  private static ContainerRoleEntry named(String name, int variants, long items) {
     return new ContainerRoleEntry(
         new BlockPos(12, 64, -8),
+        name,
         ContainerRole.GENERAL,
+        List.of(),
         Optional.empty(),
         variants,
         items,
         0,
+        27,
+        4.0);
+  }
+
+  private static ContainerRoleEntry filtered(List<String> accepted) {
+    return new ContainerRoleEntry(
+        new BlockPos(12, 64, -8),
+        "",
+        ContainerRole.FILTERED,
+        accepted,
+        Optional.empty(),
+        1,
+        1L,
+        1,
         27,
         4.0);
   }
@@ -106,5 +127,52 @@ class ContainerRowTextTest {
         keyOf(ContainerRowText.role(ContainerRole.DEFAULT)), keyOf(ContainerRowText.role(null)));
     assertEquals(
         ContainerRowText.roleColour(ContainerRole.DEFAULT), ContainerRowText.roleColour(null));
+  }
+
+  @Test
+  void anUnnamedContainerIsLabelledByWhereItIs() {
+    assertEquals("12 64 -8", ContainerRowText.label(entry(1, 1L)).getString());
+  }
+
+  @Test
+  void aNamedContainerIsLabelledByItsName() {
+    assertEquals("Potions", ContainerRowText.label(named("Potions", 1, 1L)).getString());
+  }
+
+  @Test
+  void theChipOfAFilteredContainerCountsWhatItAccepts() {
+    assertEquals(
+        PREFIX + "role.filtered.count",
+        keyOf(ContainerRowText.roleChip(filtered(List.of("ores", "wood")))));
+  }
+
+  @Test
+  void theChipOfAnyOtherRoleIsJustItsName() {
+    assertEquals(PREFIX + "role.general", keyOf(ContainerRowText.roleChip(entry(1, 1L))));
+  }
+
+  @Test
+  void aFilteredContainerAcceptingNothingIsColouredAsAWarning() {
+    assertEquals(VanillaPalette.WARNING, ContainerRowText.chipColour(filtered(List.of())));
+  }
+
+  @Test
+  void aFilteredContainerThatAcceptsSomethingKeepsItsRoleColour() {
+    assertEquals(
+        ContainerRowText.roleColour(ContainerRole.FILTERED),
+        ContainerRowText.chipColour(filtered(List.of("ores"))));
+  }
+
+  @Test
+  void whatAFilteredContainerAcceptsIsListedRatherThanCounted() {
+    assertEquals(
+        "ores, wood", ContainerRowText.acceptedTags(filtered(List.of("ores", "wood"))).getString());
+  }
+
+  @Test
+  void aFilteredContainerAcceptingNothingSaysSoRatherThanListingNothing() {
+    assertEquals(
+        PREFIX + "settings.container.filter.empty",
+        keyOf(ContainerRowText.acceptedTags(filtered(List.of()))));
   }
 }

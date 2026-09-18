@@ -89,7 +89,14 @@
       "com.grahambartley.toomanychests.gametest.NetworkFilterCandidatesGameTest",
       "com.grahambartley.toomanychests.gametest.TerminalTagEditsGameTest",
       "com.grahambartley.toomanychests.gametest.NetworkTagViewServiceGameTest",
-      "com.grahambartley.toomanychests.gametest.TerminalTagTransferGameTest"
+      "com.grahambartley.toomanychests.gametest.TerminalTagTransferGameTest",
+      "com.grahambartley.toomanychests.gametest.ContainerAssignmentWriterGameTest",
+      "com.grahambartley.toomanychests.gametest.ContainerNamingServiceGameTest",
+      "com.grahambartley.toomanychests.gametest.ContainerFilterServiceGameTest",
+      "com.grahambartley.toomanychests.gametest.ContainerNameCommandGameTest",
+      "com.grahambartley.toomanychests.gametest.ContainerFilterCommandGameTest",
+      "com.grahambartley.toomanychests.gametest.NetworkCapacityServiceGameTest",
+      "com.grahambartley.toomanychests.gametest.TerminalCapacitySignalGameTest"
     ]
   },
   "mixins": [

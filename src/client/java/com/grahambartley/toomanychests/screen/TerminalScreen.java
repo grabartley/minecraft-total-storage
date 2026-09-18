@@ -63,8 +63,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     this.playerInventoryTitleY = TerminalScreenLayout.INVENTORY_LABEL_Y;
     this.requests = new TerminalRequests(handler.syncId);
     this.prompts = new TerminalPrompts(handler.syncId);
-    this.settingsClicks =
-        new TerminalSettingsClicks(settings, tagsPanel, prompts.naming(), prompts.copying());
+    this.settingsClicks = new TerminalSettingsClicks(settings, tagsPanel, prompts);
   }
 
   @Override
@@ -151,6 +150,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     if (prompts.draw(
         context,
         textRenderer,
+        settingsThisFrame,
         tagsThisFrame,
         items.page().totalMatching(),
         x,
@@ -370,7 +370,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     final int windowX = windowX(mouseX);
     final int windowY = windowY(mouseY);
     if (prompts.isAnyOpen()) {
-      return prompts.mouseClicked(tagsThisFrame, hasShiftDown(), windowX, windowY, button);
+      return prompts.mouseClicked(
+          settingsThisFrame, tagsThisFrame, hasShiftDown(), windowX, windowY, button);
     }
     final TerminalTab clicked = TerminalTab.at(windowX, windowY);
     if (clicked != null) {
@@ -396,6 +397,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
               settingsThisFrame,
               tagsThisFrame,
               settings.scroll().firstIndex(),
+              hasShiftDown(),
               windowX,
               windowY,
               button)

@@ -67,6 +67,18 @@ public final class NetworkSettingsPayloadGameTest implements FabricGameTest {
   }
 
   @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = 20)
+  public void aNamedFilteredRowSurvivesTheRoundTrip(TestContext context) {
+    ContainerRoleEntry received = roundTrip(context, namedFilteredRow()).view().containers().get(0);
+
+    context.assertTrue(
+        "Potions".equals(received.name()), "Its name, got '" + received.name() + "'");
+    context.assertTrue(
+        received.acceptedTags().equals(List.of("brewing", "my-stuff")),
+        "What it accepts, got " + received.acceptedTags());
+    context.complete();
+  }
+
+  @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = 20)
   public void anIconedPayloadIsReadBackWithNothingLeftOver(TestContext context) {
     RegistryByteBuf buffer = buffer(context);
 
@@ -81,7 +93,22 @@ public final class NetworkSettingsPayloadGameTest implements FabricGameTest {
   }
 
   private static ContainerRoleEntry row(Optional<ItemVariant> icon) {
-    return new ContainerRoleEntry(WHERE, ContainerRole.EXCLUDED, icon, 4, 900L, 6, 27, 12.0);
+    return new ContainerRoleEntry(
+        WHERE, "", ContainerRole.EXCLUDED, List.of(), icon, 4, 900L, 6, 27, 12.0);
+  }
+
+  private static ContainerRoleEntry namedFilteredRow() {
+    return new ContainerRoleEntry(
+        WHERE,
+        "Potions",
+        ContainerRole.FILTERED,
+        List.of("brewing", "my-stuff"),
+        Optional.empty(),
+        4,
+        900L,
+        6,
+        27,
+        12.0);
   }
 
   private static NetworkSettingsPayload payload(ContainerRoleEntry row) {

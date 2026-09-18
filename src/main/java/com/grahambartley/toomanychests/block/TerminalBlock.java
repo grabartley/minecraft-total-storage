@@ -28,6 +28,7 @@ import net.minecraft.world.World;
 public class TerminalBlock extends HorizontalFacingBlock implements BlockEntityProvider {
   public static final MapCodec<TerminalBlock> CODEC = createCodec(TerminalBlock::new);
   public static final BooleanProperty POWERED = Properties.POWERED;
+  public static final BooleanProperty NEAR_CAPACITY = BooleanProperty.of("near_capacity");
 
   public TerminalBlock(Settings settings) {
     super(settings);
@@ -35,7 +36,8 @@ public class TerminalBlock extends HorizontalFacingBlock implements BlockEntityP
         this.stateManager
             .getDefaultState()
             .with(FACING, Direction.NORTH)
-            .with(POWERED, Boolean.FALSE));
+            .with(POWERED, Boolean.FALSE)
+            .with(NEAR_CAPACITY, Boolean.FALSE));
   }
 
   @Override
@@ -45,14 +47,15 @@ public class TerminalBlock extends HorizontalFacingBlock implements BlockEntityP
 
   @Override
   protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
-    builder.add(FACING, POWERED);
+    builder.add(FACING, POWERED, NEAR_CAPACITY);
   }
 
   @Override
   public BlockState getPlacementState(ItemPlacementContext ctx) {
     return this.getDefaultState()
         .with(FACING, ctx.getHorizontalPlayerFacing().getOpposite())
-        .with(POWERED, ctx.getWorld().isReceivingRedstonePower(ctx.getBlockPos()));
+        .with(POWERED, ctx.getWorld().isReceivingRedstonePower(ctx.getBlockPos()))
+        .with(NEAR_CAPACITY, Boolean.FALSE);
   }
 
   @Override

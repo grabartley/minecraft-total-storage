@@ -3,6 +3,8 @@ package com.grahambartley.toomanychests.screenhandler;
 import com.grahambartley.toomanychests.access.TerminalAccessControl;
 import com.grahambartley.toomanychests.access.TerminalAdmin;
 import com.grahambartley.toomanychests.access.TerminalCaller;
+import com.grahambartley.toomanychests.network.ContainerFilterEditPayload;
+import com.grahambartley.toomanychests.network.ContainerNameEditPayload;
 import com.grahambartley.toomanychests.network.ContainerRoleEditPayload;
 import com.grahambartley.toomanychests.network.TerminalAccessEditPayload;
 import com.grahambartley.toomanychests.network.TerminalActionPayload;
@@ -12,7 +14,9 @@ import com.grahambartley.toomanychests.operation.OperationGuards;
 import com.grahambartley.toomanychests.operation.TerminalNotice;
 import com.grahambartley.toomanychests.operation.TerminalOperationContext;
 import com.grahambartley.toomanychests.operation.TerminalOperationGate;
+import com.grahambartley.toomanychests.terminal.ContainerFilterService;
 import com.grahambartley.toomanychests.terminal.ContainerHighlightService;
+import com.grahambartley.toomanychests.terminal.ContainerNamingService;
 import com.grahambartley.toomanychests.terminal.ContainerRoleService;
 import com.grahambartley.toomanychests.terminal.RoleChangeOutcome;
 import com.grahambartley.toomanychests.terminal.TerminalAddress;
@@ -29,6 +33,8 @@ public final class TerminalSettingsEdits {
   private final TerminalSettingsService panels;
   private final ContainerRoleService roles;
   private final TerminalRadiusService radius;
+  private final ContainerNamingService names = new ContainerNamingService();
+  private final ContainerFilterService filters = new ContainerFilterService();
 
   public TerminalSettingsEdits(TerminalSettingsService panels) {
     this(panels, new ContainerRoleService(), new TerminalRadiusService(TerminalNetworks.power()));
@@ -83,13 +89,60 @@ public final class TerminalSettingsEdits {
     if (context == null) {
       return false;
     }
-    final RoleChangeOutcome outcome =
+    return applied(
+        player,
+        context,
         roles.assign(
             context.world(),
             context.terminal(),
             TerminalCaller.of(player),
             payload.container(),
-            payload.role());
+            payload.role()));
+  }
+
+  public boolean setName(ServerPlayerEntity player, ContainerNameEditPayload payload) {
+    if (payload == null) {
+      return false;
+    }
+    final TerminalOperationContext context =
+        TerminalOperationGate.open(player, payload.syncId()).orElse(null);
+    if (context == null) {
+      return false;
+    }
+    return applied(
+        player,
+        context,
+        names.rename(
+            context.world(),
+            context.terminal(),
+            TerminalCaller.of(player),
+            payload.container(),
+            payload.name()));
+  }
+
+  public boolean setFilterTag(ServerPlayerEntity player, ContainerFilterEditPayload payload) {
+    if (payload == null) {
+      return false;
+    }
+    final TerminalOperationContext context =
+        TerminalOperationGate.open(player, payload.syncId()).orElse(null);
+    if (context == null) {
+      return false;
+    }
+    return applied(
+        player,
+        context,
+        filters.accept(
+            context.world(),
+            context.terminal(),
+            TerminalCaller.of(player),
+            payload.container(),
+            payload.tagId(),
+            payload.accepted()));
+  }
+
+  private boolean applied(
+      ServerPlayerEntity player, TerminalOperationContext context, RoleChangeOutcome outcome) {
     if (outcome == RoleChangeOutcome.DENIED) {
       TerminalNotice.tell(player, TerminalMessages.notYours());
       panels.refresh(player);

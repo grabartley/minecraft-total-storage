@@ -280,5 +280,14 @@
   "tag.too-many-chests.skipped.illegal-name": "%s illegal name",
   "tag.too-many-chests.skipped.no-room": "%s over the limit",
   "screen.too-many-chests.terminal.filter.mode.active": "%s · %s",
-  "command.too-many-chests.terminal.info.withheld": "- what it is holding is only for players who may open it"
+  "command.too-many-chests.terminal.info.withheld": "- what it is holding is only for players who may open it",
+  "screen.too-many-chests.terminal.settings.container.name.title": "Name the container at %s",
+  "screen.too-many-chests.terminal.settings.container.name.hint": "Enter to save, empty to clear the name, Esc to cancel",
+  "screen.too-many-chests.terminal.settings.container.name.hint.row": "Shift-right-click to name it",
+  "screen.too-many-chests.terminal.settings.container.filter.title": "What %s accepts",
+  "screen.too-many-chests.terminal.settings.container.filter.hint": "Shift-click to choose what it accepts",
+  "screen.too-many-chests.terminal.settings.container.filter.empty": "Accepts nothing, so nothing is deposited here",
+  "screen.too-many-chests.terminal.settings.container.filter.count": "Accepts %s",
+  "screen.too-many-chests.terminal.settings.container.filter.notags": "No tags on this network yet",
+  "screen.too-many-chests.terminal.role.filtered.count": "Filtered %s"
 }

@@ -2,7 +2,9 @@ package com.grahambartley.toomanychests.network;
 
 import com.grahambartley.toomanychests.TooManyChests;
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
+import com.grahambartley.toomanychests.storage.ContainerNameRule;
 import com.grahambartley.toomanychests.storage.ContainerRole;
+import com.grahambartley.toomanychests.tag.TagNameRule;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
 import com.grahambartley.toomanychests.terminal.NetworkCapacity;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
@@ -57,7 +59,12 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
     buf.writeVarInt(view.containers().size());
     for (final ContainerRoleEntry row : view.containers()) {
       buf.writeBlockPos(row.container());
+      buf.writeString(row.name(), ContainerNameRule.MAX_LENGTH);
       buf.writeEnumConstant(row.role());
+      buf.writeVarInt(row.acceptedTags().size());
+      for (final String tagId : row.acceptedTags()) {
+        buf.writeString(tagId, TagNameRule.MAX_LENGTH);
+      }
       buf.writeVarInt(row.variantCount());
       buf.writeVarLong(row.itemCount());
       buf.writeVarInt(row.usedSlots());
@@ -116,6 +123,18 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
     return trusted;
   }
 
+  private static List<String> readAcceptedTags(RegistryByteBuf buf) {
+    final int count = buf.readVarInt();
+    if (count < 0 || count > ContainerRoleEntry.MAX_ACCEPTED_TAGS) {
+      throw new IllegalArgumentException("a container row named " + count + " accepted tags");
+    }
+    final List<String> accepted = new ArrayList<>(count);
+    for (int entry = 0; entry < count; entry++) {
+      accepted.add(buf.readString(TagNameRule.MAX_LENGTH));
+    }
+    return accepted;
+  }
+
   private static List<ContainerRoleEntry> readContainers(RegistryByteBuf buf) {
     final int count = buf.readVarInt();
     if (count < 0 || count > NetworkSettingsView.MAX_CONTAINERS) {
@@ -124,7 +143,9 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
     final List<ContainerRoleEntry> containers = new ArrayList<>(count);
     for (int row = 0; row < count; row++) {
       final BlockPos container = buf.readBlockPos();
+      final String name = buf.readString(ContainerNameRule.MAX_LENGTH);
       final ContainerRole role = buf.readEnumConstant(ContainerRole.class);
+      final List<String> acceptedTags = readAcceptedTags(buf);
       final int variants = buf.readVarInt();
       final long items = buf.readVarLong();
       final int usedSlots = Math.max(0, buf.readVarInt());
@@ -134,7 +155,9 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
       containers.add(
           new ContainerRoleEntry(
               container,
+              name,
               role,
+              acceptedTags,
               icon,
               variants,
               items,

@@ -17,7 +17,16 @@ import org.junit.jupiter.api.Test;
 class NetworkSettingsViewTest {
   private static ContainerRoleEntry row(int index) {
     return new ContainerRoleEntry(
-        new BlockPos(index, 64, 0), ContainerRole.GENERAL, Optional.empty(), 1, 1L, 1, 27, index);
+        new BlockPos(index, 64, 0),
+        "",
+        ContainerRole.GENERAL,
+        List.of(),
+        Optional.empty(),
+        1,
+        1L,
+        1,
+        27,
+        index);
   }
 
   private static NetworkSettingsView view(

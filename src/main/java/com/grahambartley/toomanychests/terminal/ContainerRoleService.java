@@ -1,7 +1,6 @@
 package com.grahambartley.toomanychests.terminal;
 
 import com.grahambartley.toomanychests.access.TerminalCaller;
-import com.grahambartley.toomanychests.block.entity.TerminalBlockEntity;
 import com.grahambartley.toomanychests.lifecycle.NetworkMembership;
 import com.grahambartley.toomanychests.storage.BlockStorageOrigin;
 import com.grahambartley.toomanychests.storage.ContainerRole;
@@ -22,13 +21,19 @@ import net.minecraft.util.math.BlockPos;
 
 public final class ContainerRoleService {
   private final StorageProviderResolver resolver;
+  private final ContainerAssignmentWriter writer;
 
   public ContainerRoleService() {
-    this(new StorageProviderResolver());
+    this(new StorageProviderResolver(), new ContainerAssignmentWriter());
   }
 
   public ContainerRoleService(StorageProviderResolver resolver) {
+    this(resolver, new ContainerAssignmentWriter());
+  }
+
+  public ContainerRoleService(StorageProviderResolver resolver, ContainerAssignmentWriter writer) {
     this.resolver = Objects.requireNonNull(resolver, "resolver");
+    this.writer = Objects.requireNonNull(writer, "writer");
   }
 
   public ContainerRole roleOf(ServerWorld world, BlockPos terminal, BlockPos container) {
@@ -43,27 +48,12 @@ public final class ContainerRoleService {
       TerminalCaller caller,
       BlockPos container,
       ContainerRole role) {
-    Objects.requireNonNull(world, "world");
-    Objects.requireNonNull(terminal, "terminal");
-    Objects.requireNonNull(container, "container");
-    final TerminalBlockEntity blockEntity = TerminalLookup.at(world, terminal).orElse(null);
-    if (blockEntity == null) {
-      return RoleChangeOutcome.NO_TERMINAL;
-    }
-    if (caller == null || !caller.mayAdminister(blockEntity.settings())) {
-      return RoleChangeOutcome.DENIED;
-    }
-    if (!reaches(world, terminal, container)) {
-      return RoleChangeOutcome.NOT_IN_NETWORK;
-    }
-    final TerminalSettings before = blockEntity.settings();
-    final TerminalSettings after =
-        before.withContainerRole(container, role == null ? ContainerRole.DEFAULT : role);
-    if (after.equals(before)) {
-      return RoleChangeOutcome.UNCHANGED;
-    }
-    blockEntity.setSettings(after);
-    return RoleChangeOutcome.CHANGED;
+    return writer.write(
+        world,
+        terminal,
+        caller,
+        container,
+        assignment -> assignment.withRole(role == null ? ContainerRole.DEFAULT : role));
   }
 
   public List<ContainerRoleEntry> containers(ServerWorld world, BlockPos terminal) {
@@ -110,7 +100,9 @@ public final class ContainerRoleService {
     }
     return new ContainerRoleEntry(
         container,
+        settings.nameFor(container),
         settings.roleFor(container),
+        List.copyOf(settings.filterFor(container).tagIds()),
         commonest(held),
         held.size(),
         items,
@@ -123,12 +115,5 @@ public final class ContainerRoleService {
     return held.entrySet().stream()
         .max(Comparator.comparingLong(Map.Entry::getValue))
         .map(Map.Entry::getKey);
-  }
-
-  private static boolean reaches(ServerWorld world, BlockPos terminal, BlockPos container) {
-    return TerminalNetworks.power()
-        .network(world, terminal)
-        .map(network -> network.containers().contains(BlockStorageOrigin.of(world, container)))
-        .orElse(false);
   }
 }

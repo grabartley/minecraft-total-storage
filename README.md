@@ -175,6 +175,8 @@ The two are separate because the window is already as tall as Minecraft will dra
 
 The Terminal section also shows how much room the network has left, counted in slots across every container it may write to. Slots rather than items, because slots are what runs out: a network holding one of each of a thousand things is full while holding almost nothing. `Excluded` containers are counted in neither total, since a chest the network may not write to is not room. The figure turns warning-coloured once the network is as full as `nearCapacityWarningPercent`, ninety by default, so you see it coming rather than discovering it on a failed deposit.
 
+**The block says it too.** A powered terminal whose network is past that threshold grows a lit bar across the bottom of its screen face, so you learn a base is filling up walking past it rather than after pressing Deposit everything. It is a shape rather than a tint, so it survives distance, low light and colour blindness, and it clears itself as soon as the network drops back below the threshold. An unpowered terminal never shows it, because an unpowered terminal is holding nothing.
+
 Only the owner and operators can change any of it. Everyone else sees the same panel with its controls greyed out, which is the truth rather than a missing control. Permission is checked again when each change arrives, so a modified client that draws itself the buttons gains buttons that refuse it.
 
 ## Seeing what a terminal reaches
@@ -194,6 +196,10 @@ Every container a terminal can see carries a role, which is what decides how far
 | **Excluded** | Never | Never | Yes | Yes |
 
 `Excluded` is the one that makes the rest safe to turn on. A curated potion chest stays exactly as you arranged it while staying searchable from the terminal. A `Filtered` container additionally records the tags and items it accepts, and that record is stored with its role.
+
+**A `Filtered` container is edited from its own row.** Shift-click it and the network's tags come up, preset and custom, with a tick against each one the container accepts. Its row chip reads `Filtered 3` for three accepted tags, and `Filtered 0` in warning colour while it accepts nothing, because a filtered container with an empty filter receives nothing at all and that should be visible rather than silent. `/tmc terminal <pos> filter <container> add|remove <tag>` is the same edit for a server with no client mod, and `clear` empties it.
+
+**Containers can be named.** The chest by the door is "Potions", not `-10 -60 3`. Shift-right-click a row to name it, and the name replaces the position everywhere that container is listed, with the position still in its tooltip. Names are trimmed, capped at 32 characters and carry no control characters; confirming an empty field takes the name back off. A name lives on the terminal beside the role, so it survives a reload, a power cut and a chunk unload the same way roles do.
 
 Roles live on the terminal, not on the container, so a chest reached by two overlapping terminals may hold a different role in each. See [ADR 0004](docs/adr/0004-container-roles.md).
 
@@ -295,6 +301,13 @@ Every server-wide setting is configurable from the console, so a server can be s
 | `/tmc terminal <pos> info` | anyone | Summarises one terminal: power, radius, access, and its containers by role |
 | `/tmc terminal <pos> role <container>` | anyone | What one container's role is |
 | `/tmc terminal <pos> role <container> <general\|filtered\|excluded>` | owner or operators | Sets it, refusing a container the terminal does not reach |
+| `/tmc terminal <pos> name <container>` | anyone | What one container is called, if anything |
+| `/tmc terminal <pos> name <container> set <name>` | owner or operators | Names a container, trimmed and capped at 32 characters |
+| `/tmc terminal <pos> name <container> clear` | owner or operators | Takes the name back off |
+| `/tmc terminal <pos> filter <container>` | anyone | What one `Filtered` container accepts |
+| `/tmc terminal <pos> filter <container> add <tag>` | owner or operators | Adds a tag to what it accepts, refusing a tag the network does not hold |
+| `/tmc terminal <pos> filter <container> remove <tag>` | owner or operators | Takes a tag back off |
+| `/tmc terminal <pos> filter <container> clear` | owner or operators | Leaves it accepting nothing |
 | `/tmc terminal <pos> rescan` | owner or operators | Makes the terminal walk its region again, rate limited like the panel button |
 | `/tmc terminal <pos> highlight` | anyone who may open it | Outlines the containers it is holding |
 | `/tmc terminal <pos> tags export <file>` | owner or operators | Writes its custom tag set to the world directory |

@@ -33,17 +33,34 @@ public final class ContainerRowText {
     return TerminalScreenText.of("settings.container.at", coordinates(entry.container()));
   }
 
+  public static Text label(ContainerRoleEntry entry) {
+    return entry.isNamed()
+        ? Text.literal(entry.name())
+        : Text.literal(coordinates(entry.container()));
+  }
+
   public static MutableText identity(ContainerRoleEntry entry) {
-    return TerminalScreenText.of(
-        "settings.container.identity", coordinates(entry.container()), contents(entry));
+    return TerminalScreenText.of("settings.container.identity", label(entry), contents(entry));
   }
 
   public static MutableText role(ContainerRole role) {
     return TerminalScreenText.of("role." + safe(role).id());
   }
 
+  public static MutableText roleChip(ContainerRoleEntry entry) {
+    return entry.isFiltered()
+        ? TerminalScreenText.of("role.filtered.count", entry.acceptedTags().size())
+        : role(entry.role());
+  }
+
   public static MutableText roleMeaning(ContainerRole role) {
     return TerminalScreenText.of("role." + safe(role).id() + ".meaning");
+  }
+
+  public static MutableText acceptedTags(ContainerRoleEntry entry) {
+    return entry.acceptsNothing()
+        ? TerminalScreenText.of("settings.container.filter.empty")
+        : Text.literal(String.join(", ", entry.acceptedTags()));
   }
 
   public static int roleColour(ContainerRole role) {
@@ -51,6 +68,10 @@ public final class ContainerRowText {
       case GENERAL, FILTERED -> VanillaPalette.LABEL;
       case EXCLUDED -> VanillaPalette.ACCENT;
     };
+  }
+
+  public static int chipColour(ContainerRoleEntry entry) {
+    return entry.acceptsNothing() ? VanillaPalette.WARNING : roleColour(entry.role());
   }
 
   private static ContainerRole safe(ContainerRole role) {

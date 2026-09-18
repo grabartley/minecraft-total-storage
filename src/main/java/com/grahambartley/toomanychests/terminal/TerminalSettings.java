@@ -103,6 +103,10 @@ public record TerminalSettings(
     return containers.filterFor(container);
   }
 
+  public String nameFor(BlockPos container) {
+    return containers.nameFor(container);
+  }
+
   public TerminalSettings withContainers(ContainerAssignments updated) {
     if (updated == null || updated.equals(containers)) {
       return this;
@@ -116,6 +120,10 @@ public record TerminalSettings(
 
   public TerminalSettings withContainerFilter(BlockPos container, ContainerFilter filter) {
     return withContainers(containers.withFilter(container, filter));
+  }
+
+  public TerminalSettings withContainerName(BlockPos container, String name) {
+    return withContainers(containers.withName(container, name));
   }
 
   public TerminalSettings forgetContainer(BlockPos container) {

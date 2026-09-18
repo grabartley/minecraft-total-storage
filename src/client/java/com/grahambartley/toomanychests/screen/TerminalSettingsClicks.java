@@ -13,18 +13,13 @@ import java.util.Objects;
 public final class TerminalSettingsClicks {
   private final TerminalSettingsPanel settings;
   private final TerminalTagsPanel tags;
-  private final TagNamePrompt naming;
-  private final TagSourcePrompt copying;
+  private final TerminalPrompts prompts;
 
   public TerminalSettingsClicks(
-      TerminalSettingsPanel settings,
-      TerminalTagsPanel tags,
-      TagNamePrompt naming,
-      TagSourcePrompt copying) {
+      TerminalSettingsPanel settings, TerminalTagsPanel tags, TerminalPrompts prompts) {
     this.settings = Objects.requireNonNull(settings, "settings");
     this.tags = Objects.requireNonNull(tags, "tags");
-    this.naming = Objects.requireNonNull(naming, "naming");
-    this.copying = Objects.requireNonNull(copying, "copying");
+    this.prompts = Objects.requireNonNull(prompts, "prompts");
   }
 
   public boolean handle(
@@ -32,13 +27,15 @@ public final class TerminalSettingsClicks {
       NetworkSettingsView view,
       NetworkTagView tagView,
       int firstVisibleTag,
+      boolean shiftDown,
       int windowX,
       int windowY,
       int button) {
     final boolean mayAdminister = view.mayAdminister();
     return switch (settings.section()) {
       case TERMINAL -> terminal(syncId, view, windowX, windowY, button, mayAdminister);
-      case CONTAINERS -> container(syncId, view, windowX, windowY, button, mayAdminister);
+      case CONTAINERS ->
+          container(syncId, view, shiftDown, windowX, windowY, button, mayAdminister);
       case TAGS ->
           tag(syncId, tagView, firstVisibleTag, settings.hiddenRows(), windowX, windowY, button);
     };
@@ -78,12 +75,16 @@ public final class TerminalSettingsClicks {
   private boolean container(
       int syncId,
       NetworkSettingsView view,
+      boolean shiftDown,
       int windowX,
       int windowY,
       int button,
       boolean mayAdminister) {
     final int index = settings.containerRowAt(windowX, windowY);
     final ContainerRoleEntry entry = index == TerminalSettingsLayout.NO_ROW ? null : view.at(index);
+    if (entry != null && shiftDown) {
+      return openEditorFor(entry, button, mayAdminister);
+    }
     final SettingsAction action = SettingsClick.of(button, entry != null, mayAdminister);
     if (action == SettingsAction.NONE) {
       return false;
@@ -95,6 +96,23 @@ public final class TerminalSettingsClicks {
           action == SettingsAction.CYCLE_BACK
               ? ContainerRoleCycle.previous(entry.role())
               : ContainerRoleCycle.next(entry.role()));
+    }
+    return true;
+  }
+
+  private boolean openEditorFor(ContainerRoleEntry entry, int button, boolean mayAdminister) {
+    if (button != GridClick.LEFT_BUTTON && button != GridClick.RIGHT_BUTTON) {
+      return false;
+    }
+    if (!mayAdminister) {
+      return true;
+    }
+    if (button == GridClick.RIGHT_BUTTON) {
+      prompts.renaming().open(entry.container(), entry.name());
+      return true;
+    }
+    if (entry.isFiltered()) {
+      prompts.filtering().open(entry.container());
     }
     return true;
   }
@@ -112,14 +130,14 @@ public final class TerminalSettingsClicks {
     }
     if (TagsSectionLayout.isOverCopy(windowX, windowY)) {
       if (view.mayAdminister()) {
-        copying.open();
+        prompts.copying().open();
         ModNetworkingClient.sendTagSourcesRequest(syncId);
       }
       return true;
     }
     if (TagsSectionLayout.isOverNewTag(windowX, windowY)) {
       if (view.mayAdminister()) {
-        naming.openForNewTag();
+        prompts.naming().openForNewTag();
       }
       return true;
     }
@@ -136,7 +154,7 @@ public final class TerminalSettingsClicks {
       return true;
     }
     tags.disarm();
-    naming.openForRename(tag.id(), tag.displayName());
+    prompts.naming().openForRename(tag.id(), tag.displayName());
     return true;
   }
 

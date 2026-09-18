@@ -1,33 +1,63 @@
 {
   "variants": {
-    "facing=north,powered=false": {
+    "facing=north,powered=false,near_capacity=false": {
       "model": "too-many-chests:block/terminal"
     },
-    "facing=east,powered=false": {
+    "facing=north,powered=false,near_capacity=true": {
+      "model": "too-many-chests:block/terminal"
+    },
+    "facing=north,powered=true,near_capacity=false": {
+      "model": "too-many-chests:block/terminal_on"
+    },
+    "facing=north,powered=true,near_capacity=true": {
+      "model": "too-many-chests:block/terminal_full"
+    },
+    "facing=east,powered=false,near_capacity=false": {
       "model": "too-many-chests:block/terminal",
       "y": 90
     },
-    "facing=south,powered=false": {
+    "facing=east,powered=false,near_capacity=true": {
+      "model": "too-many-chests:block/terminal",
+      "y": 90
+    },
+    "facing=east,powered=true,near_capacity=false": {
+      "model": "too-many-chests:block/terminal_on",
+      "y": 90
+    },
+    "facing=east,powered=true,near_capacity=true": {
+      "model": "too-many-chests:block/terminal_full",
+      "y": 90
+    },
+    "facing=south,powered=false,near_capacity=false": {
       "model": "too-many-chests:block/terminal",
       "y": 180
     },
-    "facing=west,powered=false": {
+    "facing=south,powered=false,near_capacity=true": {
+      "model": "too-many-chests:block/terminal",
+      "y": 180
+    },
+    "facing=south,powered=true,near_capacity=false": {
+      "model": "too-many-chests:block/terminal_on",
+      "y": 180
+    },
+    "facing=south,powered=true,near_capacity=true": {
+      "model": "too-many-chests:block/terminal_full",
+      "y": 180
+    },
+    "facing=west,powered=false,near_capacity=false": {
       "model": "too-many-chests:block/terminal",
       "y": 270
     },
-    "facing=north,powered=true": {
-      "model": "too-many-chests:block/terminal_on"
+    "facing=west,powered=false,near_capacity=true": {
+      "model": "too-many-chests:block/terminal",
+      "y": 270
     },
-    "facing=east,powered=true": {
+    "facing=west,powered=true,near_capacity=false": {
       "model": "too-many-chests:block/terminal_on",
-      "y": 90
+      "y": 270
     },
-    "facing=south,powered=true": {
-      "model": "too-many-chests:block/terminal_on",
-      "y": 180
-    },
-    "facing=west,powered=true": {
-      "model": "too-many-chests:block/terminal_on",
+    "facing=west,powered=true,near_capacity=true": {
+      "model": "too-many-chests:block/terminal_full",
       "y": 270
     }
   }

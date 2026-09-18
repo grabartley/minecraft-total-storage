@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.toomanychests.storage.ContainerRole;
+import java.util.List;
 import java.util.Optional;
 import net.minecraft.util.math.BlockPos;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,16 @@ class ContainerRoleEntryTest {
 
   private static ContainerRoleEntry entry(int variants, long items) {
     return new ContainerRoleEntry(
-        SOMEWHERE, ContainerRole.GENERAL, Optional.empty(), variants, items, 0, 27, 4.0);
+        SOMEWHERE,
+        "",
+        ContainerRole.GENERAL,
+        List.of(),
+        Optional.empty(),
+        variants,
+        items,
+        0,
+        27,
+        4.0);
   }
 
   @Test
@@ -34,7 +44,8 @@ class ContainerRoleEntryTest {
   @Test
   void anIconThatIsMissingIsTreatedAsNoneRatherThanThrowing() {
     assertTrue(
-        new ContainerRoleEntry(SOMEWHERE, ContainerRole.GENERAL, null, 0, 0L, 0, 0, 0.0)
+        new ContainerRoleEntry(
+                SOMEWHERE, "", ContainerRole.GENERAL, List.of(), null, 0, 0L, 0, 0, 0.0)
             .icon()
             .isEmpty());
   }
@@ -43,7 +54,8 @@ class ContainerRoleEntryTest {
   void aRoleThatIsMissingBecomesTheDefaultOne() {
     assertEquals(
         ContainerRole.DEFAULT,
-        new ContainerRoleEntry(SOMEWHERE, null, Optional.empty(), 0, 0L, 0, 0, 0.0).role());
+        new ContainerRoleEntry(SOMEWHERE, "", null, List.of(), Optional.empty(), 0, 0L, 0, 0, 0.0)
+            .role());
   }
 
   @ParameterizedTest
@@ -58,7 +70,16 @@ class ContainerRoleEntryTest {
         IllegalArgumentException.class,
         () ->
             new ContainerRoleEntry(
-                SOMEWHERE, ContainerRole.GENERAL, Optional.empty(), 0, 0L, 28, 27, 0.0));
+                SOMEWHERE,
+                "",
+                ContainerRole.GENERAL,
+                List.of(),
+                Optional.empty(),
+                0,
+                0L,
+                28,
+                27,
+                0.0));
   }
 
   @ParameterizedTest
@@ -68,7 +89,16 @@ class ContainerRoleEntryTest {
         IllegalArgumentException.class,
         () ->
             new ContainerRoleEntry(
-                SOMEWHERE, ContainerRole.GENERAL, Optional.empty(), 0, 0L, used, total, 0.0));
+                SOMEWHERE,
+                "",
+                ContainerRole.GENERAL,
+                List.of(),
+                Optional.empty(),
+                0,
+                0L,
+                used,
+                total,
+                0.0));
   }
 
   @Test
@@ -77,14 +107,24 @@ class ContainerRoleEntryTest {
         IllegalArgumentException.class,
         () ->
             new ContainerRoleEntry(
-                SOMEWHERE, ContainerRole.GENERAL, Optional.empty(), 0, 0L, 0, 0, -1.0));
+                SOMEWHERE,
+                "",
+                ContainerRole.GENERAL,
+                List.of(),
+                Optional.empty(),
+                0,
+                0L,
+                0,
+                0,
+                -1.0));
   }
 
   @Test
   void aMutablePositionIsCopiedRatherThanHeld() {
     BlockPos.Mutable moving = new BlockPos.Mutable(1, 2, 3);
     ContainerRoleEntry row =
-        new ContainerRoleEntry(moving, ContainerRole.GENERAL, Optional.empty(), 0, 0L, 0, 0, 0.0);
+        new ContainerRoleEntry(
+            moving, "", ContainerRole.GENERAL, List.of(), Optional.empty(), 0, 0L, 0, 0, 0.0);
 
     moving.set(9, 9, 9);
 

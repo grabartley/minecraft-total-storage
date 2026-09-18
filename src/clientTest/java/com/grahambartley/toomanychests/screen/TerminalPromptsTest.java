@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -68,7 +69,9 @@ class TerminalPromptsTest {
   void aClickAnywhereDismissesTheNamePrompt() {
     prompts.naming().openForNewTag();
 
-    assertTrue(prompts.mouseClicked(null, false, 0, 0, GridClick.LEFT_BUTTON));
+    assertTrue(
+        prompts.mouseClicked(
+            NetworkSettingsView.pending(), null, false, 0, 0, GridClick.LEFT_BUTTON));
     assertFalse(prompts.isAnyOpen());
   }
 

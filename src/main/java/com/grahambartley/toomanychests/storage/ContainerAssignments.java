@@ -31,6 +31,10 @@ public record ContainerAssignments(Map<BlockPos, ContainerAssignment> byPosition
     return forContainer(container).filter();
   }
 
+  public String nameFor(BlockPos container) {
+    return forContainer(container).name();
+  }
+
   public boolean isEmpty() {
     return byPosition.isEmpty();
   }
@@ -63,6 +67,10 @@ public record ContainerAssignments(Map<BlockPos, ContainerAssignment> byPosition
 
   public ContainerAssignments withFilter(BlockPos container, ContainerFilter filter) {
     return with(container, forContainer(container).withFilter(filter));
+  }
+
+  public ContainerAssignments withName(BlockPos container, String name) {
+    return with(container, forContainer(container).withName(name));
   }
 
   public ContainerAssignments without(BlockPos container) {

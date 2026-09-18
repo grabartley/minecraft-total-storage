@@ -10,8 +10,9 @@ The art is already cut for a specific blockstate. Registration has to match it o
 |---|---|---|
 | `facing` | `north`, `east`, `south`, `west` | The screen is on one face only. The blockstate rotates a single model rather than shipping four. |
 | `powered` | `false`, `true` | Each power state is a separate model over a separate texture set. |
+| `near_capacity` | `false`, `true` | A powered terminal whose network is past `nearCapacityWarningPercent` grows a bar across the bottom of its screen face. Unpowered variants ignore it and resolve to the resting model. |
 
-`blockstates/terminal.json` covers all eight combinations. Rotation follows the vanilla convention: the model is authored with its face on north, and `y` is `0`, `90`, `180`, `270` for north, east, south and west.
+`blockstates/terminal.json` covers all sixteen combinations; the eight unpowered ones resolve to `block/terminal` whatever `near_capacity` reads, because an unpowered terminal is holding nothing to be near capacity with. Rotation follows the vanilla convention: the model is authored with its face on north, and `y` is `0`, `90`, `180`, `270` for north, east, south and west.
 
 ## Textures
 
@@ -36,7 +37,10 @@ Two complete texture sets rather than one set plus an overlay is the vanilla pat
 |---|---|
 | `block/terminal` | Unpowered, `minecraft:block/cube` with per-face textures |
 | `block/terminal_on` | Powered, the same mapping over the `_on` textures |
+| `block/terminal_full` | Powered and near capacity: the same cube written out as explicit elements, plus a 12x3x1 bar standing one pixel proud of the screen face |
 | `item/terminal` | Inherits `block/terminal`, so the inventory icon shows the resting state |
+
+`terminal_full` carries no texture of its own. The bar is mapped from `terminal_top_on`, which is already a lit vent run, so the near-capacity state costs a model and no new art. It is deliberately a **protruding shape** rather than a tint: TERM-15 and A11Y-1 both ask that a state distinction survive greyscale and distance, and a silhouette does where a colour swap does not.
 
 ## Sounds
 
