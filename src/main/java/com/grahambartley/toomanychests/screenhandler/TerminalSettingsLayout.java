@@ -42,6 +42,9 @@ public final class TerminalSettingsLayout {
 
   public static final int FULL_ROW_WIDTH = PANEL_WIDTH;
 
+  public static final int SCROLLBAR_X =
+      PANEL_X + PANEL_WIDTH - TerminalScreenLayout.SCROLLBAR_WIDTH;
+
   public static final int CONTROL_SIZE = 16;
 
   public static final int CONTROL_INSET = (ROW_HEIGHT - CONTROL_SIZE) / 2;
@@ -73,9 +76,6 @@ public final class TerminalSettingsLayout {
     final int row = Math.floorDiv(windowY - CONTENT_Y, ROW_HEIGHT);
     return windowY < CONTENT_Y || row >= ROWS ? NO_ROW : row;
   }
-
-  public static final int SCROLLBAR_X =
-      PANEL_X + PANEL_WIDTH - TerminalScreenLayout.SCROLLBAR_WIDTH;
 
   public static boolean isOverScrollbar(int windowX, int windowY) {
     return windowX >= SCROLLBAR_X

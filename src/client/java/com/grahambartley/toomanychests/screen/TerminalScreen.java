@@ -339,27 +339,27 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     if (verticalAmount == 0.0) {
       return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
-    final int notches = ScrollNotches.rowsFor(verticalAmount, 1);
-    final int rows = ScrollNotches.rowsFor(verticalAmount);
+    final int gridRows = ScrollNotches.gridRowsFor(verticalAmount);
+    final int listRows = ScrollNotches.rowsFor(verticalAmount);
     if (tab.isSettings()) {
       if (settings.scrolls()
           && settings.scroll().overflows()
           && (TerminalSettingsLayout.rowAt(windowX(mouseX), windowY(mouseY))
                   != TerminalSettingsLayout.NO_ROW
               || settings.isOverScrollbar(windowX(mouseX), windowY(mouseY)))) {
-        settings.scroll().scrollBy(rows);
+        settings.scroll().scrollBy(listRows);
         return true;
       }
       return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
     if (filters.scroll().overflows()
         && FilterColumnLayout.isOverColumn(windowX(mouseX), windowY(mouseY))) {
-      filters.scroll().scrollBy(rows);
+      filters.scroll().scrollBy(listRows);
       return true;
     }
     if (items.scroll().overflows()
         && TerminalScreenLayout.isOverListing(windowX(mouseX), windowY(mouseY))) {
-      items.scroll().scrollBy(notches);
+      items.scroll().scrollBy(gridRows);
       return true;
     }
     return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);

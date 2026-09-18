@@ -8,9 +8,12 @@ public final class TerminalListingState {
   private ListingWindow window = ListingWindow.EMPTY;
   private ItemFilter filter = ItemFilter.NONE;
 
-  public void requested(ListingWindow requestedWindow, ItemFilter requestedFilter) {
+  public boolean requested(ListingWindow requestedWindow, ItemFilter requestedFilter) {
+    final ItemFilter wanted = requestedFilter == null ? ItemFilter.NONE : requestedFilter;
+    final boolean searchMoved = !wanted.query().equals(filter.query());
     window = requestedWindow == null ? ListingWindow.EMPTY : requestedWindow;
-    filter = requestedFilter == null ? ItemFilter.NONE : requestedFilter;
+    filter = wanted;
+    return searchMoved;
   }
 
   public ListingWindow window() {

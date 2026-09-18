@@ -41,8 +41,8 @@ public final class AmountEntry {
     return value() > 0;
   }
 
-  public PromptKey keyPressed(int keyCode, boolean controlDown) {
-    if (controlDown && keyCode == GLFW.GLFW_KEY_A) {
+  public PromptKey keyPressed(int keyCode, boolean selectAllHeld) {
+    if (selectAllHeld && keyCode == GLFW.GLFW_KEY_A) {
       return buffer.selectAll() ? PromptKey.HANDLED : PromptKey.REFUSED;
     }
     return switch (keyCode) {
@@ -67,7 +67,7 @@ public final class AmountEntry {
       return false;
     }
     final String next = withoutLeadingZeros(candidate);
-    if (!buffer.isReplacing() && next.equals(buffer.text())) {
+    if (next.isEmpty()) {
       return false;
     }
     buffer.accept(next);

@@ -85,7 +85,8 @@ public final class TerminalNetworkCommand {
     source.sendFeedback(
         () -> CommandMessages.terminalInfoAccess(settings.get().accessMode()), false);
     if (!TerminalCommandGate.caller(source).maySeeMembership(settings.get())) {
-      return 1;
+      source.sendFeedback(() -> CommandMessages.terminalInfoWithheld(), false);
+      return 0;
     }
     final boolean powered = TerminalNetworks.power().isActive(source.getWorld(), pos);
     final RoleTally tally = ROLES.tally(source.getWorld(), pos);

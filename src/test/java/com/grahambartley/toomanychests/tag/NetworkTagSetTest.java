@@ -290,4 +290,38 @@ class NetworkTagSetTest {
 
     assertSame(tags, tags.withItems("castle", List.of("minecraft:cobblestone")));
   }
+
+  @Test
+  void aTagIsFoundByTheNameItWasMadeWithAsWellAsByItsId() {
+    NetworkTagSet tags = NetworkTagSet.defaults().withCustomTag("Base Build");
+
+    assertTrue(tags.contains("Base Build"), "the name it was made with does not find it");
+    assertTrue(tags.contains("base-build"), "the id it was minted as does not find it");
+    assertTrue(tags.byId("Base Build").isPresent());
+    assertEquals("base-build", tags.byId("Base Build").orElseThrow().id());
+  }
+
+  @Test
+  void everyEditFindsATagByTheNameItWasMadeWith() {
+    NetworkTagSet tags =
+        NetworkTagSet.defaults()
+            .withCustomTag("Base Build")
+            .withItem("Base Build", "minecraft:stone");
+
+    assertTrue(tags.byId("base-build").orElseThrow().contains("minecraft:stone"));
+    assertFalse(tags.withoutTag("Base Build").contains("base-build"));
+    assertFalse(
+        tags.withoutItem("Base Build", "minecraft:stone")
+            .byId("base-build")
+            .orElseThrow()
+            .contains("minecraft:stone"));
+  }
+
+  @Test
+  void aTagMadeTwiceUnderOneNameIsStillOneTag() {
+    NetworkTagSet tags =
+        NetworkTagSet.defaults().withCustomTag("Base Build").withCustomTag("base-build");
+
+    assertEquals(1, tags.custom().size());
+  }
 }

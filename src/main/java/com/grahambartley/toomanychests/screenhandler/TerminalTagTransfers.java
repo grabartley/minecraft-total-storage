@@ -81,7 +81,7 @@ public final class TerminalTagTransfers {
     switch (result.outcome()) {
       case CHANGED ->
           TerminalNotice.tell(
-              player, TerminalMessages.tagsCopied(result.imported(), result.skipped()));
+              player, TerminalMessages.tagsCopied(result.imported(), result.skips()));
       case UNCHANGED -> TerminalNotice.tell(player, TerminalMessages.tagsCopiedNothing());
       default -> TerminalNotice.tell(player, TerminalMessages.notYours());
     }

@@ -53,7 +53,7 @@ public abstract class HandledScreenMixin {
         || ScreenKeyboardFocus.isTyping(((HandledScreen<?>) (Object) this).getFocused())) {
       return;
     }
-    if (SortRequests.sendFromKey(((HandledScreen<?>) (Object) this).getScreenHandler().syncId)) {
+    if (SortRequests.send(((HandledScreen<?>) (Object) this).getScreenHandler().syncId)) {
       callback.setReturnValue(true);
     }
   }

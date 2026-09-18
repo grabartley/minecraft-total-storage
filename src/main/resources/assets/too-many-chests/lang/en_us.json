@@ -94,7 +94,7 @@
   "block.too-many-chests.terminal.tag-assigned": "Tagged %s",
   "block.too-many-chests.terminal.tag-deleted": "Deleted the tag and cleared it from %s",
   "block.too-many-chests.terminal.tags-copied": "Copied %s across",
-  "block.too-many-chests.terminal.tags-copied-partial": "Copied %s across and skipped %s",
+  "block.too-many-chests.terminal.tags-copied-partial": "Copied %s across and skipped %s: %s",
   "block.too-many-chests.terminal.tags-copied-none": "That terminal had nothing this one was missing",
   "command.too-many-chests.config.refused": "These are this server's settings, and only an operator can change them",
   "command.too-many-chests.help.terminal.info": "/tmc terminal <pos> info summarises one terminal, and rescan makes it look again",
@@ -279,5 +279,6 @@
   "command.too-many-chests.terminal.tags.skipped.too-long": "%s too long",
   "command.too-many-chests.terminal.tags.skipped.illegal-name": "%s illegal name",
   "command.too-many-chests.terminal.tags.skipped.no-room": "%s over the limit",
-  "screen.too-many-chests.terminal.filter.mode.active": "%s · %s"
+  "screen.too-many-chests.terminal.filter.mode.active": "%s · %s",
+  "command.too-many-chests.terminal.info.withheld": "- what it is holding is only for players who may open it"
 }

@@ -72,6 +72,8 @@ public final class PresetTagResolverGameTest implements FabricGameTest {
           new Expectation(Items.BOOK, PresetTag.TOOLS),
           new Expectation(Items.WRITABLE_BOOK, PresetTag.TOOLS),
           new Expectation(Items.ENCHANTED_BOOK, PresetTag.TOOLS),
+          new Expectation(Items.WRITTEN_BOOK, PresetTag.TOOLS),
+          new Expectation(Items.KNOWLEDGE_BOOK, PresetTag.TOOLS),
           new Expectation(Items.GLASS_BOTTLE, PresetTag.TOOLS),
           new Expectation(Items.SHIELD, PresetTag.TOOLS),
           new Expectation(Items.DIAMOND_SWORD, PresetTag.TOOLS),

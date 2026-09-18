@@ -311,6 +311,11 @@ public final class CommandMessages {
     return line("terminal.info.access", "- %s access", mode.id());
   }
 
+  public static Text terminalInfoWithheld() {
+    return line(
+        "terminal.info.withheld", "- what it is holding is only for players who may open it");
+  }
+
   public static Text terminalInfoContainers(RoleTally tally) {
     return line(
         "terminal.info.containers",

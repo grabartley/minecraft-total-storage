@@ -47,7 +47,7 @@ public class TooManyChestsClient implements ClientModInitializer {
       pressed = true;
     }
     if (pressed && client.currentScreen == null && client.player != null) {
-      SortRequests.sendFromKey(client.player.playerScreenHandler.syncId);
+      SortRequests.send(client.player.playerScreenHandler.syncId);
     }
   }
 }

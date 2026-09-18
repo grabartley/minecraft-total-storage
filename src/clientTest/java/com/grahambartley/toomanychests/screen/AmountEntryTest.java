@@ -122,6 +122,17 @@ class AmountEntryTest {
   }
 
   @Test
+  void selectAllThenAZeroIsRefusedRatherThanQuietlyMeaningEverything() {
+    AmountEntry entry = typing(500, "128");
+
+    entry.selectAll();
+
+    assertFalse(entry.append('0'));
+    assertEquals("128", entry.text());
+    assertFalse(entry.takesEverything());
+  }
+
+  @Test
   void selectAllOnAnEmptyNumberHasNothingToSelect() {
     assertFalse(new AmountEntry(500).selectAll());
   }

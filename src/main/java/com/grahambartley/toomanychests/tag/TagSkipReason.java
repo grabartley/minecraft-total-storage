@@ -26,8 +26,9 @@ public enum TagSkipReason {
       case TOO_LONG -> TOO_LONG;
       case PRESET_COLLISION -> PRESET_NAME;
       case BLANK -> MALFORMED;
-      case ILLEGAL_CHARACTER, DUPLICATE -> ILLEGAL_NAME;
-      case OK -> throw new IllegalArgumentException("an accepted name was not skipped");
+      case ILLEGAL_CHARACTER -> ILLEGAL_NAME;
+      case OK, DUPLICATE ->
+          throw new IllegalArgumentException(outcome + " is not a reason an entry was skipped");
     };
   }
 }

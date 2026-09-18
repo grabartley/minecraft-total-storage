@@ -15,6 +15,7 @@ import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import com.grahambartley.toomanychests.terminal.TerminalLookup;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import java.util.Objects;
+import java.util.Optional;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -32,16 +33,21 @@ public final class TerminalListingService {
   }
 
   public boolean request(ServerPlayerEntity player, ListingRequestPayload payload) {
+    return requestMovedTheSearch(player, payload).isPresent();
+  }
+
+  public Optional<Boolean> requestMovedTheSearch(
+      ServerPlayerEntity player, ListingRequestPayload payload) {
     if (player == null || payload == null) {
-      return false;
+      return Optional.empty();
     }
     final TerminalScreenHandler handler = handlerOf(player, payload.syncId());
     if (handler == null) {
-      return false;
+      return Optional.empty();
     }
-    handler.listing().requested(payload.window(), filterOf(payload));
+    final boolean searchMoved = handler.listing().requested(payload.window(), filterOf(payload));
     send(player, handler);
-    return true;
+    return Optional.of(searchMoved);
   }
 
   public boolean refresh(ServerPlayerEntity player) {

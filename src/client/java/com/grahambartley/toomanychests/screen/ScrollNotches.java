@@ -3,6 +3,12 @@ package com.grahambartley.toomanychests.screen;
 public final class ScrollNotches {
   public static final int ROWS_PER_NOTCH = 3;
 
+  public static final int GRID_ROWS_PER_NOTCH = 1;
+
+  public static int gridRowsFor(double verticalAmount) {
+    return rowsFor(verticalAmount, GRID_ROWS_PER_NOTCH);
+  }
+
   private ScrollNotches() {}
 
   public static int rowsFor(double verticalAmount) {

@@ -33,7 +33,7 @@ public final class ModScreenButtons {
     if (carried.isEmpty()) {
       return;
     }
-    final ScreenButtonAnchor anchor = anchorFor(screen);
+    final ScreenButtonAnchor anchor = anchorFor(screen, carried.size());
     for (int index = 0; index < carried.size(); index++) {
       add(screen, carried.get(index), anchor, index, carried.size());
     }
@@ -42,15 +42,18 @@ public final class ModScreenButtons {
   private static boolean isSortable(ScreenHandler handler) {
     final PlayerEntity player = MinecraftClient.getInstance().player;
     return player != null
-        && SortRequests.isOffered()
+        && SortRequests.mayBeOffered()
         && ScreenSortPolicy.allowsHandler(handler)
         && SortableSlots.resolve(handler, player, LockedSlotsAttachment.get(player)).isPresent();
   }
 
-  private static ScreenButtonAnchor anchorFor(HandledScreen<?> screen) {
+  private static ScreenButtonAnchor anchorFor(HandledScreen<?> screen, int carried) {
     final ScreenButtonAnchor chosen = ClientPreferencesStore.current().screenButtonAnchor();
     if (chosen != ScreenButtonAnchor.INSIDE_TOP_RIGHT) {
       return chosen;
+    }
+    if (carried > 1) {
+      return ScreenButtonAnchor.OUTSIDE_TOP_RIGHT;
     }
     return ScreenButtonBand.isClear(ScreenPanel.of(screen), slotCorners(screen))
         ? chosen

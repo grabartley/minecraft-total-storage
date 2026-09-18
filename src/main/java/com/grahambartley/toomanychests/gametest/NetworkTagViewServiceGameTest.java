@@ -137,7 +137,7 @@ public final class NetworkTagViewServiceGameTest implements FabricGameTest {
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
       tickLimit = TICK_LIMIT)
-  public void aSearchNarrowsTheCountsSoAtagSaysWhatClickingItWouldGive(TestContext context) {
+  public void aSearchNarrowsTheCountsSoATagSaysWhatClickingItWouldGive(TestContext context) {
     final BarrelBlockEntity barrel =
         NetworkOperationFixture.stockedBarrel(
             context, NetworkOperationFixture.EAST_BARREL, Items.COBBLESTONE, 8);

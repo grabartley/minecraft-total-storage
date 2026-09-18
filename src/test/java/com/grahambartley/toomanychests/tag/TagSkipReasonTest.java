@@ -18,17 +18,19 @@ class TagSkipReasonTest {
     "TOO_LONG, TOO_LONG",
     "PRESET_COLLISION, PRESET_NAME",
     "BLANK, MALFORMED",
-    "ILLEGAL_CHARACTER, ILLEGAL_NAME",
-    "DUPLICATE, ILLEGAL_NAME"
+    "ILLEGAL_CHARACTER, ILLEGAL_NAME"
   })
   void everyRejectedNameLandsUnderAReasonTheSummaryCanName(
       TagNameOutcome outcome, TagSkipReason expected) {
     assertEquals(expected, TagSkipReason.of(outcome));
   }
 
-  @Test
-  void anAcceptedNameWasNeverSkippedSoItHasNoReason() {
-    assertThrows(IllegalArgumentException.class, () -> TagSkipReason.of(TagNameOutcome.OK));
+  @ParameterizedTest
+  @EnumSource(
+      value = TagNameOutcome.class,
+      names = {"OK", "DUPLICATE"})
+  void anOutcomeThatIsNotASkipHasNoReason(TagNameOutcome outcome) {
+    assertThrows(IllegalArgumentException.class, () -> TagSkipReason.of(outcome));
   }
 
   @ParameterizedTest

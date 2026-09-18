@@ -18,8 +18,8 @@ public final class TagNameEntry {
     return !buffer.text().isBlank();
   }
 
-  public PromptKey keyPressed(int keyCode, boolean controlDown) {
-    if (controlDown && keyCode == GLFW.GLFW_KEY_A) {
+  public PromptKey keyPressed(int keyCode, boolean selectAllHeld) {
+    if (selectAllHeld && keyCode == GLFW.GLFW_KEY_A) {
       return buffer.selectAll() ? PromptKey.HANDLED : PromptKey.REFUSED;
     }
     return switch (keyCode) {

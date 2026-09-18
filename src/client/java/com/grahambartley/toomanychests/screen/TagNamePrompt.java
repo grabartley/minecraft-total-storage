@@ -50,8 +50,8 @@ public final class TagNamePrompt {
     return entry == null ? "" : entry.text();
   }
 
-  public PromptKey keyPressed(int keyCode, boolean controlDown) {
-    return isOpen() ? entry.keyPressed(keyCode, controlDown) : PromptKey.HANDLED;
+  public PromptKey keyPressed(int keyCode, boolean selectAllHeld) {
+    return isOpen() ? entry.keyPressed(keyCode, selectAllHeld) : PromptKey.HANDLED;
   }
 
   public PromptKey charTyped(char typed) {
