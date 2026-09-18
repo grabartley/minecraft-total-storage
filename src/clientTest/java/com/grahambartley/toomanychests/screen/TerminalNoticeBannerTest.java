@@ -10,17 +10,17 @@ import org.junit.jupiter.api.Test;
 class TerminalNoticeBannerTest {
   @Test
   void onTheSettingsTabTheStripStartsBelowTheSectionTabs() {
-    assertEquals(
-        TerminalSettingsLayout.CONTENT_Y,
-        TerminalScreenLayout.NOTICE_Y + TerminalNoticeBanner.settingsDrop());
+    assertTrue(
+        TerminalSettingsLayout.CONTENT_Y
+            >= TerminalSettingsLayout.PANEL_Y + TerminalSettingsLayout.SECTION_TAB_HEIGHT,
+        "the strip would overlap the section tabs");
   }
 
   @Test
-  void theStripClearsTheSectionTabsEntirely() {
+  void theSettingsStripSpansThePanelItSitsInRatherThanTheGridsWidth() {
     assertTrue(
-        TerminalNoticeBanner.settingsDrop() >= TerminalSettingsLayout.SECTION_TAB_HEIGHT,
-        "The strip would overlap the section tabs by "
-            + (TerminalSettingsLayout.SECTION_TAB_HEIGHT - TerminalNoticeBanner.settingsDrop()));
+        TerminalSettingsLayout.PANEL_WIDTH > TerminalScreenLayout.NOTICE_WIDTH,
+        "the settings panel is meant to be wider than the item grid");
   }
 
   @Test

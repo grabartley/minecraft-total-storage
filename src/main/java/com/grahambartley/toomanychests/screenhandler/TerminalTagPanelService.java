@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests.screenhandler;
 
+import com.grahambartley.toomanychests.filter.ItemFilter;
 import com.grahambartley.toomanychests.network.TagPanelPayload;
 import com.grahambartley.toomanychests.network.TagPanelRequestPayload;
 import com.grahambartley.toomanychests.operation.TerminalOperationContext;
@@ -51,7 +52,11 @@ public final class TerminalTagPanelService {
   public NetworkTagView viewFor(ServerPlayerEntity player, TerminalScreenHandler handler) {
     Objects.requireNonNull(player, "player");
     Objects.requireNonNull(handler, "handler");
-    return views.viewFor(player, handler.terminal(), handler.tags().subject());
+    return views.viewFor(player, handler.terminal(), handler.tags().subject(), searchOf(handler));
+  }
+
+  private static ItemFilter searchOf(TerminalScreenHandler handler) {
+    return ItemFilter.ofQuery(handler.listing().filter().query());
   }
 
   private void send(ServerPlayerEntity player, TerminalScreenHandler handler) {

@@ -35,13 +35,14 @@ public final class ModScreenButtons {
     }
     final ScreenButtonAnchor anchor = anchorFor(screen);
     for (int index = 0; index < carried.size(); index++) {
-      add(screen, carried.get(index), anchor, index);
+      add(screen, carried.get(index), anchor, index, carried.size());
     }
   }
 
   private static boolean isSortable(ScreenHandler handler) {
     final PlayerEntity player = MinecraftClient.getInstance().player;
     return player != null
+        && SortRequests.isOffered()
         && ScreenSortPolicy.allowsHandler(handler)
         && SortableSlots.resolve(handler, player, LockedSlotsAttachment.get(player)).isPresent();
   }
@@ -66,16 +67,20 @@ public final class ModScreenButtons {
   }
 
   private static void add(
-      HandledScreen<?> screen, ScreenButton button, ScreenButtonAnchor anchor, int index) {
+      HandledScreen<?> screen,
+      ScreenButton button,
+      ScreenButtonAnchor anchor,
+      int index,
+      int count) {
     final ScreenIconButton widget =
         new ScreenIconButton(
             button.sprites(), button.label(), () -> button.press(screen.getScreenHandler().syncId));
-    followPanel(screen, button, widget, anchor, index);
+    followPanel(screen, button, widget, anchor, index, count);
     Screens.getButtons(screen).add(widget);
     ScreenEvents.beforeRender(screen)
         .register(
             (rendered, context, mouseX, mouseY, delta) ->
-                followPanel(screen, button, widget, anchor, index));
+                followPanel(screen, button, widget, anchor, index, count));
   }
 
   private static void followPanel(
@@ -83,8 +88,9 @@ public final class ModScreenButtons {
       ScreenButton button,
       ScreenIconButton widget,
       ScreenButtonAnchor anchor,
-      int index) {
-    final ScreenButtonSpot spot = ScreenButtonRow.at(anchor, ScreenPanel.of(screen), index);
+      int index,
+      int count) {
+    final ScreenButtonSpot spot = ScreenButtonRow.at(anchor, ScreenPanel.of(screen), index, count);
     widget.setPosition(spot.x(), spot.y());
     widget.visible = button.isOffered();
     widget.active = button.isAvailable();

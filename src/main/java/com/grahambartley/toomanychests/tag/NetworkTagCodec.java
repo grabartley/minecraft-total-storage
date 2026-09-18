@@ -23,22 +23,34 @@ public final class NetworkTagCodec {
   }
 
   public static final Codec<NetworkTagSet> CODEC =
-      StoredTag.CODEC.listOf().xmap(NetworkTagCodec::assemble, NetworkTagCodec::disassemble);
+      StoredTag.CODEC
+          .listOf()
+          .xmap(stored -> new NetworkTagSet(assemble(stored).tags()), NetworkTagCodec::disassemble);
+
+  public static final Codec<TagSetContents> CONTENTS_CODEC =
+      StoredTag.CODEC.listOf().xmap(NetworkTagCodec::assemble, contents -> store(contents.tags()));
 
   private NetworkTagCodec() {}
 
-  private static NetworkTagSet assemble(List<StoredTag> stored) {
+  private static TagSetContents assemble(List<StoredTag> stored) {
     final List<NetworkTag> tags = new ArrayList<>(stored.size());
+    int malformed = 0;
     for (final StoredTag entry : stored) {
-      if (!FilterText.isBlank(entry.id())) {
+      if (FilterText.isBlank(entry.id())) {
+        malformed++;
+      } else {
         tags.add(NetworkTag.custom(entry.id(), entry.displayName(), entry.items()));
       }
     }
-    return new NetworkTagSet(tags);
+    return new TagSetContents(tags, malformed);
   }
 
   private static List<StoredTag> disassemble(NetworkTagSet tags) {
-    return tags.custom().stream()
+    return store(tags.custom());
+  }
+
+  private static List<StoredTag> store(List<NetworkTag> tags) {
+    return tags.stream()
         .map(tag -> new StoredTag(tag.id(), tag.displayName(), List.copyOf(tag.items())))
         .toList();
   }

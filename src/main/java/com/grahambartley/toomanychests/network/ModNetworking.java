@@ -65,7 +65,14 @@ public final class ModNetworking {
     ServerPlayNetworking.registerGlobalReceiver(
         ListingRequestPayload.ID,
         (payload, context) ->
-            context.server().execute(() -> LISTINGS.request(context.player(), payload)));
+            context
+                .server()
+                .execute(
+                    () -> {
+                      if (LISTINGS.request(context.player(), payload)) {
+                        TerminalSettingsNetworking.tagPanels().refresh(context.player());
+                      }
+                    }));
     ServerPlayNetworking.registerGlobalReceiver(
         WithdrawRequestPayload.ID,
         (payload, context) ->

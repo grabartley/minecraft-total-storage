@@ -17,6 +17,10 @@ public record ItemFilter(
     return new ItemFilter(activeTags, combinationMode, SearchQuery.EMPTY);
   }
 
+  public static ItemFilter ofQuery(SearchQuery query) {
+    return new ItemFilter(Set.of(), TagCombinationMode.DEFAULT, query);
+  }
+
   public static ItemFilter ofSearch(String raw) {
     return new ItemFilter(Set.of(), TagCombinationMode.DEFAULT, SearchQueryParser.parse(raw));
   }

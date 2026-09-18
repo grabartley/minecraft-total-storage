@@ -33,11 +33,23 @@ public final class FilterColumnLayout {
 
   public static final int SCROLLBAR_X = X + WIDTH - SCROLLBAR_WIDTH;
 
-  public static final int ROW_WIDTH = WIDTH - SCROLLBAR_WIDTH - 1;
+  public static final int SCROLLBAR_GAP = 1;
+
+  public static final int ROW_WIDTH = WIDTH - SCROLLBAR_WIDTH - SCROLLBAR_GAP;
 
   public static final int TEXT_MARGIN = 4;
 
+  public static final int COUNT_GAP = 3;
+
   private FilterColumnLayout() {}
+
+  public static int nameWidth(int countWidth) {
+    return Math.max(0, ROW_WIDTH - 2 * TEXT_MARGIN - Math.max(0, countWidth) - COUNT_GAP);
+  }
+
+  public static int countLeft(int countWidth) {
+    return ROW_WIDTH - TEXT_MARGIN - Math.max(0, countWidth);
+  }
 
   public static int rowY(int row) {
     requireRow(row);

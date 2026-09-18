@@ -29,7 +29,7 @@ class TerminalItemsPanelTest {
 
     assertEquals(
         TerminalScreenLayout.NO_CELL,
-        panel.hoveredCell(TerminalScreenLayout.cellX(0) + 1, TerminalScreenLayout.cellY(0) + 1));
+        panel.hoveredCell(TerminalScreenLayout.cellX(0) + 1, TerminalScreenLayout.cellY(0) + 1, 0));
   }
 
   @Test
@@ -38,7 +38,7 @@ class TerminalItemsPanelTest {
 
     assertEquals(
         TerminalScreenLayout.NO_CELL,
-        panel.hoveredCell(TerminalScreenLayout.cellX(4) + 1, TerminalScreenLayout.cellY(4) + 1));
+        panel.hoveredCell(TerminalScreenLayout.cellX(4) + 1, TerminalScreenLayout.cellY(4) + 1, 0));
   }
 
   @Test
@@ -47,10 +47,10 @@ class TerminalItemsPanelTest {
 
     assertEquals(
         TerminalScreenLayout.NO_CELL,
-        panel.hoveredCell(TerminalScreenLayout.GRID_X - 1, TerminalScreenLayout.GRID_Y));
+        panel.hoveredCell(TerminalScreenLayout.GRID_X - 1, TerminalScreenLayout.GRID_Y, 0));
     assertEquals(
         TerminalScreenLayout.NO_CELL,
-        panel.hoveredCell(TerminalScreenLayout.GRID_X, TerminalScreenLayout.GRID_Y - 1));
+        panel.hoveredCell(TerminalScreenLayout.GRID_X, TerminalScreenLayout.GRID_Y - 1, 0));
   }
 
   @Test
@@ -62,8 +62,30 @@ class TerminalItemsPanelTest {
     assertEquals(
         lastCell,
         panel.hoveredCell(
-            TerminalScreenLayout.cellX(lastCell) + 1, TerminalScreenLayout.cellY(lastCell) + 1),
+            TerminalScreenLayout.cellX(lastCell) + 1, TerminalScreenLayout.cellY(lastCell) + 1, 0),
         "a cell with no item in it still highlights, the way a vanilla slot does");
+  }
+
+  @Test
+  void aCellUnderTheNoticeBelongsToTheNoticeRatherThanTheGrid() {
+    TerminalItemsPanel panel = showing(live(500));
+
+    assertEquals(
+        TerminalScreenLayout.NO_CELL,
+        panel.hoveredCell(TerminalScreenLayout.cellX(0) + 1, TerminalScreenLayout.cellY(0) + 1, 1));
+  }
+
+  @Test
+  void aNoticePushesTheGridDownSoEveryRowIsStillClickable() {
+    TerminalItemsPanel panel = showing(live(500));
+    final int firstVisible = TerminalScreenLayout.LISTING_COLUMNS;
+
+    assertEquals(
+        0,
+        panel.hoveredCell(
+            TerminalScreenLayout.cellX(firstVisible) + 1,
+            TerminalScreenLayout.cellY(firstVisible) + 1,
+            1));
   }
 
   @Test

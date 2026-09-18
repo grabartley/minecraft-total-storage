@@ -16,12 +16,18 @@ public final class FilterColumnText {
   public static Text columnNameOf(NetworkTagEntry tag) {
     return tag.immutable()
         ? Text.translatable(tag.displayName())
-        : Text.literal(CUSTOM_MARKER + tag.displayName());
+        : Text.literal(CUSTOM_MARKER + tag.id());
   }
 
   public static Text mode(TagCombinationMode mode) {
     return TerminalScreenText.of(
         mode == TagCombinationMode.AND ? "filter.mode.and" : "filter.mode.or");
+  }
+
+  public static Text mode(TagCombinationMode mode, int activeFilters) {
+    return activeFilters <= 0
+        ? mode(mode)
+        : TerminalScreenText.of("filter.mode.active", mode(mode), activeFilters);
   }
 
   public static String count(NetworkTagEntry tag) {

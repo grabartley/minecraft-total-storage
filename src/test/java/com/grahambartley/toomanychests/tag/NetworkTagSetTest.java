@@ -157,12 +157,12 @@ class NetworkTagSetTest {
     NetworkTagSet tags =
         NetworkTagSet.defaults()
             .withCustomTag("base build")
-            .withItem("base build", "minecraft:cobblestone")
-            .withItem("base build", "minecraft:oak_planks");
+            .withItem("base-build", "minecraft:cobblestone")
+            .withItem("base-build", "minecraft:oak_planks");
 
-    NetworkTagSet renamed = tags.withRenamedTag("base build", "Castle");
+    NetworkTagSet renamed = tags.withRenamedTag("base-build", "Castle");
 
-    assertFalse(renamed.contains("base build"));
+    assertFalse(renamed.contains("base-build"));
     assertTrue(renamed.contains("castle"));
     assertEquals(
         Set.of("minecraft:cobblestone", "minecraft:oak_planks"),
@@ -175,7 +175,7 @@ class NetworkTagSetTest {
     NetworkTagSet renamed =
         NetworkTagSet.defaults().withCustomTag("castle").withRenamedTag("castle", "  The Keep  ");
 
-    assertEquals("The Keep", renamed.byId("the keep").orElseThrow().displayName());
+    assertEquals("The Keep", renamed.byId("the-keep").orElseThrow().displayName());
   }
 
   @Test

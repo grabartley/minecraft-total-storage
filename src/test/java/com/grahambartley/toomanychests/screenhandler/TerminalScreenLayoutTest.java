@@ -612,4 +612,65 @@ class TerminalScreenLayoutTest {
           "the item in grid column " + column + " is not above the item in the inventory below it");
     }
   }
+
+  @Test
+  void withNoNoticeUpTheGridMapsCellToCellBothWays() {
+    for (int cell = 0; cell < TerminalScreenLayout.LISTING_PAGE_SIZE; cell++) {
+      assertEquals(cell, TerminalScreenLayout.pageCellAt(cell, 0));
+      assertEquals(cell, TerminalScreenLayout.screenCellFor(cell, 0));
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {1, 2, 3})
+  void aNoticePushesEveryRowDownRatherThanHidingTheTopOnes(int hiddenRows) {
+    final int covered = hiddenRows * TerminalScreenLayout.LISTING_COLUMNS;
+
+    for (int pageCell = 0;
+        pageCell < TerminalScreenLayout.LISTING_PAGE_SIZE - covered;
+        pageCell++) {
+      final int screenCell = TerminalScreenLayout.screenCellFor(pageCell, hiddenRows);
+
+      assertEquals(pageCell + covered, screenCell);
+      assertEquals(pageCell, TerminalScreenLayout.pageCellAt(screenCell, hiddenRows));
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {1, 2, 3})
+  void acellUnderTheNoticeBelongsToNothingTheGridCanBeClickedOn(int hiddenRows) {
+    for (int cell = 0; cell < hiddenRows * TerminalScreenLayout.LISTING_COLUMNS; cell++) {
+      assertEquals(TerminalScreenLayout.NO_CELL, TerminalScreenLayout.pageCellAt(cell, hiddenRows));
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {1, 2, 3})
+  void apageCellPushedPastTheBottomIsNotDrawnAtAll(int hiddenRows) {
+    final int covered = hiddenRows * TerminalScreenLayout.LISTING_COLUMNS;
+
+    for (int pageCell = TerminalScreenLayout.LISTING_PAGE_SIZE - covered;
+        pageCell < TerminalScreenLayout.LISTING_PAGE_SIZE;
+        pageCell++) {
+      assertEquals(
+          TerminalScreenLayout.NO_CELL, TerminalScreenLayout.screenCellFor(pageCell, hiddenRows));
+    }
+  }
+
+  @Test
+  void nothingUnderThePointerStaysNothingWhicheverWayItIsMapped() {
+    assertEquals(
+        TerminalScreenLayout.NO_CELL,
+        TerminalScreenLayout.pageCellAt(TerminalScreenLayout.NO_CELL, 2));
+    assertEquals(
+        TerminalScreenLayout.NO_CELL,
+        TerminalScreenLayout.screenCellFor(TerminalScreenLayout.NO_CELL, 2));
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {-1, Integer.MIN_VALUE})
+  void aNegativeNoticeHeightCoversNothing(int hiddenRows) {
+    assertEquals(4, TerminalScreenLayout.pageCellAt(4, hiddenRows));
+    assertEquals(4, TerminalScreenLayout.screenCellFor(4, hiddenRows));
+  }
 }

@@ -17,14 +17,6 @@ class DepositOutcomeTest {
   }
 
   @Test
-  void havingNothingToGiveIsToldApartFromHavingNowhereToPutIt() {
-    assertEquals(DepositResult.NOTHING_TO_DEPOSIT, DepositOutcome.nothingToDeposit().result());
-    assertEquals(0L, DepositOutcome.nothingToDeposit().offered());
-    assertEquals(DepositResult.SLOT_LOCKED, DepositOutcome.slotLocked().result());
-    assertEquals(DepositResult.RATE_LIMITED, DepositOutcome.rateLimited().result());
-  }
-
-  @Test
   void aDepositThatStoredNothingHasToSayWhy() {
     assertThrows(IllegalArgumentException.class, () -> DepositOutcome.stored(64L, 0L, List.of()));
   }

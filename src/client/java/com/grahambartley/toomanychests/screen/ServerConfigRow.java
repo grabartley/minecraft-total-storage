@@ -23,8 +23,7 @@ public final class ServerConfigRow extends ServerConfigEntry {
     super(textRenderer);
     this.label = ServerConfigText.label(setting);
     this.bounds = ServerConfigText.bounds(setting);
-    this.control = ServerConfigControls.of(setting, edits);
-    this.control.active = editable;
+    this.control = ServerConfigControls.of(setting, edits, editable);
   }
 
   @Override

@@ -66,6 +66,32 @@ public final class PresetTagResolverGameTest implements FabricGameTest {
           new Expectation(Items.RED_DYE, PresetTag.DECORATION),
           new Expectation(Items.PURPLE_STAINED_GLASS, PresetTag.DECORATION));
 
+  private static final List<Expectation> EXCLUSIONS =
+      List.of(
+          new Expectation(Items.PAPER, PresetTag.TOOLS),
+          new Expectation(Items.BOOK, PresetTag.TOOLS),
+          new Expectation(Items.WRITABLE_BOOK, PresetTag.TOOLS),
+          new Expectation(Items.ENCHANTED_BOOK, PresetTag.TOOLS),
+          new Expectation(Items.GLASS_BOTTLE, PresetTag.TOOLS),
+          new Expectation(Items.SHIELD, PresetTag.TOOLS),
+          new Expectation(Items.DIAMOND_SWORD, PresetTag.TOOLS),
+          new Expectation(Items.BOW, PresetTag.TOOLS),
+          new Expectation(Items.CROSSBOW, PresetTag.TOOLS),
+          new Expectation(Items.BONE_BLOCK, PresetTag.ORES_AND_MINERALS),
+          new Expectation(Items.HAY_BLOCK, PresetTag.ORES_AND_MINERALS),
+          new Expectation(Items.DRIED_KELP_BLOCK, PresetTag.ORES_AND_MINERALS),
+          new Expectation(Items.SLIME_BLOCK, PresetTag.ORES_AND_MINERALS));
+
+  private static final List<Expectation> MINERAL_BLOCKS =
+      List.of(
+          new Expectation(Items.IRON_BLOCK, PresetTag.ORES_AND_MINERALS),
+          new Expectation(Items.GOLD_BLOCK, PresetTag.ORES_AND_MINERALS),
+          new Expectation(Items.DIAMOND_BLOCK, PresetTag.ORES_AND_MINERALS),
+          new Expectation(Items.REDSTONE_BLOCK, PresetTag.ORES_AND_MINERALS),
+          new Expectation(Items.COAL_BLOCK, PresetTag.ORES_AND_MINERALS),
+          new Expectation(Items.LAPIS_BLOCK, PresetTag.ORES_AND_MINERALS),
+          new Expectation(Items.NETHERITE_BLOCK, PresetTag.ORES_AND_MINERALS));
+
   private final PresetTagResolver resolver = new PresetTagResolver();
 
   private record Expectation(Item item, PresetTag preset) {}
@@ -80,6 +106,45 @@ public final class PresetTagResolverGameTest implements FabricGameTest {
     return CONVENTION_ONLY.stream()
         .map(expectation -> filingCase("convention", expectation))
         .toList();
+  }
+
+  @CustomTestProvider
+  public Collection<TestFunction> noPresetHoldsAnItemItsNameDoesNotPromise() {
+    return EXCLUSIONS.stream().map(this::exclusionCase).toList();
+  }
+
+  @CustomTestProvider
+  public Collection<TestFunction> everyMineralStorageBlockIsStillAMineral() {
+    return MINERAL_BLOCKS.stream()
+        .map(expectation -> filingCase("mineral-block", expectation))
+        .toList();
+  }
+
+  private TestFunction exclusionCase(Expectation expectation) {
+    return new TestFunction(
+        BATCH,
+        "presettagresolver.excludes."
+            + Registries.ITEM.getId(expectation.item()).getPath()
+            + "."
+            + expectation.preset().id(),
+        FabricGameTest.EMPTY_STRUCTURE,
+        TICK_LIMIT,
+        0L,
+        true,
+        context -> assertNotFiledUnder(context, expectation));
+  }
+
+  private void assertNotFiledUnder(TestContext context, Expectation expectation) {
+    Set<PresetTag> presets = resolver.resolve(expectation.item());
+
+    context.assertFalse(
+        presets.contains(expectation.preset()),
+        Registries.ITEM.getId(expectation.item())
+            + " should not be filed under "
+            + expectation.preset().id()
+            + " but was filed under "
+            + presets);
+    context.complete();
   }
 
   private TestFunction filingCase(String behaviour, Expectation expectation) {

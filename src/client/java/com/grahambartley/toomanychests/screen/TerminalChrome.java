@@ -34,6 +34,10 @@ public final class TerminalChrome {
     return hovered ? TerminalSprite.RAISED_LIT : TerminalSprite.FLAT;
   }
 
+  private static TerminalSprite activeRow(boolean hovered) {
+    return hovered ? TerminalSprite.RAISED_LIT : TerminalSprite.PRESSED;
+  }
+
   public static void drawScrollbar(
       DrawContext context, TerminalScrollbar scrollbar, int x, int y, int width, int height) {
     TerminalSprite.SUNKEN.draw(context, x, y, width, height);
@@ -48,10 +52,11 @@ public final class TerminalChrome {
 
   public static void drawActiveRow(
       DrawContext context, boolean active, boolean hovered, int x, int y, int width, int height) {
-    drawRow(context, hovered, x, y, width, height);
     if (!active) {
+      drawRow(context, hovered, x, y, width, height);
       return;
     }
+    activeRow(hovered).draw(context, x, y, width, height);
     context.fill(
         x + ACCENT_INSET,
         y + ACCENT_INSET,

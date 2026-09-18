@@ -67,6 +67,8 @@ Custom tags live on the terminal, in the `Tags` section of the settings tab, and
 
 A name has to be something the query language can address: not empty, at most 32 characters, letters, digits, spaces, dashes and underscores only, not already taken on this network, and not the name of a preset. A refused name says which of those it broke rather than failing quietly. Renaming moves the tag's id along with its name, so `#castle` finds the tag called Castle the moment you rename it, and the items it held come with it. See [ADR 0033](docs/adr/0033-renaming-a-tag-moves-its-id.md).
 
+A name may carry spaces, and its id turns them into dashes, because the search box splits terms on whitespace and `#base kit` would otherwise be a tag term and a stray word rather than a name. A tag called `Base Kit` is found by `#base-kit`, or by `#base` like any other prefix, and the filter column lists it in the form you type rather than the form you named it, so the column and the search box never disagree. The tags panel and the row tooltip keep the name as you wrote it.
+
 Ctrl-click any cell in the grid, or Cmd-click on macOS, to file that item. The panel lists your custom tags with the ones the item already carries ticked, and clicking one files or unfiles it immediately. Tags apply by item identifier, so filing a pickaxe files every pickaxe, damaged or not.
 
 Filing a large storage area one item at a time is not a plan, so **shift-clicking a tag in that panel files everything the grid is currently showing**. Narrow with the search box or the other tags first, and the panel tells you how many items that is before you do it. That is what makes tagging an existing base something you finish rather than abandon.
@@ -83,7 +85,7 @@ Click a cell and the item comes to you. Left click takes a stack, right click ta
 
 Nothing is ever guessed at. What you click is a name and an amount, never a place: the server works out which containers really hold the item at the moment it extracts, inside one transaction. A listing that has gone stale under you therefore costs a shortfall rather than an item that never existed, and a container broken in the same tick you click it hands over nothing. Two players reaching for the last stack together produce exactly one success. See [ADR 0009](docs/adr/0009-clients-send-intent.md).
 
-Taking more than the network holds takes everything there is and tells you what you did not get. A full inventory takes what fits and leaves the rest in the network. Nothing is ever dropped on the floor, and a locked slot is never used as somewhere to put a withdrawal.
+Taking more than the network holds takes everything there is and tells you what you did not get, inside the terminal rather than on the action bar behind it. Losing a race for the last stack to another player says so too, rather than leaving you looking at an empty cursor. A full inventory takes what fits and leaves the rest in the network. Nothing is ever dropped on the floor, and a locked slot is never used as somewhere to put a withdrawal.
 
 Everybody else looking at what you moved is told the moment you move it, in the same tick rather than on the next sweep. That means the other player at your terminal, anybody at a second terminal whose radius overlaps the same chest, and anybody standing at that chest with it open by hand. Nobody who cannot see the container hears anything at all. See [ADR 0032](docs/adr/0032-a-commit-resyncs-everyone-who-can-see-it.md).
 
@@ -93,7 +95,7 @@ A request the network cannot meet says which of the two things went wrong: the i
 
 Shift-click a stack in your inventory and the network takes it. Pick a stack up and left click the grid to hand over all of it, or right click to hand over one. The deposit all button beside the grid empties your whole inventory in one press, and so does the deposit all key, bound to `R` by default and rebindable in the controls screen. The key yields to the search box while it has focus, the way the inventory key does inside the creative search, so typing `redstone` searches for redstone rather than emptying your inventory on the `r`.
 
-**Locked slots, armour and the offhand are never deposited**, by any of these, including deposit all. A server can also keep the hotbar out of deposit all with `depositAllSkipsHotbar`, off by default: locking already protects a chosen slot precisely, and this protects nine of them bluntly, for servers whose players would rather not learn about locking before losing a pickaxe. That is the whole reason locking exists, and it is enforced on the server rather than filtered on the client, so a modified client cannot empty a slot you pinned. Shift-click is the one mouse gesture the terminal takes over; picking up, splitting, and dragging all behave exactly as they do in any container. The keyboard belongs to the search box while it has focus, so a number key writes a digit rather than swapping a hotbar slot; clicking anywhere else in the terminal hands the keyboard back, which is what makes the deposit all keybind reachable. See [ADR 0029](docs/adr/0029-the-grid-takes-clicks-like-a-container-does.md).
+**Armour and the offhand are never deposited**, by any of these, and **deposit all leaves a locked slot alone**. A shift-click out of a locked slot still moves, into the terminal exactly as into a chest, because a lock stops the mod moving a slot rather than stopping you: you picked that slot, so it goes. A server can also keep the hotbar out of deposit all with `depositAllSkipsHotbar`, off by default: locking already protects a chosen slot precisely, and this protects nine of them bluntly, for servers whose players would rather not learn about locking before losing a pickaxe. That is the whole reason locking exists, and it is enforced on the server rather than filtered on the client, so a modified client cannot empty a slot you pinned. Shift-click is the one mouse gesture the terminal takes over; picking up, splitting, and dragging all behave exactly as they do in any container. The keyboard belongs to the search box while it has focus, so a number key writes a digit rather than swapping a hotbar slot; clicking anywhere else in the terminal hands the keyboard back, which is what makes the deposit all keybind reachable. See [ADR 0029](docs/adr/0029-the-grid-takes-clicks-like-a-container-does.md).
 
 Where each item lands is the network's decision, made per item against the roles you gave your containers. A `Filtered` container that has declared the item takes it first, and one that already holds it is preferred over one that does not, so like items gather rather than scatter. `General` containers take what is left. `Excluded` containers are never written to, under any configuration.
 
@@ -131,7 +133,7 @@ There is also a **sort keybind**, bound to `B` by default and rebindable under T
 
 ## Locking a slot
 
-**Alt-click a slot in your inventory to lock it.** A locked slot is never deposited, never quick stacked, never used to land a withdrawal, and never moved by sorting, and every one of those is enforced on the server rather than filtered on the client.
+**Alt-click a slot in your inventory to lock it.** A locked slot is never emptied by deposit all, never quick stacked, never used to land a withdrawal, and never moved by sorting, and every one of those is enforced on the server rather than filtered on the client. The rule is one sentence: a lock stops the mod moving a slot, never you. Dragging, shift-clicking and hotbar swapping are your gestures and work as they always do, wherever they are aimed.
 
 A locked slot wears a padlock badge in the top-left corner of the item, over the item and its decorations, and an amber wash behind it. **The badge carries the state and the wash only reinforces it**, so a player who cannot separate the colours loses nothing. That ordering is why the wash can be turned off and the badge cannot: set `lockedSlotTintVisible` to `false` for a quieter inventory. The badge leaves the stack count and the durability bar alone, both of which vanilla draws along the bottom. It is drawn on the in-world hotbar too, so a pinned pickaxe reads as pinned while you are out mining and not only while a container is open. See [`docs/locked-slot-art.md`](docs/locked-slot-art.md).
 
@@ -179,7 +181,7 @@ Only the owner and operators can change any of it. Everyone else sees the same p
 
 "Why isn't that chest included" is the question a radius always produces, so the terminal answers it by outlining the containers it is holding, in the world. The outlines appear when you change the radius, and whenever you ask for them from the settings view or with `/tmc terminal <pos> highlight`. They fade after a few seconds: this is feedback, not an overlay. A double chest is outlined as the one container it is, across both of its blocks, and the outline follows the block state, so splitting a chest while the outline is up redraws it rather than leaving a stale box.
 
-Each outline is coloured by that container's role, and an `Excluded` one is drawn as a doubled line as well as a different colour, so the distinction survives a player who cannot separate the red from the green. An unpowered terminal outlines nothing, because it is holding nothing.
+Each outline is coloured by that container's role and shaped by it too, so all three roles survive a player who cannot separate the red from the green from the white: `General` is a plain line, `Filtered` is a dashed one, and `Excluded` is doubled. An unpowered terminal outlines nothing, because it is holding nothing.
 
 ## Container roles
 
@@ -209,7 +211,7 @@ The terminal is a mid-game goal rather than a starting block or an endgame rewar
 | Redstone dust | Chest | Redstone dust |
 | Iron ingot | Redstone dust | Iron ingot |
 
-The recipe appears in the recipe book the first time you pick up an ender pearl, which is the moment it becomes craftable. The terminal is also in the Functional Blocks creative tab.
+The recipe appears in the recipe book the first time you pick up redstone dust or an iron ingot, greyed until you also hold an ender pearl, so you can see the terminal exists and plan for it long before you can build one. It is also in the Functional Blocks creative tab.
 
 ## Who can open a terminal
 

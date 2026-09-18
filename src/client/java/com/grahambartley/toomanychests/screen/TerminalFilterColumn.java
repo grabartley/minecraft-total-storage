@@ -110,7 +110,7 @@ public final class TerminalFilterColumn {
             top,
             FilterColumnLayout.MODE_WIDTH,
             FilterColumnLayout.HEADER_HEIGHT);
-    final Text mode = FilterColumnText.mode(selection.mode());
+    final Text mode = FilterColumnText.mode(selection.mode(), selection.active().size());
     context.drawText(
         textRenderer,
         mode,
@@ -184,13 +184,11 @@ public final class TerminalFilterColumn {
     final String count = FilterColumnText.count(tag);
     final int countWidth = textRenderer.getWidth(count);
     final int textY = top + (FilterColumnLayout.ROW_HEIGHT - LINE_HEIGHT) / 2 + 1;
-    final int nameWidth =
-        FilterColumnLayout.ROW_WIDTH
-            - 2 * FilterColumnLayout.TEXT_MARGIN
-            - countWidth
-            - FilterColumnLayout.TEXT_MARGIN;
     final OrderedText name =
-        TrimmedText.toWidth(textRenderer, FilterColumnText.columnNameOf(tag), nameWidth);
+        TrimmedText.toWidth(
+            textRenderer,
+            FilterColumnText.columnNameOf(tag),
+            FilterColumnLayout.nameWidth(countWidth));
     context.drawText(
         textRenderer,
         name,
@@ -203,7 +201,7 @@ public final class TerminalFilterColumn {
     context.drawText(
         textRenderer,
         count,
-        left + FilterColumnLayout.ROW_WIDTH - FilterColumnLayout.TEXT_MARGIN - countWidth,
+        left + FilterColumnLayout.countLeft(countWidth),
         textY,
         tag.isEmptyHere() ? VanillaPalette.DISABLED : VanillaPalette.MUTED,
         false);

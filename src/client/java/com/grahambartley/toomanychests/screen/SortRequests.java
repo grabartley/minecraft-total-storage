@@ -8,11 +8,13 @@ public final class SortRequests {
   private SortRequests() {}
 
   public static boolean isOffered() {
-    return ClientConfigMirror.hasReceived() && ClientPreferencesStore.current().sortButtonVisible();
+    return ClientConfigMirror.hasReceived()
+        && ClientConfigMirror.current().sortButtonEnabled()
+        && ClientPreferencesStore.current().sortButtonVisible();
   }
 
   public static boolean isAvailable() {
-    return ClientConfigMirror.current().sortButtonEnabled();
+    return isOffered();
   }
 
   public static boolean send(int syncId) {

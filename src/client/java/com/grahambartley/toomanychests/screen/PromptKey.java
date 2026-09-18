@@ -5,5 +5,7 @@ public enum PromptKey {
 
   CANCEL,
 
-  HANDLED
+  HANDLED,
+
+  REFUSED
 }

@@ -1,11 +1,12 @@
 package com.grahambartley.toomanychests.render;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.toomanychests.storage.ContainerRole;
+import java.util.HashSet;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -28,16 +29,24 @@ class HighlightColourTest {
   }
 
   @Test
-  void theRoleThatMattersIsToldApartByShapeAndNotOnlyByColour() {
-    assertTrue(HighlightColour.isDoubled(ContainerRole.EXCLUDED));
-    assertFalse(HighlightColour.isDoubled(ContainerRole.GENERAL));
-    assertFalse(HighlightColour.isDoubled(ContainerRole.FILTERED));
+  void everyRoleIsToldApartByShapeAndNotOnlyByColour() {
+    assertEquals(HighlightShape.SOLID, HighlightColour.shapeOf(ContainerRole.GENERAL));
+    assertEquals(HighlightShape.DASHED, HighlightColour.shapeOf(ContainerRole.FILTERED));
+    assertEquals(HighlightShape.DOUBLED, HighlightColour.shapeOf(ContainerRole.EXCLUDED));
+  }
+
+  @Test
+  void noTwoRolesShareAShape() {
+    final Set<HighlightShape> shapes = new HashSet<>();
+    for (final ContainerRole role : ContainerRole.values()) {
+      assertTrue(shapes.add(HighlightColour.shapeOf(role)), role + " reuses a shape");
+    }
   }
 
   @Test
   void aContainerWithNoRoleIsDrawnAsTheDefaultOne() {
     assertEquals(HighlightColour.of(ContainerRole.DEFAULT), HighlightColour.of(null));
-    assertFalse(HighlightColour.isDoubled(null));
+    assertEquals(HighlightColour.shapeOf(ContainerRole.DEFAULT), HighlightColour.shapeOf(null));
   }
 
   @Test

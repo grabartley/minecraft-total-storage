@@ -3,6 +3,7 @@ package com.grahambartley.toomanychests.command;
 import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import com.grahambartley.toomanychests.tag.TagEditOutcome;
+import com.grahambartley.toomanychests.tag.TagSetContents;
 import com.grahambartley.toomanychests.tag.TagSetFile;
 import com.grahambartley.toomanychests.tag.TagSetFileName;
 import com.grahambartley.toomanychests.tag.TagSetImportMode;
@@ -94,7 +95,7 @@ public final class TerminalTagCommand {
     if (path.isEmpty() || mode.isEmpty()) {
       return 0;
     }
-    final Optional<NetworkTagSet> loaded = TagSetFile.load(path.get());
+    final Optional<TagSetContents> loaded = TagSetFile.load(path.get());
     if (loaded.isEmpty()) {
       source.sendError(TagSetMessages.fileUnreadable(fileName(context)));
       return 0;
@@ -134,12 +135,11 @@ public final class TerminalTagCommand {
       ServerCommandSource source, BlockPos terminal, TagTransferResult result) {
     return switch (result.outcome()) {
       case CHANGED -> {
-        source.sendFeedback(
-            () -> TagSetMessages.imported(result.imported(), result.skipped()), true);
+        source.sendFeedback(() -> TagSetMessages.imported(result.imported(), result.skips()), true);
         yield result.imported();
       }
       case UNCHANGED -> {
-        source.sendFeedback(() -> TagSetMessages.importedNothing(result.skipped()), false);
+        source.sendFeedback(() -> TagSetMessages.importedNothing(result.skips()), false);
         yield 0;
       }
       case NO_TERMINAL -> {

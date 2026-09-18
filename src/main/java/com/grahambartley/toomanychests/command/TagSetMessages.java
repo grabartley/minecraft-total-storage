@@ -1,6 +1,9 @@
 package com.grahambartley.toomanychests.command;
 
+import com.grahambartley.toomanychests.tag.TagSkipReason;
+import com.grahambartley.toomanychests.tag.TagSkips;
 import com.grahambartley.toomanychests.text.CountedNoun;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 
 public final class TagSetMessages {
@@ -34,20 +37,57 @@ public final class TagSetMessages {
         file);
   }
 
-  public static Text imported(int imported, int skipped) {
-    return skipped == 0
+  public static Text imported(int imported, TagSkips skips) {
+    return skips.isEmpty()
         ? line("imported", "Brought %s across", CountedNoun.TAGS.of(imported))
         : line(
             "imported.partial",
-            "Brought %s across and skipped %s",
+            "Brought %s across and skipped %s: %s",
             CountedNoun.TAGS.of(imported),
-            skipped);
+            skips.total(),
+            reasons(skips));
   }
 
-  public static Text importedNothing(int skipped) {
-    return skipped == 0
+  public static Text importedNothing(TagSkips skips) {
+    return skips.isEmpty()
         ? line("imported.none", "That tag set was already there")
-        : line("imported.all-skipped", "Skipped every one of the %s", CountedNoun.TAGS.of(skipped));
+        : line(
+            "imported.all-skipped",
+            "Skipped every one of the %s: %s",
+            CountedNoun.TAGS.of(skips.total()),
+            reasons(skips));
+  }
+
+  private static Text reasons(TagSkips skips) {
+    final MutableText named = Text.empty();
+    boolean first = true;
+    for (final TagSkipReason reason : TagSkipReason.values()) {
+      final int count = skips.countOf(reason);
+      if (count == 0) {
+        continue;
+      }
+      if (!first) {
+        named.append(", ");
+      }
+      named.append(reason(reason, count));
+      first = false;
+    }
+    return named;
+  }
+
+  private static Text reason(TagSkipReason reason, int count) {
+    return Text.translatableWithFallback(
+        PREFIX + "skipped." + reason.id(), "%s " + english(reason), count);
+  }
+
+  private static String english(TagSkipReason reason) {
+    return switch (reason) {
+      case MALFORMED -> "malformed";
+      case PRESET_NAME -> "preset name";
+      case TOO_LONG -> "too long";
+      case ILLEGAL_NAME -> "illegal name";
+      case NO_ROOM -> "over the limit";
+    };
   }
 
   public static Text transferRefused() {

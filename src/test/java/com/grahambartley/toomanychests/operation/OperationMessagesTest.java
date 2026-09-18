@@ -1,7 +1,6 @@
 package com.grahambartley.toomanychests.operation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -56,16 +55,6 @@ class OperationMessagesTest {
     assertEquals(
         PREFIX + "deposit.empty",
         keyOf(OperationMessages.forDeposit(DepositOutcome.nothingToDeposit())));
-    assertEquals(
-        PREFIX + "deposit.locked",
-        keyOf(OperationMessages.forDeposit(DepositOutcome.slotLocked())));
-  }
-
-  @Test
-  void aLockedSlotIsToldApartFromAnEmptyOne() {
-    assertFalse(
-        keyOf(OperationMessages.forDeposit(DepositOutcome.slotLocked()))
-            .equals(keyOf(OperationMessages.forDeposit(DepositOutcome.nothingToDeposit()))));
   }
 
   @Test
@@ -133,7 +122,6 @@ class OperationMessagesTest {
       case DEPOSITED -> DepositOutcome.stored(64L, 64L, List.of());
       case PARTIAL, NO_SPACE -> null;
       case NOTHING_TO_DEPOSIT -> DepositOutcome.nothingToDeposit();
-      case SLOT_LOCKED -> DepositOutcome.slotLocked();
       case RATE_LIMITED -> DepositOutcome.rateLimited();
       case REFUSED -> DepositOutcome.refused();
     };

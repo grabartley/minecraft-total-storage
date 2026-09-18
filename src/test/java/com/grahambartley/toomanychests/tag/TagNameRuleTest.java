@@ -76,9 +76,21 @@ class TagNameRuleTest {
   }
 
   @ParameterizedTest
-  @CsvSource({"Castle,castle", "  Base Build  ,base build", "REDSTONE-project,redstone-project"})
-  void theIdIsTheNameNormalised(String name, String expected) {
+  @CsvSource({
+    "Castle,castle",
+    "'  Base Build  ',base-build",
+    "REDSTONE-project,redstone-project",
+    "'Base   Kit',base-kit",
+    "'a b c',a-b-c"
+  })
+  void theIdIsTheNameNormalisedIntoOneSearchableToken(String name, String expected) {
     assertEquals(expected, TagNameRule.idFor(name));
+  }
+
+  @Test
+  void anIdNeverCarriesASpaceBecauseTheSearchBoxSplitsOnOne() {
+    assertFalse(TagNameRule.idFor("Base Kit").contains(" "));
+    assertEquals(TagNameOutcome.OK, TagNameRule.check("Base Kit", NetworkTagSet.defaults()));
   }
 
   @Test

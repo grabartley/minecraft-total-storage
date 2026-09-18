@@ -74,23 +74,76 @@ class TagNameEntryTest {
 
   @Test
   void escapeCancelsAndEnterConfirmsOnlyWhenThereIsANameToSave() {
-    assertEquals(PromptKey.CANCEL, new TagNameEntry("castle").keyPressed(GLFW.GLFW_KEY_ESCAPE));
-    assertEquals(PromptKey.CONFIRM, new TagNameEntry("castle").keyPressed(GLFW.GLFW_KEY_ENTER));
-    assertEquals(PromptKey.HANDLED, new TagNameEntry("").keyPressed(GLFW.GLFW_KEY_ENTER));
+    assertEquals(
+        PromptKey.CANCEL, new TagNameEntry("castle").keyPressed(GLFW.GLFW_KEY_ESCAPE, false));
+    assertEquals(
+        PromptKey.CONFIRM, new TagNameEntry("castle").keyPressed(GLFW.GLFW_KEY_ENTER, false));
+    assertEquals(PromptKey.REFUSED, new TagNameEntry("").keyPressed(GLFW.GLFW_KEY_ENTER, false));
   }
 
   @Test
   void backspaceIsHandledWithoutClosingThePrompt() {
     final TagNameEntry entry = new TagNameEntry("ab");
-    assertEquals(PromptKey.HANDLED, entry.keyPressed(GLFW.GLFW_KEY_BACKSPACE));
+    assertEquals(PromptKey.HANDLED, entry.keyPressed(GLFW.GLFW_KEY_BACKSPACE, false));
     assertEquals("a", entry.text());
   }
 
   @Test
-  void everyTypedCharacterIsSwallowedByThePrompt() {
+  void aRefusedCharacterSaysSoRatherThanPassingForAnEdit() {
     final TagNameEntry entry = new TagNameEntry("");
     assertEquals(PromptKey.HANDLED, entry.charTyped('c'));
-    assertEquals(PromptKey.HANDLED, entry.charTyped('#'));
+    assertEquals(PromptKey.REFUSED, entry.charTyped('#'));
     assertEquals("c", entry.text());
+  }
+
+  @Test
+  void selectAllReplacesTheWholeNameWithTheNextCharacter() {
+    final TagNameEntry entry = new TagNameEntry("Base Kit");
+
+    assertTrue(entry.selectAll());
+    entry.append('K');
+    entry.append('i');
+    entry.append('t');
+
+    assertEquals("Kit", entry.text());
+  }
+
+  @Test
+  void selectAllThenBackspaceClearsTheWholeName() {
+    final TagNameEntry entry = new TagNameEntry("Base Kit");
+
+    entry.selectAll();
+
+    assertTrue(entry.backspace());
+    assertEquals("", entry.text());
+  }
+
+  @Test
+  void selectAllOnAnEmptyNameHasNothingToSelect() {
+    assertFalse(new TagNameEntry("").selectAll());
+  }
+
+  @Test
+  void selectAllOnlyAnswersToTheControlKey() {
+    final TagNameEntry withControl = new TagNameEntry("Base Kit");
+    final TagNameEntry withoutControl = new TagNameEntry("Base Kit");
+
+    assertEquals(PromptKey.HANDLED, withControl.keyPressed(GLFW.GLFW_KEY_A, true));
+    assertEquals(PromptKey.HANDLED, withoutControl.keyPressed(GLFW.GLFW_KEY_A, false));
+
+    withControl.append('x');
+    withoutControl.append('x');
+
+    assertEquals("x", withControl.text());
+    assertEquals("Base Kitx", withoutControl.text());
+  }
+
+  @Test
+  void aReplacedNameStillRefusesToOpenWithASpace() {
+    final TagNameEntry entry = new TagNameEntry("Base Kit");
+
+    entry.selectAll();
+
+    assertFalse(entry.append(' '));
   }
 }

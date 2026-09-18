@@ -5,10 +5,12 @@ import com.grahambartley.toomanychests.filter.FilterText;
 public final class TagNameRule {
   public static final int MAX_LENGTH = 32;
 
+  public static final String SPACE_REPLACEMENT = "-";
+
   private TagNameRule() {}
 
   public static String idFor(String name) {
-    return FilterText.normalise(name);
+    return FilterText.normalise(name).replaceAll("\\s+", SPACE_REPLACEMENT);
   }
 
   public static TagNameOutcome check(String name, NetworkTagSet existing) {
@@ -39,8 +41,7 @@ public final class TagNameRule {
     for (int index = 0; index < id.length(); index++) {
       final char character = id.charAt(index);
       final boolean allowed =
-          character == ' '
-              || character == '_'
+          character == '_'
               || character == '-'
               || (character >= '0' && character <= '9')
               || (character >= 'a' && character <= 'z');

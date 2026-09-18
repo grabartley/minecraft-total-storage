@@ -23,7 +23,7 @@ class TagSetFileTest {
 
     assertTrue(TagSetFile.save(file, CASTLE));
 
-    final NetworkTagSet loaded = TagSetFile.load(file).orElseThrow();
+    final NetworkTagSet loaded = new NetworkTagSet(TagSetFile.load(file).orElseThrow().tags());
     assertEquals(1, loaded.custom().size());
     assertEquals("Castle", loaded.byId("castle").orElseThrow().displayName());
     assertTrue(loaded.byId("castle").orElseThrow().contains("minecraft:stone"));

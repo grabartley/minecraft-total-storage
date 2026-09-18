@@ -159,12 +159,13 @@ public final class TerminalPrompts {
     copying.close();
   }
 
-  public boolean keyPressed(int keyCode) {
+  public boolean keyPressed(int keyCode, int modifiers) {
+    final boolean selectAllHeld = PromptModifiers.isSelectAllHeld(modifiers);
     if (amount.isOpen()) {
-      return handleAmountKey(amount.keyPressed(keyCode));
+      return handleAmountKey(amount.keyPressed(keyCode, selectAllHeld));
     }
     if (naming.isOpen()) {
-      return handleNameKey(naming.keyPressed(keyCode));
+      return handleNameKey(naming.keyPressed(keyCode, selectAllHeld));
     }
     if (copying.isOpen()) {
       if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
@@ -216,7 +217,12 @@ public final class TerminalPrompts {
   }
 
   private boolean handleAmountKey(PromptKey outcome) {
+    if (outcome == PromptKey.REFUSED) {
+      PromptRefusal.sound();
+      return true;
+    }
     if (outcome == PromptKey.CONFIRM) {
+      reportClampIfAny();
       ModNetworkingClient.sendWithdrawRequest(
           syncId, amount.variant(), amount.amount(), WithdrawDestination.INVENTORY);
     }
@@ -226,7 +232,21 @@ public final class TerminalPrompts {
     return true;
   }
 
+  private void reportClampIfAny() {
+    if (!amount.asksForMoreThanThereIs()) {
+      return;
+    }
+    TerminalNoticeMirror.accept(
+        syncId,
+        TerminalScreenText.of("amount.clamped", amount.requested(), amount.amount()),
+        false);
+  }
+
   private boolean handleNameKey(PromptKey outcome) {
+    if (outcome == PromptKey.REFUSED) {
+      PromptRefusal.sound();
+      return true;
+    }
     if (outcome == PromptKey.CONFIRM) {
       confirmName();
     }

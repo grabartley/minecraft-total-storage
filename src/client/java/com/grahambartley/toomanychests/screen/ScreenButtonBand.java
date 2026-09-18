@@ -9,7 +9,8 @@ public final class ScreenButtonBand {
   private ScreenButtonBand() {}
 
   public static boolean isClear(ScreenPanel panel, List<ScreenButtonSpot> slots) {
-    final ScreenButtonSpot band = ScreenButtonRow.at(ScreenButtonAnchor.INSIDE_TOP_RIGHT, panel, 0);
+    final ScreenButtonSpot band =
+        ScreenButtonRow.at(ScreenButtonAnchor.INSIDE_TOP_RIGHT, panel, 0, 1);
     return slots.stream().noneMatch(slot -> overlaps(band, slot));
   }
 

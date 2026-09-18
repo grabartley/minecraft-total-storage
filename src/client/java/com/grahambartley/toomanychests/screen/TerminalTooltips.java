@@ -72,8 +72,10 @@ public final class TerminalTooltips {
     if (!entry.isEmpty()) {
       lines.add(ContainerRowText.itemTotal(entry).formatted(Formatting.GRAY));
     }
+    lines.add(ContainerRowText.role(entry.role()));
+    lines.add(ContainerRowText.roleMeaning(entry.role()).formatted(Formatting.GRAY));
     if (view.mayAdminister()) {
-      lines.add(TerminalScreenText.of("settings.role.hint").formatted(Formatting.GRAY));
+      lines.add(TerminalScreenText.of("settings.role.hint").formatted(Formatting.DARK_GRAY));
     }
     context.drawTooltip(textRenderer, lines, mouseX, mouseY);
   }

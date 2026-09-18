@@ -4,55 +4,58 @@ import com.grahambartley.toomanychests.tag.TagNameRule;
 import org.lwjgl.glfw.GLFW;
 
 public final class TagNameEntry {
-  private String typed;
+  private final PromptEntryBuffer buffer;
 
   public TagNameEntry(String initial) {
-    typed = trimmed(initial);
+    buffer = new PromptEntryBuffer(trimmed(initial));
   }
 
   public String text() {
-    return typed;
+    return buffer.text();
   }
 
   public boolean isReady() {
-    return !typed.isBlank();
+    return !buffer.text().isBlank();
   }
 
-  public PromptKey keyPressed(int keyCode) {
+  public PromptKey keyPressed(int keyCode, boolean controlDown) {
+    if (controlDown && keyCode == GLFW.GLFW_KEY_A) {
+      return buffer.selectAll() ? PromptKey.HANDLED : PromptKey.REFUSED;
+    }
     return switch (keyCode) {
       case GLFW.GLFW_KEY_ESCAPE -> PromptKey.CANCEL;
       case GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER ->
-          isReady() ? PromptKey.CONFIRM : PromptKey.HANDLED;
-      case GLFW.GLFW_KEY_BACKSPACE -> {
-        backspace();
-        yield PromptKey.HANDLED;
-      }
+          isReady() ? PromptKey.CONFIRM : PromptKey.REFUSED;
+      case GLFW.GLFW_KEY_BACKSPACE -> buffer.backspace() ? PromptKey.HANDLED : PromptKey.REFUSED;
       default -> PromptKey.HANDLED;
     };
   }
 
   public PromptKey charTyped(char typedCharacter) {
-    append(typedCharacter);
-    return PromptKey.HANDLED;
+    return append(typedCharacter) ? PromptKey.HANDLED : PromptKey.REFUSED;
   }
 
   public boolean append(char typedCharacter) {
-    if (!isWritable(typedCharacter) || typed.length() >= TagNameRule.MAX_LENGTH) {
+    if (!isWritable(typedCharacter)) {
       return false;
     }
-    if (typedCharacter == ' ' && (typed.isEmpty() || typed.endsWith(" "))) {
+    final String candidate = buffer.candidate(typedCharacter);
+    if (candidate.length() > TagNameRule.MAX_LENGTH) {
       return false;
     }
-    typed = typed + typedCharacter;
+    if (typedCharacter == ' ' && (candidate.length() == 1 || candidate.endsWith("  "))) {
+      return false;
+    }
+    buffer.accept(candidate);
     return true;
   }
 
   public boolean backspace() {
-    if (typed.isEmpty()) {
-      return false;
-    }
-    typed = typed.substring(0, typed.length() - 1);
-    return true;
+    return buffer.backspace();
+  }
+
+  public boolean selectAll() {
+    return buffer.selectAll();
   }
 
   private static boolean isWritable(char character) {

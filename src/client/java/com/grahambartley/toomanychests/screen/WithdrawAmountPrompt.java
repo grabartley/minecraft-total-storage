@@ -44,8 +44,16 @@ public final class WithdrawAmountPrompt {
     return entry == null ? 0 : entry.value();
   }
 
-  public PromptKey keyPressed(int keyCode) {
-    return isOpen() ? entry.keyPressed(keyCode) : PromptKey.HANDLED;
+  public int requested() {
+    return entry == null ? 0 : entry.requested();
+  }
+
+  public boolean asksForMoreThanThereIs() {
+    return entry != null && entry.asksForMoreThanThereIs();
+  }
+
+  public PromptKey keyPressed(int keyCode, boolean controlDown) {
+    return isOpen() ? entry.keyPressed(keyCode, controlDown) : PromptKey.HANDLED;
   }
 
   public PromptKey charTyped(char typed) {
@@ -64,7 +72,9 @@ public final class WithdrawAmountPrompt {
     final List<OrderedText> available =
         textRenderer.wrapLines(TerminalScreenText.of("amount.available", entry.ceiling()), inner);
     final List<OrderedText> hint =
-        textRenderer.wrapLines(TerminalScreenText.of("amount.hint"), inner);
+        textRenderer.wrapLines(
+            TerminalScreenText.of(entry.takesEverything() ? "amount.hint.all" : "amount.hint"),
+            inner);
     final int height =
         2 * PADDING
             + 3 * GAP

@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests.terminal;
 
 import com.grahambartley.toomanychests.access.TerminalAccessRules;
 import com.grahambartley.toomanychests.access.TerminalAccessService;
+import com.grahambartley.toomanychests.filter.ItemFilter;
 import com.grahambartley.toomanychests.filter.NetworkFilterCandidates;
 import com.grahambartley.toomanychests.network.PayloadCapLog;
 import com.grahambartley.toomanychests.tag.NetworkTag;
@@ -21,6 +22,14 @@ public final class NetworkTagViewService {
 
   public NetworkTagView viewFor(
       ServerPlayerEntity player, BlockPos terminal, Optional<ItemVariant> subject) {
+    return viewFor(player, terminal, subject, ItemFilter.NONE);
+  }
+
+  public NetworkTagView viewFor(
+      ServerPlayerEntity player,
+      BlockPos terminal,
+      Optional<ItemVariant> subject,
+      ItemFilter narrowing) {
     if (player == null || terminal == null || !(player.getWorld() instanceof ServerWorld world)) {
       return NetworkTagView.pending();
     }
@@ -30,7 +39,7 @@ public final class NetworkTagViewService {
     }
     final NetworkTagSet tags = settings.tags();
     final NetworkTagTally tally =
-        NetworkTagTally.of(NetworkTagCandidates.of(world, terminal, tags));
+        NetworkTagTally.of(NetworkTagCandidates.of(world, terminal, tags, narrowing));
     return new NetworkTagView(
         TerminalAccessRules.mayAdminister(
             settings, player.getUuid(), TerminalAccessService.isOperator(player)),

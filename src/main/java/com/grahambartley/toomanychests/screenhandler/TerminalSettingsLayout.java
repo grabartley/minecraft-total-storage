@@ -3,20 +3,27 @@ package com.grahambartley.toomanychests.screenhandler;
 public final class TerminalSettingsLayout {
   public static final int NO_ROW = -1;
 
-  public static final int PANEL_X = TerminalScreenLayout.GRID_X;
+  public static final int INSET_X = TerminalScreenLayout.FILTER_X;
 
-  public static final int PANEL_Y = TerminalScreenLayout.GRID_Y;
+  public static final int INSET_Y = TerminalScreenLayout.SEARCH_Y;
 
-  public static final int PANEL_WIDTH =
-      TerminalScreenLayout.GRID_WIDTH
-          + TerminalScreenLayout.SCROLLBAR_GAP
-          + TerminalScreenLayout.SCROLLBAR_WIDTH;
+  public static final int INSET_WIDTH =
+      TerminalScreenLayout.INSET_X + TerminalScreenLayout.INSET_WIDTH - INSET_X;
 
-  public static final int PANEL_HEIGHT = TerminalScreenLayout.GRID_HEIGHT;
+  public static final int INSET_HEIGHT =
+      TerminalScreenLayout.INSET_Y + TerminalScreenLayout.INSET_HEIGHT - INSET_Y;
+
+  public static final int PANEL_X = INSET_X + TerminalScreenLayout.INSET_BORDER;
+
+  public static final int PANEL_Y = INSET_Y + TerminalScreenLayout.INSET_BORDER;
+
+  public static final int PANEL_WIDTH = INSET_WIDTH - 2 * TerminalScreenLayout.INSET_BORDER;
+
+  public static final int PANEL_HEIGHT = INSET_HEIGHT - 2 * TerminalScreenLayout.INSET_BORDER;
 
   public static final int SECTION_COUNT = 3;
 
-  public static final int SECTION_TAB_HEIGHT = 14;
+  public static final int SECTION_TAB_HEIGHT = 12;
 
   public static final int SECTION_GAP = 2;
 
@@ -30,7 +37,8 @@ public final class TerminalSettingsLayout {
 
   public static final int ROWS = CONTENT_HEIGHT / ROW_HEIGHT;
 
-  public static final int ROW_WIDTH = TerminalScreenLayout.GRID_WIDTH;
+  public static final int ROW_WIDTH =
+      PANEL_WIDTH - TerminalScreenLayout.SCROLLBAR_GAP - TerminalScreenLayout.SCROLLBAR_WIDTH;
 
   public static final int FULL_ROW_WIDTH = PANEL_WIDTH;
 
@@ -66,9 +74,12 @@ public final class TerminalSettingsLayout {
     return windowY < CONTENT_Y || row >= ROWS ? NO_ROW : row;
   }
 
+  public static final int SCROLLBAR_X =
+      PANEL_X + PANEL_WIDTH - TerminalScreenLayout.SCROLLBAR_WIDTH;
+
   public static boolean isOverScrollbar(int windowX, int windowY) {
-    return windowX >= TerminalScreenLayout.SCROLLBAR_X
-        && windowX < TerminalScreenLayout.SCROLLBAR_X + TerminalScreenLayout.SCROLLBAR_WIDTH
+    return windowX >= SCROLLBAR_X
+        && windowX < SCROLLBAR_X + TerminalScreenLayout.SCROLLBAR_WIDTH
         && windowY >= CONTENT_Y
         && windowY < CONTENT_Y + CONTENT_HEIGHT;
   }

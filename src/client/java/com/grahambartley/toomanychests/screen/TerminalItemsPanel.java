@@ -50,11 +50,12 @@ public final class TerminalItemsPanel {
     scroll.fit(page.totalMatching());
   }
 
-  public int hoveredCell(int windowX, int windowY) {
+  public int hoveredCell(int windowX, int windowY, int hiddenRows) {
     if (!page.status().hasRows()) {
       return TerminalScreenLayout.NO_CELL;
     }
-    return TerminalScreenLayout.cellAt(windowX, windowY);
+    return TerminalScreenLayout.pageCellAt(
+        TerminalScreenLayout.cellAt(windowX, windowY), hiddenRows);
   }
 
   public ListingRow<ItemVariant> rowAt(int cell) {
@@ -95,20 +96,21 @@ public final class TerminalItemsPanel {
     if (!page.status().hasRows()) {
       return;
     }
-    final int firstDrawn = Math.max(0, hiddenRows) * TerminalScreenLayout.LISTING_COLUMNS;
-    for (int cell = firstDrawn; cell < TerminalScreenLayout.LISTING_PAGE_SIZE; cell++) {
-      final ListingRow<ItemVariant> row = rowAt(cell);
+    for (int cell = 0; cell < TerminalScreenLayout.LISTING_PAGE_SIZE; cell++) {
+      final int drawnAt = TerminalScreenLayout.screenCellFor(cell, hiddenRows);
+      final ListingRow<ItemVariant> row =
+          drawnAt == TerminalScreenLayout.NO_CELL ? null : rowAt(cell);
       if (row == null) {
         continue;
       }
-      final int itemX = TerminalScreenLayout.cellX(cell) + TerminalScreenLayout.SLOT_ITEM_OFFSET;
-      final int itemY = TerminalScreenLayout.cellY(cell) + TerminalScreenLayout.SLOT_ITEM_OFFSET;
+      final int itemX = TerminalScreenLayout.cellX(drawnAt) + TerminalScreenLayout.SLOT_ITEM_OFFSET;
+      final int itemY = TerminalScreenLayout.cellY(drawnAt) + TerminalScreenLayout.SLOT_ITEM_OFFSET;
       final ItemStack stack = row.variant().toStack();
       context.drawItem(stack, itemX, itemY);
       drawCount(context, textRenderer, ItemCountFormat.cell(row.count()), itemX, itemY);
       context.drawItemInSlot(textRenderer, stack, itemX, itemY, NO_STACK_COUNT);
     }
-    drawHighlight(context, hovered);
+    drawHighlight(context, TerminalScreenLayout.screenCellFor(hovered, hiddenRows));
   }
 
   private static void drawHighlight(DrawContext context, int hovered) {

@@ -3,7 +3,6 @@ package com.grahambartley.toomanychests.operation;
 import com.grahambartley.toomanychests.ModSounds;
 import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.lock.LockedSlots;
-import com.grahambartley.toomanychests.lock.LockedSlotsAttachment;
 import com.grahambartley.toomanychests.network.DepositRequestPayload;
 import com.grahambartley.toomanychests.transaction.OperationResult;
 import com.grahambartley.toomanychests.transaction.StorageTransfers;
@@ -141,10 +140,6 @@ public final class DepositService {
     if (!LockedSlots.isValidSlot(payload.slot())) {
       return DepositOutcome.refused();
     }
-    final LockedSlots locks = LockedSlotsAttachment.get(context.player());
-    if (locks.isLocked(payload.slot())) {
-      return DepositOutcome.slotLocked();
-    }
     return give(
         context, List.of(PlayerSlots.slotAt(context.player(), payload.slot())), payload.amount());
   }
@@ -153,7 +148,8 @@ public final class DepositService {
     if (player == null) {
       return outcome;
     }
-    OperationMessages.forDeposit(outcome).ifPresent(message -> player.sendMessage(message, true));
+    OperationMessages.forDeposit(outcome)
+        .ifPresent(message -> TerminalNotice.tell(player, message));
     if (outcome.result().movedAnything()) {
       player
           .getWorld()

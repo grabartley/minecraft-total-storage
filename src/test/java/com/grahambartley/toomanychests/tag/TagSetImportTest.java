@@ -18,6 +18,12 @@ class TagSetImportTest {
               NetworkTag.custom("castle", "Castle", Set.of("minecraft:stone")),
               NetworkTag.custom("farm", "Farm", Set.of("minecraft:wheat"))));
 
+  private static final List<NetworkTag> MIXED =
+      List.of(
+          NetworkTag.custom("castle", "Castle", Set.of("minecraft:stone")),
+          NetworkTag.custom(PresetTag.TOOLS.id(), "Tools", Set.of()),
+          NetworkTag.custom("a".repeat(TagNameRule.MAX_LENGTH + 1), "Long", Set.of()));
+
   @Test
   void mergingBringsEveryCustomTagAcross() {
     final TagSetImportResult result =
@@ -112,5 +118,40 @@ class TagSetImportTest {
 
     assertEquals(0, result.imported());
     assertTrue(result.tags().custom().isEmpty());
+  }
+
+  @Test
+  void anEntryThatNeverParsedIsCountedRatherThanVanishing() {
+    final TagSetImportResult result =
+        TagSetImport.into(
+            NetworkTagSet.defaults(),
+            new TagSetContents(CASTLE_AND_FARM.custom(), 2),
+            TagSetImportMode.MERGE);
+
+    assertEquals(2, result.imported());
+    assertEquals(2, result.skipped());
+    assertEquals(2, result.skips().countOf(TagSkipReason.MALFORMED));
+  }
+
+  @Test
+  void everySkipIsCountedUnderTheReasonThatCausedIt() {
+    final TagSetImportResult result =
+        TagSetImport.into(
+            NetworkTagSet.defaults(), new TagSetContents(MIXED, 2), TagSetImportMode.MERGE);
+
+    assertEquals(1, result.imported());
+    assertEquals(4, result.skipped());
+    assertEquals(1, result.skips().countOf(TagSkipReason.PRESET_NAME));
+    assertEquals(1, result.skips().countOf(TagSkipReason.TOO_LONG));
+    assertEquals(2, result.skips().countOf(TagSkipReason.MALFORMED));
+  }
+
+  @Test
+  void whatCameAcrossAndWhatWasSkippedAddUpToTheFileHandedOver() {
+    final TagSetImportResult result =
+        TagSetImport.into(
+            NetworkTagSet.defaults(), new TagSetContents(MIXED, 2), TagSetImportMode.MERGE);
+
+    assertEquals(5, result.imported() + result.skipped());
   }
 }

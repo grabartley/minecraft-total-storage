@@ -272,6 +272,9 @@ public final class TerminalSettingsPanel {
     if (!view.answered()) {
       return pendingValue();
     }
+    if (!view.mayAdminister()) {
+      return TerminalScreenText.of("settings.trusted.hidden");
+    }
     return view.trusted().isEmpty()
         ? TerminalScreenText.of("settings.trusted.none")
         : Text.literal(String.join(", ", view.trusted()));
@@ -390,7 +393,7 @@ public final class TerminalSettingsPanel {
     final int contentsLeft = left + TEXT_INSET + ICON_SIZE + TEXT_INSET;
     context.drawText(
         textRenderer,
-        TrimmedText.toWidth(textRenderer, ContainerRowText.contents(entry), CONTENTS_WIDTH),
+        TrimmedText.toWidth(textRenderer, ContainerRowText.identity(entry), CONTENTS_WIDTH),
         contentsLeft,
         textY,
         changeable ? VanillaPalette.LABEL : VanillaPalette.MUTED,
@@ -489,7 +492,7 @@ public final class TerminalSettingsPanel {
     TerminalChrome.drawScrollbar(
         context,
         scrollbar,
-        originX + TerminalScreenLayout.SCROLLBAR_X,
+        originX + TerminalSettingsLayout.SCROLLBAR_X,
         originY + TerminalSettingsLayout.CONTENT_Y,
         TerminalScreenLayout.SCROLLBAR_WIDTH,
         TerminalSettingsLayout.CONTENT_HEIGHT);

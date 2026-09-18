@@ -4,6 +4,7 @@ import com.grahambartley.toomanychests.access.TerminalCaller;
 import com.grahambartley.toomanychests.network.TagSetCopyPayload;
 import com.grahambartley.toomanychests.network.TagSourcesPayload;
 import com.grahambartley.toomanychests.network.TagSourcesRequestPayload;
+import com.grahambartley.toomanychests.operation.TerminalNotice;
 import com.grahambartley.toomanychests.operation.TerminalOperationContext;
 import com.grahambartley.toomanychests.operation.TerminalOperationGate;
 import com.grahambartley.toomanychests.tag.TagTransferResult;
@@ -79,10 +80,10 @@ public final class TerminalTagTransfers {
   private static void report(ServerPlayerEntity player, TagTransferResult result) {
     switch (result.outcome()) {
       case CHANGED ->
-          player.sendMessage(
-              TerminalMessages.tagsCopied(result.imported(), result.skipped()), true);
-      case UNCHANGED -> player.sendMessage(TerminalMessages.tagsCopiedNothing(), true);
-      default -> player.sendMessage(TerminalMessages.notYours(), true);
+          TerminalNotice.tell(
+              player, TerminalMessages.tagsCopied(result.imported(), result.skipped()));
+      case UNCHANGED -> TerminalNotice.tell(player, TerminalMessages.tagsCopiedNothing());
+      default -> TerminalNotice.tell(player, TerminalMessages.notYours());
     }
   }
 
