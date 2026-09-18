@@ -126,7 +126,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     tagsThisFrame = NetworkTagMirror.view();
     settings.fit(settingsThisFrame, tagsThisFrame.custom().size());
     filters.fit(tagsThisFrame);
-    prompts.fit(tagsThisFrame);
+    prompts.fit(settingsThisFrame, tagsThisFrame);
     if (tagsThisFrame.answered()) {
       selection.retainAll(knownTagIds());
     }

@@ -72,9 +72,12 @@ public final class TerminalPrompts {
     TerminalTagRequests.openFor(syncId, subject);
   }
 
-  public void fit(NetworkTagView tags) {
+  public void fit(NetworkSettingsView settings, NetworkTagView tags) {
     tagging.fit(tags);
     filtering.fit(tags);
+    if (filtering.isOpen() && settings.answered() && filtering.rowIn(settings) == null) {
+      filtering.close();
+    }
     copying.fit(sources());
   }
 

@@ -1,11 +1,13 @@
 package com.grahambartley.toomanychests.gametest;
 
 import com.grahambartley.toomanychests.access.TerminalCaller;
+import com.grahambartley.toomanychests.block.entity.TerminalBlockEntity;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerFilterService;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEntry;
 import com.grahambartley.toomanychests.terminal.ContainerRoleService;
 import com.grahambartley.toomanychests.terminal.RoleChangeOutcome;
+import com.grahambartley.toomanychests.terminal.TerminalSettings;
 import java.util.List;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -153,6 +155,64 @@ public final class ContainerFilterServiceGameTest implements FabricGameTest {
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
       tickLimit = TICK_LIMIT)
+  public void aTagTheNetworkDoesNotHoldIsRefusedOnThePacketPathToo(TestContext context) {
+    ServerPlayerEntity owner = filteredEast(context);
+
+    RoleChangeOutcome outcome = accept(context, owner, "not-a-tag", true);
+
+    context.assertTrue(
+        outcome == RoleChangeOutcome.UNCHANGED,
+        "A tag the network never heard of should be refused, got " + outcome);
+    context.assertTrue(
+        filters.filterOf(context.getWorld(), terminal(context), east(context)).isEmpty(),
+        "An unknown tag was written anyway");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aTagDeletedFromTheNetworkIsPrunedFromWhatAContainerAccepts(TestContext context) {
+    ServerPlayerEntity owner = filteredEast(context);
+    tags(context, settings -> settings.withTag("my stuff"));
+    accept(context, owner, "my-stuff", true);
+    accept(context, owner, "food", true);
+
+    tags(context, settings -> settings.withoutTag("my-stuff"));
+    accept(context, owner, "brewing", true);
+
+    context.assertTrue(
+        !filters.filterOf(context.getWorld(), terminal(context), east(context)).hasTag("my-stuff"),
+        "A deleted tag should be pruned on the next write");
+    context.assertTrue(
+        rowFor(context).acceptedTags().equals(List.of("brewing", "food")),
+        "The row should list only tags the network still holds, got "
+            + rowFor(context).acceptedTags());
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aRowNeverListsATagTheNetworkHasSinceLost(TestContext context) {
+    ServerPlayerEntity owner = filteredEast(context);
+    tags(context, settings -> settings.withTag("my stuff"));
+    accept(context, owner, "my-stuff", true);
+
+    tags(context, settings -> settings.withoutTag("my-stuff"));
+
+    context.assertTrue(
+        rowFor(context).acceptsNothing(),
+        "The row should say it accepts nothing, got " + rowFor(context).acceptedTags());
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
   public void aGeneralContainerKeepsNoFilterAtAll(TestContext context) {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
     ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
@@ -174,6 +234,13 @@ public final class ContainerFilterServiceGameTest implements FabricGameTest {
         east(context),
         tagId,
         accepted);
+  }
+
+  private static void tags(
+      TestContext context, java.util.function.UnaryOperator<TerminalSettings> change) {
+    context
+        .<TerminalBlockEntity>getBlockEntity(NetworkOperationFixture.TERMINAL)
+        .updateSettings(change);
   }
 
   private ServerPlayerEntity filteredEast(TestContext context) {

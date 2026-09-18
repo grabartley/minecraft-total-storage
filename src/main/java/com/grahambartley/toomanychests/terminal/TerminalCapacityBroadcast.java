@@ -1,7 +1,9 @@
 package com.grahambartley.toomanychests.terminal;
 
 import com.grahambartley.toomanychests.config.ServerConfigService;
+import com.grahambartley.toomanychests.index.NetworkIndexSession;
 import com.grahambartley.toomanychests.lifecycle.NetworkMembership;
+import java.util.List;
 import java.util.Objects;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
@@ -11,13 +13,17 @@ public final class TerminalCapacityBroadcast {
   public static final int INTERVAL_TICKS = 20;
 
   private final NetworkCapacityService capacities;
+  private final NetworkCapacityWatch watch;
+
+  private int lastWarningPercent = -1;
 
   public TerminalCapacityBroadcast() {
-    this(new NetworkCapacityService());
+    this(new NetworkCapacityService(), new NetworkCapacityWatch());
   }
 
-  public TerminalCapacityBroadcast(NetworkCapacityService capacities) {
+  public TerminalCapacityBroadcast(NetworkCapacityService capacities, NetworkCapacityWatch watch) {
     this.capacities = Objects.requireNonNull(capacities, "capacities");
+    this.watch = Objects.requireNonNull(watch, "watch");
   }
 
   public void register() {
@@ -28,15 +34,20 @@ public final class TerminalCapacityBroadcast {
     return Math.floorMod(ticks, INTERVAL_TICKS) == 0;
   }
 
-  private void tick(MinecraftServer server) {
-    if (server == null || !isDue(server.getTicks())) {
-      return;
-    }
+  public void sweep(MinecraftServer server) {
+    final List<TerminalAddress> running = TerminalNetworks.registry().addresses();
+    watch.retainOnly(running);
     final int warningPercent = ServerConfigService.current().nearCapacityWarningPercent();
-    for (final TerminalAddress terminal : TerminalNetworks.registry().addresses()) {
+    final boolean thresholdMoved = warningPercent != lastWarningPercent;
+    lastWarningPercent = warningPercent;
+    for (final TerminalAddress terminal : running) {
       final NetworkMembership network = TerminalNetworks.registry().find(terminal).orElse(null);
       final ServerWorld world = server.getWorld(terminal.worldKey());
       if (network == null || world == null) {
+        continue;
+      }
+      final NetworkIndexSession<?> session = network.session();
+      if (!thresholdMoved && !watch.needsMeasuring(terminal, session.invalidationCount())) {
         continue;
       }
       TerminalCapacitySignal.show(
@@ -46,6 +57,14 @@ public final class TerminalCapacityBroadcast {
               world.getBlockState(terminal.pos()),
               capacities.measure(world, terminal.pos()),
               warningPercent));
+      watch.measured(terminal, session.invalidationCount());
     }
+  }
+
+  private void tick(MinecraftServer server) {
+    if (server == null || !isDue(server.getTicks())) {
+      return;
+    }
+    sweep(server);
   }
 }

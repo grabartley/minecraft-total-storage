@@ -4,6 +4,7 @@ import com.grahambartley.toomanychests.filter.FilterText;
 import com.grahambartley.toomanychests.screenhandler.TerminalViewerSync;
 import com.grahambartley.toomanychests.storage.ContainerFilter;
 import com.grahambartley.toomanychests.storage.ContainerRole;
+import com.grahambartley.toomanychests.tag.NetworkTag;
 import com.grahambartley.toomanychests.terminal.ContainerFilterService;
 import com.grahambartley.toomanychests.terminal.ContainerRoleService;
 import com.grahambartley.toomanychests.terminal.RoleChangeOutcome;
@@ -14,6 +15,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
+import java.util.List;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.BlockPosArgumentType;
 import net.minecraft.server.command.CommandManager;
@@ -32,8 +34,8 @@ public final class ContainerFilterCommand {
           CommandSource.suggestMatching(
               TerminalLookup.settingsAt(
                       context.getSource().getWorld(), TerminalCommand.terminalPos(context))
-                  .map(settings -> settings.tags().all().stream().map(tag -> tag.id()).toList())
-                  .orElse(java.util.List.of()),
+                  .map(settings -> settings.tags().all().stream().map(NetworkTag::id).toList())
+                  .orElse(List.of()),
               builder);
 
   private ContainerFilterCommand() {}
@@ -67,7 +69,7 @@ public final class ContainerFilterCommand {
       return 0;
     }
     final BlockPos container = BlockPosArgumentType.getBlockPos(context, CONTAINER);
-    if (ROLES.roleOf(source.getWorld(), terminal, container) != ContainerRole.FILTERED) {
+    if (!isFiltered(source, terminal, container)) {
       source.sendFeedback(() -> ContainerMessages.containerNotFiltered(container), false);
       return 0;
     }
@@ -87,6 +89,10 @@ public final class ContainerFilterCommand {
     final BlockPos terminal = TerminalCommand.terminalPos(context);
     final BlockPos container = BlockPosArgumentType.getBlockPos(context, CONTAINER);
     final String tagId = FilterText.tagId(StringArgumentType.getString(context, TAG));
+    if (!isFiltered(source, terminal, container)) {
+      source.sendError(ContainerMessages.containerNotFiltered(container));
+      return 0;
+    }
     if (!knowsTag(source, terminal, tagId)) {
       source.sendError(ContainerMessages.unknownTag(tagId));
       return 0;
@@ -141,6 +147,11 @@ public final class ContainerFilterCommand {
       resync(source, terminal);
     }
     return outcome.applied() ? 1 : 0;
+  }
+
+  private static boolean isFiltered(
+      ServerCommandSource source, BlockPos terminal, BlockPos container) {
+    return ROLES.roleOf(source.getWorld(), terminal, container) == ContainerRole.FILTERED;
   }
 
   private static boolean knowsTag(ServerCommandSource source, BlockPos terminal, String tagId) {

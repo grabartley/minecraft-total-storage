@@ -102,7 +102,9 @@ public final class ContainerRoleService {
         container,
         settings.nameFor(container),
         settings.roleFor(container),
-        List.copyOf(settings.filterFor(container).tagIds()),
+        List.copyOf(
+            ContainerFilterService.onlyKnown(settings.filterFor(container), settings.tags())
+                .tagIds()),
         commonest(held),
         held.size(),
         items,

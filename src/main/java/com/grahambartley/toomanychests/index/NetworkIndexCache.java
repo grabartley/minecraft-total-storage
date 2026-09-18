@@ -23,6 +23,7 @@ public final class NetworkIndexCache<V> {
   private boolean remerge;
   private int recomputeCount;
   private int containerReadCount;
+  private int invalidationCount;
 
   public NetworkIndexCache(
       Function<StorageOrigin, Map<V, Long>> contentsReader,
@@ -47,6 +48,7 @@ public final class NetworkIndexCache<V> {
   public void invalidate(StorageOrigin origin) {
     if (contents.containsKey(origin)) {
       stale.add(origin);
+      invalidationCount++;
     }
   }
 
@@ -57,12 +59,14 @@ public final class NetworkIndexCache<V> {
     }
     contents.put(origin, Map.of());
     stale.add(origin);
+    invalidationCount++;
   }
 
   public void forget(StorageOrigin origin) {
     stale.remove(origin);
     if (contents.remove(origin) != null) {
       remerge = true;
+      invalidationCount++;
     }
   }
 
@@ -101,6 +105,10 @@ public final class NetworkIndexCache<V> {
 
   public int containerReadCount() {
     return containerReadCount;
+  }
+
+  public int invalidationCount() {
+    return invalidationCount;
   }
 
   private Map<V, Long> readContents(StorageOrigin origin) {

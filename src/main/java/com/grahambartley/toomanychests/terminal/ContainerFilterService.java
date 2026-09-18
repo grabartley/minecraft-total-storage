@@ -3,6 +3,7 @@ package com.grahambartley.toomanychests.terminal;
 import com.grahambartley.toomanychests.access.TerminalCaller;
 import com.grahambartley.toomanychests.filter.FilterText;
 import com.grahambartley.toomanychests.storage.ContainerFilter;
+import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import java.util.Objects;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -32,7 +33,8 @@ public final class ContainerFilterService {
       String tagId,
       boolean accepted) {
     final String canonical = FilterText.tagId(tagId);
-    if (canonical.isEmpty()) {
+    final NetworkTagSet tags = tagsOf(world, terminal);
+    if (canonical.isEmpty() || (accepted && !tags.contains(canonical))) {
       return RoleChangeOutcome.UNCHANGED;
     }
     return writer.write(
@@ -43,8 +45,8 @@ public final class ContainerFilterService {
         assignment ->
             assignment.withFilter(
                 accepted
-                    ? assignment.filter().withTag(canonical)
-                    : assignment.filter().withoutTag(canonical)));
+                    ? onlyKnown(assignment.filter(), tags).withTag(canonical)
+                    : onlyKnown(assignment.filter(), tags).withoutTag(canonical)));
   }
 
   public RoleChangeOutcome clear(
@@ -55,5 +57,24 @@ public final class ContainerFilterService {
         caller,
         container,
         assignment -> assignment.withFilter(ContainerFilter.NONE));
+  }
+
+  public static ContainerFilter onlyKnown(ContainerFilter filter, NetworkTagSet tags) {
+    if (filter == null || filter.tagIds().isEmpty()) {
+      return filter == null ? ContainerFilter.NONE : filter;
+    }
+    ContainerFilter kept = filter;
+    for (final String tagId : filter.tagIds()) {
+      if (!tags.contains(tagId)) {
+        kept = kept.withoutTag(tagId);
+      }
+    }
+    return kept;
+  }
+
+  private static NetworkTagSet tagsOf(ServerWorld world, BlockPos terminal) {
+    return TerminalLookup.settingsAt(world, terminal)
+        .map(TerminalSettings::tags)
+        .orElseGet(NetworkTagSet::defaults);
   }
 }

@@ -54,8 +54,7 @@ public class TerminalBlock extends HorizontalFacingBlock implements BlockEntityP
   public BlockState getPlacementState(ItemPlacementContext ctx) {
     return this.getDefaultState()
         .with(FACING, ctx.getHorizontalPlayerFacing().getOpposite())
-        .with(POWERED, ctx.getWorld().isReceivingRedstonePower(ctx.getBlockPos()))
-        .with(NEAR_CAPACITY, Boolean.FALSE);
+        .with(POWERED, ctx.getWorld().isReceivingRedstonePower(ctx.getBlockPos()));
   }
 
   @Override

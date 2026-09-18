@@ -18,10 +18,6 @@ public final class ContainerNameEntry {
     return ContainerNameRule.sanitise(buffer.text());
   }
 
-  public boolean clearsTheName() {
-    return name().isEmpty();
-  }
-
   public PromptKey keyPressed(int keyCode, boolean selectAllHeld) {
     if (selectAllHeld && keyCode == GLFW.GLFW_KEY_A) {
       return buffer.selectAll() ? PromptKey.HANDLED : PromptKey.REFUSED;

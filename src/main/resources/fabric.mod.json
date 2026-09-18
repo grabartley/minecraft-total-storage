@@ -96,7 +96,8 @@
       "com.grahambartley.toomanychests.gametest.ContainerNameCommandGameTest",
       "com.grahambartley.toomanychests.gametest.ContainerFilterCommandGameTest",
       "com.grahambartley.toomanychests.gametest.NetworkCapacityServiceGameTest",
-      "com.grahambartley.toomanychests.gametest.TerminalCapacitySignalGameTest"
+      "com.grahambartley.toomanychests.gametest.TerminalCapacitySignalGameTest",
+      "com.grahambartley.toomanychests.gametest.TerminalCapacityBroadcastGameTest"
     ]
   },
   "mixins": [

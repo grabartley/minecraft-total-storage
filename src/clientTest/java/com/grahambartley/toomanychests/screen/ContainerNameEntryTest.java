@@ -73,9 +73,8 @@ class ContainerNameEntryTest {
   }
 
   @Test
-  void anEmptyFieldAsksForTheNameToBeTakenOff() {
-    assertFalse(new ContainerNameEntry("Potions").clearsTheName());
-    assertTrue(new ContainerNameEntry("").clearsTheName());
+  void anEmptyFieldSendsAnEmptyNameSoTheNameIsTakenOff() {
+    assertEquals("", new ContainerNameEntry("").name());
   }
 
   @Test

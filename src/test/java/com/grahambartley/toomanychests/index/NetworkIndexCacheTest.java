@@ -338,4 +338,54 @@ class NetworkIndexCacheTest {
   void adoptingNothingIsRejected() {
     assertThrows(NullPointerException.class, () -> cache.adopt(null));
   }
+
+  @Test
+  void aCacheNothingHasMovedInCountsNoInvalidations() {
+    cache.track(List.of(FIRST));
+
+    assertEquals(0, cache.invalidationCount());
+  }
+
+  @Test
+  void everyChangeToATrackedContainerIsCountedEvenBeforeTheIndexIsRead() {
+    cache.track(List.of(FIRST));
+
+    cache.invalidate(FIRST);
+    cache.invalidate(FIRST);
+
+    assertEquals(
+        2,
+        cache.invalidationCount(),
+        "A second change to an already stale container still moved items");
+  }
+
+  @Test
+  void aChangeToAContainerTheCacheDoesNotTrackIsNotCounted() {
+    cache.track(List.of(FIRST));
+
+    cache.invalidate(OUTSIDE);
+
+    assertEquals(0, cache.invalidationCount());
+  }
+
+  @Test
+  void takingOnAndLettingGoOfAContainerBothCount() {
+    cache.track(List.of(FIRST));
+
+    cache.adopt(SECOND);
+    cache.forget(SECOND);
+
+    assertEquals(2, cache.invalidationCount());
+  }
+
+  @Test
+  void readingTheIndexLeavesTheInvalidationCountWhereItWas() {
+    containers.put(FIRST, "cobblestone", 16L);
+    cache.track(List.of(FIRST));
+    cache.invalidate(FIRST);
+
+    cache.index();
+
+    assertEquals(1, cache.invalidationCount());
+  }
 }

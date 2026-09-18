@@ -33,8 +33,8 @@ public final class TerminalSettingsEdits {
   private final TerminalSettingsService panels;
   private final ContainerRoleService roles;
   private final TerminalRadiusService radius;
-  private final ContainerNamingService names = new ContainerNamingService();
-  private final ContainerFilterService filters = new ContainerFilterService();
+  private final ContainerNamingService names;
+  private final ContainerFilterService filters;
 
   public TerminalSettingsEdits(TerminalSettingsService panels) {
     this(panels, new ContainerRoleService(), new TerminalRadiusService(TerminalNetworks.power()));
@@ -42,9 +42,20 @@ public final class TerminalSettingsEdits {
 
   public TerminalSettingsEdits(
       TerminalSettingsService panels, ContainerRoleService roles, TerminalRadiusService radius) {
+    this(panels, roles, radius, new ContainerNamingService(), new ContainerFilterService());
+  }
+
+  public TerminalSettingsEdits(
+      TerminalSettingsService panels,
+      ContainerRoleService roles,
+      TerminalRadiusService radius,
+      ContainerNamingService names,
+      ContainerFilterService filters) {
     this.panels = Objects.requireNonNull(panels, "panels");
     this.roles = Objects.requireNonNull(roles, "roles");
     this.radius = Objects.requireNonNull(radius, "radius");
+    this.names = Objects.requireNonNull(names, "names");
+    this.filters = Objects.requireNonNull(filters, "filters");
   }
 
   public boolean setRadius(ServerPlayerEntity player, TerminalRadiusEditPayload payload) {
