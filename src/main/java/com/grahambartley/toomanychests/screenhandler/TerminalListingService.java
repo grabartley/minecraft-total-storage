@@ -6,6 +6,7 @@ import com.grahambartley.toomanychests.filter.NetworkFilterCandidates;
 import com.grahambartley.toomanychests.filter.SearchQueryParser;
 import com.grahambartley.toomanychests.lifecycle.NetworkMembership;
 import com.grahambartley.toomanychests.listing.ListingPage;
+import com.grahambartley.toomanychests.listing.ListingRequestOutcome;
 import com.grahambartley.toomanychests.listing.NetworkListing;
 import com.grahambartley.toomanychests.listing.TerminalListingState;
 import com.grahambartley.toomanychests.network.ListingPayload;
@@ -15,7 +16,6 @@ import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import com.grahambartley.toomanychests.terminal.TerminalLookup;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import java.util.Objects;
-import java.util.Optional;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -32,22 +32,19 @@ public final class TerminalListingService {
     this.candidates = Objects.requireNonNull(candidates, "candidates");
   }
 
-  public boolean request(ServerPlayerEntity player, ListingRequestPayload payload) {
-    return requestMovedTheSearch(player, payload).isPresent();
-  }
-
-  public Optional<Boolean> requestMovedTheSearch(
-      ServerPlayerEntity player, ListingRequestPayload payload) {
+  public ListingRequestOutcome request(ServerPlayerEntity player, ListingRequestPayload payload) {
     if (player == null || payload == null) {
-      return Optional.empty();
+      return ListingRequestOutcome.IGNORED;
     }
     final TerminalScreenHandler handler = handlerOf(player, payload.syncId());
     if (handler == null) {
-      return Optional.empty();
+      return ListingRequestOutcome.IGNORED;
     }
     final boolean searchMoved = handler.listing().requested(payload.window(), filterOf(payload));
     send(player, handler);
-    return Optional.of(searchMoved);
+    return searchMoved
+        ? ListingRequestOutcome.ANSWERED_ON_A_NEW_SEARCH
+        : ListingRequestOutcome.ANSWERED;
   }
 
   public boolean refresh(ServerPlayerEntity player) {

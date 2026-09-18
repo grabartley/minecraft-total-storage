@@ -5,11 +5,11 @@ public final class ScrollNotches {
 
   public static final int GRID_ROWS_PER_NOTCH = 1;
 
+  private ScrollNotches() {}
+
   public static int gridRowsFor(double verticalAmount) {
     return rowsFor(verticalAmount, GRID_ROWS_PER_NOTCH);
   }
-
-  private ScrollNotches() {}
 
   public static int rowsFor(double verticalAmount) {
     return rowsFor(verticalAmount, ROWS_PER_NOTCH);

@@ -108,10 +108,12 @@ public final class TerminalListingServiceGameTest implements FabricGameTest {
     TerminalScreenHandler handler = handlerOf(player);
 
     boolean answered =
-        listings.request(
-            player,
-            new ListingRequestPayload(
-                handler.syncId + 1, 0, 10, "", TagCombinationMode.DEFAULT, Set.of()));
+        listings
+            .request(
+                player,
+                new ListingRequestPayload(
+                    handler.syncId + 1, 0, 10, "", TagCombinationMode.DEFAULT, Set.of()))
+            .wasAnswered();
 
     context.assertFalse(answered, "A request naming another screen must not be answered");
     context.assertFalse(
@@ -246,7 +248,9 @@ public final class TerminalListingServiceGameTest implements FabricGameTest {
       TerminalScreenHandler handler,
       TagCombinationMode mode,
       Set<String> tags) {
-    listings.request(player, new ListingRequestPayload(handler.syncId, 0, 10, "", mode, tags));
+    listings
+        .request(player, new ListingRequestPayload(handler.syncId, 0, 10, "", mode, tags))
+        .wasAnswered();
   }
 
   private void request(
@@ -317,5 +321,27 @@ public final class TerminalListingServiceGameTest implements FabricGameTest {
     context.getWorld().getServer().getPlayerManager().remove(player);
     TerminalNetworks.power().unloaded(context.getWorld(), context.getAbsolutePos(TERMINAL));
     context.complete();
+  }
+
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void onlyAChangedSearchIsWorthRecountingTheTagsFor(TestContext context) {
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    TerminalScreenHandler handler = handlerOf(player);
+
+    context.assertTrue(
+        listings.request(player, listingFor(handler, "iron")).movedTheSearch(),
+        "The first search should be worth recounting for");
+    context.assertFalse(
+        listings.request(player, listingFor(handler, "iron")).movedTheSearch(),
+        "Scrolling the same search should not recount every tag");
+    context.assertTrue(
+        listings.request(player, listingFor(handler, "gold")).movedTheSearch(),
+        "A new search should be worth recounting for");
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  private static ListingRequestPayload listingFor(TerminalScreenHandler handler, String search) {
+    return new ListingRequestPayload(
+        handler.syncId, 0, 10, search, TagCombinationMode.DEFAULT, Set.of());
   }
 }

@@ -15,7 +15,7 @@ public record FilterCandidate(String identifier, String displayName, Set<String>
       throw new IllegalArgumentException("identifier must not be blank");
     }
     displayName = FilterText.normalise(displayName);
-    tags = FilterText.normaliseAll(tags);
+    tags = FilterText.tagIds(tags);
   }
 
   public String modId() {
@@ -33,13 +33,13 @@ public record FilterCandidate(String identifier, String displayName, Set<String>
       return this;
     }
     final Set<String> merged = new LinkedHashSet<>(tags);
-    merged.addAll(FilterText.normaliseAll(extra));
+    merged.addAll(FilterText.tagIds(extra));
     return merged.size() == tags.size()
         ? this
         : new FilterCandidate(identifier, displayName, merged);
   }
 
   public boolean hasTag(String tag) {
-    return tags.contains(FilterText.normalise(tag));
+    return tags.contains(FilterText.tagId(tag));
   }
 }

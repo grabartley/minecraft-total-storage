@@ -21,7 +21,7 @@ public final class FilterSelection {
   }
 
   public boolean isActive(String tagId) {
-    return active.contains(FilterText.normalise(tagId));
+    return active.contains(FilterText.tagId(tagId));
   }
 
   public boolean isFiltering() {
@@ -29,7 +29,7 @@ public final class FilterSelection {
   }
 
   public boolean toggle(String tagId) {
-    final String id = FilterText.normalise(tagId);
+    final String id = FilterText.tagId(tagId);
     if (id.isEmpty()) {
       return false;
     }
@@ -52,7 +52,7 @@ public final class FilterSelection {
   }
 
   public void retainAll(Set<String> known) {
-    active.retainAll(FilterText.normaliseAll(known));
+    active.retainAll(FilterText.tagIds(known));
   }
 
   public TagCombinationMode cycleMode() {

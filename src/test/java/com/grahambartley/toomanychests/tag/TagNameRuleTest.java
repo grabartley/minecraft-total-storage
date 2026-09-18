@@ -87,6 +87,18 @@ class TagNameRuleTest {
     assertEquals(expected, TagNameRule.idFor(name));
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {"a\tb", "a\nb", "a\u000bb"})
+  void everyKindOfWhitespaceBecomesTheSameSeparator(String name) {
+    assertEquals("a-b", TagNameRule.idFor(name));
+  }
+
+  @Test
+  void anIdWithNoWhitespaceIsHandedBackUntouched() {
+    assertEquals("base-kit", TagNameRule.idFor("Base-Kit"));
+    assertEquals("minecraft:stone", TagNameRule.idFor("minecraft:stone"));
+  }
+
   @Test
   void anIdNeverCarriesASpaceBecauseTheSearchBoxSplitsOnOne() {
     assertFalse(TagNameRule.idFor("Base Kit").contains(" "));

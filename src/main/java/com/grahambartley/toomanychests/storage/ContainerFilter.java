@@ -1,7 +1,6 @@
 package com.grahambartley.toomanychests.storage;
 
 import com.grahambartley.toomanychests.filter.FilterText;
-import com.grahambartley.toomanychests.tag.TagNameRule;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -14,7 +13,7 @@ public record ContainerFilter(Set<String> tagIds, Set<String> itemIds) {
   public static final ContainerFilter NONE = new ContainerFilter(Set.of(), Set.of());
 
   public ContainerFilter {
-    tagIds = canonicalise(tagIds, TagNameRule::idFor);
+    tagIds = canonicalise(tagIds, FilterText::tagId);
     itemIds = canonicalise(itemIds, FilterText::normalise);
   }
 
@@ -39,7 +38,7 @@ public record ContainerFilter(Set<String> tagIds, Set<String> itemIds) {
   }
 
   public boolean hasTag(String tagId) {
-    return tagIds.contains(TagNameRule.idFor(tagId));
+    return tagIds.contains(FilterText.tagId(tagId));
   }
 
   public boolean hasItem(String itemId) {
@@ -62,12 +61,12 @@ public record ContainerFilter(Set<String> tagIds, Set<String> itemIds) {
   public ContainerFilter withTag(String tagId) {
     return hasTag(tagId)
         ? this
-        : new ContainerFilter(plus(tagIds, TagNameRule.idFor(tagId)), itemIds);
+        : new ContainerFilter(plus(tagIds, FilterText.tagId(tagId)), itemIds);
   }
 
   public ContainerFilter withoutTag(String tagId) {
     return hasTag(tagId)
-        ? new ContainerFilter(minus(tagIds, TagNameRule.idFor(tagId)), itemIds)
+        ? new ContainerFilter(minus(tagIds, FilterText.tagId(tagId)), itemIds)
         : this;
   }
 

@@ -5,7 +5,7 @@ import com.grahambartley.toomanychests.filter.FilterText;
 public record NetworkTagEntry(
     String id, String displayName, boolean immutable, int assignedItems, int matchingItems) {
   public NetworkTagEntry {
-    id = FilterText.normalise(id);
+    id = FilterText.tagId(id);
     if (id.isEmpty()) {
       throw new IllegalArgumentException("tag entry id must not be blank");
     }

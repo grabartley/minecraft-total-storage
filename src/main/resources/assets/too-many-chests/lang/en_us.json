@@ -274,11 +274,11 @@
   "screen.too-many-chests.terminal.role.general.meaning": "Takes deposits and is reordered by sorting",
   "screen.too-many-chests.terminal.role.filtered.meaning": "Only takes items matching its filter",
   "screen.too-many-chests.terminal.role.excluded.meaning": "The network never writes here, and its contents stay searchable and withdrawable",
-  "command.too-many-chests.terminal.tags.skipped.malformed": "%s malformed",
-  "command.too-many-chests.terminal.tags.skipped.preset-name": "%s preset name",
-  "command.too-many-chests.terminal.tags.skipped.too-long": "%s too long",
-  "command.too-many-chests.terminal.tags.skipped.illegal-name": "%s illegal name",
-  "command.too-many-chests.terminal.tags.skipped.no-room": "%s over the limit",
+  "tag.too-many-chests.skipped.malformed": "%s malformed",
+  "tag.too-many-chests.skipped.preset-name": "%s preset name",
+  "tag.too-many-chests.skipped.too-long": "%s too long",
+  "tag.too-many-chests.skipped.illegal-name": "%s illegal name",
+  "tag.too-many-chests.skipped.no-room": "%s over the limit",
   "screen.too-many-chests.terminal.filter.mode.active": "%s · %s",
   "command.too-many-chests.terminal.info.withheld": "- what it is holding is only for players who may open it"
 }
