@@ -4,6 +4,7 @@ import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import java.util.List;
 
 public record NetworkSettingsView(
+    boolean answered,
     int radius,
     int effectiveRadius,
     int maxRadius,
@@ -19,6 +20,48 @@ public record NetworkSettingsView(
   public static final int MAX_CONTAINERS = 64;
 
   public static final int MAX_TRUSTED = 64;
+
+  private static final NetworkSettingsView PENDING =
+      new NetworkSettingsView(
+          false,
+          TerminalSettings.DEFAULT_RADIUS,
+          TerminalSettings.DEFAULT_RADIUS,
+          TerminalSettings.MAX_RADIUS,
+          TerminalAccessMode.OWNER,
+          false,
+          false,
+          List.of(),
+          NetworkCapacity.EMPTY,
+          0,
+          0,
+          List.of());
+
+  public static NetworkSettingsView answered(
+      int radius,
+      int effectiveRadius,
+      int maxRadius,
+      TerminalAccessMode accessMode,
+      boolean mayAdminister,
+      boolean powered,
+      List<String> trusted,
+      NetworkCapacity capacity,
+      int containerOffset,
+      int containerTotal,
+      List<ContainerRoleEntry> containers) {
+    return new NetworkSettingsView(
+        true,
+        radius,
+        effectiveRadius,
+        maxRadius,
+        accessMode,
+        mayAdminister,
+        powered,
+        trusted,
+        capacity,
+        containerOffset,
+        containerTotal,
+        containers);
+  }
 
   public NetworkSettingsView {
     accessMode = accessMode == null ? TerminalAccessMode.OWNER : accessMode;
@@ -37,18 +80,7 @@ public record NetworkSettingsView(
   }
 
   public static NetworkSettingsView pending() {
-    return new NetworkSettingsView(
-        TerminalSettings.DEFAULT_RADIUS,
-        TerminalSettings.DEFAULT_RADIUS,
-        TerminalSettings.MAX_RADIUS,
-        TerminalAccessMode.OWNER,
-        false,
-        false,
-        List.of(),
-        NetworkCapacity.EMPTY,
-        0,
-        0,
-        List.of());
+    return PENDING;
   }
 
   public int minRadius() {
@@ -70,7 +102,9 @@ public record NetworkSettingsView(
 
   @Override
   public String toString() {
-    return "NetworkSettingsView[radius="
+    return "NetworkSettingsView[answered="
+        + answered
+        + ", radius="
         + radius
         + "/"
         + effectiveRadius

@@ -29,7 +29,11 @@ public final class TerminalTagsPanel {
     armedForDelete = tagId == null ? "" : tagId;
   }
 
-  public NetworkTagEntry tagAt(NetworkTagView view, int firstVisible, int windowX, int windowY) {
+  public NetworkTagEntry tagAt(
+      NetworkTagView view, int firstVisible, int hiddenRows, int windowX, int windowY) {
+    if (TerminalSettingsLayout.rowAt(windowX, windowY) < hiddenRows) {
+      return null;
+    }
     final int index = TagsSectionLayout.tagIndexAt(windowX, windowY, firstVisible);
     final List<NetworkTagEntry> custom = view.custom();
     return index == TerminalSettingsLayout.NO_ROW || index >= custom.size()
@@ -42,6 +46,22 @@ public final class TerminalTagsPanel {
       TextRenderer textRenderer,
       NetworkTagView view,
       int firstVisible,
+      int hiddenRows,
+      int originX,
+      int originY,
+      int mouseX,
+      int mouseY) {
+    if (hiddenRows <= TagsSectionLayout.NEW_TAG_ROW) {
+      drawNewTagRow(context, textRenderer, view, originX, originY, mouseX, mouseY);
+    }
+    drawTagRows(
+        context, textRenderer, view, firstVisible, hiddenRows, originX, originY, mouseX, mouseY);
+  }
+
+  private void drawNewTagRow(
+      DrawContext context,
+      TextRenderer textRenderer,
+      NetworkTagView view,
       int originX,
       int originY,
       int mouseX,
@@ -66,7 +86,6 @@ public final class TerminalTagsPanel {
         TagsSectionLayout.isOverCopy(mouseX, mouseY),
         originX,
         originY);
-    drawTagRows(context, textRenderer, view, firstVisible, originX, originY, mouseX, mouseY);
   }
 
   private static void drawFixedRow(
@@ -101,13 +120,15 @@ public final class TerminalTagsPanel {
       TextRenderer textRenderer,
       NetworkTagView view,
       int firstVisible,
+      int hiddenRows,
       int originX,
       int originY,
       int mouseX,
       int mouseY) {
     final List<NetworkTagEntry> custom = view.custom();
-    final NetworkTagEntry hovered = tagAt(view, firstVisible, mouseX, mouseY);
-    for (int row = 0; row < TagsSectionLayout.TAG_ROWS; row++) {
+    final NetworkTagEntry hovered = tagAt(view, firstVisible, hiddenRows, mouseX, mouseY);
+    final int firstDrawn = Math.max(0, hiddenRows - TagsSectionLayout.FIRST_TAG_ROW);
+    for (int row = firstDrawn; row < TagsSectionLayout.TAG_ROWS; row++) {
       final int index = firstVisible + row;
       if (index >= custom.size()) {
         return;

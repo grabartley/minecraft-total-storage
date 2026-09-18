@@ -9,6 +9,7 @@ import com.grahambartley.toomanychests.network.TerminalActionPayload;
 import com.grahambartley.toomanychests.network.TerminalRadiusEditPayload;
 import com.grahambartley.toomanychests.operation.ExpensiveOperation;
 import com.grahambartley.toomanychests.operation.OperationGuards;
+import com.grahambartley.toomanychests.operation.TerminalNotice;
 import com.grahambartley.toomanychests.operation.TerminalOperationContext;
 import com.grahambartley.toomanychests.operation.TerminalOperationGate;
 import com.grahambartley.toomanychests.terminal.ContainerHighlightService;
@@ -123,7 +124,10 @@ public final class TerminalSettingsEdits {
     if (context == null) {
       return false;
     }
-    ContainerHighlightService.highlight(player, context.world(), context.terminal());
+    TerminalNotice.tell(
+        player,
+        TerminalMessages.highlighted(
+            ContainerHighlightService.highlight(player, context.world(), context.terminal())));
     return true;
   }
 
@@ -137,9 +141,9 @@ public final class TerminalSettingsEdits {
     }
     final TerminalPower power = TerminalNetworks.power();
     power.rescan(context.world(), context.terminal());
-    player.sendMessage(
-        TerminalMessages.rescanned(power.containerCount(context.world(), context.terminal())),
-        true);
+    TerminalNotice.tell(
+        player,
+        TerminalMessages.rescanned(power.containerCount(context.world(), context.terminal())));
     ContainerHighlightService.highlight(player, context.world(), context.terminal());
     return pushed(context);
   }

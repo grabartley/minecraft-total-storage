@@ -7,13 +7,16 @@ import com.grahambartley.toomanychests.config.TooManyChestsConfig;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 public final class ConfigCommandGameTest implements FabricGameTest {
@@ -98,7 +101,7 @@ public final class ConfigCommandGameTest implements FabricGameTest {
     TooManyChestsConfig original = ServerConfigService.current();
 
     runAsConsole(context, "toomanychests config set quickStackRadius 3");
-    runAsConsole(context, "toomanychests config set middleClickSortEnabled false");
+    runAsConsole(context, "toomanychests config set sortButtonEnabled false");
     int result = runAsConsole(context, "toomanychests config reset all");
     TooManyChestsConfig live = ServerConfigService.current();
     restore(context, original);
@@ -111,14 +114,14 @@ public final class ConfigCommandGameTest implements FabricGameTest {
   }
 
   @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = TICK_LIMIT)
-  public void aNonOperatorCannotReachTheSetSubcommand(TestContext context) {
+  public void aNonOperatorIsRefusedTheSetSubcommand(TestContext context) {
     TooManyChestsConfig original = ServerConfigService.current();
 
     int result = runAsPlayer(context, "toomanychests config set quickStackRadius 12");
     int live = ServerConfigService.current().quickStackRadius();
     restore(context, original);
 
-    context.assertTrue(result == REFUSED_EXIT_CODE, "A non-operator should not reach config set");
+    context.assertTrue(result == 0, "A non-operator should be refused config set");
     context.assertTrue(
         live == original.quickStackRadius(),
         "A refused set should leave quickStackRadius at " + original.quickStackRadius());
@@ -126,19 +129,52 @@ public final class ConfigCommandGameTest implements FabricGameTest {
   }
 
   @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = TICK_LIMIT)
-  public void aNonOperatorCannotReachTheResetSubcommand(TestContext context) {
+  public void aNonOperatorIsRefusedTheResetSubcommand(TestContext context) {
     context.assertTrue(
-        runAsPlayer(context, "toomanychests config reset all") == REFUSED_EXIT_CODE,
-        "A non-operator should not reach config reset");
+        runAsPlayer(context, "toomanychests config reset all") == 0,
+        "A non-operator should be refused config reset");
     context.complete();
   }
 
   @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = TICK_LIMIT)
-  public void aNonOperatorCannotForceContainerEligibility(TestContext context) {
+  public void aRefusedSetSaysWhyRatherThanFailingToParse(TestContext context) {
+    List<Text> said = new ArrayList<>();
+
+    int result =
+        run(
+            context,
+            server(context).getCommandSource().withLevel(0).withOutput(collecting(said)),
+            "toomanychests config set quickStackRadius 12");
+
+    context.assertTrue(result == 0, "A non-operator should be refused rather than unable to parse");
     context.assertTrue(
-        runAsPlayer(context, "toomanychests config eligibility set minecraft:furnace true")
-            == REFUSED_EXIT_CODE,
-        "A non-operator should not reach eligibility set");
+        said.stream().anyMatch(line -> line.getString().contains("only an operator")),
+        "The refusal should say why, but said " + said.stream().map(Text::getString).toList());
+    context.complete();
+  }
+
+  @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void aRefusedEligibilityEditSaysWhyRatherThanFailingToParse(TestContext context) {
+    List<Text> said = new ArrayList<>();
+
+    int result =
+        run(
+            context,
+            server(context).getCommandSource().withLevel(0).withOutput(collecting(said)),
+            "toomanychests config eligibility set minecraft:furnace true");
+
+    context.assertTrue(result == 0, "A non-operator should be refused rather than unable to parse");
+    context.assertTrue(
+        said.stream().anyMatch(line -> line.getString().contains("only an operator")),
+        "The refusal should say why, but said " + said.stream().map(Text::getString).toList());
+    context.complete();
+  }
+
+  @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void aNonOperatorIsRefusedForcingContainerEligibility(TestContext context) {
+    context.assertTrue(
+        runAsPlayer(context, "toomanychests config eligibility set minecraft:furnace true") == 0,
+        "A non-operator should be refused eligibility set");
     context.complete();
   }
 
@@ -244,6 +280,30 @@ public final class ConfigCommandGameTest implements FabricGameTest {
         .stream()
         .map(Suggestion::getText)
         .toList();
+  }
+
+  private static CommandOutput collecting(List<Text> said) {
+    return new CommandOutput() {
+      @Override
+      public void sendMessage(Text message) {
+        said.add(message);
+      }
+
+      @Override
+      public boolean shouldReceiveFeedback() {
+        return true;
+      }
+
+      @Override
+      public boolean shouldTrackOutput() {
+        return true;
+      }
+
+      @Override
+      public boolean shouldBroadcastConsoleToOps() {
+        return false;
+      }
+    };
   }
 
   private static int runAsConsole(TestContext context, String command) {

@@ -4,8 +4,10 @@ import com.grahambartley.toomanychests.listing.ListingWindow;
 
 public final class TerminalSettingsState {
   private ListingWindow window = ListingWindow.EMPTY;
+  private boolean showing;
 
-  public void requested(ListingWindow requested) {
+  public void showing(ListingWindow requested) {
+    showing = true;
     window = requested == null ? ListingWindow.EMPTY : requested;
   }
 
@@ -14,15 +16,16 @@ public final class TerminalSettingsState {
   }
 
   public boolean isOpen() {
-    return !window.isEmpty();
+    return showing;
   }
 
   public void closed() {
+    showing = false;
     window = ListingWindow.EMPTY;
   }
 
   @Override
   public String toString() {
-    return "TerminalSettingsState[window=" + window + "]";
+    return "TerminalSettingsState[showing=" + showing + ", window=" + window + "]";
   }
 }

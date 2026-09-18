@@ -27,7 +27,6 @@ public final class EligibilityCommand {
         .then(CommandManager.literal("list").executes(EligibilityCommand::list))
         .then(
             CommandManager.literal("set")
-                .requires(TooManyChestsCommand::isOperator)
                 .then(
                     blockArgument()
                         .then(
@@ -35,7 +34,6 @@ public final class EligibilityCommand {
                                 .executes(EligibilityCommand::set))))
         .then(
             CommandManager.literal("clear")
-                .requires(TooManyChestsCommand::isOperator)
                 .then(CommandManager.literal("all").executes(EligibilityCommand::clearAll))
                 .then(blockArgument().executes(EligibilityCommand::clear)));
   }
@@ -65,6 +63,9 @@ public final class EligibilityCommand {
   }
 
   private static int set(CommandContext<ServerCommandSource> context) {
+    if (ConfigWriteGate.refuses(context)) {
+      return 0;
+    }
     final String blockId = blockIdOf(context);
     final boolean eligible = BoolArgumentType.getBool(context, ELIGIBLE);
     final Optional<TooManyChestsConfig> updated =
@@ -78,6 +79,9 @@ public final class EligibilityCommand {
   }
 
   private static int clear(CommandContext<ServerCommandSource> context) {
+    if (ConfigWriteGate.refuses(context)) {
+      return 0;
+    }
     final String blockId = blockIdOf(context);
     final Optional<TooManyChestsConfig> updated =
         ContainerEligibilityOverrides.clear(ServerConfigService.current(), blockId);
@@ -89,6 +93,9 @@ public final class EligibilityCommand {
   }
 
   private static int clearAll(CommandContext<ServerCommandSource> context) {
+    if (ConfigWriteGate.refuses(context)) {
+      return 0;
+    }
     return ConfigCommand.apply(
         context,
         ContainerEligibilityOverrides.clearAll(ServerConfigService.current()),

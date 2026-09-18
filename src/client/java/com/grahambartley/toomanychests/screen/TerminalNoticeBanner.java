@@ -1,6 +1,7 @@
 package com.grahambartley.toomanychests.screen;
 
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
+import com.grahambartley.toomanychests.screenhandler.TerminalSettingsLayout;
 import java.util.List;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -8,9 +9,11 @@ import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 
 public final class TerminalNoticeBanner {
-  private static final float ELEVATION = 300.0F;
-
   private TerminalNoticeBanner() {}
+
+  public static int settingsDrop() {
+    return TerminalSettingsLayout.CONTENT_Y - TerminalScreenLayout.NOTICE_Y;
+  }
 
   public static int rowsCovered(TextRenderer textRenderer, Text message) {
     final int lines = linesOf(textRenderer, message).size();

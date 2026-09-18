@@ -30,6 +30,6 @@ Locked slots become possible. Inventory Profiles Next documents that skipping lo
 
 Cross-container consolidation becomes possible at all. Slots cannot be clicked in a container that is not open, so a client-side implementation could never gather items across chests.
 
-**Vanilla clients can still sort**, through a command and a middle-click gesture, because the logic lives server-side. A player joins with no mods installed and sorting works, which is a genuine advantage for modpacks and public servers.
+**Vanilla clients can still sort**, through a command, because the logic lives server-side. A player joins with no mods installed and sorting works, which is a genuine advantage for modpacks and public servers.
 
 Accepted drawback: the mod must be installed on the server. This was already true for every other feature, so it costs nothing here. The main argument for client-side sorting, compatibility with servers that do not have the mod, does not apply to a mod that is server-installed regardless.

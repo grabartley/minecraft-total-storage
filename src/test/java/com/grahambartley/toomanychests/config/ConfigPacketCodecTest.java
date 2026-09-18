@@ -96,7 +96,6 @@ class ConfigPacketCodecTest {
     buffer.writeString(accessMode);
     buffer.writeString(ordering);
     buffer.writeBoolean(true);
-    buffer.writeBoolean(true);
     buffer.writeVarInt(8);
     buffer.writeBoolean(true);
     buffer.writeBoolean(false);

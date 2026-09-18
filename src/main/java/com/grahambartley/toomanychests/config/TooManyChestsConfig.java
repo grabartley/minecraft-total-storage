@@ -14,7 +14,6 @@ public record TooManyChestsConfig(
     TerminalAccessMode defaultTerminalAccessMode,
     SortOrdering sortOrdering,
     boolean sortButtonEnabled,
-    boolean middleClickSortEnabled,
     int quickStackRadius,
     boolean quickStackEnabled,
     boolean depositAllSkipsHotbar,
@@ -42,7 +41,6 @@ public record TooManyChestsConfig(
   public static final TerminalAccessMode DEFAULT_TERMINAL_ACCESS_MODE = TerminalAccessMode.OWNER;
   public static final SortOrdering DEFAULT_SORT_ORDERING = SortOrdering.REGISTRY_ID;
   public static final boolean DEFAULT_SORT_BUTTON_ENABLED = true;
-  public static final boolean DEFAULT_MIDDLE_CLICK_SORT_ENABLED = true;
   public static final int DEFAULT_QUICK_STACK_RADIUS = 8;
   public static final boolean DEFAULT_QUICK_STACK_ENABLED = true;
   public static final boolean DEFAULT_DEPOSIT_ALL_SKIPS_HOTBAR = false;
@@ -85,7 +83,6 @@ public record TooManyChestsConfig(
         DEFAULT_TERMINAL_ACCESS_MODE,
         DEFAULT_SORT_ORDERING,
         DEFAULT_SORT_BUTTON_ENABLED,
-        DEFAULT_MIDDLE_CLICK_SORT_ENABLED,
         DEFAULT_QUICK_STACK_RADIUS,
         DEFAULT_QUICK_STACK_ENABLED,
         DEFAULT_DEPOSIT_ALL_SKIPS_HOTBAR,
@@ -102,7 +99,6 @@ public record TooManyChestsConfig(
         defaultTerminalAccessMode,
         sortOrdering,
         sortButtonEnabled,
-        middleClickSortEnabled,
         quickStackRadius,
         quickStackEnabled,
         depositAllSkipsHotbar,

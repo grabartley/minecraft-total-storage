@@ -30,11 +30,6 @@ public final class ConfigSettings {
               TooManyChestsConfig::sortButtonEnabled,
               ConfigBuilder::sortButtonEnabled,
               TooManyChestsConfig.DEFAULT_SORT_BUTTON_ENABLED),
-          new BooleanConfigSetting(
-              "middleClickSortEnabled",
-              TooManyChestsConfig::middleClickSortEnabled,
-              ConfigBuilder::middleClickSortEnabled,
-              TooManyChestsConfig.DEFAULT_MIDDLE_CLICK_SORT_ENABLED),
           new BoundedIntConfigSetting(
               "quickStackRadius",
               TooManyChestsConfig.QUICK_STACK_RADIUS_MIN,

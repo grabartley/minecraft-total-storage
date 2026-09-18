@@ -21,7 +21,6 @@ class TooManyChestsConfigTest {
     assertEquals(TerminalAccessMode.OWNER, defaults.defaultTerminalAccessMode());
     assertEquals(SortOrdering.REGISTRY_ID, defaults.sortOrdering());
     assertTrue(defaults.sortButtonEnabled());
-    assertTrue(defaults.middleClickSortEnabled());
     assertEquals(8, defaults.quickStackRadius());
     assertEquals(false, defaults.depositAllSkipsHotbar());
     assertEquals(90, defaults.nearCapacityWarningPercent());
@@ -158,7 +157,6 @@ class TooManyChestsConfigTest {
     assertEquals(original.defaultTerminalAccessMode(), updated.defaultTerminalAccessMode());
     assertEquals(original.sortOrdering(), updated.sortOrdering());
     assertEquals(original.sortButtonEnabled(), updated.sortButtonEnabled());
-    assertEquals(original.middleClickSortEnabled(), updated.middleClickSortEnabled());
     assertEquals(original.quickStackRadius(), updated.quickStackRadius());
     assertEquals(original.depositAllSkipsHotbar(), updated.depositAllSkipsHotbar());
     assertEquals(original.nearCapacityWarningPercent(), updated.nearCapacityWarningPercent());

@@ -40,7 +40,6 @@ public final class TestConfigs {
         .defaultTerminalAccessMode(TerminalAccessMode.OPEN)
         .sortOrdering(SortOrdering.DISPLAY_NAME)
         .sortButtonEnabled(false)
-        .middleClickSortEnabled(false)
         .quickStackRadius(4)
         .depositAllSkipsHotbar(true)
         .nearCapacityWarningPercent(50)

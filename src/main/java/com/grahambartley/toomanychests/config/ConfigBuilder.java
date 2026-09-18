@@ -8,7 +8,6 @@ public final class ConfigBuilder {
   private TerminalAccessMode defaultTerminalAccessMode;
   private SortOrdering sortOrdering;
   private boolean sortButtonEnabled;
-  private boolean middleClickSortEnabled;
   private int quickStackRadius;
   private boolean quickStackEnabled;
   private boolean depositAllSkipsHotbar;
@@ -23,7 +22,6 @@ public final class ConfigBuilder {
     defaultTerminalAccessMode = config.defaultTerminalAccessMode();
     sortOrdering = config.sortOrdering();
     sortButtonEnabled = config.sortButtonEnabled();
-    middleClickSortEnabled = config.middleClickSortEnabled();
     quickStackRadius = config.quickStackRadius();
     quickStackEnabled = config.quickStackEnabled();
     depositAllSkipsHotbar = config.depositAllSkipsHotbar();
@@ -55,11 +53,6 @@ public final class ConfigBuilder {
 
   public ConfigBuilder sortButtonEnabled(boolean value) {
     sortButtonEnabled = value;
-    return this;
-  }
-
-  public ConfigBuilder middleClickSortEnabled(boolean value) {
-    middleClickSortEnabled = value;
     return this;
   }
 
@@ -109,7 +102,6 @@ public final class ConfigBuilder {
         defaultTerminalAccessMode,
         sortOrdering,
         sortButtonEnabled,
-        middleClickSortEnabled,
         quickStackRadius,
         quickStackEnabled,
         depositAllSkipsHotbar,

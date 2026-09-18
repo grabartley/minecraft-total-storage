@@ -26,7 +26,7 @@ public final class TerminalSettingsServiceGameTest implements FabricGameTest {
     TerminalScreenHandler handler = NetworkOperationFixture.handlerOf(player);
 
     boolean answered =
-        panels.request(player, new NetworkSettingsRequestPayload(handler.syncId, 0, 4));
+        panels.request(player, NetworkSettingsRequestPayload.showing(handler.syncId, 0, 4));
 
     context.assertTrue(answered, "A request from an open screen should be answered");
     context.assertTrue(handler.settings().isOpen(), "The panel should be recorded as open");
@@ -46,7 +46,7 @@ public final class TerminalSettingsServiceGameTest implements FabricGameTest {
     TerminalScreenHandler handler = NetworkOperationFixture.handlerOf(player);
 
     boolean answered =
-        panels.request(player, new NetworkSettingsRequestPayload(handler.syncId + 1, 0, 4));
+        panels.request(player, NetworkSettingsRequestPayload.showing(handler.syncId + 1, 0, 4));
 
     context.assertFalse(answered, "A request naming another screen was answered");
     context.assertFalse(handler.settings().isOpen(), "A refused request opened the panel anyway");
@@ -74,7 +74,7 @@ public final class TerminalSettingsServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
     ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
     TerminalScreenHandler handler = NetworkOperationFixture.handlerOf(player);
-    panels.request(player, new NetworkSettingsRequestPayload(handler.syncId, 0, 4));
+    panels.request(player, NetworkSettingsRequestPayload.showing(handler.syncId, 0, 4));
 
     context.assertTrue(panels.refresh(player), "An open panel should be pushed to");
     NetworkOperationFixture.finish(context, player);
@@ -84,13 +84,13 @@ public final class TerminalSettingsServiceGameTest implements FabricGameTest {
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
       tickLimit = TICK_LIMIT)
-  public void askingForNoRowsClosesThePanelAgain(TestContext context) {
+  public void sayingThePanelIsHiddenClosesItAgain(TestContext context) {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
     ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
     TerminalScreenHandler handler = NetworkOperationFixture.handlerOf(player);
-    panels.request(player, new NetworkSettingsRequestPayload(handler.syncId, 0, 4));
+    panels.request(player, NetworkSettingsRequestPayload.showing(handler.syncId, 0, 4));
 
-    panels.request(player, new NetworkSettingsRequestPayload(handler.syncId, 0, 0));
+    panels.request(player, NetworkSettingsRequestPayload.closed(handler.syncId));
 
     context.assertFalse(handler.settings().isOpen(), "The panel stayed open");
     context.assertFalse(panels.refresh(player), "A closed panel was pushed to");
@@ -105,13 +105,12 @@ public final class TerminalSettingsServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
     ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
     TerminalScreenHandler handler = NetworkOperationFixture.handlerOf(player);
-    panels.request(player, new NetworkSettingsRequestPayload(handler.syncId, 0, 4));
+    panels.request(player, NetworkSettingsRequestPayload.showing(handler.syncId, 0, 4));
     context.setBlockState(NetworkOperationFixture.POWER, Blocks.AIR);
     TerminalNetworks.power()
         .unloaded(context.getWorld(), context.getAbsolutePos(NetworkOperationFixture.TERMINAL));
 
-    boolean closed =
-        panels.request(player, new NetworkSettingsRequestPayload(handler.syncId, 0, 0));
+    boolean closed = panels.request(player, NetworkSettingsRequestPayload.closed(handler.syncId));
 
     context.assertTrue(closed, "An unpowered terminal refused to close its panel");
     context.assertFalse(handler.settings().isOpen(), "The panel stayed open");
@@ -126,10 +125,10 @@ public final class TerminalSettingsServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
     ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
     TerminalScreenHandler handler = NetworkOperationFixture.handlerOf(player);
-    panels.request(player, new NetworkSettingsRequestPayload(handler.syncId, 0, 4));
+    panels.request(player, NetworkSettingsRequestPayload.showing(handler.syncId, 0, 4));
 
     boolean closed =
-        panels.request(player, new NetworkSettingsRequestPayload(handler.syncId + 1, 0, 0));
+        panels.request(player, NetworkSettingsRequestPayload.closed(handler.syncId + 1));
 
     context.assertFalse(closed, "A close naming another screen was honoured");
     context.assertTrue(handler.settings().isOpen(), "Somebody else's close shut this panel");
@@ -144,7 +143,7 @@ public final class TerminalSettingsServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
     ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
     TerminalScreenHandler handler = NetworkOperationFixture.handlerOf(player);
-    panels.request(player, new NetworkSettingsRequestPayload(handler.syncId, 0, 4));
+    panels.request(player, NetworkSettingsRequestPayload.showing(handler.syncId, 0, 4));
 
     context.assertTrue(
         panels.viewFor(player, handler).containerTotal() == 1,

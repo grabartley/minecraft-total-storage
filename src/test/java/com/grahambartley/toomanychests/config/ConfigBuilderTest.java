@@ -25,7 +25,6 @@ class ConfigBuilderTest {
     assertEquals(original.defaultTerminalAccessMode(), edited.defaultTerminalAccessMode());
     assertEquals(original.sortOrdering(), edited.sortOrdering());
     assertEquals(original.sortButtonEnabled(), edited.sortButtonEnabled());
-    assertEquals(original.middleClickSortEnabled(), edited.middleClickSortEnabled());
     assertEquals(original.depositAllSkipsHotbar(), edited.depositAllSkipsHotbar());
     assertEquals(original.nearCapacityWarningPercent(), edited.nearCapacityWarningPercent());
     assertEquals(
@@ -42,7 +41,6 @@ class ConfigBuilderTest {
             .defaultTerminalAccessMode(TerminalAccessMode.TRUSTED)
             .sortOrdering(SortOrdering.DISPLAY_NAME)
             .sortButtonEnabled(false)
-            .middleClickSortEnabled(false)
             .quickStackRadius(3)
             .depositAllSkipsHotbar(true)
             .nearCapacityWarningPercent(75)
@@ -55,7 +53,6 @@ class ConfigBuilderTest {
     assertEquals(TerminalAccessMode.TRUSTED, built.defaultTerminalAccessMode());
     assertEquals(SortOrdering.DISPLAY_NAME, built.sortOrdering());
     assertEquals(false, built.sortButtonEnabled());
-    assertEquals(false, built.middleClickSortEnabled());
     assertEquals(3, built.quickStackRadius());
     assertEquals(true, built.depositAllSkipsHotbar());
     assertEquals(75, built.nearCapacityWarningPercent());

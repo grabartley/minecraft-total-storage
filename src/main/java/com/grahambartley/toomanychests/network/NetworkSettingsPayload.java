@@ -39,6 +39,7 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
   private static void write(NetworkSettingsPayload payload, RegistryByteBuf buf) {
     final NetworkSettingsView view = payload.view();
     buf.writeVarInt(payload.syncId());
+    buf.writeBoolean(view.answered());
     buf.writeVarInt(view.radius());
     buf.writeVarInt(view.effectiveRadius());
     buf.writeVarInt(view.maxRadius());
@@ -59,6 +60,8 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
       buf.writeEnumConstant(row.role());
       buf.writeVarInt(row.variantCount());
       buf.writeVarLong(row.itemCount());
+      buf.writeVarInt(row.usedSlots());
+      buf.writeVarInt(row.totalSlots());
       buf.writeBoolean(row.icon().isPresent());
       row.icon().ifPresent(icon -> ItemVariant.PACKET_CODEC.encode(buf, icon));
     }
@@ -66,6 +69,7 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
 
   private static NetworkSettingsPayload read(RegistryByteBuf buf) {
     final int syncId = buf.readVarInt();
+    final boolean answered = buf.readBoolean();
     final int radius = buf.readVarInt();
     final int effectiveRadius = buf.readVarInt();
     final int maxRadius = buf.readVarInt();
@@ -80,6 +84,7 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
     return new NetworkSettingsPayload(
         syncId,
         new NetworkSettingsView(
+            answered,
             radius,
             effectiveRadius,
             maxRadius,
@@ -122,9 +127,20 @@ public record NetworkSettingsPayload(int syncId, NetworkSettingsView view)
       final ContainerRole role = buf.readEnumConstant(ContainerRole.class);
       final int variants = buf.readVarInt();
       final long items = buf.readVarLong();
+      final int usedSlots = Math.max(0, buf.readVarInt());
+      final int totalSlots = Math.max(0, buf.readVarInt());
       final Optional<ItemVariant> icon =
           buf.readBoolean() ? Optional.of(ItemVariant.PACKET_CODEC.decode(buf)) : Optional.empty();
-      containers.add(new ContainerRoleEntry(container, role, icon, variants, items, 0, 0, 0.0));
+      containers.add(
+          new ContainerRoleEntry(
+              container,
+              role,
+              icon,
+              variants,
+              items,
+              Math.min(usedSlots, totalSlots),
+              totalSlots,
+              0.0));
     }
     return containers;
   }

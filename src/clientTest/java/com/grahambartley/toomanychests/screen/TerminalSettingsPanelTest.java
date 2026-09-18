@@ -23,7 +23,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class TerminalSettingsPanelTest {
   private static NetworkSettingsView viewOf(int total) {
-    return new NetworkSettingsView(
+    return NetworkSettingsView.answered(
         16,
         16,
         32,
@@ -132,6 +132,124 @@ class TerminalSettingsPanelTest {
         setting,
         panel.settingAt(
             TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(setting.row())));
+  }
+
+  @Test
+  void aRowUnderTheNoticeStripCannotBeClicked() {
+    TerminalSettingsPanel panel = containers();
+
+    panel.coverTopRows(2);
+
+    assertTrue(
+        panel.containerRowAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(0)) < 0);
+    assertTrue(
+        panel.containerRowAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(1)) < 0);
+    assertEquals(
+        2, panel.containerRowAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(2)));
+  }
+
+  @Test
+  void aSettingUnderTheNoticeStripCannotBeClicked() {
+    TerminalSettingsPanel panel = new TerminalSettingsPanel();
+
+    panel.coverTopRows(1);
+
+    assertEquals(
+        null,
+        panel.settingAt(
+            TerminalSettingsLayout.PANEL_X,
+            TerminalSettingsLayout.rowY(TerminalSetting.RADIUS.row())));
+    assertEquals(
+        TerminalSetting.ACCESS,
+        panel.settingAt(
+            TerminalSettingsLayout.PANEL_X,
+            TerminalSettingsLayout.rowY(TerminalSetting.ACCESS.row())));
+  }
+
+  @Test
+  void aRadiusStepperUnderTheNoticeStripCannotBeClicked() {
+    TerminalSettingsPanel panel = new TerminalSettingsPanel();
+
+    panel.coverTopRows(1);
+
+    assertEquals(
+        SettingsControl.NONE,
+        panel.controlAt(SettingsControl.radiusDownX(), SettingsControl.radiusY()));
+    assertEquals(
+        SettingsControl.NONE,
+        panel.controlAt(SettingsControl.radiusUpX(), SettingsControl.radiusY()));
+  }
+
+  @Test
+  void anUncoveredRadiusStepperIsStillClickable() {
+    assertEquals(
+        SettingsControl.RADIUS_DOWN,
+        new TerminalSettingsPanel()
+            .controlAt(SettingsControl.radiusDownX(), SettingsControl.radiusY()));
+  }
+
+  @Test
+  void theContainersSectionHasNoRadiusSteppers() {
+    assertEquals(
+        SettingsControl.NONE,
+        containers().controlAt(SettingsControl.radiusDownX(), SettingsControl.radiusY()));
+  }
+
+  @Test
+  void theTagsSectionRowsUnderTheNoticeStripAreCoveredToo() {
+    TerminalSettingsPanel panel = new TerminalSettingsPanel();
+    panel.show(SettingsSection.TAGS);
+
+    panel.coverTopRows(2);
+
+    assertTrue(
+        panel.isCoveredAt(
+            TerminalSettingsLayout.PANEL_X,
+            TerminalSettingsLayout.rowY(TagsSectionLayout.NEW_TAG_ROW)));
+    assertTrue(
+        panel.isCoveredAt(
+            TerminalSettingsLayout.PANEL_X,
+            TerminalSettingsLayout.rowY(TagsSectionLayout.FIRST_TAG_ROW)));
+    assertFalse(panel.isCoveredAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(2)));
+  }
+
+  @Test
+  void aClickOutsideAnyRowIsNeverTreatedAsCovered() {
+    TerminalSettingsPanel panel = containers();
+    panel.coverTopRows(TerminalSettingsLayout.ROWS);
+
+    assertFalse(panel.isCoveredAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.PANEL_Y));
+  }
+
+  @Test
+  void theScrollbarUnderTheNoticeStripIsCoveredTooRatherThanGrabbable() {
+    TerminalSettingsPanel panel = containers();
+
+    panel.coverTopRows(2);
+
+    assertTrue(panel.isCoveredAt(TerminalScreenLayout.SCROLLBAR_X, TerminalSettingsLayout.rowY(0)));
+    assertFalse(
+        panel.isCoveredAt(TerminalScreenLayout.SCROLLBAR_X, TerminalSettingsLayout.rowY(2)));
+  }
+
+  @Test
+  void aNoticeTallerThanThePanelCoversNoMoreRowsThanThereAre() {
+    TerminalSettingsPanel panel = containers();
+
+    panel.coverTopRows(Integer.MAX_VALUE);
+
+    assertEquals(TerminalSettingsLayout.ROWS, panel.hiddenRows());
+  }
+
+  @Test
+  void aNoticeThatHasGoneUncoversTheRowsAgain() {
+    TerminalSettingsPanel panel = containers();
+    panel.coverTopRows(2);
+
+    panel.coverTopRows(0);
+
+    assertEquals(
+        0, panel.containerRowAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(0)));
   }
 
   @Test

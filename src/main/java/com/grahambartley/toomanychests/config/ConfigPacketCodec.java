@@ -15,7 +15,6 @@ public final class ConfigPacketCodec {
     buf.writeString(config.defaultTerminalAccessMode().id());
     buf.writeString(config.sortOrdering().id());
     buf.writeBoolean(config.sortButtonEnabled());
-    buf.writeBoolean(config.middleClickSortEnabled());
     buf.writeVarInt(config.quickStackRadius());
     buf.writeBoolean(config.quickStackEnabled());
     buf.writeBoolean(config.depositAllSkipsHotbar());
@@ -35,7 +34,6 @@ public final class ConfigPacketCodec {
         TerminalAccessMode.fromId(buf.readString())
             .orElse(TooManyChestsConfig.DEFAULT_TERMINAL_ACCESS_MODE),
         SortOrdering.fromId(buf.readString()).orElse(TooManyChestsConfig.DEFAULT_SORT_ORDERING),
-        buf.readBoolean(),
         buf.readBoolean(),
         buf.readVarInt(),
         buf.readBoolean(),
