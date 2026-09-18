@@ -7,16 +7,12 @@ public final class TagNameRule {
 
   private TagNameRule() {}
 
-  public static String idFor(String name) {
-    return FilterText.normalise(name);
-  }
-
   public static TagNameOutcome check(String name, NetworkTagSet existing) {
     return check(name, existing, "");
   }
 
   public static TagNameOutcome check(String name, NetworkTagSet existing, String replacing) {
-    final String id = idFor(name);
+    final String id = FilterText.tagId(name);
     if (id.isEmpty()) {
       return TagNameOutcome.BLANK;
     }
@@ -29,7 +25,7 @@ public final class TagNameRule {
     if (PresetTag.fromId(id).isPresent()) {
       return TagNameOutcome.PRESET_COLLISION;
     }
-    if (existing != null && existing.contains(id) && !id.equals(idFor(replacing))) {
+    if (existing != null && existing.contains(id) && !id.equals(FilterText.tagId(replacing))) {
       return TagNameOutcome.DUPLICATE;
     }
     return TagNameOutcome.OK;
@@ -39,8 +35,7 @@ public final class TagNameRule {
     for (int index = 0; index < id.length(); index++) {
       final char character = id.charAt(index);
       final boolean allowed =
-          character == ' '
-              || character == '_'
+          character == '_'
               || character == '-'
               || (character >= '0' && character <= '9')
               || (character >= 'a' && character <= 'z');

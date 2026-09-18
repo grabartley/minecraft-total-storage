@@ -75,10 +75,9 @@ class TagNameRuleTest {
         TagNameRule.check("keep", withCustom("castle", "keep"), "castle"));
   }
 
-  @ParameterizedTest
-  @CsvSource({"Castle,castle", "  Base Build  ,base build", "REDSTONE-project,redstone-project"})
-  void theIdIsTheNameNormalised(String name, String expected) {
-    assertEquals(expected, TagNameRule.idFor(name));
+  @Test
+  void aMultiWordNameIsAcceptedBecauseItsIdCarriesNoSpace() {
+    assertEquals(TagNameOutcome.OK, TagNameRule.check("Base Kit", NetworkTagSet.defaults()));
   }
 
   @Test

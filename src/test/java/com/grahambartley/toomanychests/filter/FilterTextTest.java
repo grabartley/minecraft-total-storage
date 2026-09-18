@@ -96,4 +96,43 @@ class FilterTextTest {
   void nothingNamesNoNamespace() {
     assertFalse(FilterText.hasNamespace(null));
   }
+
+  @ParameterizedTest
+  @CsvSource({
+    "Castle,castle",
+    "'  Base Build  ',base-build",
+    "REDSTONE-project,redstone-project",
+    "'Base   Kit',base-kit",
+    "'a b c',a-b-c"
+  })
+  void aTagIdIsItsNameNormalisedIntoOneSearchableToken(String name, String expected) {
+    assertEquals(expected, FilterText.tagId(name));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"a b", "a\tb", "a\nb", "a\u000bb", "a\fb", "a\rb", "a  b"})
+  void everyKindOfWhitespaceBecomesTheSameSeparator(String name) {
+    assertEquals("a-b", FilterText.tagId(name));
+  }
+
+  @Test
+  void aTagIdWithNoWhitespaceIsHandedBackAsTheNormalisedStringItAlreadyWas() {
+    assertEquals("base-kit", FilterText.tagId("Base-Kit"));
+    assertEquals("minecraft:stone", FilterText.tagId("minecraft:stone"));
+    assertEquals("", FilterText.tagId(null));
+  }
+
+  @Test
+  void tagIdsDropWhatCanonicalisesToNothingAndKeepTheirOrder() {
+    assertEquals(
+        List.of("base-kit", "castle"),
+        List.copyOf(FilterText.tagIds(Arrays.asList("Base Kit", "  ", null, "Castle"))));
+    assertEquals(Set.of(), FilterText.tagIds(null));
+  }
+
+  @Test
+  void anItemIdKeepsItsSpacingRuleSeparateFromATagId() {
+    assertEquals("a b", FilterText.normalise("A B"));
+    assertEquals("a-b", FilterText.tagId("A B"));
+  }
 }

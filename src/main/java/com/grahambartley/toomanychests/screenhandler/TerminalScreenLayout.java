@@ -198,6 +198,22 @@ public final class TerminalScreenLayout {
 
   public static final int NOTICE_TEXT_WIDTH = NOTICE_WIDTH - 2 * NOTICE_PADDING;
 
+  public static int pageCellAt(int screenCell, int hiddenRows) {
+    if (screenCell == NO_CELL) {
+      return NO_CELL;
+    }
+    final int covered = Math.max(0, hiddenRows) * LISTING_COLUMNS;
+    return screenCell < covered ? NO_CELL : screenCell - covered;
+  }
+
+  public static int screenCellFor(int pageCell, int hiddenRows) {
+    if (pageCell == NO_CELL) {
+      return NO_CELL;
+    }
+    final int cell = pageCell + Math.max(0, hiddenRows) * LISTING_COLUMNS;
+    return cell >= LISTING_PAGE_SIZE ? NO_CELL : cell;
+  }
+
   public static int noticeRows(int lines) {
     if (lines < 1 || lines > NOTICE_MAX_LINES) {
       throw new IllegalArgumentException("a notice cannot be " + lines + " lines tall");

@@ -33,23 +33,27 @@ public final class ModScreenButtons {
     if (carried.isEmpty()) {
       return;
     }
-    final ScreenButtonAnchor anchor = anchorFor(screen);
+    final ScreenButtonAnchor anchor = anchorFor(screen, carried.size());
     for (int index = 0; index < carried.size(); index++) {
-      add(screen, carried.get(index), anchor, index);
+      add(screen, carried.get(index), anchor, index, carried.size());
     }
   }
 
   private static boolean isSortable(ScreenHandler handler) {
     final PlayerEntity player = MinecraftClient.getInstance().player;
     return player != null
+        && SortRequests.mayBeOffered()
         && ScreenSortPolicy.allowsHandler(handler)
         && SortableSlots.resolve(handler, player, LockedSlotsAttachment.get(player)).isPresent();
   }
 
-  private static ScreenButtonAnchor anchorFor(HandledScreen<?> screen) {
+  private static ScreenButtonAnchor anchorFor(HandledScreen<?> screen, int carried) {
     final ScreenButtonAnchor chosen = ClientPreferencesStore.current().screenButtonAnchor();
     if (chosen != ScreenButtonAnchor.INSIDE_TOP_RIGHT) {
       return chosen;
+    }
+    if (carried > 1) {
+      return ScreenButtonAnchor.OUTSIDE_TOP_RIGHT;
     }
     return ScreenButtonBand.isClear(ScreenPanel.of(screen), slotCorners(screen))
         ? chosen
@@ -66,16 +70,20 @@ public final class ModScreenButtons {
   }
 
   private static void add(
-      HandledScreen<?> screen, ScreenButton button, ScreenButtonAnchor anchor, int index) {
+      HandledScreen<?> screen,
+      ScreenButton button,
+      ScreenButtonAnchor anchor,
+      int index,
+      int count) {
     final ScreenIconButton widget =
         new ScreenIconButton(
             button.sprites(), button.label(), () -> button.press(screen.getScreenHandler().syncId));
-    followPanel(screen, button, widget, anchor, index);
+    followPanel(screen, button, widget, anchor, index, count);
     Screens.getButtons(screen).add(widget);
     ScreenEvents.beforeRender(screen)
         .register(
             (rendered, context, mouseX, mouseY, delta) ->
-                followPanel(screen, button, widget, anchor, index));
+                followPanel(screen, button, widget, anchor, index, count));
   }
 
   private static void followPanel(
@@ -83,8 +91,9 @@ public final class ModScreenButtons {
       ScreenButton button,
       ScreenIconButton widget,
       ScreenButtonAnchor anchor,
-      int index) {
-    final ScreenButtonSpot spot = ScreenButtonRow.at(anchor, ScreenPanel.of(screen), index);
+      int index,
+      int count) {
+    final ScreenButtonSpot spot = ScreenButtonRow.at(anchor, ScreenPanel.of(screen), index, count);
     widget.setPosition(spot.x(), spot.y());
     widget.visible = button.isOffered();
     widget.active = button.isAvailable();

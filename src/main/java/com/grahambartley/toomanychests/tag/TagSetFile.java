@@ -42,7 +42,7 @@ public final class TagSetFile {
     }
   }
 
-  public static Optional<NetworkTagSet> load(Path path) {
+  public static Optional<TagSetContents> load(Path path) {
     if (path == null || !Files.exists(path)) {
       return Optional.empty();
     }
@@ -52,7 +52,7 @@ public final class TagSetFile {
       if (root == null || !root.has(TAGS)) {
         return Optional.empty();
       }
-      return NetworkTagCodec.CODEC.parse(JsonOps.INSTANCE, root.get(TAGS)).result();
+      return NetworkTagCodec.CONTENTS_CODEC.parse(JsonOps.INSTANCE, root.get(TAGS)).result();
     } catch (IOException | JsonParseException | IllegalStateException unusable) {
       LOGGER.warn("Failed to import a Too Many Chests tag set from {}", path, unusable);
       return Optional.empty();

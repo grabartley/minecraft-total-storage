@@ -49,8 +49,6 @@ public final class OperationMessages {
                   CountedNoun.ITEMS.of(outcome.moved()),
                   leftovers(outcome.leftovers())));
       case NOTHING_TO_DEPOSIT -> Optional.of(line("deposit.empty", "There is nothing to store"));
-      case SLOT_LOCKED ->
-          Optional.of(line("deposit.locked", "That slot is locked, so nothing left it"));
       case NO_SPACE -> Optional.of(line("deposit.full", "This network has no room left"));
       case RATE_LIMITED -> Optional.empty();
       case REFUSED -> Optional.of(line("refused", "That terminal is not yours to use right now"));

@@ -55,7 +55,7 @@ public final class TerminalSettingsEdits {
       return false;
     }
     if (applied.get().clamped()) {
-      player.sendMessage(TerminalMessages.radiusClamped(applied.get().blocks()), true);
+      TerminalNotice.tell(player, TerminalMessages.radiusClamped(applied.get().blocks()));
     }
     ContainerHighlightService.highlight(player, context.world(), context.terminal());
     return pushed(context);
@@ -91,12 +91,12 @@ public final class TerminalSettingsEdits {
             payload.container(),
             payload.role());
     if (outcome == RoleChangeOutcome.DENIED) {
-      player.sendMessage(TerminalMessages.notYours(), true);
+      TerminalNotice.tell(player, TerminalMessages.notYours());
       panels.refresh(player);
       return false;
     }
     if (outcome == RoleChangeOutcome.NOT_IN_NETWORK) {
-      player.sendMessage(TerminalMessages.containerNotInNetwork(), true);
+      TerminalNotice.tell(player, TerminalMessages.containerNotInNetwork());
       panels.refresh(player);
       return false;
     }
@@ -163,7 +163,7 @@ public final class TerminalSettingsEdits {
     if (TerminalAdmin.mayAdminister(context.world(), context.terminal(), player)) {
       return context;
     }
-    player.sendMessage(TerminalMessages.notYours(), true);
+    TerminalNotice.tell(player, TerminalMessages.notYours());
     panels.refresh(player);
     return null;
   }

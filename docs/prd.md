@@ -190,7 +190,7 @@ With a stack already on the cursor the same grid takes clicks the other way, dep
 | GET-2 | Asking for more than exists grants everything available and reports the shortfall |
 | GET-3 | A full inventory yields a partial withdrawal; the remainder stays in the network |
 | GET-4 | Locked slots are never used as a destination |
-| GET-5 | The two empty-handed endings are reported distinctly: the item is gone, or there is nowhere to put it |
+| GET-5 | The two empty-handed endings are reported distinctly: the item is gone, or there is nowhere to put it. This includes losing a race for the last stack, which says the item is gone rather than staying silent. The report goes to the in-terminal notice, never the action bar, because the terminal is open when it fires. This is the rule SAFE-6's quietness is measured against: quiet means no error and no interruption, not no feedback |
 
 **Not supported:** withdrawing to a specific container; naming a slot or position in a request; the client deciding what a withdrawal may take.
 
@@ -359,8 +359,8 @@ A player locks the slots holding their tools, weapons, and food. No automated op
 | LOCK-6 | An out-of-range slot index from a forged packet is rejected |
 | LOCK-7 | A locked slot is tinted, and carries a badge readable without colour that leaves the stack count and durability bar untouched and the item still identifiable |
 | LOCK-8 | The tint is a per-player client display option that can be turned off, leaving the badge as the indicator; it is not a server-wide setting |
-| LOCK-9 | Every automated path honours locks: sorting by any entry point, deposit, deposit all, quick-stack, and any future loadout preset swap (ADR 0010) |
-| LOCK-10 | Manual dragging, shift-clicking, and hotbar swapping are never blocked by a lock |
+| LOCK-9 | Every path the mod drives on the player's behalf honours locks: sorting by any entry point, deposit all, quick-stack, and any future loadout preset swap (ADR 0010). "Automated" means the mod chose which slots to move, not that the player pressed something |
+| LOCK-10 | A gesture in which the player chose the slot is never blocked by a lock: dragging, shift-clicking and hotbar swapping, wherever they are aimed. A shift-click from a locked slot onto the terminal grid moves the stack, exactly as a shift-click into a chest does, because the player picked that slot. The one-sentence rule is that a lock stops the mod moving a slot, never the player |
 | LOCK-11 | Sorting an inventory with locked slots scattered through it sorts around them, leaving them in place |
 
 **Not supported:** locking armour or the offhand, which are excluded from automated operations anyway; a lock preventing vanilla death drops; a lock fighting the player's own hands.
@@ -545,7 +545,7 @@ The property that decides whether the mod is safe in a modpack. How the suite is
 | SAFE-3 | Items are never fabricated to satisfy a request, under any circumstance |
 | SAFE-4 | Items are never dropped on the floor by any operation |
 | SAFE-5 | A recorded container position is a hint, revalidated against the world before every extraction |
-| SAFE-6 | A request the network cannot meet is an ordinary race, handled quietly with a resync rather than an error |
+| SAFE-6 | A request the network cannot meet is an ordinary race, handled with a resync rather than an error. Quiet means it is not an error and does not interrupt: the player is still told what happened, in the register GET-5 names |
 | SAFE-7 | Adversarial gametests assert conservation of total item count across containers, inventories, and the floor |
 
 ### 8.2 Performance

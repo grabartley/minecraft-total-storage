@@ -12,9 +12,11 @@ public final class ScreenButtonRow {
 
   private ScreenButtonRow() {}
 
-  public static ScreenButtonSpot at(ScreenButtonAnchor anchor, ScreenPanel panel, int index) {
+  public static ScreenButtonSpot at(
+      ScreenButtonAnchor anchor, ScreenPanel panel, int index, int count) {
     return switch (anchor) {
-      case INSIDE_TOP_RIGHT -> index == 0 ? inTheBand(panel) : downTheSide(panel, index - 1);
+      case INSIDE_TOP_RIGHT ->
+          count == 1 ? inTheBand(panel) : downTheSide(panel, Math.max(0, index));
       case OUTSIDE_TOP_RIGHT -> downTheSide(panel, index);
       case OUTSIDE_BOTTOM_RIGHT -> upTheSide(panel, index);
     };

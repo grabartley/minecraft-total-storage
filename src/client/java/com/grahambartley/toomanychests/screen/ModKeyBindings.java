@@ -25,6 +25,10 @@ public final class ModKeyBindings {
     return quickStack;
   }
 
+  public static KeyBinding sort() {
+    return sort;
+  }
+
   public static boolean isDepositAll(int keyCode, int scanCode) {
     return depositAll != null && depositAll.matchesKey(keyCode, scanCode);
   }

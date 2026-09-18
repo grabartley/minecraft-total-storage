@@ -6,10 +6,6 @@
     "#minecraft:hoes",
     "#minecraft:compasses",
     {
-      "id": "#c:tools",
-      "required": false
-    },
-    {
       "id": "#c:tools/mining_tool",
       "required": false
     },
@@ -48,9 +44,6 @@
     "minecraft:bundle",
     "minecraft:map",
     "minecraft:filled_map",
-    "minecraft:writable_book",
-    "minecraft:written_book",
-    "minecraft:book",
     "minecraft:anvil",
     "minecraft:chipped_anvil",
     "minecraft:damaged_anvil",
@@ -63,15 +56,11 @@
     "minecraft:smoker",
     "minecraft:cauldron",
     "minecraft:enchanting_table",
-    "minecraft:paper",
-    "minecraft:enchanted_book",
-    "minecraft:knowledge_book",
     "minecraft:fire_charge",
-    "minecraft:lodestone",
-    "minecraft:respawn_anchor",
     "minecraft:end_crystal",
+    "minecraft:respawn_anchor",
+    "minecraft:lodestone",
     "minecraft:bowl",
-    "minecraft:glass_bottle",
     "minecraft:bucket"
   ]
 }

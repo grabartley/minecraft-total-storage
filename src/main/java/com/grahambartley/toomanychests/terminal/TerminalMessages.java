@@ -2,6 +2,8 @@ package com.grahambartley.toomanychests.terminal;
 
 import com.grahambartley.toomanychests.tag.TagNameOutcome;
 import com.grahambartley.toomanychests.tag.TagNameRule;
+import com.grahambartley.toomanychests.tag.TagSkipSummary;
+import com.grahambartley.toomanychests.tag.TagSkips;
 import com.grahambartley.toomanychests.text.CountedNoun;
 import net.minecraft.text.Text;
 
@@ -92,15 +94,16 @@ public final class TerminalMessages {
         CountedNoun.ITEMS.of(items));
   }
 
-  public static Text tagsCopied(int imported, int skipped) {
-    return skipped == 0
+  public static Text tagsCopied(int imported, TagSkips skips) {
+    return skips.isEmpty()
         ? Text.translatableWithFallback(
             PREFIX + "tags-copied", "Copied %s across", CountedNoun.TAGS.of(imported))
         : Text.translatableWithFallback(
             PREFIX + "tags-copied-partial",
-            "Copied %s across and skipped %s",
+            "Copied %s across and skipped %s: %s",
             CountedNoun.TAGS.of(imported),
-            skipped);
+            skips.total(),
+            TagSkipSummary.of(skips));
   }
 
   public static Text tagsCopiedNothing() {

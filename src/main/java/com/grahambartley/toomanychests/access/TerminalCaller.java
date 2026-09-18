@@ -33,4 +33,8 @@ public record TerminalCaller(Optional<UUID> player, boolean operator) {
   public boolean mayOpen(TerminalSettings settings) {
     return TerminalAccessRules.decide(settings, player.orElse(null), operator).allowed();
   }
+
+  public boolean maySeeMembership(TerminalSettings settings) {
+    return operator || mayOpen(settings);
+  }
 }

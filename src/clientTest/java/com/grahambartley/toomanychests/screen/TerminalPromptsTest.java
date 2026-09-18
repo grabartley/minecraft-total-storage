@@ -24,7 +24,7 @@ class TerminalPromptsTest {
   @ParameterizedTest
   @ValueSource(ints = {GLFW.GLFW_KEY_ESCAPE, GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_A})
   void withNoPromptUpEveryKeyIsLeftToTheScreen(int keyCode) {
-    assertFalse(prompts.keyPressed(keyCode));
+    assertFalse(prompts.keyPressed(keyCode, 0));
   }
 
   @Test
@@ -60,7 +60,7 @@ class TerminalPromptsTest {
   void escapeClosesTheNamePromptWithoutClosingTheScreen() {
     prompts.naming().openForNewTag();
 
-    assertTrue(prompts.keyPressed(GLFW.GLFW_KEY_ESCAPE));
+    assertTrue(prompts.keyPressed(GLFW.GLFW_KEY_ESCAPE, 0));
     assertFalse(prompts.isAnyOpen());
   }
 

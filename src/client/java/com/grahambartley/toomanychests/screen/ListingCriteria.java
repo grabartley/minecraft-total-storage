@@ -32,7 +32,7 @@ public final class ListingCriteria {
   }
 
   public boolean isNewFilter(Set<String> wantedTags, TagCombinationMode wantedMode) {
-    return !tags.equals(FilterText.normaliseAll(wantedTags)) || mode != orDefault(wantedMode);
+    return !tags.equals(FilterText.tagIds(wantedTags)) || mode != orDefault(wantedMode);
   }
 
   public boolean needsRequest(
@@ -52,7 +52,7 @@ public final class ListingCriteria {
       TagCombinationMode requestedMode) {
     window = orEmpty(requestedWindow);
     search = normalised(requestedSearch);
-    tags = FilterText.normaliseAll(requestedTags);
+    tags = FilterText.tagIds(requestedTags);
     mode = orDefault(requestedMode);
   }
 

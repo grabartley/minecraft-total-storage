@@ -8,7 +8,7 @@ import java.util.TreeSet;
 
 public record NetworkTag(String id, String displayName, boolean immutable, Set<String> items) {
   public NetworkTag {
-    id = FilterText.normalise(id);
+    id = FilterText.tagId(id);
     if (id.isEmpty()) {
       throw new IllegalArgumentException("tag id must not be blank");
     }

@@ -17,23 +17,25 @@ class ScreenButtonRowTest {
 
   @ParameterizedTest
   @CsvSource({
-    "INSIDE_TOP_RIGHT, 0, 274, 43",
-    "INSIDE_TOP_RIGHT, 1, 298, 43",
-    "INSIDE_TOP_RIGHT, 2, 298, 59",
-    "OUTSIDE_TOP_RIGHT, 0, 298, 43",
-    "OUTSIDE_TOP_RIGHT, 1, 298, 59",
-    "OUTSIDE_BOTTOM_RIGHT, 0, 298, 191",
-    "OUTSIDE_BOTTOM_RIGHT, 1, 298, 175"
+    "INSIDE_TOP_RIGHT, 0, 1, 274, 43",
+    "INSIDE_TOP_RIGHT, 0, 2, 298, 43",
+    "INSIDE_TOP_RIGHT, 1, 2, 298, 59",
+    "OUTSIDE_TOP_RIGHT, 0, 1, 298, 43",
+    "OUTSIDE_TOP_RIGHT, 1, 2, 298, 59",
+    "OUTSIDE_BOTTOM_RIGHT, 0, 1, 298, 191",
+    "OUTSIDE_BOTTOM_RIGHT, 1, 2, 298, 175"
   })
   void everyAnchorPutsTheButtonWhereItSays(
-      ScreenButtonAnchor anchor, int index, int expectedX, int expectedY) {
+      ScreenButtonAnchor anchor, int index, int count, int expectedX, int expectedY) {
     assertEquals(
-        new ScreenButtonSpot(expectedX, expectedY), ScreenButtonRow.at(anchor, CHEST, index));
+        new ScreenButtonSpot(expectedX, expectedY),
+        ScreenButtonRow.at(anchor, CHEST, index, count));
   }
 
   @Test
-  void theFirstButtonSitsInTheBandVanillaLeavesAboveTheSlots() {
-    final ScreenButtonSpot spot = ScreenButtonRow.at(ScreenButtonAnchor.INSIDE_TOP_RIGHT, CHEST, 0);
+  void aLoneButtonSitsInTheBandVanillaLeavesAboveTheSlots() {
+    final ScreenButtonSpot spot =
+        ScreenButtonRow.at(ScreenButtonAnchor.INSIDE_TOP_RIGHT, CHEST, 0, 1);
 
     assertEquals(CHEST.x() + CHEST.width() - 8 - ScreenButtonRow.SIZE, spot.x());
     assertEquals(CHEST.y() + 3, spot.y());
@@ -45,20 +47,25 @@ class ScreenButtonRowTest {
   }
 
   @Test
-  void aSecondButtonLeavesTheBandRatherThanCrowdingTheTitle() {
-    final ScreenButtonSpot spot = ScreenButtonRow.at(ScreenButtonAnchor.INSIDE_TOP_RIGHT, CHEST, 1);
+  void twoButtonsLeaveTheBandTogetherRatherThanSplittingUp() {
+    final ScreenButtonSpot first =
+        ScreenButtonRow.at(ScreenButtonAnchor.INSIDE_TOP_RIGHT, CHEST, 0, 2);
+    final ScreenButtonSpot second =
+        ScreenButtonRow.at(ScreenButtonAnchor.INSIDE_TOP_RIGHT, CHEST, 1, 2);
 
+    assertEquals(first.x(), second.x());
     assertTrue(
-        spot.x() >= CHEST.x() + CHEST.width(),
-        "only one button fits the band, so the second belongs outside the panel");
+        first.x() >= CHEST.x() + CHEST.width(),
+        "only one button fits the band, so a pair belongs outside the panel as a column");
+    assertEquals(first.y() + ScreenButtonRow.SIZE + ScreenButtonRow.GAP, second.y());
   }
 
   @ParameterizedTest
   @EnumSource(ScreenButtonAnchor.class)
   void noTwoButtonsEverOverlap(ScreenButtonAnchor anchor) {
     for (int index = 0; index < 3; index++) {
-      final ScreenButtonSpot here = ScreenButtonRow.at(anchor, CHEST, index);
-      final ScreenButtonSpot next = ScreenButtonRow.at(anchor, CHEST, index + 1);
+      final ScreenButtonSpot here = ScreenButtonRow.at(anchor, CHEST, index, 4);
+      final ScreenButtonSpot next = ScreenButtonRow.at(anchor, CHEST, index + 1, 4);
 
       assertTrue(
           Math.abs(here.x() - next.x()) >= ScreenButtonRow.SIZE
@@ -70,12 +77,13 @@ class ScreenButtonRowTest {
   @ParameterizedTest
   @EnumSource(ScreenButtonAnchor.class)
   void everyAnchorFollowsThePanelRatherThanTheWindow(ScreenButtonAnchor anchor) {
-    final ScreenButtonSpot here = ScreenButtonRow.at(anchor, CHEST, 0);
+    final ScreenButtonSpot here = ScreenButtonRow.at(anchor, CHEST, 0, 1);
     final ScreenButtonSpot moved =
         ScreenButtonRow.at(
             anchor,
             new ScreenPanel(CHEST.x() + 30, CHEST.y() + 20, CHEST.width(), CHEST.height()),
-            0);
+            0,
+            1);
 
     assertEquals(here.x() + 30, moved.x());
     assertEquals(here.y() + 20, moved.y());
@@ -85,7 +93,7 @@ class ScreenButtonRowTest {
   @EnumSource(ScreenButtonAnchor.class)
   void noButtonEverLandsOnASlot(ScreenButtonAnchor anchor) {
     for (int index = 0; index < 3; index++) {
-      final ScreenButtonSpot spot = ScreenButtonRow.at(anchor, CHEST, index);
+      final ScreenButtonSpot spot = ScreenButtonRow.at(anchor, CHEST, index, 3);
       final boolean insideThePanel =
           spot.x() + ScreenButtonRow.SIZE > CHEST.x() && spot.x() < CHEST.x() + CHEST.width();
 
@@ -100,7 +108,7 @@ class ScreenButtonRowTest {
       value = ScreenButtonAnchor.class,
       names = {"OUTSIDE_TOP_RIGHT", "OUTSIDE_BOTTOM_RIGHT"})
   void anOutsideAnchorKeepsTheButtonBesideThePanelRatherThanOffIt(ScreenButtonAnchor anchor) {
-    final ScreenButtonSpot spot = ScreenButtonRow.at(anchor, CHEST, 0);
+    final ScreenButtonSpot spot = ScreenButtonRow.at(anchor, CHEST, 0, 1);
 
     assertEquals(CHEST.x() + CHEST.width() + ScreenButtonRow.GAP, spot.x());
     assertTrue(spot.y() >= CHEST.y());

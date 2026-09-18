@@ -2,13 +2,18 @@ package com.grahambartley.toomanychests.screen;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.toomanychests.filter.TagCombinationMode;
 import com.grahambartley.toomanychests.terminal.NetworkTagEntry;
+import java.util.List;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableTextContent;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class FilterColumnTextTest {
   private static NetworkTagEntry preset(String id) {
@@ -60,5 +65,33 @@ class FilterColumnTextTest {
         FilterColumnText.mode(TagCombinationMode.AND)
             .getString()
             .equals(FilterColumnText.mode(TagCombinationMode.OR).getString()));
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {0, -1})
+  void withNoFilterOnTheModeSaysOnlyWhatItCombines(int active) {
+    assertEquals(
+        FilterColumnText.mode(TagCombinationMode.AND).getString(),
+        FilterColumnText.mode(TagCombinationMode.AND, active).getString());
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {1, 2, 9})
+  void anActiveFilterIsCountedBesideTheModeSoAScrolledListStillSaysSo(int active) {
+    final Text counted = FilterColumnText.mode(TagCombinationMode.AND, active);
+
+    assertNotEquals(FilterColumnText.mode(TagCombinationMode.AND).getString(), counted.getString());
+    assertTrue(
+        List.of(((TranslatableTextContent) counted.getContent()).getArgs()).contains(active));
+  }
+
+  @Test
+  void aCustomTagIsListedInTheFormTheSearchBoxExpects() {
+    final NetworkTagEntry tag = new NetworkTagEntry("base-kit", "Base Kit", false, 1, 1);
+
+    assertEquals(
+        FilterColumnText.CUSTOM_MARKER + "base-kit",
+        FilterColumnText.columnNameOf(tag).getString());
+    assertEquals("Base Kit", FilterColumnText.nameOf(tag).getString());
   }
 }

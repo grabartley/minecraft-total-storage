@@ -80,13 +80,17 @@ public final class TerminalNetworkCommand {
     final TerminalRadius radius =
         TerminalRadius.of(
             settings.get().radius(), ServerConfigService.current().maxTerminalRadius());
-    final boolean powered = TerminalNetworks.power().isActive(source.getWorld(), pos);
-    final RoleTally tally = ROLES.tally(source.getWorld(), pos);
     source.sendFeedback(() -> CommandMessages.terminalInfoHeader(pos), false);
-    source.sendFeedback(() -> CommandMessages.terminalInfoPower(powered), false);
     source.sendFeedback(() -> CommandMessages.terminalInfoRadius(radius), false);
     source.sendFeedback(
         () -> CommandMessages.terminalInfoAccess(settings.get().accessMode()), false);
+    if (!TerminalCommandGate.caller(source).maySeeMembership(settings.get())) {
+      source.sendFeedback(() -> CommandMessages.terminalInfoWithheld(), false);
+      return 0;
+    }
+    final boolean powered = TerminalNetworks.power().isActive(source.getWorld(), pos);
+    final RoleTally tally = ROLES.tally(source.getWorld(), pos);
+    source.sendFeedback(() -> CommandMessages.terminalInfoPower(powered), false);
     source.sendFeedback(() -> CommandMessages.terminalInfoContainers(tally), false);
     return tally.total();
   }

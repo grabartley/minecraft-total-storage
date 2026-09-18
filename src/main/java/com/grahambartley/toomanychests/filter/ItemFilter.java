@@ -8,13 +8,17 @@ public record ItemFilter(
       new ItemFilter(Set.of(), TagCombinationMode.DEFAULT, SearchQuery.EMPTY);
 
   public ItemFilter {
-    activeTags = FilterText.normaliseAll(activeTags);
+    activeTags = FilterText.tagIds(activeTags);
     combinationMode = combinationMode == null ? TagCombinationMode.DEFAULT : combinationMode;
     query = query == null ? SearchQuery.EMPTY : query;
   }
 
   public static ItemFilter ofTags(TagCombinationMode combinationMode, Set<String> activeTags) {
     return new ItemFilter(activeTags, combinationMode, SearchQuery.EMPTY);
+  }
+
+  public static ItemFilter ofQuery(SearchQuery query) {
+    return new ItemFilter(Set.of(), TagCombinationMode.DEFAULT, query);
   }
 
   public static ItemFilter ofSearch(String raw) {

@@ -41,10 +41,16 @@ class TerminalChromeTest {
     verifyDrew(rowDrawnWith(active, true), TerminalSprite.RAISED_LIT);
   }
 
-  @ParameterizedTest(name = "active={0}")
-  @CsvSource({"false", "true"})
-  void aRowAwayFromThePointerIsFlat(boolean active) {
-    verifyDrew(rowDrawnWith(active, false), TerminalSprite.FLAT);
+  @Test
+  void aRowAwayFromThePointerIsFlat() {
+    verifyDrew(rowDrawnWith(false, false), TerminalSprite.FLAT);
+  }
+
+  @Test
+  void anActiveRowIsSunkenSoItReadsAsSwitchedOnWithoutRelyingOnTheAccent() {
+    verifyDrew(rowDrawnWith(true, false), TerminalSprite.PRESSED);
+    verify(rowDrawnWith(true, false), never())
+        .drawGuiTexture(eq(TerminalSprite.FLAT.id()), anyInt(), anyInt(), anyInt(), anyInt());
   }
 
   @Test

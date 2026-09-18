@@ -17,8 +17,12 @@ public final class HighlightColour {
     };
   }
 
-  public static boolean isDoubled(ContainerRole role) {
-    return role == ContainerRole.EXCLUDED;
+  public static HighlightShape shapeOf(ContainerRole role) {
+    return switch (role == null ? ContainerRole.DEFAULT : role) {
+      case GENERAL -> HighlightShape.SOLID;
+      case FILTERED -> HighlightShape.DASHED;
+      case EXCLUDED -> HighlightShape.DOUBLED;
+    };
   }
 
   public static float red(int argb) {

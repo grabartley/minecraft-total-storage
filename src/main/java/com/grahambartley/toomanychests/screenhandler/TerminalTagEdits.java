@@ -4,6 +4,7 @@ import com.grahambartley.toomanychests.access.TerminalCaller;
 import com.grahambartley.toomanychests.network.TagEditPayload;
 import com.grahambartley.toomanychests.operation.ExpensiveOperation;
 import com.grahambartley.toomanychests.operation.OperationGuards;
+import com.grahambartley.toomanychests.operation.TerminalNotice;
 import com.grahambartley.toomanychests.operation.TerminalOperationContext;
 import com.grahambartley.toomanychests.operation.TerminalOperationGate;
 import com.grahambartley.toomanychests.tag.NetworkTagSet;
@@ -83,13 +84,13 @@ public final class TerminalTagEdits {
 
   private static void report(ServerPlayerEntity player, TagEdit action, TagEditResult result) {
     switch (result.outcome()) {
-      case DENIED -> player.sendMessage(TerminalMessages.notYours(), true);
-      case UNKNOWN_TAG -> player.sendMessage(TerminalMessages.tagUnknown(), true);
-      case PRESET_IMMUTABLE -> player.sendMessage(TerminalMessages.tagIsPreset(), true);
+      case DENIED -> TerminalNotice.tell(player, TerminalMessages.notYours());
+      case UNKNOWN_TAG -> TerminalNotice.tell(player, TerminalMessages.tagUnknown());
+      case PRESET_IMMUTABLE -> TerminalNotice.tell(player, TerminalMessages.tagIsPreset());
       case TOO_MANY_TAGS ->
-          player.sendMessage(TerminalMessages.tagLimitReached(NetworkTagSet.MAX_CUSTOM), true);
+          TerminalNotice.tell(player, TerminalMessages.tagLimitReached(NetworkTagSet.MAX_CUSTOM));
       case NAME_REJECTED ->
-          player.sendMessage(TerminalMessages.tagNameRejected(result.name()), true);
+          TerminalNotice.tell(player, TerminalMessages.tagNameRejected(result.name()));
       case CHANGED -> reportChange(player, action, result);
       default -> {}
     }
@@ -98,11 +99,11 @@ public final class TerminalTagEdits {
   private static void reportChange(
       ServerPlayerEntity player, TagEdit action, TagEditResult result) {
     if (action == TagEdit.DELETE) {
-      player.sendMessage(TerminalMessages.tagDeleted(result.affected()), true);
+      TerminalNotice.tell(player, TerminalMessages.tagDeleted(result.affected()));
       return;
     }
     if (action == TagEdit.ASSIGN_MATCHING) {
-      player.sendMessage(TerminalMessages.tagAssignedTo(result.affected()), true);
+      TerminalNotice.tell(player, TerminalMessages.tagAssignedTo(result.affected()));
     }
   }
 

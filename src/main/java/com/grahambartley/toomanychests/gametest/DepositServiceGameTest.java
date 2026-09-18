@@ -154,7 +154,7 @@ public final class DepositServiceGameTest implements FabricGameTest {
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
       tickLimit = TICK_LIMIT)
-  public void aRequestNamingALockedSlotIsRefusedRatherThanHonoured(TestContext context) {
+  public void aShiftClickOutOfALockedSlotMovesItTheSameAsIntoAChest(TestContext context) {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
     ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
     player.getInventory().setStack(5, new ItemStack(Items.DIAMOND, STACK));
@@ -166,11 +166,29 @@ public final class DepositServiceGameTest implements FabricGameTest {
             DepositRequestPayload.wholeSlot(NetworkOperationFixture.handlerOf(player).syncId, 5));
 
     context.assertTrue(
-        outcome.result() == DepositResult.SLOT_LOCKED,
-        "A locked slot was reachable, got " + outcome.result());
+        outcome.result() == DepositResult.DEPOSITED,
+        "The player chose the slot, so the lock should not have stopped them, got "
+            + outcome.result());
     context.assertTrue(
-        player.getInventory().getStack(5).getCount() == STACK,
-        "The locked slot was emptied by a forged request");
+        player.getInventory().getStack(5).isEmpty(),
+        "The stack the player shift-clicked stayed where it was");
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void depositAllStillLeavesALockedSlotAlone(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    player.getInventory().setStack(5, new ItemStack(Items.DIAMOND, STACK));
+    LockedSlotsAttachment.set(player, LockedSlots.of(List.of(5)));
+
+    deposits.depositAll(player, NetworkOperationFixture.handlerOf(player).syncId);
+
+    context.assertTrue(
+        player.getInventory().getStack(5).getCount() == STACK, "Deposit all emptied a locked slot");
     NetworkOperationFixture.finish(context, player);
   }
 

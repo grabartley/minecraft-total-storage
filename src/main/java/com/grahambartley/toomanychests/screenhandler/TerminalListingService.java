@@ -6,6 +6,7 @@ import com.grahambartley.toomanychests.filter.NetworkFilterCandidates;
 import com.grahambartley.toomanychests.filter.SearchQueryParser;
 import com.grahambartley.toomanychests.lifecycle.NetworkMembership;
 import com.grahambartley.toomanychests.listing.ListingPage;
+import com.grahambartley.toomanychests.listing.ListingRequestOutcome;
 import com.grahambartley.toomanychests.listing.NetworkListing;
 import com.grahambartley.toomanychests.listing.TerminalListingState;
 import com.grahambartley.toomanychests.network.ListingPayload;
@@ -31,17 +32,19 @@ public final class TerminalListingService {
     this.candidates = Objects.requireNonNull(candidates, "candidates");
   }
 
-  public boolean request(ServerPlayerEntity player, ListingRequestPayload payload) {
+  public ListingRequestOutcome request(ServerPlayerEntity player, ListingRequestPayload payload) {
     if (player == null || payload == null) {
-      return false;
+      return ListingRequestOutcome.IGNORED;
     }
     final TerminalScreenHandler handler = handlerOf(player, payload.syncId());
     if (handler == null) {
-      return false;
+      return ListingRequestOutcome.IGNORED;
     }
-    handler.listing().requested(payload.window(), filterOf(payload));
+    final boolean searchMoved = handler.listing().requested(payload.window(), filterOf(payload));
     send(player, handler);
-    return true;
+    return searchMoved
+        ? ListingRequestOutcome.ANSWERED_ON_A_NEW_SEARCH
+        : ListingRequestOutcome.ANSWERED;
   }
 
   public boolean refresh(ServerPlayerEntity player) {

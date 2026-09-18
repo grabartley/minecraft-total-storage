@@ -10,21 +10,29 @@ class TagTransferResultTest {
   @Test
   void aTransferThatStoredSomethingReportsWhatItBroughtAndWhatItSkipped() {
     final TagTransferResult result =
-        TagTransferResult.from(new TagSetImportResult(NetworkTagSet.defaults(), 3, 2), true);
+        TagTransferResult.from(
+            new TagSetImportResult(
+                NetworkTagSet.defaults(), 3, TagSkips.of(TagSkipReason.TOO_LONG, 2)),
+            true);
 
     assertTrue(result.isChange());
     assertEquals(3, result.imported());
     assertEquals(2, result.skipped());
+    assertEquals(2, result.skips().countOf(TagSkipReason.TOO_LONG));
   }
 
   @Test
   void aTransferThatChangedNothingStillReportsWhatItSkipped() {
     final TagTransferResult result =
-        TagTransferResult.from(new TagSetImportResult(NetworkTagSet.defaults(), 0, 4), false);
+        TagTransferResult.from(
+            new TagSetImportResult(
+                NetworkTagSet.defaults(), 0, TagSkips.of(TagSkipReason.MALFORMED, 4)),
+            false);
 
     assertFalse(result.isChange());
     assertEquals(0, result.imported());
     assertEquals(4, result.skipped());
+    assertEquals(4, result.skips().countOf(TagSkipReason.MALFORMED));
   }
 
   @Test

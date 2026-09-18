@@ -7,8 +7,6 @@ public enum DepositResult {
 
   NOTHING_TO_DEPOSIT,
 
-  SLOT_LOCKED,
-
   NO_SPACE,
 
   REFUSED,

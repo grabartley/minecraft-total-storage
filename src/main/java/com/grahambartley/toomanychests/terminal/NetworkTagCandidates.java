@@ -1,6 +1,8 @@
 package com.grahambartley.toomanychests.terminal;
 
 import com.grahambartley.toomanychests.filter.FilterCandidate;
+import com.grahambartley.toomanychests.filter.FilterEvaluator;
+import com.grahambartley.toomanychests.filter.ItemFilter;
 import com.grahambartley.toomanychests.filter.NetworkFilterCandidates;
 import com.grahambartley.toomanychests.index.NetworkIndexEntry;
 import com.grahambartley.toomanychests.lifecycle.NetworkMembership;
@@ -16,16 +18,25 @@ public final class NetworkTagCandidates {
   private NetworkTagCandidates() {}
 
   public static List<FilterCandidate> of(ServerWorld world, BlockPos terminal, NetworkTagSet tags) {
+    return of(world, terminal, tags, ItemFilter.NONE);
+  }
+
+  public static List<FilterCandidate> of(
+      ServerWorld world, BlockPos terminal, NetworkTagSet tags, ItemFilter narrowing) {
     final NetworkMembership network =
         TerminalNetworks.power().network(world, terminal).orElse(null);
     if (network == null) {
       return List.of();
     }
+    final ItemFilter filter = narrowing == null ? ItemFilter.NONE : narrowing;
     final NetworkFilterCandidates candidates =
         new NetworkFilterCandidates(tags == null ? NetworkTagSet.defaults() : tags);
     final List<FilterCandidate> resolved = new ArrayList<>(network.index().variantCount());
     for (final NetworkIndexEntry<ItemVariant> entry : network.index().entries()) {
-      resolved.add(candidates.of(entry.variant()));
+      final FilterCandidate candidate = candidates.of(entry.variant());
+      if (FilterEvaluator.strengthOf(candidate, filter).isMatch()) {
+        resolved.add(candidate);
+      }
     }
     return List.copyOf(resolved);
   }

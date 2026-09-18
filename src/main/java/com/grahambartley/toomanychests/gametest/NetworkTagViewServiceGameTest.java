@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests.gametest;
 
+import com.grahambartley.toomanychests.filter.ItemFilter;
 import com.grahambartley.toomanychests.tag.PresetTag;
 import com.grahambartley.toomanychests.terminal.NetworkTagEntry;
 import com.grahambartley.toomanychests.terminal.NetworkTagView;
@@ -7,6 +8,8 @@ import com.grahambartley.toomanychests.terminal.NetworkTagViewService;
 import java.util.Optional;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.minecraft.block.entity.BarrelBlockEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.GameTest;
@@ -130,8 +133,62 @@ public final class NetworkTagViewServiceGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, owner);
   }
 
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aSearchNarrowsTheCountsSoATagSaysWhatClickingItWouldGive(TestContext context) {
+    final BarrelBlockEntity barrel =
+        NetworkOperationFixture.stockedBarrel(
+            context, NetworkOperationFixture.EAST_BARREL, Items.COBBLESTONE, 8);
+    barrel.setStack(1, new ItemStack(Items.DIAMOND, 8));
+    final ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    NetworkOperationFixture.fileUnderCustomTag(context, "castle", "minecraft:cobblestone");
+    NetworkOperationFixture.fileUnderCustomTag(context, "castle", "minecraft:diamond");
+
+    final NetworkTagEntry wideOpen = customTag(viewFor(owner, Optional.empty()), "castle");
+    final NetworkTagEntry searched =
+        customTag(viewFor(owner, Optional.empty(), ItemFilter.ofSearch("diamond")), "castle");
+
+    context.assertTrue(
+        wideOpen.matchingItems() == 2,
+        "With no search up the tag counts both items, got " + wideOpen.matchingItems());
+    context.assertTrue(
+        searched.matchingItems() == 1,
+        "With a search up the tag should count only what matches, got " + searched.matchingItems());
+    context.assertTrue(
+        searched.assignedItems() == 2, "A search must not change what is filed under the tag");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aTagMatchingNothingUnderTheSearchStaysInTheListGreyed(TestContext context) {
+    NetworkOperationFixture.stockedBarrel(
+        context, NetworkOperationFixture.EAST_BARREL, Items.COBBLESTONE, 8);
+    final ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    NetworkOperationFixture.fileUnderCustomTag(context, "castle", "minecraft:cobblestone");
+
+    final NetworkTagView view = viewFor(owner, Optional.empty(), ItemFilter.ofSearch("diamond"));
+    final NetworkTagEntry castle = customTag(view, "castle");
+
+    context.assertTrue(castle.isEmptyHere(), "A tag with no matches should read as empty");
+    context.assertTrue(
+        view.tags().size() == PresetTag.all().size() + 1,
+        "No tag should leave the list while a search is up, got " + view.tags().size());
+    NetworkOperationFixture.finish(context, owner);
+  }
+
   private NetworkTagView viewFor(ServerPlayerEntity player, Optional<ItemVariant> subject) {
     return views.viewFor(player, NetworkOperationFixture.handlerOf(player).terminal(), subject);
+  }
+
+  private NetworkTagView viewFor(
+      ServerPlayerEntity player, Optional<ItemVariant> subject, ItemFilter narrowing) {
+    return views.viewFor(
+        player, NetworkOperationFixture.handlerOf(player).terminal(), subject, narrowing);
   }
 
   private static NetworkTagEntry customTag(NetworkTagView view, String id) {

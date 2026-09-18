@@ -35,10 +35,6 @@ public record DepositOutcome(
     return new DepositOutcome(DepositResult.NOTHING_TO_DEPOSIT, 0L, 0L, List.of());
   }
 
-  public static DepositOutcome slotLocked() {
-    return new DepositOutcome(DepositResult.SLOT_LOCKED, 0L, 0L, List.of());
-  }
-
   public static DepositOutcome noSpace(long offered, List<DepositLeftover> leftovers) {
     return new DepositOutcome(DepositResult.NO_SPACE, offered, 0L, leftovers);
   }

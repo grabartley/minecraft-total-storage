@@ -213,13 +213,23 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     if (!TerminalNoticeMirror.isShowingOn(handler.syncId)) {
       return;
     }
+    if (tab.isSettings()) {
+      TerminalNoticeBanner.drawInSettings(
+          context,
+          textRenderer,
+          TerminalNoticeMirror.message(),
+          TerminalNoticeMirror.needsAnAnswer(),
+          x,
+          y);
+      return;
+    }
     TerminalNoticeBanner.draw(
         context,
         textRenderer,
         TerminalNoticeMirror.message(),
         TerminalNoticeMirror.needsAnAnswer(),
         x,
-        tab.isSettings() ? y + TerminalNoticeBanner.settingsDrop() : y);
+        y);
   }
 
   private void updateHovered(int mouseX, int mouseY) {
@@ -234,7 +244,9 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     }
     hoveredTab = TerminalTab.at(windowX, windowY);
     hoveredCell =
-        tab.isSettings() ? TerminalScreenLayout.NO_CELL : items.hoveredCell(windowX, windowY);
+        tab.isSettings()
+            ? TerminalScreenLayout.NO_CELL
+            : items.hoveredCell(windowX, windowY, noticeRows());
     hoveredWindowX = windowX;
     hoveredWindowY = windowY;
   }
@@ -245,12 +257,21 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     if (!tab.isSettings()) {
       search.drawBox(context, x, y);
     }
-    TerminalSprite.SUNKEN.draw(
-        context,
-        x + TerminalScreenLayout.INSET_X,
-        y + TerminalScreenLayout.INSET_Y,
-        TerminalScreenLayout.INSET_WIDTH,
-        TerminalScreenLayout.INSET_HEIGHT);
+    if (tab.isSettings()) {
+      TerminalSprite.SUNKEN.draw(
+          context,
+          x + TerminalSettingsLayout.INSET_X,
+          y + TerminalSettingsLayout.INSET_Y,
+          TerminalSettingsLayout.INSET_WIDTH,
+          TerminalSettingsLayout.INSET_HEIGHT);
+    } else {
+      TerminalSprite.SUNKEN.draw(
+          context,
+          x + TerminalScreenLayout.INSET_X,
+          y + TerminalScreenLayout.INSET_Y,
+          TerminalScreenLayout.INSET_WIDTH,
+          TerminalScreenLayout.INSET_HEIGHT);
+    }
     if (!tab.isSettings()) {
       items.drawCells(context, x, y);
       items.drawScrollbar(context, x, y);
@@ -318,26 +339,27 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     if (verticalAmount == 0.0) {
       return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
-    final int notches = verticalAmount > 0.0 ? -1 : 1;
+    final int gridRows = ScrollNotches.gridRowsFor(verticalAmount);
+    final int listRows = ScrollNotches.rowsFor(verticalAmount);
     if (tab.isSettings()) {
       if (settings.scrolls()
           && settings.scroll().overflows()
           && (TerminalSettingsLayout.rowAt(windowX(mouseX), windowY(mouseY))
                   != TerminalSettingsLayout.NO_ROW
               || settings.isOverScrollbar(windowX(mouseX), windowY(mouseY)))) {
-        settings.scroll().scrollBy(notches);
+        settings.scroll().scrollBy(listRows);
         return true;
       }
       return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
     if (filters.scroll().overflows()
         && FilterColumnLayout.isOverColumn(windowX(mouseX), windowY(mouseY))) {
-      filters.scroll().scrollBy(notches);
+      filters.scroll().scrollBy(listRows);
       return true;
     }
     if (items.scroll().overflows()
         && TerminalScreenLayout.isOverListing(windowX(mouseX), windowY(mouseY))) {
-      items.scroll().scrollBy(notches);
+      items.scroll().scrollBy(gridRows);
       return true;
     }
     return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
@@ -430,7 +452,9 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   }
 
   private boolean handleGridClick(int windowX, int windowY, int button) {
-    final int cell = TerminalScreenLayout.cellAt(windowX, windowY);
+    final int cell =
+        TerminalScreenLayout.pageCellAt(
+            TerminalScreenLayout.cellAt(windowX, windowY), noticeRows());
     if (cell == TerminalScreenLayout.NO_CELL) {
       return false;
     }
@@ -526,7 +550,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   @Override
   public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-    if (prompts.keyPressed(keyCode)) {
+    if (prompts.keyPressed(keyCode, modifiers)) {
       return true;
     }
     if (isDepositAllKey(keyCode, scanCode)) {

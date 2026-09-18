@@ -35,7 +35,7 @@ public final class NetworkTagEditor {
     if (!check.isAccepted()) {
       return TagEditResult.rejected(check);
     }
-    return store(block, tags.withCustomTag(TagNameRule.idFor(name), name.trim()), 0);
+    return store(block, tags.withCustomTag(FilterText.tagId(name), name.trim()), 0);
   }
 
   public TagEditResult rename(

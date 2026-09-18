@@ -15,13 +15,54 @@ import org.junit.jupiter.params.provider.ValueSource;
 class TerminalSettingsLayoutTest {
 
   @Test
-  void theSettingsPanelFillsTheRecessTheGridUses() {
-    assertEquals(TerminalScreenLayout.GRID_X, TerminalSettingsLayout.PANEL_X);
-    assertEquals(TerminalScreenLayout.GRID_Y, TerminalSettingsLayout.PANEL_Y);
-    assertEquals(TerminalScreenLayout.GRID_HEIGHT, TerminalSettingsLayout.PANEL_HEIGHT);
+  void theSettingsPanelFillsEveryInchTheItemsTabUsesIncludingTheFilterColumn() {
+    assertEquals(TerminalScreenLayout.FILTER_X, TerminalSettingsLayout.INSET_X);
+    assertEquals(TerminalScreenLayout.SEARCH_Y, TerminalSettingsLayout.INSET_Y);
     assertEquals(
-        TerminalScreenLayout.SCROLLBAR_X + TerminalScreenLayout.SCROLLBAR_WIDTH,
-        TerminalSettingsLayout.PANEL_X + TerminalSettingsLayout.PANEL_WIDTH);
+        TerminalScreenLayout.INSET_X + TerminalScreenLayout.INSET_WIDTH,
+        TerminalSettingsLayout.INSET_X + TerminalSettingsLayout.INSET_WIDTH);
+    assertEquals(
+        TerminalScreenLayout.INSET_Y + TerminalScreenLayout.INSET_HEIGHT,
+        TerminalSettingsLayout.INSET_Y + TerminalSettingsLayout.INSET_HEIGHT);
+  }
+
+  @Test
+  void thePanelSitsInsideItsRecessByTheBorderTheChromeDraws() {
+    assertEquals(
+        TerminalSettingsLayout.INSET_X + TerminalScreenLayout.INSET_BORDER,
+        TerminalSettingsLayout.PANEL_X);
+    assertEquals(
+        TerminalSettingsLayout.INSET_Y + TerminalScreenLayout.INSET_BORDER,
+        TerminalSettingsLayout.PANEL_Y);
+    assertEquals(
+        TerminalSettingsLayout.INSET_WIDTH - 2 * TerminalScreenLayout.INSET_BORDER,
+        TerminalSettingsLayout.PANEL_WIDTH);
+    assertEquals(
+        TerminalSettingsLayout.INSET_HEIGHT - 2 * TerminalScreenLayout.INSET_BORDER,
+        TerminalSettingsLayout.PANEL_HEIGHT);
+  }
+
+  @Test
+  void theWiderPanelBuysRoomTheOldGridSizedOneDidNotHave() {
+    assertTrue(
+        TerminalSettingsLayout.PANEL_WIDTH > TerminalScreenLayout.GRID_WIDTH,
+        "the settings tabs are meant to use the filter column's width too");
+    assertTrue(
+        TerminalSettingsLayout.ROWS >= 5,
+        "a seven container network should be close to fitting, got "
+            + TerminalSettingsLayout.ROWS
+            + " rows");
+  }
+
+  @Test
+  void theScrollbarSitsAtTheRightEdgeOfThePanelAndTheRowsStopShortOfIt() {
+    assertEquals(
+        TerminalSettingsLayout.PANEL_X + TerminalSettingsLayout.PANEL_WIDTH,
+        TerminalSettingsLayout.SCROLLBAR_X + TerminalScreenLayout.SCROLLBAR_WIDTH);
+    assertTrue(
+        TerminalSettingsLayout.PANEL_X + TerminalSettingsLayout.ROW_WIDTH
+            <= TerminalSettingsLayout.SCROLLBAR_X,
+        "a container row would run under the scrollbar");
   }
 
   static Stream<Integer> everySection() {

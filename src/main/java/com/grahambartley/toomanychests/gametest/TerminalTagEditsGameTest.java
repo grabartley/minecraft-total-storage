@@ -47,7 +47,7 @@ public final class TerminalTagEditsGameTest implements FabricGameTest {
     final boolean applied = edits.edit(owner, TagEditPayload.create(syncId(owner), "Base Build"));
 
     context.assertTrue(applied, "The owner could not create a tag");
-    context.assertTrue(tagsOf(context).contains("base build"), "The tag is not on the terminal");
+    context.assertTrue(tagsOf(context).contains("base-build"), "The tag is not on the terminal");
     NetworkOperationFixture.finish(context, owner);
   }
 
@@ -117,10 +117,10 @@ public final class TerminalTagEditsGameTest implements FabricGameTest {
 
     edits.edit(owner, TagEditPayload.rename(syncId(owner), "castle", "The Keep"));
 
-    context.assertTrue(tagsOf(context).contains("the keep"), "The tag was not renamed");
+    context.assertTrue(tagsOf(context).contains("the-keep"), "The tag was not renamed");
     context.assertFalse(tagsOf(context).contains("castle"), "The old name is still there");
     context.assertTrue(
-        tagsOf(context).tagIdsFor("minecraft:cobblestone").contains("the keep"),
+        tagsOf(context).tagIdsFor("minecraft:cobblestone").contains("the-keep"),
         "Renaming lost the items the tag held");
     NetworkOperationFixture.finish(context, owner);
   }

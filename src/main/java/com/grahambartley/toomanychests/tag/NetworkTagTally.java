@@ -25,6 +25,6 @@ public record NetworkTagTally(Map<String, Integer> counts) {
   }
 
   public int countOf(String tagId) {
-    return counts.getOrDefault(FilterText.normalise(tagId), 0);
+    return counts.getOrDefault(FilterText.tagId(tagId), 0);
   }
 }

@@ -18,6 +18,8 @@ public final class ContainerHighlightRenderer {
 
   private static final double INNER_INSET = 0.2;
 
+  private static final int DASHES_PER_EDGE = 3;
+
   private ContainerHighlightRenderer() {}
 
   public static void register() {
@@ -48,10 +50,14 @@ public final class ContainerHighlightRenderer {
   private static void drawOutline(
       MatrixStack matrices, VertexConsumer lines, BlockView world, HighlightedContainer container) {
     final int colour = HighlightColour.of(container.role());
-    final Box footprint = ContainerOutline.of(world, container.container());
-    drawBox(matrices, lines, footprint.expand(SWELL), colour);
-    if (HighlightColour.isDoubled(container.role())) {
-      drawBox(matrices, lines, footprint.expand(-INNER_INSET), colour);
+    final Box footprint = ContainerOutline.of(world, container.container()).expand(SWELL);
+    switch (HighlightColour.shapeOf(container.role())) {
+      case SOLID -> drawBox(matrices, lines, footprint, colour);
+      case DASHED -> DashedBox.draw(matrices, lines, footprint, DASHES_PER_EDGE, colour);
+      case DOUBLED -> {
+        drawBox(matrices, lines, footprint, colour);
+        drawBox(matrices, lines, footprint.expand(-INNER_INSET), colour);
+      }
     }
   }
 

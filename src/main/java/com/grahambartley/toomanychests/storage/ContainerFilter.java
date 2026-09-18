@@ -3,20 +3,26 @@ package com.grahambartley.toomanychests.storage;
 import com.grahambartley.toomanychests.filter.FilterText;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.UnaryOperator;
 
 public record ContainerFilter(Set<String> tagIds, Set<String> itemIds) {
   public static final ContainerFilter NONE = new ContainerFilter(Set.of(), Set.of());
 
   public ContainerFilter {
-    tagIds = canonicalise(tagIds);
-    itemIds = canonicalise(itemIds);
+    tagIds = canonicalise(tagIds, FilterText::tagId);
+    itemIds = canonicalise(itemIds, FilterText::normalise);
   }
 
   public static ContainerFilter of(Collection<String> tagIds, Collection<String> itemIds) {
-    return new ContainerFilter(canonicalise(tagIds), canonicalise(itemIds));
+    return new ContainerFilter(asSet(tagIds), asSet(itemIds));
+  }
+
+  private static Set<String> asSet(Collection<String> raw) {
+    return raw == null ? Set.of() : new LinkedHashSet<>(raw);
   }
 
   public static ContainerFilter ofTags(String... tagIds) {
@@ -32,7 +38,7 @@ public record ContainerFilter(Set<String> tagIds, Set<String> itemIds) {
   }
 
   public boolean hasTag(String tagId) {
-    return tagIds.contains(FilterText.normalise(tagId));
+    return tagIds.contains(FilterText.tagId(tagId));
   }
 
   public boolean hasItem(String itemId) {
@@ -53,42 +59,50 @@ public record ContainerFilter(Set<String> tagIds, Set<String> itemIds) {
   }
 
   public ContainerFilter withTag(String tagId) {
-    return hasTag(tagId) ? this : new ContainerFilter(plus(tagIds, tagId), itemIds);
+    return hasTag(tagId)
+        ? this
+        : new ContainerFilter(plus(tagIds, FilterText.tagId(tagId)), itemIds);
   }
 
   public ContainerFilter withoutTag(String tagId) {
-    return hasTag(tagId) ? new ContainerFilter(minus(tagIds, tagId), itemIds) : this;
+    return hasTag(tagId)
+        ? new ContainerFilter(minus(tagIds, FilterText.tagId(tagId)), itemIds)
+        : this;
   }
 
   public ContainerFilter withItem(String itemId) {
-    return hasItem(itemId) ? this : new ContainerFilter(tagIds, plus(itemIds, itemId));
+    return hasItem(itemId)
+        ? this
+        : new ContainerFilter(tagIds, plus(itemIds, FilterText.normalise(itemId)));
   }
 
   public ContainerFilter withoutItem(String itemId) {
-    return hasItem(itemId) ? new ContainerFilter(tagIds, minus(itemIds, itemId)) : this;
+    return hasItem(itemId)
+        ? new ContainerFilter(tagIds, minus(itemIds, FilterText.normalise(itemId)))
+        : this;
   }
 
   private static Set<String> plus(Set<String> existing, String value) {
     final Set<String> next = new TreeSet<>(existing);
-    next.add(FilterText.normalise(value));
+    next.add(value);
     return next;
   }
 
   private static Set<String> minus(Set<String> existing, String value) {
     final Set<String> next = new TreeSet<>(existing);
-    next.remove(FilterText.normalise(value));
+    next.remove(value);
     return next;
   }
 
-  private static Set<String> canonicalise(Collection<String> raw) {
+  private static Set<String> canonicalise(Collection<String> raw, UnaryOperator<String> rule) {
     if (raw == null || raw.isEmpty()) {
       return Set.of();
     }
     final Set<String> kept = new TreeSet<>();
     for (final String value : raw) {
-      final String normalised = FilterText.normalise(value);
-      if (!normalised.isEmpty()) {
-        kept.add(normalised);
+      final String canonical = rule.apply(value);
+      if (!canonical.isEmpty()) {
+        kept.add(canonical);
       }
     }
     return Collections.unmodifiableSet(kept);

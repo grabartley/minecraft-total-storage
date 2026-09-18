@@ -138,4 +138,29 @@ class ContainerFilterTest {
     assertThrows(UnsupportedOperationException.class, () -> filter.tagIds().add("wood"));
     assertThrows(UnsupportedOperationException.class, () -> filter.itemIds().add(COAL));
   }
+
+  @Test
+  void aTagIdIsCanonicalisedTheSameWayATagNameIsMinted() {
+    final ContainerFilter filter = ContainerFilter.ofTags("Base Build");
+
+    assertTrue(filter.hasTag("Base Build"), "the name it was written with does not match");
+    assertTrue(filter.hasTag("base-build"), "the id the tag set mints does not match");
+    assertEquals(Set.of("base-build"), filter.tagIds());
+  }
+
+  @Test
+  void afilterSavedBeforeTagIdsLostTheirSpacesStillRoutesAfterLoading() {
+    final ContainerFilter loaded = ContainerFilter.of(Set.of("base build"), Set.of());
+
+    assertTrue(loaded.hasTag("base-build"), "a filter written by an older world stopped routing");
+    assertTrue(loaded.accepts("minecraft:stone", Set.of("base-build")));
+  }
+
+  @Test
+  void anItemIdKeepsEveryCharacterItsIdentifierNeeds() {
+    final ContainerFilter filter = ContainerFilter.ofItems("MINECRAFT:Oak_Planks");
+
+    assertEquals(Set.of("minecraft:oak_planks"), filter.itemIds());
+    assertTrue(filter.hasItem("minecraft:oak_planks"));
+  }
 }

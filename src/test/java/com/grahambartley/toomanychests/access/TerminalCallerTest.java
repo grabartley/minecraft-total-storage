@@ -87,6 +87,25 @@ class TerminalCallerTest {
   }
 
   @Test
+  void theConsoleStillReadsAnyNetworkEvenThoughItCannotOpenOne() {
+    assertTrue(TerminalCaller.of(null, true).maySeeMembership(ownedTerminal()));
+  }
+
+  @Test
+  void membershipIsReadableByWhoeverMayOpenTheTerminal() {
+    assertTrue(new TerminalCaller(Optional.of(OWNER), false).maySeeMembership(ownedTerminal()));
+    assertTrue(
+        new TerminalCaller(Optional.of(SOMEBODY_ELSE), true).maySeeMembership(ownedTerminal()));
+  }
+
+  @Test
+  void aStrangerReadsNothingAboutANetworkTheyMayNotOpen() {
+    assertFalse(
+        new TerminalCaller(Optional.of(SOMEBODY_ELSE), false).maySeeMembership(ownedTerminal()));
+    assertFalse(TerminalCaller.of(null, false).maySeeMembership(ownedTerminal()));
+  }
+
+  @Test
   void anUnownedTerminalIsConfigurableOnlyByAnOperator() {
     assertFalse(
         new TerminalCaller(Optional.of(OWNER), false).mayAdminister(TerminalSettings.defaults()));

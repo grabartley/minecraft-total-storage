@@ -33,6 +33,18 @@ The canonical implementations are **Loot Lock** and **Dogs Unleashed**. Follow t
 - Configuration changes sync to connected clients, so client-side UI reflects live server state.
 - Every setting reachable from a configuration screen is also reachable from the command tree, and the two share their validation rather than reimplementing it.
 
+## Speaking To The Player
+
+The mod speaks in three registers, and which one a message belongs to is decided by where the player is looking when it arrives, not by which code path produced it.
+
+- **The in-terminal notice banner** carries anything an operation says while the terminal screen is open. The action bar renders *behind* an open screen, so a message sent there while the terminal is up is a message the player may never read, and a confirmation the player cannot read is not a confirmation. This is the reasoning already recorded in PRD SORT-18, and it binds every terminal-initiated message: withdrawal shortfalls, deposit refusals, sort and consolidate summaries, and the large-operation confirmation alike.
+- **The action bar** carries anything said while a container screen or no screen is open: sorting a chest from its own screen, quick stack from the world, a refused gesture. Nothing the mod draws covers the action bar in those cases, so it reads.
+- **Chat** carries command output only. The player typed the command and is already looking at chat, and chat is the only register that persists long enough to read a multi-line readout.
+
+Adding a new message means answering one question first: can a mod screen be covering the action bar at the moment this fires? If it can, the message is a notice. If it cannot, it is an action bar message. If the player typed a command to cause it, it is chat.
+
+The registers are not interchangeable and a message never goes to two of them. A single operation that can be started from both the terminal and a container screen picks its register from the screen it was started on, rather than sending to both and letting one be invisible.
+
 ## Code Structure
 
 - **Single Responsibility Principle.** One class, one concern. Extract a collaborator rather than growing a class sideways.

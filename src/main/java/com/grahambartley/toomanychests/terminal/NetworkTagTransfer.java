@@ -5,6 +5,7 @@ import com.grahambartley.toomanychests.block.entity.TerminalBlockEntity;
 import com.grahambartley.toomanychests.lifecycle.LoadedChunks;
 import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import com.grahambartley.toomanychests.tag.TagEditOutcome;
+import com.grahambartley.toomanychests.tag.TagSetContents;
 import com.grahambartley.toomanychests.tag.TagSetImport;
 import com.grahambartley.toomanychests.tag.TagSetImportMode;
 import com.grahambartley.toomanychests.tag.TagSetImportResult;
@@ -29,14 +30,14 @@ public final class NetworkTagTransfer {
     if (lifted.isEmpty()) {
       return TagTransferResult.of(refusalFor(world, source));
     }
-    return importInto(world, target, caller, lifted.get(), mode);
+    return importInto(world, target, caller, TagSetContents.of(lifted.get()), mode);
   }
 
   public TagTransferResult importInto(
       ServerWorld world,
       BlockPos terminal,
       TerminalCaller caller,
-      NetworkTagSet source,
+      TagSetContents source,
       TagSetImportMode mode) {
     final TerminalBlockEntity block = administrable(world, terminal, caller);
     if (block == null) {
