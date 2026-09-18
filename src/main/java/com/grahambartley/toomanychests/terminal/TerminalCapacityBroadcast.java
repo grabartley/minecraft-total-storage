@@ -1,7 +1,6 @@
 package com.grahambartley.toomanychests.terminal;
 
 import com.grahambartley.toomanychests.config.ServerConfigService;
-import com.grahambartley.toomanychests.index.NetworkIndexSession;
 import com.grahambartley.toomanychests.lifecycle.NetworkMembership;
 import java.util.List;
 import java.util.Objects;
@@ -46,8 +45,10 @@ public final class TerminalCapacityBroadcast {
       if (network == null || world == null) {
         continue;
       }
-      final NetworkIndexSession<?> session = network.session();
-      if (!thresholdMoved && !watch.needsMeasuring(terminal, session.invalidationCount())) {
+      final NetworkCapacityStamp stamp =
+          NetworkCapacityStamp.of(
+              network.session(), TerminalLookup.settingsAt(world, terminal.pos()).orElse(null));
+      if (!thresholdMoved && !watch.needsMeasuring(terminal, stamp)) {
         continue;
       }
       TerminalCapacitySignal.show(
@@ -57,7 +58,7 @@ public final class TerminalCapacityBroadcast {
               world.getBlockState(terminal.pos()),
               capacities.measure(world, terminal.pos()),
               warningPercent));
-      watch.measured(terminal, session.invalidationCount());
+      watch.measured(terminal, stamp);
     }
   }
 

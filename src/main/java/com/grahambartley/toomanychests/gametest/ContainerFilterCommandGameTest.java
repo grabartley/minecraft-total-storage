@@ -115,6 +115,37 @@ public final class ContainerFilterCommandGameTest implements FabricGameTest {
     NetworkOperationFixture.finish(context, owner);
   }
 
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void clearingAContainerThatIsNotFilteredIsRefusedRatherThanReportedAsDone(
+      TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+
+    int result = runAsConsole(context, filterCommand(context, "clear"));
+
+    context.assertTrue(
+        result <= 0,
+        "A general container accepts everything, so clearing its filter is a lie, got " + result);
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void addingToAContainerThatIsNotFilteredIsRefused(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+
+    int result = runAsConsole(context, filterCommand(context, "add food"));
+
+    context.assertTrue(result <= 0, "A general container has nothing to accept, got " + result);
+    NetworkOperationFixture.finish(context, owner);
+  }
+
   private boolean accepts(TestContext context, String tagId) {
     return filters.filterOf(context.getWorld(), terminal(context), east(context)).hasTag(tagId);
   }

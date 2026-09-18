@@ -1,11 +1,16 @@
 package com.grahambartley.toomanychests.gametest;
 
+import com.grahambartley.toomanychests.access.TerminalCaller;
 import com.grahambartley.toomanychests.block.TerminalBlock;
 import com.grahambartley.toomanychests.lifecycle.NetworkMembership;
+import com.grahambartley.toomanychests.storage.ContainerRole;
+import com.grahambartley.toomanychests.terminal.ContainerRoleService;
 import com.grahambartley.toomanychests.terminal.NetworkCapacityService;
+import com.grahambartley.toomanychests.terminal.NetworkCapacityStamp;
 import com.grahambartley.toomanychests.terminal.NetworkCapacityWatch;
 import com.grahambartley.toomanychests.terminal.TerminalAddress;
 import com.grahambartley.toomanychests.terminal.TerminalCapacityBroadcast;
+import com.grahambartley.toomanychests.terminal.TerminalLookup;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.block.entity.BarrelBlockEntity;
@@ -84,7 +89,7 @@ public final class TerminalCapacityBroadcastGameTest implements FabricGameTest {
     context.assertTrue(
         watch.isWatching(address(context)), "The sweep should remember the network it measured");
     context.assertTrue(
-        !watch.needsMeasuring(address(context), network(context).session().invalidationCount()),
+        !watch.needsMeasuring(address(context), stamp(context)),
         "A settled network should be passed over rather than measured again");
     NetworkOperationFixture.finish(context, owner);
   }
@@ -108,6 +113,61 @@ public final class TerminalCapacityBroadcastGameTest implements FabricGameTest {
         !watch.isWatching(address(context)),
         "An unpowered terminal should be forgotten by the sweep");
     NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void excludingAContainerBringsTheNetworkBackIntoTheSweep(TestContext context) {
+    NetworkOperationFixture.fullBarrel(context, NetworkOperationFixture.EAST_BARREL, Items.DIAMOND);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    NetworkCapacityWatch watch = new NetworkCapacityWatch();
+    TerminalCapacityBroadcast sweeping =
+        new TerminalCapacityBroadcast(new NetworkCapacityService(), watch);
+    sweeping.sweep(server(context));
+
+    new ContainerRoleService()
+        .assign(
+            context.getWorld(),
+            terminal(context),
+            TerminalCaller.of(owner),
+            context.getAbsolutePos(NetworkOperationFixture.EAST_BARREL),
+            ContainerRole.EXCLUDED);
+
+    context.assertTrue(
+        watch.needsMeasuring(address(context), stamp(context)),
+        "A role change moves the capacity, so the sweep should look again");
+    sweeping.sweep(server(context));
+    context.assertTrue(
+        !isWarning(context), "An excluded container leaves nothing to be near capacity with");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aRescanBringsTheNetworkBackIntoTheSweep(TestContext context) {
+    NetworkOperationFixture.fullBarrel(context, NetworkOperationFixture.EAST_BARREL, Items.DIAMOND);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    NetworkCapacityWatch watch = new NetworkCapacityWatch();
+    TerminalCapacityBroadcast sweeping =
+        new TerminalCapacityBroadcast(new NetworkCapacityService(), watch);
+    sweeping.sweep(server(context));
+
+    TerminalNetworks.power().rescan(context.getWorld(), terminal(context));
+
+    context.assertTrue(
+        watch.needsMeasuring(address(context), stamp(context)),
+        "A rescan builds a fresh index, so the sweep should look again");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  private static NetworkCapacityStamp stamp(TestContext context) {
+    return NetworkCapacityStamp.of(
+        network(context).session(),
+        TerminalLookup.settingsAt(context.getWorld(), terminal(context)).orElse(null));
   }
 
   private static TerminalAddress address(TestContext context) {

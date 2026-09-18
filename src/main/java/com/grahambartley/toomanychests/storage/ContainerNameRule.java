@@ -3,6 +3,8 @@ package com.grahambartley.toomanychests.storage;
 public final class ContainerNameRule {
   public static final int MAX_LENGTH = 32;
 
+  private static final char FORMATTING = '\u00a7';
+
   private ContainerNameRule() {}
 
   public static String sanitise(String raw) {
@@ -17,7 +19,7 @@ public final class ContainerNameRule {
         spacePending = !kept.isEmpty();
         continue;
       }
-      if (Character.isISOControl(character)) {
+      if (Character.isISOControl(character) || character == FORMATTING) {
         continue;
       }
       if (spacePending) {

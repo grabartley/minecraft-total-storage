@@ -213,6 +213,51 @@ public final class ContainerFilterServiceGameTest implements FabricGameTest {
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
       tickLimit = TICK_LIMIT)
+  public void aStrangerIsRefusedBeforeTheTagIsEvenLookedAt(TestContext context) {
+    ServerPlayerEntity owner = filteredEast(context);
+    ServerPlayerEntity stranger = NetworkOperationFixture.standingPlayer(context);
+
+    RoleChangeOutcome outcome =
+        filters.accept(
+            context.getWorld(),
+            terminal(context),
+            TerminalCaller.of(stranger, false),
+            east(context),
+            "",
+            false);
+
+    context.assertTrue(
+        outcome == RoleChangeOutcome.DENIED,
+        "A stranger should be refused whatever tag they name, got " + outcome);
+    NetworkOperationFixture.finish(context, owner, stranger);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aContainerTheNetworkDoesNotReachIsRefusedBeforeTheTagIsLookedAt(TestContext context) {
+    ServerPlayerEntity owner = filteredEast(context);
+
+    RoleChangeOutcome outcome =
+        filters.accept(
+            context.getWorld(),
+            terminal(context),
+            TerminalCaller.of(owner),
+            context.getAbsolutePos(NetworkOperationFixture.FAR_BARREL),
+            "",
+            true);
+
+    context.assertTrue(
+        outcome == RoleChangeOutcome.NOT_IN_NETWORK,
+        "An unreached container should be refused whatever tag is named, got " + outcome);
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
   public void aGeneralContainerKeepsNoFilterAtAll(TestContext context) {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
     ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);

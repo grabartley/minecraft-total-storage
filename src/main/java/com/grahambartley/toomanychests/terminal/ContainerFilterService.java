@@ -34,19 +34,13 @@ public final class ContainerFilterService {
       boolean accepted) {
     final String canonical = FilterText.tagId(tagId);
     final NetworkTagSet tags = tagsOf(world, terminal);
-    if (canonical.isEmpty() || (accepted && !tags.contains(canonical))) {
-      return RoleChangeOutcome.UNCHANGED;
-    }
     return writer.write(
         world,
         terminal,
         caller,
         container,
         assignment ->
-            assignment.withFilter(
-                accepted
-                    ? onlyKnown(assignment.filter(), tags).withTag(canonical)
-                    : onlyKnown(assignment.filter(), tags).withoutTag(canonical)));
+            assignment.withFilter(edited(assignment.filter(), tags, canonical, accepted)));
   }
 
   public RoleChangeOutcome clear(
@@ -57,6 +51,15 @@ public final class ContainerFilterService {
         caller,
         container,
         assignment -> assignment.withFilter(ContainerFilter.NONE));
+  }
+
+  private static ContainerFilter edited(
+      ContainerFilter filter, NetworkTagSet tags, String tagId, boolean accepted) {
+    final ContainerFilter pruned = onlyKnown(filter, tags);
+    if (tagId.isEmpty() || (accepted && !tags.contains(tagId))) {
+      return pruned;
+    }
+    return accepted ? pruned.withTag(tagId) : pruned.withoutTag(tagId);
   }
 
   public static ContainerFilter onlyKnown(ContainerFilter filter, NetworkTagSet tags) {

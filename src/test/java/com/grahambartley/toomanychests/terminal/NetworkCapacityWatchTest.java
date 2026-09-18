@@ -4,7 +4,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.grahambartley.toomanychests.index.NetworkIndexEntry;
+import com.grahambartley.toomanychests.index.NetworkIndexOrdering;
+import com.grahambartley.toomanychests.index.NetworkIndexSession;
+import com.grahambartley.toomanychests.mutation.ContainerMutationRegistry;
+import com.grahambartley.toomanychests.storage.ContainerAssignment;
+import com.grahambartley.toomanychests.storage.ContainerAssignments;
+import com.grahambartley.toomanychests.storage.ContainerRole;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Identifier;
@@ -19,59 +29,97 @@ class NetworkCapacityWatchTest {
   private static final TerminalAddress HERE = new TerminalAddress(WORLD, new BlockPos(1, 2, 3));
   private static final TerminalAddress THERE = new TerminalAddress(WORLD, new BlockPos(9, 2, 3));
 
+  private static final Comparator<NetworkIndexEntry<String>> BY_NAME =
+      NetworkIndexOrdering.byKey(Function.identity());
+
   private final NetworkCapacityWatch watch = new NetworkCapacityWatch();
 
-  @Test
-  void aNetworkNobodyHasMeasuredYetIsMeasured() {
-    assertTrue(watch.needsMeasuring(HERE, 0));
+  private static NetworkIndexSession<String> session() {
+    return new NetworkIndexSession<>(new ContainerMutationRegistry(), origin -> Map.of(), BY_NAME);
+  }
+
+  private static NetworkCapacityStamp stamp(
+      NetworkIndexSession<String> session, int invalidations, ContainerAssignments containers) {
+    return new NetworkCapacityStamp(session, invalidations, containers);
+  }
+
+  private static ContainerAssignments excluding(BlockPos container) {
+    return ContainerAssignments.empty()
+        .with(container, ContainerAssignment.of(ContainerRole.EXCLUDED));
   }
 
   @Test
-  void aNetworkWhoseContentsHaveMovedIsMeasuredAgain() {
-    watch.measured(HERE, 4);
-
-    assertTrue(watch.needsMeasuring(HERE, 5));
+  void aNetworkNobodyHasMeasuredYetIsMeasured() {
+    assertTrue(watch.needsMeasuring(HERE, stamp(session(), 0, ContainerAssignments.empty())));
   }
 
   @Test
   void aNetworkNothingHasMovedInIsPassedOver() {
-    watch.measured(HERE, 4);
+    NetworkIndexSession<String> session = session();
+    watch.measured(HERE, stamp(session, 4, ContainerAssignments.empty()));
 
-    assertFalse(watch.needsMeasuring(HERE, 4));
+    assertFalse(watch.needsMeasuring(HERE, stamp(session, 4, ContainerAssignments.empty())));
+  }
+
+  @Test
+  void aNetworkWhoseContentsHaveMovedIsMeasuredAgain() {
+    NetworkIndexSession<String> session = session();
+    watch.measured(HERE, stamp(session, 4, ContainerAssignments.empty()));
+
+    assertTrue(watch.needsMeasuring(HERE, stamp(session, 5, ContainerAssignments.empty())));
+  }
+
+  @Test
+  void aRoleChangeMovesTheCapacitySoTheNetworkIsMeasuredAgain() {
+    NetworkIndexSession<String> session = session();
+    watch.measured(HERE, stamp(session, 4, ContainerAssignments.empty()));
+
+    assertTrue(
+        watch.needsMeasuring(HERE, stamp(session, 4, excluding(new BlockPos(4, 1, 3)))),
+        "An excluded container is no longer room, so the block has to be looked at again");
+  }
+
+  @Test
+  void aRebuiltNetworkIsMeasuredAgainEvenThoughItsCounterStartsOver() {
+    watch.measured(HERE, stamp(session(), 0, ContainerAssignments.empty()));
+
+    assertTrue(
+        watch.needsMeasuring(HERE, stamp(session(), 0, ContainerAssignments.empty())),
+        "A rescan builds a fresh index whose count starts at zero");
   }
 
   @Test
   void eachNetworkIsRememberedSeparately() {
-    watch.measured(HERE, 4);
+    NetworkIndexSession<String> session = session();
+    watch.measured(HERE, stamp(session, 4, ContainerAssignments.empty()));
 
-    assertTrue(watch.needsMeasuring(THERE, 4));
-    assertFalse(watch.needsMeasuring(HERE, 4));
+    assertTrue(watch.needsMeasuring(THERE, stamp(session, 4, ContainerAssignments.empty())));
+    assertFalse(watch.needsMeasuring(HERE, stamp(session, 4, ContainerAssignments.empty())));
   }
 
   @Test
   void aNetworkIsOnlyWatchedOnceItHasBeenMeasured() {
     assertFalse(watch.isWatching(HERE));
 
-    watch.measured(HERE, 4);
+    watch.measured(HERE, stamp(session(), 4, ContainerAssignments.empty()));
 
     assertTrue(watch.isWatching(HERE));
   }
 
   @Test
   void aNetworkThatStopsRunningIsForgotten() {
-    watch.measured(HERE, 4);
-    watch.measured(THERE, 4);
+    watch.measured(HERE, stamp(session(), 4, ContainerAssignments.empty()));
+    watch.measured(THERE, stamp(session(), 4, ContainerAssignments.empty()));
 
     watch.retainOnly(List.of(THERE));
 
     assertEquals(1, watch.watchedCount());
     assertFalse(watch.isWatching(HERE));
-    assertTrue(watch.needsMeasuring(HERE, 4));
   }
 
   @Test
   void retainingNothingForgetsEveryNetwork() {
-    watch.measured(HERE, 4);
+    watch.measured(HERE, stamp(session(), 4, ContainerAssignments.empty()));
 
     watch.retainOnly(null);
 
@@ -80,18 +128,19 @@ class NetworkCapacityWatchTest {
 
   @Test
   void forgettingOneNetworkLeavesTheRestAlone() {
-    watch.measured(HERE, 4);
-    watch.measured(THERE, 4);
+    NetworkIndexSession<String> session = session();
+    watch.measured(HERE, stamp(session, 4, ContainerAssignments.empty()));
+    watch.measured(THERE, stamp(session, 4, ContainerAssignments.empty()));
 
     watch.forget(HERE);
 
     assertEquals(1, watch.watchedCount());
-    assertFalse(watch.needsMeasuring(THERE, 4));
+    assertFalse(watch.needsMeasuring(THERE, stamp(session, 4, ContainerAssignments.empty())));
   }
 
   @Test
   void clearingForgetsEverything() {
-    watch.measured(HERE, 4);
+    watch.measured(HERE, stamp(session(), 4, ContainerAssignments.empty()));
     watch.clear();
 
     assertEquals(0, watch.watchedCount());

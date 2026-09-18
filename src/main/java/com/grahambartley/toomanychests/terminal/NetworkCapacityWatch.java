@@ -4,19 +4,21 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class NetworkCapacityWatch {
-  private final Map<TerminalAddress, Integer> measuredAt = new HashMap<>();
+  private final Map<TerminalAddress, NetworkCapacityStamp> measuredAt = new HashMap<>();
 
-  public boolean needsMeasuring(TerminalAddress terminal, int invalidationCount) {
+  public boolean needsMeasuring(TerminalAddress terminal, NetworkCapacityStamp stamp) {
     Objects.requireNonNull(terminal, "terminal");
-    final Integer seen = measuredAt.get(terminal);
-    return seen == null || seen != invalidationCount;
+    Objects.requireNonNull(stamp, "stamp");
+    return !stamp.equals(measuredAt.get(terminal));
   }
 
-  public void measured(TerminalAddress terminal, int invalidationCount) {
+  public void measured(TerminalAddress terminal, NetworkCapacityStamp stamp) {
     Objects.requireNonNull(terminal, "terminal");
-    measuredAt.put(terminal, invalidationCount);
+    Objects.requireNonNull(stamp, "stamp");
+    measuredAt.put(terminal, stamp);
   }
 
   public void forget(TerminalAddress terminal) {
@@ -24,7 +26,7 @@ public final class NetworkCapacityWatch {
   }
 
   public void retainOnly(Collection<TerminalAddress> running) {
-    measuredAt.keySet().retainAll(running == null ? java.util.Set.of() : running);
+    measuredAt.keySet().retainAll(running == null ? Set.of() : running);
   }
 
   public boolean isWatching(TerminalAddress terminal) {

@@ -105,15 +105,18 @@ public final class TerminalSettingsClicks {
       return false;
     }
     if (!mayAdminister) {
+      PromptRefusal.sound();
       return true;
     }
     if (button == GridClick.RIGHT_BUTTON) {
       prompts.renaming().open(entry.container(), entry.name());
       return true;
     }
-    if (entry.isFiltered()) {
-      prompts.filtering().open(entry.container());
+    if (!entry.isFiltered()) {
+      PromptRefusal.sound();
+      return true;
     }
+    prompts.filtering().open(entry.container());
     return true;
   }
 

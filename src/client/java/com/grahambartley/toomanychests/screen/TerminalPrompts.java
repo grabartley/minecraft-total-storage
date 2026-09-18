@@ -75,10 +75,15 @@ public final class TerminalPrompts {
   public void fit(NetworkSettingsView settings, NetworkTagView tags) {
     tagging.fit(tags);
     filtering.fit(tags);
-    if (filtering.isOpen() && settings.answered() && filtering.rowIn(settings) == null) {
+    if (filtering.isOpen() && settings.answered() && !stillFiltered(settings)) {
       filtering.close();
     }
     copying.fit(sources());
+  }
+
+  private boolean stillFiltered(NetworkSettingsView settings) {
+    final ContainerRoleEntry row = filtering.rowIn(settings);
+    return row != null && row.isFiltered();
   }
 
   private List<OwnedTerminal> sources() {

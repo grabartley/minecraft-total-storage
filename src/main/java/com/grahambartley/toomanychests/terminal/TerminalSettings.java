@@ -122,10 +122,6 @@ public record TerminalSettings(
     return withContainers(containers.withFilter(container, filter));
   }
 
-  public TerminalSettings withContainerName(BlockPos container, String name) {
-    return withContainers(containers.withName(container, name));
-  }
-
   public TerminalSettings forgetContainer(BlockPos container) {
     return withContainers(containers.without(container));
   }

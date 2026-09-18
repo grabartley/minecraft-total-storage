@@ -69,10 +69,6 @@ public record ContainerAssignments(Map<BlockPos, ContainerAssignment> byPosition
     return with(container, forContainer(container).withFilter(filter));
   }
 
-  public ContainerAssignments withName(BlockPos container, String name) {
-    return with(container, forContainer(container).withName(name));
-  }
-
   public ContainerAssignments without(BlockPos container) {
     return with(container, ContainerAssignment.DEFAULT);
   }

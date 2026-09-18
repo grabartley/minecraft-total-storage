@@ -5,11 +5,13 @@ import com.grahambartley.toomanychests.screenhandler.TerminalViewerSync;
 import com.grahambartley.toomanychests.storage.ContainerFilter;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.tag.NetworkTag;
+import com.grahambartley.toomanychests.tag.NetworkTagSet;
 import com.grahambartley.toomanychests.terminal.ContainerFilterService;
 import com.grahambartley.toomanychests.terminal.ContainerRoleService;
 import com.grahambartley.toomanychests.terminal.RoleChangeOutcome;
 import com.grahambartley.toomanychests.terminal.TerminalAddress;
 import com.grahambartley.toomanychests.terminal.TerminalLookup;
+import com.grahambartley.toomanychests.terminal.TerminalSettings;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -73,7 +75,9 @@ public final class ContainerFilterCommand {
       source.sendFeedback(() -> ContainerMessages.containerNotFiltered(container), false);
       return 0;
     }
-    final ContainerFilter filter = FILTERS.filterOf(source.getWorld(), terminal, container);
+    final ContainerFilter filter =
+        ContainerFilterService.onlyKnown(
+            FILTERS.filterOf(source.getWorld(), terminal, container), tagsOf(source, terminal));
     source.sendFeedback(
         () ->
             filter.tagIds().isEmpty()
@@ -132,6 +136,10 @@ public final class ContainerFilterCommand {
     final ServerCommandSource source = context.getSource();
     final BlockPos terminal = TerminalCommand.terminalPos(context);
     final BlockPos container = BlockPosArgumentType.getBlockPos(context, CONTAINER);
+    if (!isFiltered(source, terminal, container)) {
+      source.sendError(ContainerMessages.containerNotFiltered(container));
+      return 0;
+    }
     final RoleChangeOutcome outcome =
         FILTERS.clear(source.getWorld(), terminal, TerminalCommandGate.caller(source), container);
     switch (outcome) {
@@ -147,6 +155,12 @@ public final class ContainerFilterCommand {
       resync(source, terminal);
     }
     return outcome.applied() ? 1 : 0;
+  }
+
+  private static NetworkTagSet tagsOf(ServerCommandSource source, BlockPos terminal) {
+    return TerminalLookup.settingsAt(source.getWorld(), terminal)
+        .map(TerminalSettings::tags)
+        .orElseGet(NetworkTagSet::defaults);
   }
 
   private static boolean isFiltered(
