@@ -31,6 +31,18 @@ cleanup() {
 }
 trap cleanup EXIT
 
+drain_log() {
+  local deadline=$((SECONDS + STOP_TIMEOUT))
+  while kill -0 "$TEE_PID" 2>/dev/null; do
+    if (( SECONDS >= deadline )); then
+      echo "::error::Server output was still open ${STOP_TIMEOUT}s after the server exited"
+      exit 1
+    fi
+    sleep 1
+  done
+  TEE_PID=
+}
+
 mkdir -p "$RUN_DIR"
 echo "eula=true" > "$RUN_DIR/eula.txt"
 
@@ -44,7 +56,12 @@ exec 3> "$FIFO"
 deadline=$((SECONDS + BOOT_TIMEOUT))
 until grep -q 'Done (' "$LOG"; do
   if ! kill -0 "$SERVER_PID" 2>/dev/null; then
-    echo "::error::Server exited before reaching Done"
+    drain_log
+    if grep -q 'Done (' "$LOG"; then
+      echo "::error::Server exited on its own right after reaching Done"
+    else
+      echo "::error::Server exited before reaching Done"
+    fi
     exit 1
   fi
   if (( SECONDS >= deadline )); then
@@ -73,11 +90,10 @@ if (( status != 0 )); then
   exit "$status"
 fi
 
-wait "$TEE_PID"
-TEE_PID=
+drain_log
 
-for marker in 'Too Many Chests server config loaded for ' 'All dimensions are saved'; do
-  if ! grep -q "$marker" "$LOG"; then
+for marker in '[Server thread/INFO] (ServerConfigService) Too Many Chests server config loaded for ' 'All dimensions are saved'; do
+  if ! grep -qF "$marker" "$LOG"; then
     echo "::error::Server log is missing '${marker}'"
     exit 1
   fi
