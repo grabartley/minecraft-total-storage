@@ -26,7 +26,7 @@ Search always combines with the filter column using AND, whatever mode the colum
 
 A bare term containing a namespace separator is matched literally against the full item identifier. Anything else is matched fuzzily against the display name and against the identifier's path, never against the namespace.
 
-A `#tag` term and an `@modid` term name an identifier, so they match a tag id or a mod id that equals the term or starts with it, and nothing looser. Substring and fuzzy matching belong to name terms only.
+A `#tag` term and an `@modid` term name an identifier, so they match a tag id or a mod id, or one of its words between underscores and dashes, that equals the term or starts with it, and nothing looser. Substring and fuzzy matching belong to name terms only.
 
 The evaluator answers only whether a row belongs in the results. Ordering the results it accepts is the terminal grid's job.
 
@@ -36,7 +36,7 @@ Every query a player can type means something. Typing more of one kind of term d
 
 Excluding the namespace from fuzzy matching is what keeps `mine` from matching every vanilla item at once, which it otherwise would through the shared `minecraft:` prefix that every identifier carries. Players who know an identifier can still type it out, and get an exact match rather than a fuzzy one.
 
-Matching identifiers by exact or prefix only is what keeps `#stone` from finding everything tagged `redstone`, and keeps a short `@` term from finding any mod whose id happens to hold those letters in order. It also keeps a `#tag` search agreeing with that tag's count in the filter column. `#base` still finds `base-kit`, because a prefix is how a player types an identifier they have not finished.
+Matching identifiers by the start of a word is what keeps `#stone` from finding everything tagged `redstone`, and keeps a short `@` term from finding any mod whose id happens to hold those letters in order. `#base` and `#kit` both find `base-kit`, and `#armour` finds `weapons_and_armour`, because a player names a multi-word tag by whichever word they remember. A `#tag` search that names one tag in full agrees with that tag's count in the filter column, unless another tag's id starts with the same word.
 
 Keeping acceptance separate from ranking means the sorting epic and the deposit routing epic can reuse the evaluator without inheriting a notion of relevance that only the terminal grid cares about.
 

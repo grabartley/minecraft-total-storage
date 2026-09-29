@@ -78,11 +78,16 @@ class FilterEvaluatorTest {
         Arguments.of("#stone", List.of(COBBLESTONE)),
         Arguments.of("#red", List.of(COGWHEEL)),
         Arguments.of("#tone", List.of()),
+        Arguments.of("#blocks", List.of(COBBLESTONE)),
+        Arguments.of("#drops", List.of(COOKED_BEEF)),
+        Arguments.of("#_drops", List.of()),
         Arguments.of("#stne", List.of()),
         Arguments.of("@cre", List.of(COGWHEEL, CREATE_WRENCH)),
         Arguments.of("@eate", List.of()),
         Arguments.of("@crt", List.of()),
-        Arguments.of("@some", List.of(UNTAGGED)));
+        Arguments.of("@some", List.of(UNTAGGED)),
+        Arguments.of("@mod", List.of(UNTAGGED)),
+        Arguments.of("@od", List.of()));
   }
 
   @ParameterizedTest
@@ -94,7 +99,7 @@ class FilterEvaluatorTest {
 
   @ParameterizedTest
   @MethodSource("baseKitTerms")
-  void aMultiWordTagIsFoundByItsWholeIdOrAnyPrefix(String raw, boolean expected) {
+  void aMultiWordTagIsFoundByItsWholeIdOrAnyWordsPrefix(String raw, boolean expected) {
     FilterCandidate kit =
         new FilterCandidate("minecraft:torch", "Torch", Set.of(FilterText.tagId("Base Kit")));
 
@@ -105,7 +110,8 @@ class FilterEvaluatorTest {
     return Stream.of(
         Arguments.of("#base-kit", true),
         Arguments.of("#base", true),
-        Arguments.of("#kit", false),
+        Arguments.of("#kit", true),
+        Arguments.of("#it", false),
         Arguments.of("#bkit", false));
   }
 

@@ -8,6 +8,7 @@ import com.grahambartley.toomanychests.storage.StorageProvider;
 import com.grahambartley.toomanychests.storage.StorageProviderResolver;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.minecraft.server.world.ServerWorld;
@@ -25,6 +26,16 @@ public final class NetworkCapacityService {
   }
 
   public NetworkCapacity measure(ServerWorld world, BlockPos terminal) {
+    return measure(world, terminal, role -> role != ContainerRole.EXCLUDED);
+  }
+
+  public int freeSlots(ServerWorld world, BlockPos terminal, ContainerRole role) {
+    Objects.requireNonNull(role, "role");
+    return measure(world, terminal, role::equals).freeSlots();
+  }
+
+  private NetworkCapacity measure(
+      ServerWorld world, BlockPos terminal, Predicate<ContainerRole> counted) {
     final TerminalSettings settings = TerminalLookup.settingsAt(world, terminal).orElse(null);
     final NetworkMembership network =
         TerminalNetworks.power().network(world, terminal).orElse(null);
@@ -38,7 +49,7 @@ public final class NetworkCapacityService {
         continue;
       }
       final ContainerRole role = settings.roleFor(block.pos());
-      if (role == ContainerRole.EXCLUDED) {
+      if (!counted.test(role)) {
         continue;
       }
       final Optional<StorageProvider> provider = resolver.resolve(world, block.pos(), role);

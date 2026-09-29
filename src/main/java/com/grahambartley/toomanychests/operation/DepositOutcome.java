@@ -43,6 +43,10 @@ public record DepositOutcome(
     return new DepositOutcome(DepositResult.ONLY_FILTERED_SPACE, offered, 0L, leftovers);
   }
 
+  public static DepositOutcome noFittingSpace(long offered, List<DepositLeftover> leftovers) {
+    return new DepositOutcome(DepositResult.NO_FITTING_SPACE, offered, 0L, leftovers);
+  }
+
   public static DepositOutcome rateLimited() {
     return new DepositOutcome(DepositResult.RATE_LIMITED, 0L, 0L, List.of());
   }

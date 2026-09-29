@@ -8,11 +8,13 @@ import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.ChestBlock;
+import net.minecraft.block.entity.LockableContainerBlockEntity;
 import net.minecraft.block.enums.ChestType;
 import net.minecraft.command.argument.EntityAnchorArgumentType;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -110,6 +112,32 @@ public final class SortCommandGameTest implements FabricGameTest {
     context.assertTrue(
         matches(inventoryBefore, snapshotOf(player.getInventory())),
         "A refused furnace must not fall back to sorting the inventory");
+    finish(context, player);
+  }
+
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void aLockedChestInViewStaysLockedAndUnsorted(TestContext context) {
+    context.setBlockState(IN_VIEW, Blocks.CHEST.getDefaultState());
+    LockableContainerBlockEntity chest = context.getBlockEntity(IN_VIEW);
+    NbtCompound lock = new NbtCompound();
+    lock.putString("Lock", "only the keyholder");
+    chest.read(lock, context.getWorld().getRegistryManager());
+    chest.setStack(4, new ItemStack(Items.COBBLESTONE, 20));
+    chest.setStack(9, new ItemStack(Items.COBBLESTONE, 30));
+    List<ItemStack> before = snapshotOf(chest);
+    ServerPlayerEntity player = playerAt(context, STANDING);
+    stockInventoryWithPartStacks(player);
+    List<ItemStack> inventoryBefore = snapshotOf(player.getInventory());
+    lookAt(context, player, IN_VIEW);
+
+    int result = runSort(context, player);
+
+    context.assertTrue(result == 0, "A locked chest must be refused, returned " + result);
+    context.assertTrue(
+        matches(before, snapshotOf(chest)), "A locked chest must hold exactly what it held");
+    context.assertTrue(
+        matches(inventoryBefore, snapshotOf(player.getInventory())),
+        "A locked chest must not fall back to sorting the inventory");
     finish(context, player);
   }
 

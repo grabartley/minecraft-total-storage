@@ -7,6 +7,7 @@ import com.grahambartley.toomanychests.operation.OperationMessages;
 import com.grahambartley.toomanychests.storage.ContainerAssignment;
 import com.grahambartley.toomanychests.storage.ContainerFilter;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BarrelBlockEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -335,6 +336,35 @@ public final class DepositLeftoverReportGameTest implements FabricGameTest {
         "The two largest kinds should be named, read " + line);
     context.assertTrue(
         line.contains("and 2 other kinds"), "The rest should be summarised, read " + line);
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void freeGeneralSlotsThatRefuseTheItemAreNotBlamedOnFilters(TestContext context) {
+    NetworkOperationFixture.fullBarrel(context, NetworkOperationFixture.EAST_BARREL, Items.DIAMOND);
+    context.setBlockState(
+        NetworkOperationFixture.WEST_BARREL, Blocks.SHULKER_BOX.getDefaultState());
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    player.getInventory().setStack(0, new ItemStack(Items.SHULKER_BOX, 1));
+
+    DepositOutcome outcome =
+        deposits.depositAll(player, NetworkOperationFixture.handlerOf(player).syncId);
+    Text line = OperationMessages.forDeposit(outcome).orElseThrow();
+
+    context.assertTrue(
+        outcome.result() == DepositResult.NO_FITTING_SPACE,
+        "A shulker box refused by an empty shulker box should say the free slots will not hold"
+            + " it, got "
+            + outcome.result());
+    context.assertTrue(
+        keyOf(line).equals("operation.too-many-chests.deposit.unfitting"),
+        "Free general slots borrowed another line, got " + keyOf(line));
+    context.assertTrue(
+        NetworkOperationFixture.countCarried(player, Items.SHULKER_BOX) == 1L,
+        "The inventory should be exactly as it was");
     NetworkOperationFixture.finish(context, player);
   }
 

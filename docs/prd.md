@@ -179,7 +179,7 @@ With a stack already on the cursor the same grid takes clicks the other way, dep
 |---|---|
 | FIND-1 | The search box takes keyboard focus the moment the terminal opens; no click required |
 | FIND-2 | Matching is ranked exact, then prefix, then substring, then fuzzy, over the display name and the identifier path; a term carrying a namespace separator is matched literally against the full identifier (ADR 0013, ADR 0028) |
-| FIND-3 | `#tag` searches tags and `@modid` filters by source mod, both combining with free text. Both match an id that equals or starts with the term, never a substring or a fuzzy match. Name and tag terms narrow each other; mod identifier terms broaden, so `@create @ae2` matches either (ADR 0013) |
+| FIND-3 | `#tag` searches tags and `@modid` filters by source mod, both combining with free text. Both match an id, or a word of it between underscores or dashes, that equals or starts with the term, never a substring or a fuzzy match. Name and tag terms narrow each other; mod identifier terms broaden, so `@create @ae2` matches either (ADR 0013) |
 | FIND-4 | Counts are aggregated across the network and formatted for readability at scale |
 | FIND-5 | Items differing only by data components are separate entries with individual counts |
 | FIND-6 | An empty network and an empty search result read differently |
@@ -226,7 +226,7 @@ Routing order, per item variant:
 | PUT-8 | A full `Filtered` container falls through to `General` rather than refusing the item |
 | PUT-9 | A network with no room leaves the inventory untouched and says so |
 | PUT-10 | Items that cannot be stored stay in their original slots where possible |
-| PUT-11 | Feedback distinguishes "nothing to deposit" from "no space", tells a full network apart from free space that only `Filtered` containers hold, and names what could not be stored by item and count |
+| PUT-11 | Feedback distinguishes "nothing to deposit" from "no space", tells a full network apart from free space that only `Filtered` containers hold and from free slots that cannot hold the item, and names what could not be stored by item and count |
 | PUT-12 | The terminal shows network capacity, with a configurable near-full warning threshold |
 | PUT-13 | Capacity counts only writable containers, excluding `Excluded` ones |
 | PUT-14 | Ties between candidate containers resolve deterministically |
@@ -296,7 +296,7 @@ Default order: category by preset tag grouping, then registry identifier, then d
 | SORT-1 | The comparator is deterministic and stable; sorting a sorted container produces zero moves and no resync |
 | SORT-2 | Ordering is language independent by default, with display-name ordering as an explicit option |
 | SORT-3 | Full stacks sort ahead of partial stacks of the same item |
-| SORT-4 | A sort request is honoured only for the screen handler the player currently has open, or, for `/tmc sort` with no container open, the container block the player is looking at within reach, which must pass the same gates its screen would and may not be locked against them |
+| SORT-4 | A sort request is honoured only for the screen handler the player currently has open, or, for `/tmc sort` with no container open, the container block the player is looking at within reach, which must pass the same gates its screen would and must open for that player, so a locked container and a spectator are refused |
 | SORT-5 | Screens where reordering is meaningless or harmful are refused, unknown special-purpose screens included, by a deny list and a structural probe (ADR 0018) |
 | SORT-6 | Sorting runs in one transaction; a failure part way rolls back completely |
 | SORT-7 | Every viewer of a sorted container is resynced, both halves of a double chest included |

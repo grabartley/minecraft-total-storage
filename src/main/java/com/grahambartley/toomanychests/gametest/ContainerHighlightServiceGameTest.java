@@ -25,6 +25,7 @@ public final class ContainerHighlightServiceGameTest implements FabricGameTest {
 
   private static final BlockPos DISTANT = new BlockPos(6, 1, 6);
   private static final int FAR_AWAY_BLOCKS = 24;
+  private static final BlockPos OUTSIDE_THE_RADIUS = new BlockPos(3, 1, 6);
 
   private final ContainerRoleService roles = new ContainerRoleService();
 
@@ -189,6 +190,28 @@ public final class ContainerHighlightServiceGameTest implements FabricGameTest {
         "Only the owner standing by should be outlined, got "
             + outlined.stream().map(player -> player.getUuid().toString()).toList());
     NetworkOperationFixture.finish(context, owner, guest, farAway);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aPlayerWithinReachButOutsideTheRadiusIsOutlined(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = unpoweredTerminal(context);
+    BlockPos justOutside = context.getAbsolutePos(OUTSIDE_THE_RADIUS);
+    owner.refreshPositionAndAngles(
+        justOutside.getX() + 0.5, justOutside.getY(), justOutside.getZ() + 0.5, 0f, 0f);
+    context.setBlockState(NetworkOperationFixture.POWER, Blocks.REDSTONE_BLOCK.getDefaultState());
+    NextTick.queue().cancel(powerOnHighlight(context));
+
+    List<ServerPlayerEntity> outlined =
+        ContainerHighlightService.highlightForEveryoneNearby(context.getWorld(), terminal(context));
+
+    context.assertTrue(
+        outlined.equals(List.of(owner)),
+        "A player within reach of the lever should be outlined even outside the radius");
+    NetworkOperationFixture.finish(context, owner);
   }
 
   @GameTest(

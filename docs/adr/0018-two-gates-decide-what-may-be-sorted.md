@@ -24,7 +24,7 @@ Both, as two independent gates, and a screen must pass both.
 
 Sorting a container never touches the player's own slots, and sorting the player's inventory covers only its twenty seven main slots, so the hotbar, armour, the offhand, and the crafting grid fall out for free.
 
-`/tmc sort` run with no container open sorts the container block the player is looking at, since an unmodified client cannot open chat over a container screen. It builds the screen handler that block would open for that player, runs both gates against it exactly as if it were open, and closes it again. A block whose screen fails either gate is refused rather than swapped for the inventory, so looking at a furnace never sorts anything.
+`/tmc sort` run with no container open sorts the container block the player is looking at, since an unmodified client cannot open chat over a container screen. It builds the screen handler that block would open for that player, runs both gates against it exactly as if it were open, and closes it again. A block whose screen fails either gate is refused rather than swapped for the inventory, so looking at a furnace never sorts anything, and a block that will not build a screen for that player, a locked container or any block for a spectator, is refused the same way. Building the handler is opening the container, so it has every consequence opening does: the open and close sounds, the lid, the game events a sculk sensor hears, and a loot table rolled on first open. That is deliberate. A sort that reached into a container without opening it would be a way round everything vanilla attaches to opening one.
 
 ## Consequences
 

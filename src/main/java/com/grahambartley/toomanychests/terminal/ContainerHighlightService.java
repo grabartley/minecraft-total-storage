@@ -28,15 +28,14 @@ public final class ContainerHighlightService {
     if (player == null || world == null || terminal == null) {
       return 0;
     }
-    final List<HighlightedContainer> containers = containersOf(world, terminal);
-    ServerPlayNetworking.send(player, new ContainerHighlightPayload(TICKS, containers));
-    return containers.size();
+    final ContainerHighlightPayload payload = payloadFor(world, terminal);
+    ServerPlayNetworking.send(player, payload);
+    return payload.containers().size();
   }
 
   public static void poweredOn(ServerWorld world, BlockPos terminal) {
-    if (world == null || terminal == null) {
-      return;
-    }
+    Objects.requireNonNull(world, "world");
+    Objects.requireNonNull(terminal, "terminal");
     final BlockPos pos = terminal.toImmutable();
     NextTick.queue()
         .submit(
@@ -65,10 +64,13 @@ public final class ContainerHighlightService {
     if (nearby.isEmpty()) {
       return List.of();
     }
-    final ContainerHighlightPayload payload =
-        new ContainerHighlightPayload(TICKS, containersOf(world, terminal));
+    final ContainerHighlightPayload payload = payloadFor(world, terminal);
     nearby.forEach(player -> ServerPlayNetworking.send(player, payload));
     return List.copyOf(nearby);
+  }
+
+  private static ContainerHighlightPayload payloadFor(ServerWorld world, BlockPos terminal) {
+    return new ContainerHighlightPayload(TICKS, containersOf(world, terminal));
   }
 
   private static boolean isNear(ServerPlayerEntity player, ScanRegion region, BlockPos terminal) {

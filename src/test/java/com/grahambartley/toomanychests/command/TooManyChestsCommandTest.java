@@ -1,36 +1,100 @@
 package com.grahambartley.toomanychests.command;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import net.minecraft.server.command.ServerCommandSource;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class TooManyChestsCommandTest {
-  @Test
-  void everyTerminalSubcommandHasExactlyTheHelpLinesThatNameIt() {
-    assertEquals(registeredTerminalSubcommands(), subcommandsWithHelp());
+  private static final CommandNode<ServerCommandSource> ROOT = registeredRoot();
+
+  @ParameterizedTest
+  @MethodSource("registeredCommands")
+  void everyRegisteredCommandHasAHelpLine(String command) {
+    assertTrue(
+        documented().stream()
+            .anyMatch(line -> line.equals(command) || line.startsWith(command + " ")),
+        "/tmc " + command + " has no help line");
   }
 
-  private static Set<String> registeredTerminalSubcommands() {
+  @ParameterizedTest
+  @MethodSource("documentedCommands")
+  void everyHelpLineNamesACommandThatIsRegistered(String command) {
+    assertTrue(resolve(command).isPresent(), "The help names /tmc " + command + ", which is gone");
+  }
+
+  @Test
+  void theNameAndFilterEditsAreDocumented() {
+    assertTrue(documented().containsAll(Set.of("terminal name", "terminal filter")));
+  }
+
+  private static Stream<String> registeredCommands() {
+    List<String> commands = new ArrayList<>();
+    for (CommandNode<ServerCommandSource> top : literalsUnder(ROOT)) {
+      commands.add(top.getName());
+    }
+    CommandNode<ServerCommandSource> terminal = ROOT.getChild("terminal");
+    for (CommandNode<ServerCommandSource> sub : literalsUnder(terminal)) {
+      commands.add("terminal " + sub.getName());
+    }
+    return commands.stream();
+  }
+
+  private static Stream<String> documentedCommands() {
+    return documented().stream();
+  }
+
+  private static Set<String> documented() {
+    return TooManyChestsCommand.helpLines().stream()
+        .flatMap(line -> line.commands().stream())
+        .collect(Collectors.toSet());
+  }
+
+  private static Optional<CommandNode<ServerCommandSource>> resolve(String command) {
+    CommandNode<ServerCommandSource> node = ROOT;
+    for (String word : command.split(" ")) {
+      node =
+          literalsUnder(node).stream()
+              .filter(child -> child.getName().equals(word))
+              .findFirst()
+              .orElse(null);
+      if (node == null) {
+        return Optional.empty();
+      }
+    }
+    return Optional.of(node);
+  }
+
+  private static List<CommandNode<ServerCommandSource>> literalsUnder(
+      CommandNode<ServerCommandSource> node) {
+    List<CommandNode<ServerCommandSource>> literals = new ArrayList<>();
+    for (CommandNode<ServerCommandSource> child : node.getChildren()) {
+      if (child instanceof LiteralCommandNode) {
+        literals.add(child);
+      } else if (child instanceof ArgumentCommandNode) {
+        child.getChildren().stream()
+            .filter(LiteralCommandNode.class::isInstance)
+            .forEach(literals::add);
+      }
+    }
+    return literals;
+  }
+
+  private static CommandNode<ServerCommandSource> registeredRoot() {
     CommandDispatcher<ServerCommandSource> dispatcher = new CommandDispatcher<>();
     TooManyChestsCommand.register(dispatcher);
-    CommandNode<ServerCommandSource> terminal =
-        dispatcher.getRoot().getChild("toomanychests").getChild("terminal");
-    CommandNode<ServerCommandSource> position = terminal.getChildren().iterator().next();
-    return position.getChildren().stream()
-        .filter(LiteralCommandNode.class::isInstance)
-        .map(CommandNode::getName)
-        .collect(Collectors.toSet());
-  }
-
-  private static Set<String> subcommandsWithHelp() {
-    return TooManyChestsCommand.helpLines().stream()
-        .flatMap(line -> line.terminalSubcommands().stream())
-        .collect(Collectors.toSet());
+    return dispatcher.getRoot().getChild("toomanychests");
   }
 }

@@ -61,6 +61,12 @@ public final class OperationMessages {
                   "deposit.filtered_only",
                   "No room for %s, the free space only takes filtered items",
                   leftovers(outcome.leftovers())));
+      case NO_FITTING_SPACE ->
+          Optional.of(
+              line(
+                  "deposit.unfitting",
+                  "No room for %s, the free slots will not hold them",
+                  leftovers(outcome.leftovers())));
       case RATE_LIMITED -> Optional.empty();
       case REFUSED -> Optional.of(line("refused", "That terminal is not yours to use right now"));
     };

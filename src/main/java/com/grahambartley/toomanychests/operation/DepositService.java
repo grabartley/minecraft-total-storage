@@ -4,6 +4,7 @@ import com.grahambartley.toomanychests.ModSounds;
 import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.lock.LockedSlots;
 import com.grahambartley.toomanychests.network.DepositRequestPayload;
+import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.NetworkCapacityService;
 import com.grahambartley.toomanychests.transaction.OperationResult;
 import com.grahambartley.toomanychests.transaction.StorageTransfers;
@@ -74,12 +75,21 @@ public final class DepositService {
     final OperationResult<Stored> result =
         NetworkMutation.run(context, transaction -> store(context, offers, transaction));
     if (result.rolledBack()) {
-      return capacity.measure(context.world(), context.terminal()).freeSlots() > 0
-          ? DepositOutcome.onlyFilteredSpace(offered, leftoversOf(offers))
-          : DepositOutcome.noSpace(offered, leftoversOf(offers));
+      return nothingStored(context, offered, leftoversOf(offers));
     }
     final Stored stored = result.orElse(Stored.nothing());
     return DepositOutcome.stored(offered, stored.moved(), stored.leftovers());
+  }
+
+  private DepositOutcome nothingStored(
+      TerminalOperationContext context, long offered, List<DepositLeftover> leftovers) {
+    if (capacity.freeSlots(context.world(), context.terminal(), ContainerRole.GENERAL) > 0) {
+      return DepositOutcome.noFittingSpace(offered, leftovers);
+    }
+    if (capacity.freeSlots(context.world(), context.terminal(), ContainerRole.FILTERED) > 0) {
+      return DepositOutcome.onlyFilteredSpace(offered, leftovers);
+    }
+    return DepositOutcome.noSpace(offered, leftovers);
   }
 
   private static List<DepositLeftover> leftoversOf(List<Offer> offers) {

@@ -86,14 +86,17 @@ public final class ContainerSortService {
   }
 
   private SortOutcome sortUnopened(ServerPlayerEntity player, NamedScreenHandlerFactory factory) {
+    if (player.isSpectator()) {
+      return SortOutcome.NOT_OPENABLE;
+    }
     final ScreenHandler unopened =
         factory.createMenu(UNOPENED_SYNC_ID, player.getInventory(), player);
     if (unopened == null) {
-      return SortOutcome.SCREEN_NOT_SORTABLE;
+      return SortOutcome.NOT_OPENABLE;
     }
     try {
       if (!unopened.canUse(player)) {
-        return SortOutcome.SCREEN_NOT_SORTABLE;
+        return SortOutcome.NOT_OPENABLE;
       }
       return SortableSlots.resolve(unopened, player, LockedSlotsAttachment.get(player))
           .map(target -> apply(player, target))

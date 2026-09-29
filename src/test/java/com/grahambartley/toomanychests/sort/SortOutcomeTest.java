@@ -20,7 +20,13 @@ class SortOutcomeTest {
   @ParameterizedTest
   @EnumSource(
       value = SortOutcome.class,
-      names = {"NOT_OFFERED", "NO_OPEN_SCREEN", "SCREEN_NOT_SORTABLE", "RATE_LIMITED"})
+      names = {
+        "NOT_OFFERED",
+        "NO_OPEN_SCREEN",
+        "SCREEN_NOT_SORTABLE",
+        "NOT_OPENABLE",
+        "RATE_LIMITED"
+      })
   void anOutcomeWhereTheModDeclinedToActIsARefusal(SortOutcome outcome) {
     assertTrue(outcome.wasRefused());
   }

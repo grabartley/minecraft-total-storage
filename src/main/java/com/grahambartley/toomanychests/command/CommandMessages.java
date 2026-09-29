@@ -255,18 +255,23 @@ public final class CommandMessages {
   }
 
   public static Text inventorySorted() {
-    return line("sort.inventory.sorted", "Sorted your inventory, as no container is in view");
+    return line("sort.inventory.sorted", "Sorted your inventory, as nothing in view can be sorted");
   }
 
   public static Text inventoryAlreadySorted() {
     return line(
         "sort.inventory.unchanged",
-        "Your inventory was already sorted, and no container is in view");
+        "Your inventory was already sorted, and nothing in view can be sorted");
   }
 
   public static Text inventoryNothingToSort() {
     return line(
-        "sort.inventory.empty", "Your inventory has nothing to sort, and no container is in view");
+        "sort.inventory.empty",
+        "Your inventory has nothing to sort, and nothing in view can be sorted");
+  }
+
+  public static Text notOpenableToSort() {
+    return line("sort.unopenable", "You could not open that, so it was not sorted");
   }
 
   public static Text nothingToSort() {

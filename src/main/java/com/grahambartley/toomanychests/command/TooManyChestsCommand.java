@@ -50,28 +50,24 @@ public final class TooManyChestsCommand {
   static List<HelpLine> helpLines() {
     return List.of(
         HelpLine.of(CommandMessages.helpHeader()),
-        HelpLine.of(CommandMessages.helpConfig()),
-        HelpLine.of(CommandMessages.helpEligibility()),
-        HelpLine.terminal(CommandMessages.helpTerminal(), "radius"),
-        HelpLine.terminal(CommandMessages.helpTerminalAccess(), "access"),
-        HelpLine.terminal(CommandMessages.helpTerminalTrust(), "trust", "untrust"),
-        HelpLine.terminal(CommandMessages.helpTerminalInfo(), "info", "rescan"),
-        HelpLine.terminal(CommandMessages.helpTerminalRole(), "role"),
-        HelpLine.terminal(CommandMessages.helpTerminalName(), "name"),
-        HelpLine.terminal(CommandMessages.helpTerminalFilter(), "filter"),
-        HelpLine.terminal(CommandMessages.helpTerminalHighlight(), "highlight"),
-        HelpLine.terminal(TagSetMessages.help(), "tags"),
-        HelpLine.of(CommandMessages.helpSort()),
-        HelpLine.of(CommandMessages.helpQuickStack()));
+        HelpLine.of(CommandMessages.helpConfig(), "config"),
+        HelpLine.of(CommandMessages.helpEligibility(), "config eligibility"),
+        HelpLine.of(CommandMessages.helpTerminal(), "terminal radius"),
+        HelpLine.of(CommandMessages.helpTerminalAccess(), "terminal access"),
+        HelpLine.of(CommandMessages.helpTerminalTrust(), "terminal trust", "terminal untrust"),
+        HelpLine.of(CommandMessages.helpTerminalInfo(), "terminal info", "terminal rescan"),
+        HelpLine.of(CommandMessages.helpTerminalRole(), "terminal role"),
+        HelpLine.of(CommandMessages.helpTerminalName(), "terminal name"),
+        HelpLine.of(CommandMessages.helpTerminalFilter(), "terminal filter"),
+        HelpLine.of(CommandMessages.helpTerminalHighlight(), "terminal highlight"),
+        HelpLine.of(TagSetMessages.help(), "terminal tags"),
+        HelpLine.of(CommandMessages.helpSort(), "sort"),
+        HelpLine.of(CommandMessages.helpQuickStack(), "quickstack"));
   }
 
-  record HelpLine(Text text, Set<String> terminalSubcommands) {
-    static HelpLine of(Text text) {
-      return new HelpLine(text, Set.of());
-    }
-
-    static HelpLine terminal(Text text, String... subcommands) {
-      return new HelpLine(text, Set.of(subcommands));
+  record HelpLine(Text text, Set<String> commands) {
+    static HelpLine of(Text text, String... commands) {
+      return new HelpLine(text, Set.of(commands));
     }
   }
 }
