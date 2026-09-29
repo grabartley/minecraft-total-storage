@@ -1,6 +1,7 @@
 package com.grahambartley.toomanychests.gametest;
 
 import com.grahambartley.toomanychests.operation.OperationGuards;
+import com.grahambartley.toomanychests.operation.PlayerSlots;
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import java.util.ArrayList;
@@ -44,7 +45,6 @@ public final class SortCommandGameTest implements FabricGameTest {
 
   private static final int FIRST_PART_SLOT = 12;
   private static final int SECOND_PART_SLOT = 20;
-  private static final int FIRST_MAIN_SLOT = 9;
 
   @BeforeBatch(batchId = BATCH)
   public void clearCooldowns(ServerWorld world) {
@@ -210,6 +210,41 @@ public final class SortCommandGameTest implements FabricGameTest {
   }
 
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void aShulkerBoxWithItsLidBlockedIsRefused(TestContext context) {
+    Inventory shulker = placeWithPartStacks(context, IN_VIEW, Blocks.SHULKER_BOX.getDefaultState());
+    context.setBlockState(IN_VIEW.up(), Blocks.STONE.getDefaultState());
+    List<ItemStack> before = snapshotOf(shulker);
+    ServerPlayerEntity player = playerAt(context, STANDING);
+    stockInventoryWithPartStacks(player);
+    List<ItemStack> inventoryBefore = snapshotOf(player.getInventory());
+    lookAt(context, player, IN_VIEW);
+
+    int result = runSort(context, player);
+
+    context.assertTrue(result == 0, "A shut shulker box must be refused, returned " + result);
+    context.assertTrue(
+        matches(before, snapshotOf(shulker)), "The shut shulker box must hold what it held");
+    context.assertTrue(
+        matches(inventoryBefore, snapshotOf(player.getInventory())),
+        "A shut shulker box must not fall back to sorting the inventory");
+    finish(context, player);
+  }
+
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void aBlockThatHoldsItemsButOpensNoScreenSortsTheInventory(TestContext context) {
+    context.setBlockState(IN_VIEW, Blocks.CHISELED_BOOKSHELF.getDefaultState());
+    ServerPlayerEntity player = playerAt(context, STANDING);
+    stockInventoryWithPartStacks(player);
+    lookAt(context, player, IN_VIEW);
+
+    int result = runSort(context, player);
+
+    context.assertTrue(result == 1, "The inventory should have been sorted, returned " + result);
+    assertInventoryMerged(context, player);
+    finish(context, player);
+  }
+
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void anAnvilInViewIsRefused(TestContext context) {
     context.setBlockState(IN_VIEW, Blocks.ANVIL.getDefaultState());
     ServerPlayerEntity player = playerAt(context, STANDING);
@@ -280,7 +315,7 @@ public final class SortCommandGameTest implements FabricGameTest {
   }
 
   private static void assertInventoryMerged(TestContext context, ServerPlayerEntity player) {
-    ItemStack first = player.getInventory().getStack(FIRST_MAIN_SLOT);
+    ItemStack first = player.getInventory().getStack(PlayerSlots.FIRST_MAIN_SLOT);
     context.assertTrue(
         first.isOf(Items.COBBLESTONE) && first.getCount() == 50,
         "The inventory's part stacks should have merged, found " + first);

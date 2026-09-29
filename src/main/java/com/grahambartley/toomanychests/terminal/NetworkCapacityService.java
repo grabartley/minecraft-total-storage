@@ -27,14 +27,8 @@ public final class NetworkCapacityService {
   }
 
   public NetworkCapacity measure(ServerWorld world, BlockPos terminal) {
-    final Map<ContainerRole, NetworkCapacity> byRole = measureByRole(world, terminal);
-    int used = 0;
-    int total = 0;
-    for (final NetworkCapacity capacity : byRole.values()) {
-      used += capacity.usedSlots();
-      total += capacity.totalSlots();
-    }
-    return new NetworkCapacity(used, total);
+    return measureByRole(world, terminal).values().stream()
+        .reduce(NetworkCapacity.EMPTY, NetworkCapacityService::combined);
   }
 
   public Map<ContainerRole, NetworkCapacity> measureByRole(ServerWorld world, BlockPos terminal) {
@@ -44,7 +38,7 @@ public final class NetworkCapacityService {
     if (settings == null || network == null) {
       return Map.of();
     }
-    final Map<ContainerRole, int[]> tallies = new EnumMap<>(ContainerRole.class);
+    final Map<ContainerRole, NetworkCapacity> byRole = new EnumMap<>(ContainerRole.class);
     for (final StorageOrigin origin : network.containers()) {
       if (!(origin instanceof BlockStorageOrigin block)) {
         continue;
@@ -57,16 +51,25 @@ public final class NetworkCapacityService {
       if (provider.isEmpty()) {
         continue;
       }
-      final int[] tally = tallies.computeIfAbsent(role, unused -> new int[2]);
-      for (final StorageView<ItemVariant> view : provider.get().storage()) {
-        tally[1]++;
-        if (!view.isResourceBlank() && view.getAmount() > 0L) {
-          tally[0]++;
-        }
+      byRole.merge(role, capacityOf(provider.get()), NetworkCapacityService::combined);
+    }
+    return Map.copyOf(byRole);
+  }
+
+  private static NetworkCapacity capacityOf(StorageProvider provider) {
+    int used = 0;
+    int total = 0;
+    for (final StorageView<ItemVariant> view : provider.storage()) {
+      total++;
+      if (!view.isResourceBlank() && view.getAmount() > 0L) {
+        used++;
       }
     }
-    final Map<ContainerRole, NetworkCapacity> byRole = new EnumMap<>(ContainerRole.class);
-    tallies.forEach((role, tally) -> byRole.put(role, new NetworkCapacity(tally[0], tally[1])));
-    return Map.copyOf(byRole);
+    return new NetworkCapacity(used, total);
+  }
+
+  private static NetworkCapacity combined(NetworkCapacity first, NetworkCapacity second) {
+    return new NetworkCapacity(
+        first.usedSlots() + second.usedSlots(), first.totalSlots() + second.totalSlots());
   }
 }

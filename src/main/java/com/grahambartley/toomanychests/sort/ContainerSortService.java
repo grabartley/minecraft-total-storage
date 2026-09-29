@@ -17,8 +17,11 @@ import java.util.Optional;
 import net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
+import net.minecraft.block.AbstractChestBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.EnderChestBlock;
+import net.minecraft.block.ShulkerBoxBlock;
+import net.minecraft.block.entity.ShulkerBoxBlockEntity;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.screen.ScreenHandler;
@@ -89,16 +92,25 @@ public final class ContainerSortService {
   private Optional<SortOutcome> sortBlock(ServerPlayerEntity player, BlockPos pos) {
     final World world = player.getWorld();
     final BlockState state = world.getBlockState(pos);
-    final NamedScreenHandlerFactory factory = state.createScreenHandlerFactory(world, pos);
-    if (factory != null) {
-      return Optional.of(sortUnopened(player, factory));
-    }
     if (state.getBlock() instanceof EnderChestBlock) {
       return Optional.of(SortOutcome.SCREEN_NOT_SORTABLE);
     }
-    return world.getBlockEntity(pos) instanceof Inventory
-        ? Optional.of(SortOutcome.NOT_OPENABLE)
-        : Optional.empty();
+    final NamedScreenHandlerFactory factory = state.createScreenHandlerFactory(world, pos);
+    if (factory == null) {
+      return state.getBlock() instanceof AbstractChestBlock<?>
+          ? Optional.of(SortOutcome.NOT_OPENABLE)
+          : Optional.empty();
+    }
+    if (isShutShulkerBox(world, pos, state)) {
+      return Optional.of(SortOutcome.NOT_OPENABLE);
+    }
+    return Optional.of(sortUnopened(player, factory));
+  }
+
+  private static boolean isShutShulkerBox(World world, BlockPos pos, BlockState state) {
+    return state.getBlock() instanceof ShulkerBoxBlock
+        && world.getBlockEntity(pos) instanceof ShulkerBoxBlockEntity shulker
+        && !ShulkerBoxBlock.canOpen(state, world, pos, shulker);
   }
 
   private SortOutcome sortUnopened(ServerPlayerEntity player, NamedScreenHandlerFactory factory) {
