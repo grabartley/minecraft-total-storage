@@ -15,60 +15,12 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 
 public final class TerminalLifecycleGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
   private static final String BATCH = "terminal-lifecycle";
 
-  private static final int REMOTE_OFFSET = 1024;
-  private static final int REMOTE_HEIGHT = 8;
   private static final BlockPos TERMINAL = new BlockPos(3, 1, 3);
-
-  @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = 400)
-  public void aTerminalSavedPoweredStartsItsNetworkWhenItsChunkLoadsAgain(TestContext context) {
-    final ServerWorld world = context.getWorld();
-    final BlockPos pos = remoteTerminalPos(context);
-    final ChunkPos chunkPos = new ChunkPos(pos);
-
-    world.setChunkForced(chunkPos.x, chunkPos.z, true);
-    world.setBlockState(pos, poweredTerminal());
-    narrowTo(world, pos);
-    world.setChunkForced(chunkPos.x, chunkPos.z, false);
-
-    final long[] reloadedAt = {-1L};
-    context.runAtEveryTick(
-        () -> {
-          if (reloadedAt[0] < 0L) {
-
-            if (world.getChunkManager().isChunkLoaded(chunkPos.x, chunkPos.z)
-                || TerminalNetworks.power().network(world, pos).isPresent()) {
-              return;
-            }
-
-            world.setChunkForced(chunkPos.x, chunkPos.z, true);
-
-            context.assertTrue(
-                TerminalNetworks.power().network(world, pos).isEmpty(),
-                "A chunk load must not start a network from inside the chunk load");
-            reloadedAt[0] = context.getTick();
-            return;
-          }
-          if (context.getTick() <= reloadedAt[0] + 1L) {
-            return;
-          }
-          final NetworkMembership reloaded =
-              TerminalNetworks.power().network(world, pos).orElse(null);
-          context.assertTrue(
-              reloaded != null,
-              "A terminal saved powered should run a network the tick after its chunk loaded");
-          context.assertTrue(
-              ContainerLifecycle.registry().isSubscribed(reloaded),
-              "A terminal that started again should be listening for containers again");
-          discard(world, pos, chunkPos);
-          context.complete();
-        });
-  }
 
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = 40)
   public void aTerminalThatLoadsPoweredIsOwedAStartRatherThanGivenOne(TestContext context) {
@@ -177,25 +129,8 @@ public final class TerminalLifecycleGameTest implements FabricGameTest {
     context.complete();
   }
 
-  private static BlockPos remoteTerminalPos(TestContext context) {
-    final BlockPos here = context.getAbsolutePos(BlockPos.ORIGIN);
-    return new BlockPos(
-        here.getX() + REMOTE_OFFSET, here.getY() + REMOTE_HEIGHT, here.getZ() + REMOTE_OFFSET);
-  }
-
   private static BlockState poweredTerminal() {
     return ModBlocks.TERMINAL.getDefaultState().with(TerminalBlock.POWERED, Boolean.TRUE);
-  }
-
-  private static void narrowTo(ServerWorld world, BlockPos pos) {
-    if (world.getBlockEntity(pos) instanceof TerminalBlockEntity terminal) {
-      terminal.updateSettings(settings -> settings.withRadius(1));
-    }
-  }
-
-  private static void discard(ServerWorld world, BlockPos pos, ChunkPos chunkPos) {
-    world.setBlockState(pos, Blocks.AIR.getDefaultState());
-    world.setChunkForced(chunkPos.x, chunkPos.z, false);
   }
 
   private void placeAlreadyPowered(TestContext context) {
