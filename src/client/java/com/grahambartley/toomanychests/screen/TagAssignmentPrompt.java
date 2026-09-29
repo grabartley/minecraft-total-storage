@@ -38,10 +38,6 @@ public final class TagAssignmentPrompt {
     list.fit(view.custom().size());
   }
 
-  public boolean scrollBy(int notches) {
-    return list.scrollBy(notches);
-  }
-
   public NetworkTagEntry tagAt(NetworkTagView view, int windowX, int windowY) {
     final int index = list.indexAt(windowX, windowY);
     final List<NetworkTagEntry> tags = view.custom();

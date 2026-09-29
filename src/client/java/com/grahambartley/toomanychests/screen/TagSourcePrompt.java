@@ -49,10 +49,6 @@ public final class TagSourcePrompt {
     list.fit(sources.size());
   }
 
-  public boolean scrollBy(int notches) {
-    return list.scrollBy(notches);
-  }
-
   public OwnedTerminal sourceAt(List<OwnedTerminal> sources, int windowX, int windowY) {
     final int index = list.indexAt(windowX, windowY);
     return index < 0 || index >= sources.size() ? null : sources.get(index);

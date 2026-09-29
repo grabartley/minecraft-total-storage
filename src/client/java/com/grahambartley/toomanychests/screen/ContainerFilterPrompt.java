@@ -42,10 +42,6 @@ public final class ContainerFilterPrompt {
     list.fit(view.tags().size());
   }
 
-  public boolean scrollBy(int notches) {
-    return list.scrollBy(notches);
-  }
-
   public ContainerRoleEntry rowIn(NetworkSettingsView view) {
     if (!isOpen()) {
       return null;

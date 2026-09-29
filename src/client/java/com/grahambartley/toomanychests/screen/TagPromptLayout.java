@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests.screen;
 
+import com.grahambartley.toomanychests.screenhandler.FilterColumnLayout;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
 
 public final class TagPromptLayout {
@@ -29,7 +30,7 @@ public final class TagPromptLayout {
 
   public static final int TEXT_WIDTH = WIDTH - 2 * PADDING;
 
-  public static final int SCROLLBAR_WIDTH = 4;
+  public static final int SCROLLBAR_WIDTH = FilterColumnLayout.SCROLLBAR_WIDTH;
 
   public static final int SCROLLBAR_GAP = 2;
 

@@ -5,9 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import net.minecraft.client.font.TextHandler;
 import net.minecraft.text.StringVisitable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -20,36 +20,7 @@ class EllipsisTrimTest {
   private static final String LONG_NAME = "Everything And More";
 
   private static final EllipsisTrim.TextRoom ROOM =
-      new EllipsisTrim.TextRoom() {
-        @Override
-        public int widthOf(StringVisitable text) {
-          return plainOf(text).length() * CHARACTER_WIDTH;
-        }
-
-        @Override
-        public StringVisitable trimmedTo(StringVisitable text, int width) {
-          final String plain = plainOf(text);
-          return StringVisitable.plain(
-              plain.substring(0, Math.min(plain.length(), width / CHARACTER_WIDTH)));
-        }
-
-        @Override
-        public List<Integer> lineStarts(String text, int width) {
-          final int perLine = Math.max(1, width / CHARACTER_WIDTH);
-          final List<Integer> starts = new ArrayList<>();
-          int start = 0;
-          while (start < text.length()) {
-            starts.add(start);
-            final int limit = start + perLine;
-            if (limit >= text.length()) {
-              break;
-            }
-            final int space = text.lastIndexOf(' ', limit);
-            start = space > start ? space + 1 : limit;
-          }
-          return starts;
-        }
-      };
+      new TrimmedText.HandlerRoom(new TextHandler((codePoint, style) -> CHARACTER_WIDTH));
 
   private static String plainOf(StringVisitable text) {
     final StringBuilder plain = new StringBuilder();

@@ -60,7 +60,7 @@ class TagAssignmentPromptTest {
     prompt.fit(view);
 
     assertNull(prompt.tagAt(view, ROW_LEFT, TagPromptLayout.rowY(0)));
-    assertFalse(prompt.scrollBy(1));
+    assertFalse(prompt.list().scrollBy(1));
   }
 
   @Test
@@ -72,7 +72,7 @@ class TagAssignmentPromptTest {
                 custom("a"), custom("b"), custom("c"), custom("d"), custom("e"), preset("wood")));
     prompt.fit(tooMany);
 
-    assertTrue(prompt.scrollBy(1));
+    assertTrue(prompt.list().scrollBy(1));
     assertEquals(custom("b"), prompt.tagAt(tooMany, ROW_LEFT, TagPromptLayout.rowY(0)));
   }
 }

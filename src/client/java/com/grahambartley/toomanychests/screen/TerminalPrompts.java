@@ -163,23 +163,12 @@ public final class TerminalPrompts {
     if (ownsTheKeyboard()) {
       return true;
     }
-    if (copying.isOpen()) {
-      if (verticalAmount != 0.0) {
-        copying.scrollBy(verticalAmount > 0.0 ? -1 : 1);
-      }
-      return true;
-    }
-    if (filtering.isOpen()) {
-      if (verticalAmount != 0.0) {
-        filtering.scrollBy(verticalAmount > 0.0 ? -1 : 1);
-      }
-      return true;
-    }
-    if (!tagging.isOpen()) {
+    final TagPromptList list = openList();
+    if (list == null) {
       return false;
     }
     if (verticalAmount != 0.0) {
-      tagging.scrollBy(verticalAmount > 0.0 ? -1 : 1);
+      list.scrollBy(verticalAmount > 0.0 ? -1 : 1);
     }
     return true;
   }

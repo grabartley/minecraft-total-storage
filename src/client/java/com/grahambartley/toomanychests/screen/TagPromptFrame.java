@@ -45,7 +45,10 @@ public final class TagPromptFrame {
     int lineY = originY + TagPromptLayout.footerTop();
     for (final OrderedText line :
         TrimmedText.toLines(
-            textRenderer, footer, TagPromptLayout.TEXT_WIDTH, TagPromptLayout.FOOTER_LINES)) {
+            textRenderer,
+            footer.getString(),
+            TagPromptLayout.TEXT_WIDTH,
+            TagPromptLayout.FOOTER_LINES)) {
       context.drawText(
           textRenderer,
           line,
