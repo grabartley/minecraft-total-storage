@@ -1,6 +1,7 @@
 package com.grahambartley.toomanychests.screen;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.toomanychests.config.ConfigSetting;
 import com.grahambartley.toomanychests.config.ConfigSettings;
@@ -9,6 +10,8 @@ import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableTextContent;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class ServerConfigTextTest {
   private static final String PREFIX = "screen.too-many-chests.config.";
@@ -21,60 +24,50 @@ class ServerConfigTextTest {
     return (TranslatableTextContent) ((Text) text).getContent();
   }
 
-  @Test
-  void theAccessModeHintNamesEveryModeAndTheDefaultInTheTerminalsWords() {
-    TranslatableTextContent bounds =
-        contentOf(ServerConfigText.bounds(setting("defaultTerminalAccessMode")));
-    TranslatableTextContent modes = contentOf(bounds.getArgs()[0]);
+  @ParameterizedTest
+  @ValueSource(strings = {"defaultTerminalAccessMode", "sortOrdering", "sortButtonEnabled"})
+  void aChoiceHintNamesOnlyItsDefaultInThePlayersWords(String name) {
+    ConfigSetting choice = setting(name);
+    TranslatableTextContent hint = contentOf(ServerConfigText.bounds(choice));
 
-    assertEquals(PREFIX + "bounds", bounds.getKey());
-    assertEquals(TerminalAccessMode.OWNER.displayName(), bounds.getArgs()[1]);
-    assertEquals(PREFIX + "or", modes.getKey());
-    assertEquals(
-        Text.empty()
-            .append(TerminalAccessMode.OWNER.displayName())
-            .append(Text.translatableWithFallback(PREFIX + "separator", ", "))
-            .append(TerminalAccessMode.TRUSTED.displayName()),
-        modes.getArgs()[0]);
-    assertEquals(TerminalAccessMode.OPEN.displayName(), modes.getArgs()[1]);
+    assertEquals(PREFIX + "default", hint.getKey());
+    assertEquals(choice.displayValue(choice.defaultValue()), hint.getArgs()[0]);
   }
 
   @Test
-  void aSwitchHintReadsOnOrOff() {
-    TranslatableTextContent bounds =
-        contentOf(ServerConfigText.bounds(setting("sortButtonEnabled")));
-    TranslatableTextContent choices = contentOf(bounds.getArgs()[0]);
-
-    assertEquals(PREFIX + "or", choices.getKey());
-    assertEquals(ScreenTexts.ON, choices.getArgs()[0]);
-    assertEquals(ScreenTexts.OFF, choices.getArgs()[1]);
-    assertEquals(ScreenTexts.ON, bounds.getArgs()[1]);
+  void theAccessModeHintUsesTheTerminalsOwnWords() {
+    assertEquals(
+        TerminalAccessMode.OWNER.displayName(),
+        contentOf(ServerConfigText.bounds(setting("defaultTerminalAccessMode"))).getArgs()[0]);
   }
 
-  @Test
-  void aPercentageHintShowsBothEndsAndTheDefaultAsPercentages() {
-    ConfigSetting warning = setting("nearCapacityWarningPercent");
-    TranslatableTextContent bounds = contentOf(ServerConfigText.bounds(warning));
-    TranslatableTextContent range = contentOf(bounds.getArgs()[0]);
+  @ParameterizedTest
+  @ValueSource(strings = {"sortButtonEnabled", "quickStackEnabled"})
+  void aSwitchHintReadsAsVanillasOnOrOff(String name) {
+    Object shown = contentOf(ServerConfigText.bounds(setting(name))).getArgs()[0];
 
-    assertEquals(PREFIX + "range", range.getKey());
-    assertEquals(
-        warning.displayValue(Integer.toString(warning.range().orElseThrow().min())),
-        range.getArgs()[0]);
-    assertEquals(
-        warning.displayValue(Integer.toString(warning.range().orElseThrow().max())),
-        range.getArgs()[1]);
-    assertEquals(warning.displayValue(warning.defaultValue()), bounds.getArgs()[1]);
-    assertEquals(PREFIX + "value.percent", contentOf(bounds.getArgs()[1]).getKey());
+    assertTrue(shown.equals(ScreenTexts.ON) || shown.equals(ScreenTexts.OFF), shown.toString());
   }
 
-  @Test
-  void aPlainNumberHintShowsItsRangeAsNumbers() {
-    ConfigSetting radius = setting("quickStackRadius");
-    TranslatableTextContent range =
-        contentOf(contentOf(ServerConfigText.bounds(radius)).getArgs()[0]);
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "maxTerminalRadius",
+        "quickStackRadius",
+        "nearCapacityWarningPercent",
+        "movesPerTickBudget"
+      })
+  void aNumberHintShowsBothEndsAndTheDefaultInTheSettingsOwnUnits(String name) {
+    ConfigSetting number = setting(name);
+    TranslatableTextContent hint = contentOf(ServerConfigText.bounds(number));
 
+    assertEquals(PREFIX + "bounds", hint.getKey());
     assertEquals(
-        Text.literal(Integer.toString(radius.range().orElseThrow().min())), range.getArgs()[0]);
+        number.displayValue(Integer.toString(number.range().orElseThrow().min())),
+        hint.getArgs()[0]);
+    assertEquals(
+        number.displayValue(Integer.toString(number.range().orElseThrow().max())),
+        hint.getArgs()[1]);
+    assertEquals(number.displayValue(number.defaultValue()), hint.getArgs()[2]);
   }
 }
