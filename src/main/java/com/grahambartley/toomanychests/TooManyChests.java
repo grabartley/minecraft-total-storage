@@ -47,7 +47,7 @@ public class TooManyChests implements ModInitializer {
     OperationGuards.register();
     NetworkOperations.register();
     TerminalScreenLifecycle.register();
-    new TerminalListingBroadcast(ModNetworking.listings()).register();
+    TerminalListingBroadcast.register();
     new TerminalCapacityBroadcast().register();
     TerminalRadiusClamp.register();
     ContainerEligibilityRefresh.register();

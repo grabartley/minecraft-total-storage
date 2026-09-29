@@ -29,6 +29,8 @@
       "com.grahambartley.toomanychests.compat.TooManyChestsEmiPlugin"
     ],
     "fabric-gametest": [
+      "com.grahambartley.toomanychests.gametest.SortCommandGameTest",
+      "com.grahambartley.toomanychests.gametest.TerminalTagPanelServiceGameTest",
       "com.grahambartley.toomanychests.gametest.NetworkSortGameTest",
       "com.grahambartley.toomanychests.gametest.StorageSortGameTest",
       "com.grahambartley.toomanychests.gametest.NetworkJobsGameTest",

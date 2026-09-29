@@ -3,10 +3,10 @@ package com.grahambartley.toomanychests.command;
 import com.grahambartley.toomanychests.sort.ContainerSortService;
 import com.grahambartley.toomanychests.sort.SortFeedback;
 import com.grahambartley.toomanychests.sort.SortOutcome;
+import com.grahambartley.toomanychests.sort.SortReply;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -25,16 +25,12 @@ public final class SortCommand {
       throws CommandSyntaxException {
     final ServerCommandSource source = context.getSource();
     final ServerPlayerEntity player = source.getPlayerOrThrow();
-    final ScreenHandler open = player.currentScreenHandler;
-    if (open == null) {
-      source.sendError(CommandMessages.nothingOpenToSort());
-      return 0;
-    }
-    return report(source, SORTING.sort(player, open.syncId));
+    return report(source, SORTING.sortForCommand(player));
   }
 
-  private static int report(ServerCommandSource source, SortOutcome outcome) {
-    final Text message = SortFeedback.messageFor(outcome);
+  private static int report(ServerCommandSource source, SortReply reply) {
+    final SortOutcome outcome = reply.outcome();
+    final Text message = SortFeedback.messageFor(reply);
     if (outcome.wasRefused() || outcome == SortOutcome.FAILED) {
       source.sendError(message);
       return 0;

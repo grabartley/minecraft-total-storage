@@ -4,6 +4,9 @@ import com.grahambartley.toomanychests.ModSounds;
 import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.lock.LockedSlots;
 import com.grahambartley.toomanychests.network.DepositRequestPayload;
+import com.grahambartley.toomanychests.storage.ContainerRole;
+import com.grahambartley.toomanychests.terminal.NetworkCapacity;
+import com.grahambartley.toomanychests.terminal.NetworkCapacityService;
 import com.grahambartley.toomanychests.transaction.OperationResult;
 import com.grahambartley.toomanychests.transaction.StorageTransfers;
 import java.util.ArrayList;
@@ -21,13 +24,15 @@ import net.minecraft.sound.SoundCategory;
 
 public final class DepositService {
   private final DepositDestinations destinations;
+  private final NetworkCapacityService capacity;
 
   public DepositService() {
-    this(new DepositDestinations());
+    this(new DepositDestinations(), new NetworkCapacityService());
   }
 
-  public DepositService(DepositDestinations destinations) {
+  public DepositService(DepositDestinations destinations, NetworkCapacityService capacity) {
     this.destinations = Objects.requireNonNull(destinations, "destinations");
+    this.capacity = Objects.requireNonNull(capacity, "capacity");
   }
 
   public DepositOutcome deposit(ServerPlayerEntity player, DepositRequestPayload payload) {
@@ -71,10 +76,27 @@ public final class DepositService {
     final OperationResult<Stored> result =
         NetworkMutation.run(context, transaction -> store(context, offers, transaction));
     if (result.rolledBack()) {
-      return DepositOutcome.noSpace(offered, leftoversOf(offers));
+      return nothingStored(context, offered, leftoversOf(offers));
     }
     final Stored stored = result.orElse(Stored.nothing());
     return DepositOutcome.stored(offered, stored.moved(), stored.leftovers());
+  }
+
+  private DepositOutcome nothingStored(
+      TerminalOperationContext context, long offered, List<DepositLeftover> leftovers) {
+    final Map<ContainerRole, NetworkCapacity> byRole =
+        capacity.measureByRole(context.world(), context.terminal());
+    if (freeIn(byRole, ContainerRole.GENERAL) > 0) {
+      return DepositOutcome.noFittingSpace(offered, leftovers);
+    }
+    if (freeIn(byRole, ContainerRole.FILTERED) > 0) {
+      return DepositOutcome.onlyFilteredSpace(offered, leftovers);
+    }
+    return DepositOutcome.noSpace(offered, leftovers);
+  }
+
+  private static int freeIn(Map<ContainerRole, NetworkCapacity> byRole, ContainerRole role) {
+    return byRole.getOrDefault(role, NetworkCapacity.EMPTY).freeSlots();
   }
 
   private static List<DepositLeftover> leftoversOf(List<Offer> offers) {

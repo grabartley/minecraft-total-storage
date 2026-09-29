@@ -35,18 +35,38 @@ public final class TerminalTagPanelService {
       return false;
     }
     context.handler().tags().requested(true, payload.subject());
-    send(player, context.handler());
+    send(player, context.handler(), viewFor(player, context.handler()));
     return true;
   }
 
   public boolean refresh(ServerPlayerEntity player) {
-    if (player == null
-        || !(player.currentScreenHandler instanceof TerminalScreenHandler handler)
-        || !handler.tags().isOpen()) {
+    final TerminalScreenHandler handler = openPanelOf(player);
+    if (handler == null) {
       return false;
     }
-    send(player, handler);
+    send(player, handler, viewFor(player, handler));
     return true;
+  }
+
+  public boolean contentsChanged(ServerPlayerEntity player) {
+    final TerminalScreenHandler handler = openPanelOf(player);
+    if (handler == null) {
+      return false;
+    }
+    final NetworkTagView view = viewFor(player, handler);
+    if (!handler.tags().differsFromLastSent(view)) {
+      return false;
+    }
+    send(player, handler, view);
+    return true;
+  }
+
+  private static TerminalScreenHandler openPanelOf(ServerPlayerEntity player) {
+    return player != null
+            && player.currentScreenHandler instanceof TerminalScreenHandler handler
+            && handler.tags().isOpen()
+        ? handler
+        : null;
   }
 
   public NetworkTagView viewFor(ServerPlayerEntity player, TerminalScreenHandler handler) {
@@ -59,9 +79,10 @@ public final class TerminalTagPanelService {
     return ItemFilter.ofQuery(handler.listing().filter().query());
   }
 
-  private void send(ServerPlayerEntity player, TerminalScreenHandler handler) {
-    ServerPlayNetworking.send(
-        player, new TagPanelPayload(handler.syncId, viewFor(player, handler)));
+  private static void send(
+      ServerPlayerEntity player, TerminalScreenHandler handler, NetworkTagView view) {
+    ServerPlayNetworking.send(player, new TagPanelPayload(handler.syncId, view));
+    handler.tags().sent(view);
   }
 
   private static boolean closed(ServerPlayerEntity player, int syncId) {

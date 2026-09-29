@@ -5,6 +5,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import java.util.List;
+import java.util.Set;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -40,25 +41,33 @@ public final class TooManyChestsCommand {
 
   private static int help(CommandContext<ServerCommandSource> context) {
     final ServerCommandSource source = context.getSource();
-    for (final Text line : helpLines()) {
-      source.sendFeedback(() -> line, false);
+    for (final HelpLine line : helpLines()) {
+      source.sendFeedback(line::text, false);
     }
     return 1;
   }
 
-  private static List<Text> helpLines() {
+  static List<HelpLine> helpLines() {
     return List.of(
-        CommandMessages.helpHeader(),
-        CommandMessages.helpConfig(),
-        CommandMessages.helpEligibility(),
-        CommandMessages.helpTerminal(),
-        CommandMessages.helpTerminalAccess(),
-        CommandMessages.helpTerminalTrust(),
-        CommandMessages.helpTerminalInfo(),
-        CommandMessages.helpTerminalRole(),
-        CommandMessages.helpTerminalHighlight(),
-        TagSetMessages.help(),
-        CommandMessages.helpSort(),
-        CommandMessages.helpQuickStack());
+        HelpLine.of(CommandMessages.helpHeader()),
+        HelpLine.of(CommandMessages.helpConfig(), "config"),
+        HelpLine.of(CommandMessages.helpEligibility(), "config eligibility"),
+        HelpLine.of(CommandMessages.helpTerminal(), "terminal radius"),
+        HelpLine.of(CommandMessages.helpTerminalAccess(), "terminal access"),
+        HelpLine.of(CommandMessages.helpTerminalTrust(), "terminal trust", "terminal untrust"),
+        HelpLine.of(CommandMessages.helpTerminalInfo(), "terminal info", "terminal rescan"),
+        HelpLine.of(CommandMessages.helpTerminalRole(), "terminal role"),
+        HelpLine.of(CommandMessages.helpTerminalName(), "terminal name"),
+        HelpLine.of(CommandMessages.helpTerminalFilter(), "terminal filter"),
+        HelpLine.of(CommandMessages.helpTerminalHighlight(), "terminal highlight"),
+        HelpLine.of(TagSetMessages.help(), "terminal tags"),
+        HelpLine.of(CommandMessages.helpSort(), "sort"),
+        HelpLine.of(CommandMessages.helpQuickStack(), "quickstack"));
+  }
+
+  record HelpLine(Text text, Set<String> commands) {
+    static HelpLine of(Text text, String... commands) {
+      return new HelpLine(text, Set.of(commands));
+    }
   }
 }

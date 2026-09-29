@@ -8,6 +8,7 @@ import java.util.Optional;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.GameTest;
@@ -22,6 +23,8 @@ public final class SortableSlotsGameTest implements FabricGameTest {
   private static final BlockPos CONTAINER = new BlockPos(3, 1, 3);
   private static final int CHEST_SLOTS = 27;
   private static final int SHULKER_SLOTS = 27;
+  private static final int MAIN_INVENTORY_SLOTS =
+      LockedSlots.SLOT_COUNT - PlayerInventory.getHotbarSize();
 
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void aChestResolvesToItsOwnSlotsAndNoneOfThePlayers(TestContext context) {
@@ -57,7 +60,7 @@ public final class SortableSlotsGameTest implements FabricGameTest {
   }
 
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
-  public void theOpenPlayerInventoryResolvesToEveryLockableSlot(TestContext context) {
+  public void theOpenPlayerInventoryResolvesToTheMainInventoryOnly(TestContext context) {
     ServerPlayerEntity player = playerAt(context);
 
     SortTarget target =
@@ -65,7 +68,10 @@ public final class SortableSlotsGameTest implements FabricGameTest {
             .orElseThrow();
 
     context.assertEquals(
-        target.slotCount(), LockedSlots.SLOT_COUNT, "The main inventory and hotbar are sortable");
+        target.slotCount(), MAIN_INVENTORY_SLOTS, "Only the main inventory is sortable");
+    context.assertTrue(
+        target.indices().stream().noneMatch(index -> index < PlayerInventory.getHotbarSize()),
+        "No hotbar slot should be sortable, got " + target.indices());
     context.assertTrue(
         target.inventory() == player.getInventory(), "The target should be the player's inventory");
     finish(context, player);
@@ -91,13 +97,13 @@ public final class SortableSlotsGameTest implements FabricGameTest {
 
     SortTarget target =
         SortableSlots.resolve(
-                player.currentScreenHandler, player, LockedSlots.of(List.of(0, 5, 35)))
+                player.currentScreenHandler, player, LockedSlots.of(List.of(9, 20, 35)))
             .orElseThrow();
 
     context.assertEquals(
-        target.slotCount(), LockedSlots.SLOT_COUNT - 3, "Three locked slots leave thirty three");
+        target.slotCount(), MAIN_INVENTORY_SLOTS - 3, "Three locked slots leave twenty four");
     context.assertTrue(
-        target.indices().stream().noneMatch(List.of(0, 5, 35)::contains),
+        target.indices().stream().noneMatch(List.of(9, 20, 35)::contains),
         "A locked index must not appear in the target, got " + target.indices());
     finish(context, player);
   }

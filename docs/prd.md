@@ -179,7 +179,7 @@ With a stack already on the cursor the same grid takes clicks the other way, dep
 |---|---|
 | FIND-1 | The search box takes keyboard focus the moment the terminal opens; no click required |
 | FIND-2 | Matching is ranked exact, then prefix, then substring, then fuzzy, over the display name and the identifier path; a term carrying a namespace separator is matched literally against the full identifier (ADR 0013, ADR 0028) |
-| FIND-3 | `#tag` searches tags and `@modid` filters by source mod, both combining with free text. Name and tag terms narrow each other; mod identifier terms broaden, so `@create @ae2` matches either (ADR 0013) |
+| FIND-3 | `#tag` searches tags and `@modid` filters by source mod, both combining with free text. Both match an id, or a word of it between underscores or dashes, that equals or starts with the term, never a substring or a fuzzy match. Name and tag terms narrow each other; mod identifier terms broaden, so `@create @ae2` matches either (ADR 0013) |
 | FIND-4 | Counts are aggregated across the network and formatted for readability at scale |
 | FIND-5 | Items differing only by data components are separate entries with individual counts |
 | FIND-6 | An empty network and an empty search result read differently |
@@ -226,7 +226,7 @@ Routing order, per item variant:
 | PUT-8 | A full `Filtered` container falls through to `General` rather than refusing the item |
 | PUT-9 | A network with no room leaves the inventory untouched and says so |
 | PUT-10 | Items that cannot be stored stay in their original slots where possible |
-| PUT-11 | Feedback distinguishes "nothing to deposit" from "no space", and names what could not be stored by item and count |
+| PUT-11 | Feedback distinguishes "nothing to deposit" from "no space", tells a full network apart from free space that only `Filtered` containers hold and from free slots that cannot hold the item, and names what could not be stored by item and count |
 | PUT-12 | The terminal shows network capacity, with a configurable near-full warning threshold |
 | PUT-13 | Capacity counts only writable containers, excluding `Excluded` ones |
 | PUT-14 | Ties between candidate containers resolve deterministically |
@@ -296,7 +296,7 @@ Default order: category by preset tag grouping, then registry identifier, then d
 | SORT-1 | The comparator is deterministic and stable; sorting a sorted container produces zero moves and no resync |
 | SORT-2 | Ordering is language independent by default, with display-name ordering as an explicit option |
 | SORT-3 | Full stacks sort ahead of partial stacks of the same item |
-| SORT-4 | A sort request is honoured only for the screen handler the player currently has open |
+| SORT-4 | A sort request is honoured only for the screen handler the player currently has open, or, for `/tmc sort` with no container open, the container block the player is looking at within reach, which must pass the same gates its screen would and must open for that player, so a locked container and a spectator are refused |
 | SORT-5 | Screens where reordering is meaningless or harmful are refused, unknown special-purpose screens included, by a deny list and a structural probe (ADR 0018) |
 | SORT-6 | Sorting runs in one transaction; a failure part way rolls back completely |
 | SORT-7 | Every viewer of a sorted container is resynced, both halves of a double chest included |
@@ -322,7 +322,7 @@ Default order: category by preset tag grouping, then registry identifier, then d
 
 **Actor:** Any player, including a vanilla client
 
-A sort button appears on every container screen and the player inventory. A keybind does the same without the mouse. A vanilla client with no mod installed sorts by command, because the logic is server-side.
+A sort button appears on every container screen and the player inventory. A keybind does the same without the mouse. A vanilla client with no mod installed sorts by command, because the logic is server-side. It looks at the container and runs `/tmc sort`, since vanilla will not open chat while a container screen is up.
 
 | ID | Requirement |
 |---|---|
@@ -334,12 +334,13 @@ A sort button appears on every container screen and the player inventory. A keyb
 | BTN-6 | The button is hidden when the server does not have the mod installed |
 | BTN-7 | A rebindable keybind sorts the container the player has open, or their inventory |
 | BTN-8 | No default keybinding conflicts with a vanilla key |
-| BTN-9 | `/tmc sort` sorts the open container, or the inventory when none is open, for any player |
+| BTN-9 | `/tmc sort` sorts the open container; with none open, the container block the player is looking at within reach; with nothing sortable in view, the inventory. A block in view whose screen is refused, a furnace or an anvil among them, is refused rather than falling back, and so is a container that will not open for the player and an ender chest |
 | BTN-11 | The button is disableable in config, leaving the command working |
+| BTN-12 | Sorting the player inventory, by any entry point, orders the 27 main inventory slots only and never moves anything into or out of the hotbar |
 
-**Not supported:** sorting a container the player does not have open; sorting by replaying simulated slot clicks; a client-only installation providing sorting; reinterpreting a vanilla mouse gesture as a sort, which an unmodified survival client never sends.
+**Not supported:** sorting a container the player neither has open nor is looking at within reach; sorting by replaying simulated slot clicks; a client-only installation providing sorting; reinterpreting a vanilla mouse gesture as a sort, which an unmodified survival client never sends.
 
-**Enforcement:** server, validated against the player's current screen handler. The client contributes the button, the keybind, and a packet.
+**Enforcement:** server, validated against the player's current screen handler, or against the screen the block in view would open for them. The client contributes the button, the keybind, and a packet.
 
 ---
 
@@ -361,7 +362,7 @@ A player locks the slots holding their tools, weapons, and food. No automated op
 | LOCK-8 | The tint is a per-player client display option that can be turned off, leaving the badge as the indicator; it is not a server-wide setting |
 | LOCK-9 | Every path the mod drives on the player's behalf honours locks: sorting by any entry point, deposit all, quick-stack, and any future loadout preset swap (ADR 0010). "Automated" means the mod chose which slots to move, not that the player pressed something |
 | LOCK-10 | A gesture in which the player chose the slot is never blocked by a lock: dragging, shift-clicking and hotbar swapping, wherever they are aimed. A shift-click from a locked slot onto the terminal grid moves the stack, exactly as a shift-click into a chest does, because the player picked that slot. The one-sentence rule is that a lock stops the mod moving a slot, never the player |
-| LOCK-11 | Sorting an inventory with locked slots scattered through it sorts around them, leaving them in place |
+| LOCK-11 | Sorting an inventory with locked slots scattered through its main inventory sorts around them, leaving them in place |
 
 **Not supported:** locking armour or the offhand, which are excluded from automated operations anyway; a lock preventing vanilla death drops; a lock fighting the player's own hands.
 

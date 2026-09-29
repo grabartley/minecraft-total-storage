@@ -14,6 +14,18 @@ public final class SortFeedback {
     player.sendMessage(messageFor(outcome), true);
   }
 
+  public static Text messageFor(SortReply reply) {
+    if (reply.subject() != SortSubject.INVENTORY) {
+      return messageFor(reply.outcome());
+    }
+    return switch (reply.outcome()) {
+      case SORTED -> CommandMessages.inventorySorted();
+      case ALREADY_SORTED -> CommandMessages.inventoryAlreadySorted();
+      case NOTHING_TO_SORT -> CommandMessages.inventoryNothingToSort();
+      default -> messageFor(reply.outcome());
+    };
+  }
+
   public static Text messageFor(SortOutcome outcome) {
     return switch (outcome) {
       case SORTED -> CommandMessages.sorted();
@@ -22,7 +34,8 @@ public final class SortFeedback {
       case FAILED -> CommandMessages.sortFailed();
       case RATE_LIMITED -> CommandMessages.sortTooFast();
       case NOT_OFFERED -> CommandMessages.sortButtonDisabled();
-      case NO_OPEN_SCREEN, SCREEN_NOT_SORTABLE -> CommandMessages.nothingOpenToSort();
+      case NO_OPEN_SCREEN, SCREEN_NOT_SORTABLE -> CommandMessages.sortRefused();
+      case NOT_OPENABLE -> CommandMessages.notOpenableToSort();
     };
   }
 }

@@ -3,8 +3,11 @@ package com.grahambartley.toomanychests.filter;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public final class FilterEvaluator {
+  private static final Pattern IDENTIFIER_WORDS = Pattern.compile("[_\\-]");
+
   private FilterEvaluator() {}
 
   public static MatchStrength strengthOf(FilterCandidate candidate, ItemFilter filter) {
@@ -30,7 +33,7 @@ public final class FilterEvaluator {
 
   private static boolean matchesAnyTag(Set<String> tags, String term) {
     for (final String tag : tags) {
-      if (MatchStrength.of(tag, term).isMatch()) {
+      if (identifies(tag, term)) {
         return true;
       }
     }
@@ -42,10 +45,21 @@ public final class FilterEvaluator {
       return true;
     }
     for (final String term : terms) {
-      if (MatchStrength.of(modId, term).isMatch()) {
+      if (identifies(modId, term)) {
         return true;
       }
     }
     return false;
+  }
+
+  private static boolean identifies(String identifier, String term) {
+    for (final String word : IDENTIFIER_WORDS.split(identifier)) {
+      final MatchStrength strength = MatchStrength.literal(word, term);
+      if (strength == MatchStrength.EXACT || strength == MatchStrength.PREFIX) {
+        return true;
+      }
+    }
+    final MatchStrength whole = MatchStrength.literal(identifier, term);
+    return whole == MatchStrength.EXACT || whole == MatchStrength.PREFIX;
   }
 }

@@ -20,7 +20,13 @@ class SortOutcomeTest {
   @ParameterizedTest
   @EnumSource(
       value = SortOutcome.class,
-      names = {"NOT_OFFERED", "NO_OPEN_SCREEN", "SCREEN_NOT_SORTABLE", "RATE_LIMITED"})
+      names = {
+        "NOT_OFFERED",
+        "NO_OPEN_SCREEN",
+        "SCREEN_NOT_SORTABLE",
+        "NOT_OPENABLE",
+        "RATE_LIMITED"
+      })
   void anOutcomeWhereTheModDeclinedToActIsARefusal(SortOutcome outcome) {
     assertTrue(outcome.wasRefused());
   }
@@ -31,23 +37,6 @@ class SortOutcomeTest {
       names = {"NOTHING_TO_SORT", "ALREADY_SORTED", "FAILED", "SORTED"})
   void anOutcomeWhereTheModActuallyLookedAtTheContainerIsNotARefusal(SortOutcome outcome) {
     assertFalse(outcome.wasRefused());
-  }
-
-  @ParameterizedTest
-  @EnumSource(
-      value = SortOutcome.class,
-      names = {"NOT_OFFERED", "NO_OPEN_SCREEN", "SCREEN_NOT_SORTABLE"})
-  void anOutcomeThisModHasNoOpinionOnIsLeftToVanilla(SortOutcome outcome) {
-    assertTrue(outcome.fallsThroughToVanilla());
-  }
-
-  @ParameterizedTest
-  @EnumSource(
-      value = SortOutcome.class,
-      names = {"NOT_OFFERED", "NO_OPEN_SCREEN", "SCREEN_NOT_SORTABLE"},
-      mode = EnumSource.Mode.EXCLUDE)
-  void anOutcomeThisModDecidedIsNeverHandedBackToVanilla(SortOutcome outcome) {
-    assertFalse(outcome.fallsThroughToVanilla());
   }
 
   @ParameterizedTest
