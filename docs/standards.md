@@ -1,6 +1,6 @@
 # Engineering Standards
 
-These standards apply to every mod in this family: Dogs Unleashed, More Arrows, More Doors, Teleport Effects, and Too Many Chests. They exist because the same decisions kept being re-made from memory.
+These standards apply to every mod in this family: Dogs Unleashed, Loot Lock, More Doors, Not Enough Arrows, Teleport Effects, and Too Many Chests. They exist because the same decisions kept being re-made from memory.
 
 Dogs Unleashed is the reference implementation. When this document and that codebase disagree, the codebase is probably right and this document needs updating.
 
