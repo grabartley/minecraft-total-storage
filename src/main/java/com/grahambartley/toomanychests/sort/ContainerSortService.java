@@ -17,12 +17,15 @@ import java.util.Optional;
 import net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.EnderChestBlock;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public final class ContainerSortService {
@@ -66,23 +69,36 @@ public final class ContainerSortService {
     if (open != null && open != player.playerScreenHandler) {
       return new SortReply(SortSubject.OPEN_SCREEN, sort(player, open.syncId));
     }
-    final Optional<NamedScreenHandlerFactory> inView = containerInView(player);
-    if (inView.isPresent()) {
-      return new SortReply(SortSubject.CONTAINER_IN_VIEW, sortUnopened(player, inView.get()));
+    final BlockPos inView = blockInView(player).orElse(null);
+    if (inView != null) {
+      final Optional<SortOutcome> outcome = sortBlock(player, inView);
+      if (outcome.isPresent()) {
+        return new SortReply(SortSubject.CONTAINER_IN_VIEW, outcome.get());
+      }
     }
     return new SortReply(SortSubject.INVENTORY, sort(player, player.playerScreenHandler.syncId));
   }
 
-  private static Optional<NamedScreenHandlerFactory> containerInView(ServerPlayerEntity player) {
+  private static Optional<BlockPos> blockInView(ServerPlayerEntity player) {
     final HitResult hit = player.raycast(player.getBlockInteractionRange(), 1.0f, false);
-    if (hit.getType() != HitResult.Type.BLOCK || !(hit instanceof BlockHitResult block)) {
-      return Optional.empty();
-    }
+    return hit.getType() == HitResult.Type.BLOCK && hit instanceof BlockHitResult block
+        ? Optional.of(block.getBlockPos())
+        : Optional.empty();
+  }
+
+  private Optional<SortOutcome> sortBlock(ServerPlayerEntity player, BlockPos pos) {
     final World world = player.getWorld();
-    return Optional.ofNullable(
-        world
-            .getBlockState(block.getBlockPos())
-            .createScreenHandlerFactory(world, block.getBlockPos()));
+    final BlockState state = world.getBlockState(pos);
+    final NamedScreenHandlerFactory factory = state.createScreenHandlerFactory(world, pos);
+    if (factory != null) {
+      return Optional.of(sortUnopened(player, factory));
+    }
+    if (state.getBlock() instanceof EnderChestBlock) {
+      return Optional.of(SortOutcome.SCREEN_NOT_SORTABLE);
+    }
+    return world.getBlockEntity(pos) instanceof Inventory
+        ? Optional.of(SortOutcome.NOT_OPENABLE)
+        : Optional.empty();
   }
 
   private SortOutcome sortUnopened(ServerPlayerEntity player, NamedScreenHandlerFactory factory) {

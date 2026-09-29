@@ -278,7 +278,7 @@ public final class CommandMessages {
     return line("sort.empty", "There is nothing in there to sort");
   }
 
-  public static Text nothingOpenToSort() {
+  public static Text sortRefused() {
     return line("sort.refused", "That is not something this mod will sort");
   }
 

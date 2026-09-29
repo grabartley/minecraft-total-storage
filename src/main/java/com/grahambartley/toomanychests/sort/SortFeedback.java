@@ -34,7 +34,7 @@ public final class SortFeedback {
       case FAILED -> CommandMessages.sortFailed();
       case RATE_LIMITED -> CommandMessages.sortTooFast();
       case NOT_OFFERED -> CommandMessages.sortButtonDisabled();
-      case NO_OPEN_SCREEN, SCREEN_NOT_SORTABLE -> CommandMessages.nothingOpenToSort();
+      case NO_OPEN_SCREEN, SCREEN_NOT_SORTABLE -> CommandMessages.sortRefused();
       case NOT_OPENABLE -> CommandMessages.notOpenableToSort();
     };
   }

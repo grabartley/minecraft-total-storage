@@ -1,13 +1,17 @@
 package com.grahambartley.toomanychests.gametest;
 
 import com.grahambartley.toomanychests.operation.OperationGuards;
+import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import net.fabricmc.fabric.api.entity.FakePlayer;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.ChestBlock;
+import net.minecraft.block.entity.ChestBlockEntity;
 import net.minecraft.block.entity.LockableContainerBlockEntity;
 import net.minecraft.block.enums.ChestType;
 import net.minecraft.command.argument.EntityAnchorArgumentType;
@@ -24,6 +28,7 @@ import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.GameMode;
 
 public final class SortCommandGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "too-many-chests:container_pad";
@@ -66,6 +71,11 @@ public final class SortCommandGameTest implements FabricGameTest {
     context.assertTrue(
         matches(inventoryBefore, snapshotOf(player.getInventory())),
         "Sorting the chest in view must not touch the player's inventory");
+    context.assertTrue(
+        ChestBlockEntity.getPlayersLookingInChestCount(
+                context.getWorld(), context.getAbsolutePos(IN_VIEW))
+            == 0,
+        "The chest must be closed again once it has been sorted");
     finish(context, player);
   }
 
@@ -139,6 +149,64 @@ public final class SortCommandGameTest implements FabricGameTest {
         matches(inventoryBefore, snapshotOf(player.getInventory())),
         "A locked chest must not fall back to sorting the inventory");
     finish(context, player);
+  }
+
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void aChestThatCannotOpenIsRefusedRatherThanSwappedForTheInventory(TestContext context) {
+    Inventory chest = placeWithPartStacks(context, IN_VIEW, Blocks.CHEST.getDefaultState());
+    context.setBlockState(IN_VIEW.up(), Blocks.STONE.getDefaultState());
+    List<ItemStack> before = snapshotOf(chest);
+    ServerPlayerEntity player = playerAt(context, STANDING);
+    stockInventoryWithPartStacks(player);
+    List<ItemStack> inventoryBefore = snapshotOf(player.getInventory());
+    lookAt(context, player, IN_VIEW);
+
+    int result = runSort(context, player);
+
+    context.assertTrue(result == 0, "A chest that cannot open must be refused, returned " + result);
+    context.assertTrue(
+        matches(before, snapshotOf(chest)), "The blocked chest must hold exactly what it held");
+    context.assertTrue(
+        matches(inventoryBefore, snapshotOf(player.getInventory())),
+        "A blocked chest must not fall back to sorting the inventory");
+    finish(context, player);
+  }
+
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void anEnderChestInViewIsRefusedRatherThanSwappedForTheInventory(TestContext context) {
+    context.setBlockState(IN_VIEW, Blocks.ENDER_CHEST.getDefaultState());
+    ServerPlayerEntity player = playerAt(context, STANDING);
+    stockInventoryWithPartStacks(player);
+    List<ItemStack> inventoryBefore = snapshotOf(player.getInventory());
+    lookAt(context, player, IN_VIEW);
+
+    int result = runSort(context, player);
+
+    context.assertTrue(result == 0, "An ender chest must be refused, returned " + result);
+    context.assertTrue(
+        matches(inventoryBefore, snapshotOf(player.getInventory())),
+        "An ender chest must not fall back to sorting the inventory");
+    finish(context, player);
+  }
+
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void aSpectatorLookingAtAChestIsRefused(TestContext context) {
+    Inventory chest = placeWithPartStacks(context, IN_VIEW, Blocks.CHEST.getDefaultState());
+    List<ItemStack> before = snapshotOf(chest);
+    FakePlayer spectator =
+        FakePlayer.get(context.getWorld(), new GameProfile(UUID.randomUUID(), "spectating"));
+    spectator.changeGameMode(GameMode.SPECTATOR);
+    BlockPos standing = context.getAbsolutePos(STANDING);
+    spectator.refreshPositionAndAngles(
+        standing.getX() + 0.5, standing.getY(), standing.getZ() + 0.5, 0.0f, 0.0f);
+    lookAt(context, spectator, IN_VIEW);
+
+    int result = runSort(context, spectator);
+
+    context.assertTrue(result == 0, "A spectator must be refused, returned " + result);
+    context.assertTrue(
+        matches(before, snapshotOf(chest)), "A spectator must not rearrange a chest");
+    context.complete();
   }
 
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)

@@ -13,7 +13,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.minecraft.server.command.ServerCommandSource;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -33,11 +32,6 @@ class TooManyChestsCommandTest {
   @MethodSource("documentedCommands")
   void everyHelpLineNamesACommandThatIsRegistered(String command) {
     assertTrue(resolve(command).isPresent(), "The help names /tmc " + command + ", which is gone");
-  }
-
-  @Test
-  void theNameAndFilterEditsAreDocumented() {
-    assertTrue(documented().containsAll(Set.of("terminal name", "terminal filter")));
   }
 
   private static Stream<String> registeredCommands() {

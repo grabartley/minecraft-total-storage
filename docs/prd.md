@@ -334,7 +334,7 @@ A sort button appears on every container screen and the player inventory. A keyb
 | BTN-6 | The button is hidden when the server does not have the mod installed |
 | BTN-7 | A rebindable keybind sorts the container the player has open, or their inventory |
 | BTN-8 | No default keybinding conflicts with a vanilla key |
-| BTN-9 | `/tmc sort` sorts the open container; with none open, the container block the player is looking at within reach; with nothing sortable in view, the inventory. A block in view whose screen is refused, a furnace or an anvil among them, is refused rather than falling back |
+| BTN-9 | `/tmc sort` sorts the open container; with none open, the container block the player is looking at within reach; with nothing sortable in view, the inventory. A block in view whose screen is refused, a furnace or an anvil among them, is refused rather than falling back, and so is a container that will not open for the player and an ender chest |
 | BTN-11 | The button is disableable in config, leaving the command working |
 | BTN-12 | Sorting the player inventory, by any entry point, orders the 27 main inventory slots only and never moves anything into or out of the hotbar |
 

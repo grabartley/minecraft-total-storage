@@ -11,10 +11,14 @@ public final class TerminalResync {
     if (player == null) {
       return;
     }
-    ModNetworking.listings().refresh(player);
-    TerminalSettingsNetworking.tagPanels().contentsChanged(player);
+    contents(player);
     if (player.currentScreenHandler != null) {
       player.currentScreenHandler.syncState();
     }
+  }
+
+  public static void contents(ServerPlayerEntity player) {
+    ModNetworking.listings().refresh(player);
+    TerminalSettingsNetworking.tagPanels().contentsChanged(player);
   }
 }

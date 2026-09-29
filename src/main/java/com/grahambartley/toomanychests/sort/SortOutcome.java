@@ -15,10 +15,6 @@ public enum SortOutcome {
     return this == SORTED;
   }
 
-  public boolean fallsThroughToVanilla() {
-    return this == NOT_OFFERED || this == NO_OPEN_SCREEN || this == SCREEN_NOT_SORTABLE;
-  }
-
   public boolean wasRefused() {
     return this == NOT_OFFERED
         || this == NO_OPEN_SCREEN

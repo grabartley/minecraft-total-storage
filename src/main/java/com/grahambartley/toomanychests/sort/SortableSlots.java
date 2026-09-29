@@ -1,6 +1,7 @@
 package com.grahambartley.toomanychests.sort;
 
 import com.grahambartley.toomanychests.lock.LockedSlots;
+import com.grahambartley.toomanychests.operation.PlayerSlots;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -35,7 +36,7 @@ public final class SortableSlots {
   private static Optional<SortTarget> playerInventory(PlayerEntity player, LockedSlots locks) {
     final PlayerInventory inventory = player.getInventory();
     final List<Integer> indices = new ArrayList<>(LockedSlots.SLOT_COUNT);
-    for (int index = PlayerInventory.getHotbarSize(); index <= LockedSlots.LAST_SLOT; index++) {
+    for (int index = PlayerSlots.FIRST_MAIN_SLOT; index <= LockedSlots.LAST_SLOT; index++) {
       if (!locks.isLocked(index)) {
         indices.add(index);
       }

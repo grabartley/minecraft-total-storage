@@ -15,6 +15,8 @@ public final class PlayerSlots {
 
   public static final int HOTBAR_SLOTS = 9;
 
+  public static final int FIRST_MAIN_SLOT = LockedSlots.FIRST_SLOT + HOTBAR_SLOTS;
+
   private PlayerSlots() {}
 
   public static List<SingleSlotStorage<ItemVariant>> unlocked(PlayerEntity player) {
@@ -47,7 +49,7 @@ public final class PlayerSlots {
     Objects.requireNonNull(player, "player");
     final LockedSlots locked = locks == null ? LockedSlots.empty() : locks;
     final InventoryStorage inventory = InventoryStorage.of(player.getInventory(), null);
-    final int first = skipHotbar ? LockedSlots.FIRST_SLOT + HOTBAR_SLOTS : LockedSlots.FIRST_SLOT;
+    final int first = skipHotbar ? FIRST_MAIN_SLOT : LockedSlots.FIRST_SLOT;
     final List<SingleSlotStorage<ItemVariant>> open = new ArrayList<>(LockedSlots.SLOT_COUNT);
     for (int index = first; index <= LockedSlots.LAST_SLOT; index++) {
       if (!locked.isLocked(index)) {
