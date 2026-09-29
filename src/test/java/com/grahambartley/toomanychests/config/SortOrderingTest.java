@@ -9,6 +9,7 @@ import java.util.Optional;
 import net.minecraft.text.TranslatableTextContent;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -42,10 +43,10 @@ class SortOrderingTest {
     assertTrue(SortOrdering.fromId(null).isEmpty());
   }
 
-  @Test
-  void theOrderingsReadAsAPlayerWouldSayThem() {
-    assertEquals("Registry order", EnglishLang.of(keyOf(SortOrdering.REGISTRY_ID)));
-    assertEquals("Display name", EnglishLang.of(keyOf(SortOrdering.DISPLAY_NAME)));
+  @ParameterizedTest
+  @CsvSource({"REGISTRY_ID, Registry order", "DISPLAY_NAME, Display name"})
+  void theOrderingsReadAsAPlayerWouldSayThem(SortOrdering ordering, String english) {
+    assertEquals(english, EnglishLang.of(keyOf(ordering)));
   }
 
   private static String keyOf(SortOrdering ordering) {

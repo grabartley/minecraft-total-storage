@@ -32,7 +32,7 @@ class TagNamePromptTest {
     prompt.openForNewTag();
     type("Base Kit");
 
-    assertTrue(prompt.accepts(KNOWN));
+    assertTrue(prompt.confirm(KNOWN));
     assertEquals(TagNameOutcome.OK, prompt.refusal());
   }
 
@@ -41,7 +41,7 @@ class TagNamePromptTest {
     prompt.openForNewTag();
     type("Castle");
 
-    assertFalse(prompt.accepts(KNOWN));
+    assertFalse(prompt.confirm(KNOWN));
     assertEquals(TagNameOutcome.DUPLICATE, prompt.refusal());
     assertEquals("Castle", prompt.name());
     assertTrue(prompt.isOpen());
@@ -52,7 +52,7 @@ class TagNamePromptTest {
     prompt.openForNewTag();
     type("Stone");
 
-    assertFalse(prompt.accepts(Set.of()));
+    assertFalse(prompt.confirm(Set.of()));
     assertEquals(TagNameOutcome.PRESET_COLLISION, prompt.refusal());
   }
 
@@ -60,14 +60,14 @@ class TagNamePromptTest {
   void renamingATagToItsOwnNameIsAccepted() {
     prompt.openForRename("castle", "Castle");
 
-    assertTrue(prompt.accepts(KNOWN));
+    assertTrue(prompt.confirm(KNOWN));
   }
 
   @Test
   void editingTheTextClearsTheRefusal() {
     prompt.openForNewTag();
     type("Castle");
-    prompt.accepts(KNOWN);
+    prompt.confirm(KNOWN);
 
     prompt.charTyped('s');
 
@@ -79,7 +79,7 @@ class TagNamePromptTest {
   void deletingACharacterClearsTheRefusal() {
     prompt.openForNewTag();
     type("Castle");
-    prompt.accepts(KNOWN);
+    prompt.confirm(KNOWN);
 
     prompt.keyPressed(GLFW.GLFW_KEY_BACKSPACE, false);
 
@@ -90,7 +90,7 @@ class TagNamePromptTest {
   void aKeyThatChangesNothingLeavesTheRefusalShowing() {
     prompt.openForNewTag();
     type("Castle");
-    prompt.accepts(KNOWN);
+    prompt.confirm(KNOWN);
 
     prompt.keyPressed(GLFW.GLFW_KEY_LEFT_SHIFT, false);
     prompt.charTyped('/');
@@ -102,7 +102,7 @@ class TagNamePromptTest {
   void closingAndReopeningForgetsTheRefusal() {
     prompt.openForNewTag();
     type("Castle");
-    prompt.accepts(KNOWN);
+    prompt.confirm(KNOWN);
 
     prompt.close();
     prompt.openForNewTag();

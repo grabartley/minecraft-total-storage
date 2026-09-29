@@ -79,7 +79,7 @@ final class BoundedIntConfigSetting implements ConfigSetting {
     try {
       return unit.display(Integer.parseInt(rawValue == null ? "" : rawValue.trim()));
     } catch (NumberFormatException ex) {
-      return Text.literal(String.valueOf(rawValue));
+      return rawValue == null ? Text.empty() : Text.literal(rawValue);
     }
   }
 

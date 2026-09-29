@@ -34,16 +34,20 @@ class EllipsisTrimTest {
         }
 
         @Override
-        public List<StringVisitable> wrapped(StringVisitable text, int width) {
-          final String plain = plainOf(text);
+        public List<Integer> lineStarts(String text, int width) {
           final int perLine = Math.max(1, width / CHARACTER_WIDTH);
-          final List<StringVisitable> lines = new ArrayList<>();
-          for (int start = 0; start < plain.length(); start += perLine) {
-            lines.add(
-                StringVisitable.plain(
-                    plain.substring(start, Math.min(plain.length(), start + perLine))));
+          final List<Integer> starts = new ArrayList<>();
+          int start = 0;
+          while (start < text.length()) {
+            starts.add(start);
+            final int limit = start + perLine;
+            if (limit >= text.length()) {
+              break;
+            }
+            final int space = text.lastIndexOf(' ', limit);
+            start = space > start ? space + 1 : limit;
           }
-          return lines;
+          return starts;
         }
       };
 
@@ -111,9 +115,7 @@ class EllipsisTrimTest {
   }
 
   private static List<String> lines(String text, int characters, int maxLines) {
-    return EllipsisTrim.toLines(
-            StringVisitable.plain(text), characters * CHARACTER_WIDTH, maxLines, ROOM)
-        .stream()
+    return EllipsisTrim.toLines(text, characters * CHARACTER_WIDTH, maxLines, ROOM).stream()
         .map(EllipsisTrimTest::plainOf)
         .toList();
   }
@@ -124,8 +126,14 @@ class EllipsisTrimTest {
   }
 
   @Test
-  void aLineThatNeedsNoMoreThanTheAllowedLinesIsWrappedWithNothingLost() {
-    assertEquals(List.of("Everything", " And More"), lines(LONG_NAME, 10, 2));
+  void aLineThatNeedsNoMoreThanTheAllowedLinesBreaksBetweenWords() {
+    assertEquals(List.of("Everything", "And More"), lines(LONG_NAME, 10, 2));
+  }
+
+  @Test
+  void theLastLineKeepsTheSpacesBetweenTheWordsThatDidNotFit() {
+    assertEquals(
+        List.of("alpha beta", "gamma del..."), lines("alpha beta gamma delta epsilon", 12, 2));
   }
 
   @Test
@@ -157,8 +165,6 @@ class EllipsisTrimTest {
   @Test
   void wrappingNeedsBothSomethingToWrapAndAWayToMeasureIt() {
     assertThrows(NullPointerException.class, () -> EllipsisTrim.toLines(null, 24, 2, ROOM));
-    assertThrows(
-        NullPointerException.class,
-        () -> EllipsisTrim.toLines(StringVisitable.plain("Ores"), 24, 2, null));
+    assertThrows(NullPointerException.class, () -> EllipsisTrim.toLines("Ores", 24, 2, null));
   }
 }

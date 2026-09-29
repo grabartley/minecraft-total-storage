@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests.screen;
 
+import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.text.OrderedText;
@@ -19,7 +20,9 @@ public final class TrimmedText {
   public static List<OrderedText> toLines(
       TextRenderer textRenderer, Text text, int width, int maxLines) {
     return Language.getInstance()
-        .reorder(EllipsisTrim.toLines(text, width, maxLines, new RendererRoom(textRenderer)));
+        .reorder(
+            EllipsisTrim.toLines(
+                text.getString(), width, maxLines, new RendererRoom(textRenderer)));
   }
 
   private record RendererRoom(TextRenderer textRenderer) implements EllipsisTrim.TextRoom {
@@ -34,8 +37,12 @@ public final class TrimmedText {
     }
 
     @Override
-    public List<StringVisitable> wrapped(StringVisitable text, int width) {
-      return textRenderer.getTextHandler().wrapLines(text, width, Style.EMPTY);
+    public List<Integer> lineStarts(String text, int width) {
+      final List<Integer> starts = new ArrayList<>();
+      textRenderer
+          .getTextHandler()
+          .wrapLines(text, width, Style.EMPTY, false, (style, start, end) -> starts.add(start));
+      return starts;
     }
   }
 }

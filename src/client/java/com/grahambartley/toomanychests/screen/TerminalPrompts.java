@@ -308,10 +308,7 @@ public final class TerminalPrompts {
       return handleAmountKey(amount.charTyped(typed));
     }
     if (naming.isOpen()) {
-      if (naming.charTyped(typed) == PromptKey.REFUSED) {
-        PromptRefusal.sound();
-      }
-      return true;
+      return soundIfRefused(naming.charTyped(typed));
     }
     if (renaming.isOpen()) {
       return handleContainerNameKey(renaming.charTyped(typed));
@@ -369,13 +366,19 @@ public final class TerminalPrompts {
         false);
   }
 
-  private boolean handleNameKey(PromptKey outcome, NetworkTagView tags) {
+  private static boolean soundIfRefused(PromptKey outcome) {
     if (outcome == PromptKey.REFUSED) {
       PromptRefusal.sound();
-      return true;
+    }
+    return true;
+  }
+
+  private boolean handleNameKey(PromptKey outcome, NetworkTagView tags) {
+    if (outcome == PromptKey.REFUSED) {
+      return soundIfRefused(outcome);
     }
     if (outcome == PromptKey.CONFIRM) {
-      if (!naming.accepts(tags.ids())) {
+      if (!naming.confirm(tags.ids())) {
         PromptRefusal.sound();
         return true;
       }

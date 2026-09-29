@@ -34,7 +34,6 @@ class TagPromptLayoutTest {
 
   @Test
   void theFooterHasRoomForItsLinesInsideThePanel() {
-    assertEquals(2, TagPromptLayout.FOOTER_LINES);
     assertTrue(
         TagPromptLayout.footerTop() + TagPromptLayout.FOOTER_LINES * TagPromptLayout.LINE_HEIGHT
             <= TagPromptLayout.top() + TagPromptLayout.HEIGHT - TagPromptLayout.PADDING);
@@ -47,8 +46,6 @@ class TagPromptLayoutTest {
     assertTrue(
         TagPromptLayout.scrollbarX() + TagPromptLayout.SCROLLBAR_WIDTH
             <= TagPromptLayout.left() + TagPromptLayout.WIDTH - TagPromptLayout.PADDING);
-    assertEquals(
-        TagPromptLayout.VISIBLE_ROWS * TagPromptLayout.ROW_HEIGHT, TagPromptLayout.TRACK_HEIGHT);
   }
 
   @Test

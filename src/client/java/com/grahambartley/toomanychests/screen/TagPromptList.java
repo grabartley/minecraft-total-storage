@@ -21,10 +21,6 @@ public final class TagPromptList {
     return scroll.scrollBy(rows);
   }
 
-  public boolean overflows() {
-    return scroll.overflows();
-  }
-
   public int indexOfRow(int row) {
     return scroll.firstIndex() + row;
   }

@@ -52,7 +52,7 @@ public final class TagNamePrompt {
     return refusal;
   }
 
-  public boolean accepts(Set<String> knownTagIds) {
+  public boolean confirm(Set<String> knownTagIds) {
     refusal = TagNameRule.check(name(), knownTagIds, renaming);
     return refusal.isAccepted();
   }

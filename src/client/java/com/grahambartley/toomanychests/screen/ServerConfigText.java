@@ -59,7 +59,7 @@ public final class ServerConfigText {
     if (shown.size() < 2) {
       return shown.isEmpty() ? Text.empty() : shown.get(0);
     }
-    final Text leading = Texts.join(shown.subList(0, shown.size() - 1), Text.literal(", "));
+    final Text leading = Texts.join(shown.subList(0, shown.size() - 1), line("separator", ", "));
     return line("or", "%s or %s", leading, shown.get(shown.size() - 1));
   }
 

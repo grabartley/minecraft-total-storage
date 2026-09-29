@@ -139,4 +139,9 @@ class BoundedIntConfigSettingTest {
   void aValueThatIsNotANumberIsShownAsItWasWritten() {
     assertEquals(Text.literal("lots"), setting.displayValue("lots"));
   }
+
+  @Test
+  void anAbsentValueIsShownAsNothing() {
+    assertEquals(Text.empty(), setting.displayValue(null));
+  }
 }

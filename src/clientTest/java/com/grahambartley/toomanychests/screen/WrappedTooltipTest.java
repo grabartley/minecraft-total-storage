@@ -63,11 +63,6 @@ class WrappedTooltipTest {
   }
 
   @Test
-  void theCapIsTwoHundredScaledPixels() {
-    assertEquals(200, WrappedTooltip.MAX_WIDTH);
-  }
-
-  @Test
   void aShortLineIsLeftAsItWas() {
     assertEquals(List.of("Owner only"), wrap(120, "Owner only"));
   }

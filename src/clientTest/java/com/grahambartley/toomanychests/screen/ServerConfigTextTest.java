@@ -33,7 +33,7 @@ class ServerConfigTextTest {
     assertEquals(
         Text.empty()
             .append(TerminalAccessMode.OWNER.displayName())
-            .append(", ")
+            .append(Text.translatableWithFallback(PREFIX + "separator", ", "))
             .append(TerminalAccessMode.TRUSTED.displayName()),
         modes.getArgs()[0]);
     assertEquals(TerminalAccessMode.OPEN.displayName(), modes.getArgs()[1]);

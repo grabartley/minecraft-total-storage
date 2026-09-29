@@ -18,19 +18,18 @@ class TagPromptListTest {
   private final TagPromptList list = new TagPromptList();
 
   @Test
-  void aListThatFitsDoesNotOverflowAndOffersNoScrollbarToGrab() {
+  void aListThatFitsOffersNoScrollbarToGrab() {
     list.fit(TagPromptLayout.VISIBLE_ROWS);
 
-    assertFalse(list.overflows());
     assertFalse(list.grabScrollbar(BAR_X, TRACK_TOP));
     assertFalse(list.isDraggingScrollbar());
   }
 
   @Test
-  void aFreshNetworksTagsOverflowTheRows() {
+  void aFreshNetworksTagsOfferAScrollbarToGrab() {
     list.fit(PRESET_TAGS);
 
-    assertTrue(list.overflows());
+    assertTrue(list.grabScrollbar(BAR_X, TRACK_TOP));
   }
 
   @ParameterizedTest
