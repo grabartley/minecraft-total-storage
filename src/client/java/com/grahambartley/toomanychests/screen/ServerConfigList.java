@@ -6,7 +6,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.ElementListWidget;
 
 public final class ServerConfigList extends ElementListWidget<ServerConfigEntry> {
-  private static final int ROW_HEIGHT = 26;
+  static final int ROW_HEIGHT = 26;
   private static final int WIDEST_ROW = 340;
   private static final int EDGE_MARGIN = 20;
 

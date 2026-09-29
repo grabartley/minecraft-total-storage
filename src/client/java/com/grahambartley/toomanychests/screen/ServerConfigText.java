@@ -38,11 +38,18 @@ public final class ServerConfigText {
   }
 
   public static Text bounds(ConfigSetting setting) {
-    return line("bounds", "%s, default %s", setting.allowedValues(), setting.defaultValue());
-  }
-
-  public static Text value(String rawValue) {
-    return Text.literal(rawValue);
+    final Text fallback = setting.displayValue(setting.defaultValue());
+    return setting
+        .range()
+        .map(
+            range ->
+                line(
+                    "bounds",
+                    "%s to %s, default %s",
+                    setting.displayValue(Integer.toString(range.min())),
+                    setting.displayValue(Integer.toString(range.max())),
+                    fallback))
+        .orElseGet(() -> line("default", "Default %s", fallback));
   }
 
   private static Text line(String key, String english, Object... arguments) {

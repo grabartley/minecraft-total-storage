@@ -5,13 +5,10 @@ import java.util.List;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.OrderedText;
-import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 
 public final class TagSourcePrompt {
-  private static final float ELEVATION = 300.0F;
-
-  private final ListingScroll scroll = new ListingScroll(1, TagPromptLayout.VISIBLE_ROWS);
+  private final TagPromptList list = new TagPromptList();
 
   private boolean open;
   private BlockPos armedForReplace;
@@ -19,12 +16,13 @@ public final class TagSourcePrompt {
   public void open() {
     open = true;
     armedForReplace = null;
-    scroll.scrollTo(0);
+    list.reset();
   }
 
   public void close() {
     open = false;
     armedForReplace = null;
+    list.releaseScrollbar();
   }
 
   public boolean isArmed(OwnedTerminal source) {
@@ -43,21 +41,17 @@ public final class TagSourcePrompt {
     return open;
   }
 
-  public void fit(List<OwnedTerminal> sources) {
-    scroll.fit(sources.size());
+  public TagPromptList list() {
+    return list;
   }
 
-  public boolean scrollBy(int notches) {
-    return scroll.scrollBy(notches);
+  public void fit(List<OwnedTerminal> sources) {
+    list.fit(sources.size());
   }
 
   public OwnedTerminal sourceAt(List<OwnedTerminal> sources, int windowX, int windowY) {
-    final int row = TagPromptLayout.rowAt(windowX, windowY);
-    if (row == TagPromptLayout.NO_ROW) {
-      return null;
-    }
-    final int index = scroll.firstIndex() + row;
-    return index >= sources.size() ? null : sources.get(index);
+    final int index = list.indexAt(windowX, windowY);
+    return index < 0 || index >= sources.size() ? null : sources.get(index);
   }
 
   public void draw(
@@ -71,29 +65,17 @@ public final class TagSourcePrompt {
     if (!open) {
       return;
     }
-    final int left = originX + TagPromptLayout.left();
-    final int top = originY + TagPromptLayout.top();
-    context.getMatrices().push();
-    context.getMatrices().translate(0.0F, 0.0F, ELEVATION);
-    TerminalSprite.PANEL.draw(context, left, top, TagPromptLayout.WIDTH, TagPromptLayout.HEIGHT);
-    drawLine(
+    TagPromptFrame.draw(
         context,
         textRenderer,
         TerminalScreenText.of("tags.copy.title"),
-        left + TagPromptLayout.PADDING,
-        top + TagPromptLayout.PADDING,
-        VanillaPalette.LABEL);
-    drawRows(context, textRenderer, sources, originX, originY, mouseX, mouseY);
-    drawLine(
-        context,
-        textRenderer,
         sources.isEmpty()
             ? TerminalScreenText.of("tags.copy.none")
             : TerminalScreenText.of("tags.copy.hint"),
-        left + TagPromptLayout.PADDING,
-        top + TagPromptLayout.HEIGHT - TagPromptLayout.PADDING - TagPromptLayout.LINE_HEIGHT,
-        VanillaPalette.MUTED);
-    context.getMatrices().pop();
+        list,
+        originX,
+        originY,
+        () -> drawRows(context, textRenderer, sources, originX, originY, mouseX, mouseY));
   }
 
   private void drawRows(
@@ -106,12 +88,12 @@ public final class TagSourcePrompt {
       int mouseY) {
     final OwnedTerminal hovered = sourceAt(sources, mouseX, mouseY);
     for (int row = 0; row < TagPromptLayout.VISIBLE_ROWS; row++) {
-      final int index = scroll.firstIndex() + row;
+      final int index = list.indexOfRow(row);
       if (index >= sources.size()) {
         return;
       }
       final OwnedTerminal source = sources.get(index);
-      final int left = originX + TagPromptLayout.left() + TagPromptLayout.PADDING;
+      final int left = originX + TagPromptLayout.textLeft();
       final int top = originY + TagPromptLayout.rowY(row);
       final boolean armed = isArmed(source);
       TerminalChrome.drawActiveRow(
@@ -122,21 +104,20 @@ public final class TagSourcePrompt {
           top,
           TagPromptLayout.ROW_WIDTH,
           TagPromptLayout.ROW_HEIGHT);
-      drawLine(
-          context,
+      final OrderedText text =
+          TrimmedText.toWidth(
+              textRenderer,
+              armed ? TerminalScreenText.of("tags.copy.replace.confirm") : TagText.source(source),
+              TagPromptLayout.ROW_WIDTH - 2 * TagPromptLayout.TEXT_MARGIN);
+      context.drawText(
           textRenderer,
-          armed ? TerminalScreenText.of("tags.copy.replace.confirm") : TagText.source(source),
+          text,
           left + TagPromptLayout.TEXT_MARGIN,
           top + (TagPromptLayout.ROW_HEIGHT - TagPromptLayout.LINE_HEIGHT) / 2 + 1,
           armed
               ? VanillaPalette.WARNING
-              : source.holdsAnythingToCopy() ? VanillaPalette.LABEL : VanillaPalette.MUTED);
+              : source.holdsAnythingToCopy() ? VanillaPalette.LABEL : VanillaPalette.MUTED,
+          false);
     }
-  }
-
-  private static void drawLine(
-      DrawContext context, TextRenderer textRenderer, Text text, int left, int top, int colour) {
-    final OrderedText trimmed = TrimmedText.toWidth(textRenderer, text, TagPromptLayout.ROW_WIDTH);
-    context.drawText(textRenderer, trimmed, left, top, colour, false);
   }
 }

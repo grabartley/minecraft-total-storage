@@ -120,7 +120,7 @@ class ContainerFilterPromptTest {
     prompt.open(WHERE);
     prompt.fit(tagsOf("ores", "wood"));
 
-    assertFalse(prompt.scrollBy(1));
+    assertFalse(prompt.list().scrollBy(1));
   }
 
   @Test
@@ -129,7 +129,7 @@ class ContainerFilterPromptTest {
     NetworkTagView tags = tagsOf("a", "b", "c", "d", "e", "f");
     prompt.fit(tags);
 
-    assertTrue(prompt.scrollBy(1));
+    assertTrue(prompt.list().scrollBy(1));
     assertEquals(
         "b",
         prompt

@@ -5,8 +5,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import net.minecraft.text.Text;
 
-final class EnumConfigSetting<E extends Enum<E> & ConfigEnum> implements ConfigSetting {
+final class EnumConfigSetting<E extends Enum<E> & ConfigChoice> implements ConfigSetting {
   private final String name;
   private final List<E> alternatives;
   private final Function<TooManyChestsConfig, E> reader;
@@ -49,6 +50,16 @@ final class EnumConfigSetting<E extends Enum<E> & ConfigEnum> implements ConfigS
   @Override
   public String allowedValues() {
     return String.join(", ", suggestions());
+  }
+
+  @Override
+  public Text displayValue(String rawValue) {
+    final String trimmed = rawValue == null ? "" : rawValue.trim();
+    return alternatives.stream()
+        .filter(alternative -> alternative.id().equalsIgnoreCase(trimmed))
+        .findFirst()
+        .map(ConfigChoice::displayName)
+        .orElseGet(() -> Text.literal(trimmed));
   }
 
   @Override

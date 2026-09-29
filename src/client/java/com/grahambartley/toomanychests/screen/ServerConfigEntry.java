@@ -6,7 +6,8 @@ import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.text.Text;
 
 public abstract class ServerConfigEntry extends ElementListWidget.Entry<ServerConfigEntry> {
-  protected static final int LABEL_TOP = 3;
+  static final int LABEL_TOP = 3;
+  static final int LINE_HEIGHT = 9;
   protected static final int LABEL_COLOUR = 0xFFFFFFFF;
 
   private final TextRenderer textRenderer;

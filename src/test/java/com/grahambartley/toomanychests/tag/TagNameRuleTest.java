@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -88,5 +90,41 @@ class TagNameRuleTest {
         assertFalse(outcome.isAccepted(), outcome + " must not be accepted");
       }
     }
+  }
+
+  private static Set<String> idsOf(NetworkTagSet tags) {
+    return tags.all().stream().map(NetworkTag::id).collect(Collectors.toSet());
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "castle,''",
+    "Stone,''",
+    "Wood,''",
+    "keep,''",
+    "Keep,castle",
+    "Castle,castle",
+    "'',''",
+    "'   ',''",
+    "drop/table,''",
+    "base build,''",
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,''"
+  })
+  void theKnownIdsGiveTheSameAnswerAsTheTagSetTheyCameFrom(String name, String replacing) {
+    NetworkTagSet tags = withCustom("castle", "keep");
+
+    assertEquals(
+        TagNameRule.check(name, tags, replacing), TagNameRule.check(name, idsOf(tags), replacing));
+  }
+
+  @Test
+  void aPresetsNameIsRefusedEvenWithNoKnownIds() {
+    assertEquals(TagNameOutcome.PRESET_COLLISION, TagNameRule.check("Stone", Set.of(), ""));
+  }
+
+  @Test
+  void noKnownIdsAtAllStillChecksEveryOtherRule() {
+    assertEquals(TagNameOutcome.OK, TagNameRule.check("castle", (Set<String>) null, ""));
+    assertEquals(TagNameOutcome.BLANK, TagNameRule.check(" ", (Set<String>) null, ""));
   }
 }

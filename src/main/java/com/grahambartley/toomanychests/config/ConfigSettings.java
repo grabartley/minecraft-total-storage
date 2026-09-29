@@ -53,7 +53,8 @@ public final class ConfigSettings {
               TooManyChestsConfig.NEAR_CAPACITY_WARNING_PERCENT_MAX,
               TooManyChestsConfig.DEFAULT_NEAR_CAPACITY_WARNING_PERCENT,
               TooManyChestsConfig::nearCapacityWarningPercent,
-              ConfigBuilder::nearCapacityWarningPercent),
+              ConfigBuilder::nearCapacityWarningPercent,
+              ConfigUnit.PERCENT),
           new BoundedIntConfigSetting(
               "expensiveOperationCooldownTicks",
               TooManyChestsConfig.EXPENSIVE_OPERATION_COOLDOWN_TICKS_MIN,

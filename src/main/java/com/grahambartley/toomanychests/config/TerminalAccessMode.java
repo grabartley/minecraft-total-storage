@@ -1,9 +1,11 @@
 package com.grahambartley.toomanychests.config;
 
+import com.grahambartley.toomanychests.TooManyChests;
 import java.util.Locale;
 import java.util.Optional;
+import net.minecraft.text.Text;
 
-public enum TerminalAccessMode implements ConfigEnum {
+public enum TerminalAccessMode implements ConfigChoice {
   OWNER,
   TRUSTED,
   OPEN;
@@ -11,6 +13,11 @@ public enum TerminalAccessMode implements ConfigEnum {
   @Override
   public String id() {
     return name().toLowerCase(Locale.ROOT);
+  }
+
+  @Override
+  public Text displayName() {
+    return Text.translatable("screen." + TooManyChests.MOD_ID + ".terminal.access." + id());
   }
 
   public static Optional<TerminalAccessMode> fromId(String id) {

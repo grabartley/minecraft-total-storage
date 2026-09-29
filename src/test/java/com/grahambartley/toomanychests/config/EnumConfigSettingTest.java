@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Optional;
+import net.minecraft.text.Text;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -116,5 +117,16 @@ class EnumConfigSettingTest {
     assertEquals(
         ConfigBuilder.from(original).defaultTerminalAccessMode(TerminalAccessMode.TRUSTED).build(),
         updated);
+  }
+
+  @ParameterizedTest
+  @CsvSource({"owner, OWNER", "TRUSTED, TRUSTED", "' open ', OPEN"})
+  void aValueIsShownByTheModesOwnName(String raw, TerminalAccessMode mode) {
+    assertEquals(mode.displayName(), setting.displayValue(raw));
+  }
+
+  @Test
+  void aValueNoModeAnswersToIsShownAsItWasWritten() {
+    assertEquals(Text.literal("everyone"), setting.displayValue("everyone"));
   }
 }

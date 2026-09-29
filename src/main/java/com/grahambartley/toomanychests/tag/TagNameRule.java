@@ -1,6 +1,8 @@
 package com.grahambartley.toomanychests.tag;
 
 import com.grahambartley.toomanychests.filter.FilterText;
+import java.util.Set;
+import java.util.function.Predicate;
 
 public final class TagNameRule {
   public static final int MAX_LENGTH = 32;
@@ -12,6 +14,14 @@ public final class TagNameRule {
   }
 
   public static TagNameOutcome check(String name, NetworkTagSet existing, String replacing) {
+    return check(name, existing == null ? id -> false : existing::contains, replacing);
+  }
+
+  public static TagNameOutcome check(String name, Set<String> knownIds, String replacing) {
+    return check(name, knownIds == null ? id -> false : knownIds::contains, replacing);
+  }
+
+  private static TagNameOutcome check(String name, Predicate<String> taken, String replacing) {
     final String id = FilterText.tagId(name);
     if (id.isEmpty()) {
       return TagNameOutcome.BLANK;
@@ -25,7 +35,7 @@ public final class TagNameRule {
     if (PresetTag.fromId(id).isPresent()) {
       return TagNameOutcome.PRESET_COLLISION;
     }
-    if (existing != null && existing.contains(id) && !id.equals(FilterText.tagId(replacing))) {
+    if (taken.test(id) && !id.equals(FilterText.tagId(replacing))) {
       return TagNameOutcome.DUPLICATE;
     }
     return TagNameOutcome.OK;

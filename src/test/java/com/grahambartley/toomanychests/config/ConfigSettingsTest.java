@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Optional;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableTextContent;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -99,5 +101,25 @@ class ConfigSettingsTest {
   @Test
   void anAbsentNameIsNotFound() {
     assertEquals(Optional.empty(), ConfigSettings.byName(null));
+  }
+
+  @Test
+  void theNearCapacityWarningIsShownAsAPercentage() {
+    ConfigSetting warning = ConfigSettings.byName("nearCapacityWarningPercent").orElseThrow();
+
+    assertEquals(
+        "screen.too-many-chests.config.value.percent",
+        ((TranslatableTextContent) warning.displayValue("90").getContent()).getKey());
+  }
+
+  @ParameterizedTest
+  @MethodSource("everySetting")
+  void noSettingShowsARawConfigIdForAnyValueItOffers(ConfigSetting setting) {
+    for (String raw : setting.suggestions()) {
+      if (!raw.matches("-?\\d+")) {
+        assertNotEquals(
+            Text.literal(raw), setting.displayValue(raw), setting.name() + " shows raw " + raw);
+      }
+    }
   }
 }

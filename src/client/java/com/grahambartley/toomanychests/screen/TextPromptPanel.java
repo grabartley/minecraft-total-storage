@@ -23,6 +23,7 @@ public final class TextPromptPanel {
       TextRenderer textRenderer,
       Text heading,
       Text hint,
+      int hintColour,
       String typed,
       int originX,
       int originY) {
@@ -52,8 +53,7 @@ public final class TextPromptPanel {
         left,
         lineY + 2,
         VanillaPalette.FIELD_TEXT);
-    drawLines(
-        context, textRenderer, hintLines, left, lineY + FIELD_HEIGHT + GAP, VanillaPalette.MUTED);
+    drawLines(context, textRenderer, hintLines, left, lineY + FIELD_HEIGHT + GAP, hintColour);
     context.getMatrices().pop();
   }
 

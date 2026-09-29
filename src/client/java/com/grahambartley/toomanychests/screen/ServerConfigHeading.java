@@ -28,7 +28,11 @@ public final class ServerConfigHeading extends ServerConfigEntry {
       int mouseY,
       boolean hovered,
       float delta) {
-    drawHeading(context, heading, x + entryWidth / 2, y + LABEL_TOP);
+    drawHeading(context, heading, x + entryWidth / 2, textTop(y, entryHeight));
+  }
+
+  static int textTop(int entryTop, int entryHeight) {
+    return entryTop + entryHeight - LINE_HEIGHT;
   }
 
   @Override

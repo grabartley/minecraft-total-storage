@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests.config;
 
 import java.util.List;
 import java.util.Optional;
+import net.minecraft.text.Text;
 
 public interface ConfigSetting {
   String name();
@@ -13,6 +14,8 @@ public interface ConfigSetting {
   List<String> suggestions();
 
   String allowedValues();
+
+  Text displayValue(String rawValue);
 
   default Optional<ConfigRange> range() {
     return Optional.empty();

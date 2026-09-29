@@ -60,6 +60,8 @@ The set is named for the chrome it draws, not for the widget that draws it, so a
 - **The toolbar is a column down the right of the window, not a row above the recess.** A row would have cost the grid a line of cells.
 - **The filter column has no fixed width.** Every row sprite is nine-sliced, so the column may be any width without clipping the grid; widen the window rather than the grid when the column grows.
 - **The scrollbar is 8 wide.** The track takes the full height of the grid area; the thumb is nine-sliced vertically and may be any height down to 6.
+- **A tag prompt is a list with its own 4-wide scrollbar**, the filter column's width, beside its rows. It is centred on the grid recess rather than the grid, which is what gives its footer room for two lines.
+- **Tooltips wrap at 200 scaled pixels**, or at half the screen when that is narrower, so a long line never pushes a tooltip off the edge at GUI scale 4.
 
 ## State Cues
 
