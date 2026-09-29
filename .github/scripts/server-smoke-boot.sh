@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+cd "$(dirname "$0")/../.."
+
 RUN_DIR=run
 BOOT_TIMEOUT="${BOOT_TIMEOUT:-300}"
 STOP_TIMEOUT="${STOP_TIMEOUT:-60}"
 LOG="$(mktemp)"
 FIFO="$(mktemp -u)"
+OUT_FIFO="$(mktemp -u)"
 SERVER_PID=
+TEE_PID=
 
 kill_tree() {
   local child
@@ -20,15 +24,20 @@ cleanup() {
   if [[ -n "$SERVER_PID" ]] && kill -0 "$SERVER_PID" 2>/dev/null; then
     kill_tree "$SERVER_PID"
   fi
-  rm -f "$FIFO" "$LOG"
+  if [[ -n "$TEE_PID" ]]; then
+    kill "$TEE_PID" 2>/dev/null || true
+  fi
+  rm -f "$FIFO" "$OUT_FIFO" "$LOG"
 }
 trap cleanup EXIT
 
 mkdir -p "$RUN_DIR"
 echo "eula=true" > "$RUN_DIR/eula.txt"
 
-mkfifo "$FIFO"
-./gradlew runServer --no-daemon --stacktrace --args="nogui" < "$FIFO" > >(tee "$LOG") 2>&1 &
+mkfifo "$FIFO" "$OUT_FIFO"
+tee "$LOG" < "$OUT_FIFO" &
+TEE_PID=$!
+./gradlew runServer --no-daemon --stacktrace --args="nogui" < "$FIFO" > "$OUT_FIFO" 2>&1 &
 SERVER_PID=$!
 exec 3> "$FIFO"
 
@@ -64,7 +73,10 @@ if (( status != 0 )); then
   exit "$status"
 fi
 
-for marker in 'Too Many Chests server config loaded for world' 'All dimensions are saved'; do
+wait "$TEE_PID"
+TEE_PID=
+
+for marker in 'Too Many Chests server config loaded for ' 'All dimensions are saved'; do
   if ! grep -q "$marker" "$LOG"; then
     echo "::error::Server log is missing '${marker}'"
     exit 1
