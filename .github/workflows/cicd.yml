@@ -70,13 +70,20 @@ jobs:
       - name: Dedicated server smoke boot
         run: .github/scripts/server-smoke-boot.sh
 
-      - name: Publish test report
+      - name: Publish unit test report
         uses: mikepenz/action-junit-report@v4
         if: success() || failure()
         with:
-          report_paths: |
-            **/build/test-results/*/TEST-*.xml
-            build/gametest-results.xml
+          report_paths: "**/build/test-results/*/TEST-*.xml"
+          detailed_summary: true
+          include_passed: true
+
+      - name: Publish gametest report
+        uses: mikepenz/action-junit-report@v4
+        if: success() || failure()
+        with:
+          report_paths: build/gametest-results.xml
+          check_name: Gametest Report
           detailed_summary: true
           include_passed: true
 
