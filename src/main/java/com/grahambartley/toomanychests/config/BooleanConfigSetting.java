@@ -5,6 +5,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
+import net.minecraft.screen.ScreenTexts;
+import net.minecraft.text.Text;
 
 final class BooleanConfigSetting implements ConfigSetting {
   private static final List<String> VALUES = List.of("true", "false");
@@ -48,6 +50,11 @@ final class BooleanConfigSetting implements ConfigSetting {
   @Override
   public String allowedValues() {
     return "true or false";
+  }
+
+  @Override
+  public Text displayValue(String rawValue) {
+    return ScreenTexts.onOrOff("true".equalsIgnoreCase(rawValue == null ? "" : rawValue.trim()));
   }
 
   @Override

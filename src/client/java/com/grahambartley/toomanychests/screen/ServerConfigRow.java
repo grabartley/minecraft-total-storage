@@ -10,7 +10,7 @@ import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 
 public final class ServerConfigRow extends ServerConfigEntry {
-  private static final int BOUNDS_TOP = 14;
+  static final int BOUNDS_TOP = 14;
   private static final int TEXT_GAP = 6;
   private static final int BOUNDS_COLOUR = 0xFFA0A0A0;
 

@@ -3,8 +3,11 @@ package com.grahambartley.toomanychests.config;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.grahambartley.toomanychests.EnglishLang;
 import java.util.List;
 import java.util.Optional;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableTextContent;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -105,5 +108,35 @@ class BoundedIntConfigSettingTest {
 
   private static TooManyChestsConfig defaults() {
     return TooManyChestsConfig.defaults();
+  }
+
+  @Test
+  void aPlainNumberIsShownAsTheNumber() {
+    assertEquals(Text.literal("12"), setting.displayValue("12"));
+  }
+
+  @Test
+  void aPercentageIsShownWithItsPercentSign() {
+    ConfigSetting percent =
+        new BoundedIntConfigSetting(
+            "nearCapacityWarningPercent",
+            50,
+            100,
+            90,
+            TooManyChestsConfig::nearCapacityWarningPercent,
+            ConfigBuilder::nearCapacityWarningPercent,
+            ConfigUnit.PERCENT);
+
+    TranslatableTextContent shown =
+        (TranslatableTextContent) percent.displayValue("90").getContent();
+
+    assertEquals("screen.too-many-chests.config.value.percent", shown.getKey());
+    assertEquals("%s%%", EnglishLang.of(shown.getKey()));
+    assertEquals(90, shown.getArgs()[0]);
+  }
+
+  @Test
+  void aValueThatIsNotANumberIsShownAsItWasWritten() {
+    assertEquals(Text.literal("lots"), setting.displayValue("lots"));
   }
 }

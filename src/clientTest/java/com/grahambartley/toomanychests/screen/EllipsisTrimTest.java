@@ -1,13 +1,17 @@
 package com.grahambartley.toomanychests.screen;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import net.minecraft.text.StringVisitable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class EllipsisTrimTest {
@@ -27,6 +31,19 @@ class EllipsisTrimTest {
           final String plain = plainOf(text);
           return StringVisitable.plain(
               plain.substring(0, Math.min(plain.length(), width / CHARACTER_WIDTH)));
+        }
+
+        @Override
+        public List<StringVisitable> wrapped(StringVisitable text, int width) {
+          final String plain = plainOf(text);
+          final int perLine = Math.max(1, width / CHARACTER_WIDTH);
+          final List<StringVisitable> lines = new ArrayList<>();
+          for (int start = 0; start < plain.length(); start += perLine) {
+            lines.add(
+                StringVisitable.plain(
+                    plain.substring(start, Math.min(plain.length(), start + perLine))));
+          }
+          return lines;
         }
       };
 
@@ -91,5 +108,57 @@ class EllipsisTrimTest {
     assertThrows(
         NullPointerException.class,
         () -> EllipsisTrim.toWidth(StringVisitable.plain("Ores"), 24, null));
+  }
+
+  private static List<String> lines(String text, int characters, int maxLines) {
+    return EllipsisTrim.toLines(
+            StringVisitable.plain(text), characters * CHARACTER_WIDTH, maxLines, ROOM)
+        .stream()
+        .map(EllipsisTrimTest::plainOf)
+        .toList();
+  }
+
+  @Test
+  void aLineThatFitsStaysOneLineExactlyAsItWas() {
+    assertEquals(List.of("Ores"), lines("Ores", 10, 2));
+  }
+
+  @Test
+  void aLineThatNeedsNoMoreThanTheAllowedLinesIsWrappedWithNothingLost() {
+    assertEquals(List.of("Everything", " And More"), lines(LONG_NAME, 10, 2));
+  }
+
+  @Test
+  void textBeyondTheLastAllowedLineEndsThatLineInAnEllipsis() {
+    List<String> kept = lines(LONG_NAME, 5, 2);
+
+    assertEquals(2, kept.size());
+    assertEquals("Every", kept.get(0));
+    assertTrue(kept.get(1).endsWith(EllipsisTrim.ELLIPSIS), kept.get(1));
+  }
+
+  @ParameterizedTest
+  @CsvSource({"4, 1", "5, 2", "8, 2", "12, 3"})
+  void noWrappedLineIsWiderThanTheRoomItWasGiven(int characters, int maxLines) {
+    List<String> kept = lines(LONG_NAME, characters, maxLines);
+
+    assertFalse(kept.size() > maxLines, kept.toString());
+    for (String line : kept) {
+      assertTrue(line.length() <= characters, "'" + line + "' is wider than " + characters);
+    }
+  }
+
+  @ParameterizedTest
+  @CsvSource({"0, 2", "-1, 2", "10, 0", "10, -3"})
+  void noRoomOrNoLinesDrawsNothing(int characters, int maxLines) {
+    assertEquals(List.of(), lines(LONG_NAME, characters, maxLines));
+  }
+
+  @Test
+  void wrappingNeedsBothSomethingToWrapAndAWayToMeasureIt() {
+    assertThrows(NullPointerException.class, () -> EllipsisTrim.toLines(null, 24, 2, ROOM));
+    assertThrows(
+        NullPointerException.class,
+        () -> EllipsisTrim.toLines(StringVisitable.plain("Ores"), 24, 2, null));
   }
 }

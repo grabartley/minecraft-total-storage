@@ -127,6 +127,38 @@ public final class TerminalPrompts {
     return false;
   }
 
+  private TagPromptList openList() {
+    if (amount.isOpen() || naming.isOpen() || renaming.isOpen()) {
+      return null;
+    }
+    if (filtering.isOpen()) {
+      return filtering.list();
+    }
+    if (tagging.isOpen()) {
+      return tagging.list();
+    }
+    return copying.isOpen() ? copying.list() : null;
+  }
+
+  public boolean isDraggingScrollbar() {
+    final TagPromptList list = openList();
+    return list != null && list.isDraggingScrollbar();
+  }
+
+  public void dragScrollbarTo(int windowY) {
+    final TagPromptList list = openList();
+    if (list != null) {
+      list.dragScrollbarTo(windowY);
+    }
+  }
+
+  public void releaseScrollbar() {
+    final TagPromptList list = openList();
+    if (list != null) {
+      list.releaseScrollbar();
+    }
+  }
+
   public boolean scrolled(double verticalAmount) {
     if (ownsTheKeyboard()) {
       return true;
@@ -169,6 +201,13 @@ public final class TerminalPrompts {
     }
     if (renaming.isOpen()) {
       renaming.close();
+      return true;
+    }
+    final TagPromptList list = openList();
+    if (list != null
+        && button == GridClick.LEFT_BUTTON
+        && TagPromptLayout.isOverScrollbar(windowX, windowY)) {
+      list.grabScrollbar(windowX, windowY);
       return true;
     }
     if (filtering.isOpen()) {
@@ -232,13 +271,13 @@ public final class TerminalPrompts {
     copying.close();
   }
 
-  public boolean keyPressed(int keyCode, int modifiers) {
+  public boolean keyPressed(int keyCode, int modifiers, NetworkTagView tags) {
     final boolean selectAllHeld = PromptModifiers.isSelectAllHeld(modifiers);
     if (amount.isOpen()) {
       return handleAmountKey(amount.keyPressed(keyCode, selectAllHeld));
     }
     if (naming.isOpen()) {
-      return handleNameKey(naming.keyPressed(keyCode, selectAllHeld));
+      return handleNameKey(naming.keyPressed(keyCode, selectAllHeld), tags);
     }
     if (renaming.isOpen()) {
       return handleContainerNameKey(renaming.keyPressed(keyCode, selectAllHeld));
@@ -269,7 +308,10 @@ public final class TerminalPrompts {
       return handleAmountKey(amount.charTyped(typed));
     }
     if (naming.isOpen()) {
-      return handleNameKey(naming.charTyped(typed));
+      if (naming.charTyped(typed) == PromptKey.REFUSED) {
+        PromptRefusal.sound();
+      }
+      return true;
     }
     if (renaming.isOpen()) {
       return handleContainerNameKey(renaming.charTyped(typed));
@@ -327,12 +369,16 @@ public final class TerminalPrompts {
         false);
   }
 
-  private boolean handleNameKey(PromptKey outcome) {
+  private boolean handleNameKey(PromptKey outcome, NetworkTagView tags) {
     if (outcome == PromptKey.REFUSED) {
       PromptRefusal.sound();
       return true;
     }
     if (outcome == PromptKey.CONFIRM) {
+      if (!naming.accepts(tags.ids())) {
+        PromptRefusal.sound();
+        return true;
+      }
       confirmName();
     }
     if (outcome == PromptKey.CANCEL) {

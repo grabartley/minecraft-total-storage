@@ -11,11 +11,8 @@ import com.grahambartley.toomanychests.screenhandler.TerminalScreenHandler;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenLayout;
 import com.grahambartley.toomanychests.screenhandler.TerminalSettingsLayout;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
-import com.grahambartley.toomanychests.terminal.NetworkTagEntry;
 import com.grahambartley.toomanychests.terminal.NetworkTagView;
 import com.grahambartley.toomanychests.terminal.TerminalAction;
-import java.util.HashSet;
-import java.util.Set;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
@@ -128,7 +125,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     filters.fit(tagsThisFrame);
     prompts.fit(settingsThisFrame, tagsThisFrame);
     if (tagsThisFrame.answered()) {
-      selection.retainAll(knownTagIds());
+      selection.retainAll(tagsThisFrame.ids());
     }
     if (requests.isNewListing(search.text(), selection.active(), selection.mode())) {
       items.scroll().scrollTo(0);
@@ -533,6 +530,10 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   @Override
   public boolean mouseDragged(
       double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    if (prompts.isDraggingScrollbar()) {
+      prompts.dragScrollbarTo(windowY(mouseY));
+      return true;
+    }
     if (prompts.isAnyOpen()) {
       return true;
     }
@@ -553,7 +554,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   @Override
   public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-    if (prompts.keyPressed(keyCode, modifiers)) {
+    if (prompts.keyPressed(keyCode, modifiers, tagsThisFrame)) {
       return true;
     }
     if (isDepositAllKey(keyCode, scanCode)) {
@@ -587,6 +588,10 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   @Override
   public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    if (button == GridClick.LEFT_BUTTON && prompts.isDraggingScrollbar()) {
+      prompts.releaseScrollbar();
+      return true;
+    }
     if (button == GridClick.LEFT_BUTTON && settings.isDraggingScrollbar()) {
       settings.releaseScrollbar();
       return true;
@@ -604,14 +609,6 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   private void requestVisibleRows() {
     requests.rows(items.scroll().window(), search.text(), selection.active(), selection.mode());
-  }
-
-  private Set<String> knownTagIds() {
-    final Set<String> known = new HashSet<>();
-    for (final NetworkTagEntry tag : tagsThisFrame.tags()) {
-      known.add(tag.id());
-    }
-    return known;
   }
 
   private void requestVisibleContainers() {

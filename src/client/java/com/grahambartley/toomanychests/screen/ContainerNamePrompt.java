@@ -47,6 +47,7 @@ public final class ContainerNamePrompt {
         textRenderer,
         TerminalScreenText.of("settings.container.name.title"),
         TerminalScreenText.of("settings.container.name.hint"),
+        VanillaPalette.MUTED,
         entry.text(),
         originX,
         originY);

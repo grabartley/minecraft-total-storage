@@ -73,4 +73,18 @@ class NetworkTagViewTest {
     assertEquals(Optional.empty(), view.subject());
     assertEquals(Set.of(), view.subjectTags());
   }
+
+  @Test
+  void theIdsAreEveryTagsIdPresetOrCustom() {
+    NetworkTagView view =
+        new NetworkTagView(
+            true, List.of(preset("stone"), custom("castle")), Optional.empty(), Set.of());
+
+    assertEquals(Set.of("stone", "castle"), view.ids());
+  }
+
+  @Test
+  void aPendingViewKnowsNoIds() {
+    assertEquals(Set.of(), NetworkTagView.pending().ids());
+  }
 }

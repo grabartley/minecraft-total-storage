@@ -28,7 +28,7 @@ public final class ServerConfigControls {
   }
 
   private static ClickableWidget readOnly(ConfigSetting setting, ServerConfigEdits edits) {
-    return ButtonWidget.builder(ServerConfigText.value(edits.valueOf(setting)), button -> {})
+    return ButtonWidget.builder(setting.displayValue(edits.valueOf(setting)), button -> {})
         .dimensions(0, 0, WIDTH, HEIGHT)
         .build();
   }
@@ -40,7 +40,7 @@ public final class ServerConfigControls {
 
   private static ClickableWidget cycler(ConfigSetting setting, ServerConfigEdits edits) {
     final List<String> alternatives = setting.suggestions();
-    return CyclingButtonWidget.<String>builder(ServerConfigText::value)
+    return CyclingButtonWidget.<String>builder(setting::displayValue)
         .values(alternatives)
         .initially(edits.valueOf(setting))
         .omitKeyText()
@@ -64,7 +64,7 @@ public final class ServerConfigControls {
           0,
           WIDTH,
           HEIGHT,
-          ServerConfigText.value(edits.valueOf(setting)),
+          setting.displayValue(edits.valueOf(setting)),
           range.fractionOf(Integer.parseInt(edits.valueOf(setting))));
       this.setting = setting;
       this.edits = edits;
@@ -73,7 +73,7 @@ public final class ServerConfigControls {
 
     @Override
     protected void updateMessage() {
-      setMessage(ServerConfigText.value(Integer.toString(range.valueAt(value))));
+      setMessage(setting.displayValue(Integer.toString(range.valueAt(value))));
     }
 
     @Override

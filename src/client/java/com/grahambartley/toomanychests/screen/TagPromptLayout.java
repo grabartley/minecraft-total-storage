@@ -17,14 +17,23 @@ public final class TagPromptLayout {
 
   public static final int VISIBLE_ROWS = 4;
 
+  public static final int FOOTER_LINES = 2;
+
   public static final int HEADING_HEIGHT = LINE_HEIGHT + GAP;
 
-  public static final int FOOTER_HEIGHT = LINE_HEIGHT + GAP;
+  public static final int FOOTER_HEIGHT = GAP + FOOTER_LINES * LINE_HEIGHT;
 
-  public static final int HEIGHT =
-      2 * PADDING + HEADING_HEIGHT + VISIBLE_ROWS * ROW_HEIGHT + FOOTER_HEIGHT;
+  public static final int TRACK_HEIGHT = VISIBLE_ROWS * ROW_HEIGHT;
 
-  public static final int ROW_WIDTH = WIDTH - 2 * PADDING;
+  public static final int HEIGHT = 2 * PADDING + HEADING_HEIGHT + TRACK_HEIGHT + FOOTER_HEIGHT;
+
+  public static final int TEXT_WIDTH = WIDTH - 2 * PADDING;
+
+  public static final int SCROLLBAR_WIDTH = 4;
+
+  public static final int SCROLLBAR_GAP = 2;
+
+  public static final int ROW_WIDTH = TEXT_WIDTH - SCROLLBAR_GAP - SCROLLBAR_WIDTH;
 
   public static final int CHECK_SIZE = 8;
 
@@ -41,11 +50,27 @@ public final class TagPromptLayout {
   }
 
   public static int top() {
-    return TerminalScreenLayout.GRID_Y + (TerminalScreenLayout.GRID_HEIGHT - HEIGHT) / 2;
+    return TerminalScreenLayout.INSET_Y + (TerminalScreenLayout.INSET_HEIGHT - HEIGHT) / 2;
+  }
+
+  public static int textLeft() {
+    return left() + PADDING;
+  }
+
+  public static int headingTop() {
+    return top() + PADDING;
   }
 
   public static int rowsTop() {
-    return top() + PADDING + HEADING_HEIGHT;
+    return headingTop() + HEADING_HEIGHT;
+  }
+
+  public static int footerTop() {
+    return top() + HEIGHT - PADDING - FOOTER_LINES * LINE_HEIGHT;
+  }
+
+  public static int scrollbarX() {
+    return textLeft() + ROW_WIDTH + SCROLLBAR_GAP;
   }
 
   public static int rowY(int row) {
@@ -56,12 +81,18 @@ public final class TagPromptLayout {
   }
 
   public static int rowAt(int windowX, int windowY) {
-    final int rowLeft = left() + PADDING;
-    if (windowX < rowLeft || windowX >= rowLeft + ROW_WIDTH) {
+    if (windowX < textLeft() || windowX >= textLeft() + ROW_WIDTH) {
       return NO_ROW;
     }
     final int row = Math.floorDiv(windowY - rowsTop(), ROW_HEIGHT);
     return windowY < rowsTop() || row >= VISIBLE_ROWS ? NO_ROW : row;
+  }
+
+  public static boolean isOverScrollbar(int windowX, int windowY) {
+    return windowX >= scrollbarX()
+        && windowX < scrollbarX() + SCROLLBAR_WIDTH
+        && windowY >= rowsTop()
+        && windowY < rowsTop() + TRACK_HEIGHT;
   }
 
   public static boolean isOverPrompt(int windowX, int windowY) {

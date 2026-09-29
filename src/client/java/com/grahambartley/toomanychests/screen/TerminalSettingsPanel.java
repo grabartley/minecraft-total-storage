@@ -230,7 +230,7 @@ public final class TerminalSettingsPanel {
           context,
           textRenderer,
           TerminalScreenText.of(TerminalSetting.ACCESS.label()),
-          answered ? TerminalScreenText.of("access." + view.accessMode().id()) : pendingValue(),
+          answered ? view.accessMode().displayName() : pendingValue(),
           originX,
           originY + TerminalSettingsLayout.rowY(TerminalSetting.ACCESS.row()),
           view.mayAdminister());

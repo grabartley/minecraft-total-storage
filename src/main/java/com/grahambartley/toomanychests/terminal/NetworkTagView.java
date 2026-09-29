@@ -3,6 +3,7 @@ package com.grahambartley.toomanychests.terminal;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 
 public record NetworkTagView(
@@ -40,6 +41,10 @@ public record NetworkTagView(
 
   public List<NetworkTagEntry> custom() {
     return tags.stream().filter(tag -> !tag.immutable()).toList();
+  }
+
+  public Set<String> ids() {
+    return tags.stream().map(NetworkTagEntry::id).collect(Collectors.toUnmodifiableSet());
   }
 
   public boolean subjectCarries(String tagId) {

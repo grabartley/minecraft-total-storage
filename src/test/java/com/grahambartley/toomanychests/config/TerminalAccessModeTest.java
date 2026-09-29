@@ -3,7 +3,9 @@ package com.grahambartley.toomanychests.config;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.grahambartley.toomanychests.EnglishLang;
 import java.util.Optional;
+import net.minecraft.text.TranslatableTextContent;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -37,5 +39,24 @@ class TerminalAccessModeTest {
   @Test
   void aNullIdIsEmpty() {
     assertTrue(TerminalAccessMode.fromId(null).isEmpty());
+  }
+
+  @ParameterizedTest
+  @EnumSource(TerminalAccessMode.class)
+  void everyModeIsShownWithTheTerminalsOwnWordsForIt(TerminalAccessMode mode) {
+    assertEquals(
+        "screen.too-many-chests.terminal.access." + mode.id(),
+        ((TranslatableTextContent) mode.displayName().getContent()).getKey());
+  }
+
+  @Test
+  void theModesReadAsAPlayerWouldSayThem() {
+    assertEquals("Owner only", EnglishLang.of(keyOf(TerminalAccessMode.OWNER)));
+    assertEquals("Trusted players", EnglishLang.of(keyOf(TerminalAccessMode.TRUSTED)));
+    assertEquals("Anyone", EnglishLang.of(keyOf(TerminalAccessMode.OPEN)));
+  }
+
+  private static String keyOf(TerminalAccessMode mode) {
+    return ((TranslatableTextContent) mode.displayName().getContent()).getKey();
   }
 }

@@ -12,22 +12,67 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class TagPromptLayoutTest {
   @Test
-  void thePromptSitsOverTheGridItWasOpenedFrom() {
-    assertTrue(TagPromptLayout.left() >= TerminalScreenLayout.GRID_X);
-    assertTrue(TagPromptLayout.top() >= TerminalScreenLayout.GRID_Y);
+  void thePromptSitsInsideTheItemGridInsetItWasOpenedFrom() {
+    assertTrue(TagPromptLayout.left() >= TerminalScreenLayout.INSET_X);
+    assertTrue(TagPromptLayout.top() >= TerminalScreenLayout.INSET_Y);
     assertTrue(
         TagPromptLayout.left() + TagPromptLayout.WIDTH
-            <= TerminalScreenLayout.GRID_X + TerminalScreenLayout.GRID_WIDTH);
+            <= TerminalScreenLayout.INSET_X + TerminalScreenLayout.INSET_WIDTH);
     assertTrue(
         TagPromptLayout.top() + TagPromptLayout.HEIGHT
-            <= TerminalScreenLayout.GRID_Y + TerminalScreenLayout.GRID_HEIGHT);
+            <= TerminalScreenLayout.INSET_Y + TerminalScreenLayout.INSET_HEIGHT);
   }
 
   @Test
   void everyRowFitsBetweenTheHeadingAndTheFooter() {
     assertTrue(
+        TagPromptLayout.rowsTop() >= TagPromptLayout.headingTop() + TagPromptLayout.LINE_HEIGHT);
+    assertTrue(
         TagPromptLayout.rowY(TagPromptLayout.VISIBLE_ROWS - 1) + TagPromptLayout.ROW_HEIGHT
-            <= TagPromptLayout.top() + TagPromptLayout.HEIGHT - TagPromptLayout.FOOTER_HEIGHT);
+            <= TagPromptLayout.footerTop());
+  }
+
+  @Test
+  void theFooterHasRoomForItsLinesInsideThePanel() {
+    assertEquals(2, TagPromptLayout.FOOTER_LINES);
+    assertTrue(
+        TagPromptLayout.footerTop() + TagPromptLayout.FOOTER_LINES * TagPromptLayout.LINE_HEIGHT
+            <= TagPromptLayout.top() + TagPromptLayout.HEIGHT - TagPromptLayout.PADDING);
+  }
+
+  @Test
+  void theScrollbarRunsBesideTheRowsInsideThePanel() {
+    assertTrue(
+        TagPromptLayout.scrollbarX() >= TagPromptLayout.textLeft() + TagPromptLayout.ROW_WIDTH);
+    assertTrue(
+        TagPromptLayout.scrollbarX() + TagPromptLayout.SCROLLBAR_WIDTH
+            <= TagPromptLayout.left() + TagPromptLayout.WIDTH - TagPromptLayout.PADDING);
+    assertEquals(
+        TagPromptLayout.VISIBLE_ROWS * TagPromptLayout.ROW_HEIGHT, TagPromptLayout.TRACK_HEIGHT);
+  }
+
+  @Test
+  void aPointOnTheScrollbarIsNotARowAndAPointOnARowIsNotTheScrollbar() {
+    int trackY = TagPromptLayout.rowsTop();
+    assertTrue(TagPromptLayout.isOverScrollbar(TagPromptLayout.scrollbarX(), trackY));
+    assertEquals(
+        TagPromptLayout.NO_ROW, TagPromptLayout.rowAt(TagPromptLayout.scrollbarX(), trackY));
+    assertFalse(TagPromptLayout.isOverScrollbar(TagPromptLayout.textLeft(), trackY));
+  }
+
+  @Test
+  void theScrollbarEndsWhereTheRowsEnd() {
+    int x = TagPromptLayout.scrollbarX();
+    assertFalse(TagPromptLayout.isOverScrollbar(x, TagPromptLayout.rowsTop() - 1));
+    assertTrue(
+        TagPromptLayout.isOverScrollbar(
+            x, TagPromptLayout.rowsTop() + TagPromptLayout.TRACK_HEIGHT - 1));
+    assertFalse(
+        TagPromptLayout.isOverScrollbar(
+            x, TagPromptLayout.rowsTop() + TagPromptLayout.TRACK_HEIGHT));
+    assertFalse(
+        TagPromptLayout.isOverScrollbar(
+            x + TagPromptLayout.SCROLLBAR_WIDTH, TagPromptLayout.rowsTop()));
   }
 
   @ParameterizedTest
@@ -40,9 +85,7 @@ class TagPromptLayoutTest {
   void aPointInsideARowResolvesToThatRow() {
     for (int row = 0; row < TagPromptLayout.VISIBLE_ROWS; row++) {
       assertEquals(
-          row,
-          TagPromptLayout.rowAt(
-              TagPromptLayout.left() + TagPromptLayout.PADDING, TagPromptLayout.rowY(row)));
+          row, TagPromptLayout.rowAt(TagPromptLayout.textLeft(), TagPromptLayout.rowY(row)));
     }
   }
 
@@ -53,8 +96,7 @@ class TagPromptLayoutTest {
         TagPromptLayout.rowAt(TagPromptLayout.left() - 1, TagPromptLayout.rowsTop()));
     assertEquals(
         TagPromptLayout.NO_ROW,
-        TagPromptLayout.rowAt(
-            TagPromptLayout.left() + TagPromptLayout.PADDING, TagPromptLayout.rowsTop() - 1));
+        TagPromptLayout.rowAt(TagPromptLayout.textLeft(), TagPromptLayout.rowsTop() - 1));
   }
 
   @Test

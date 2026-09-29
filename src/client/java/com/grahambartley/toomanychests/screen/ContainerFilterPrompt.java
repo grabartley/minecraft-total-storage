@@ -8,24 +8,22 @@ import com.grahambartley.toomanychests.text.CountedNoun;
 import java.util.List;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 
 public final class ContainerFilterPrompt {
-  private static final float ELEVATION = 300.0F;
-
-  private final ListingScroll scroll = new ListingScroll(1, TagPromptLayout.VISIBLE_ROWS);
+  private final TagPromptList list = new TagPromptList();
 
   private BlockPos container;
 
   public void open(BlockPos edited) {
     container = edited == null ? null : edited.toImmutable();
-    scroll.scrollTo(0);
+    list.reset();
   }
 
   public void close() {
     container = null;
+    list.releaseScrollbar();
   }
 
   public boolean isOpen() {
@@ -36,12 +34,16 @@ public final class ContainerFilterPrompt {
     return container;
   }
 
+  public TagPromptList list() {
+    return list;
+  }
+
   public void fit(NetworkTagView view) {
-    scroll.fit(view.tags().size());
+    list.fit(view.tags().size());
   }
 
   public boolean scrollBy(int notches) {
-    return scroll.scrollBy(notches);
+    return list.scrollBy(notches);
   }
 
   public ContainerRoleEntry rowIn(NetworkSettingsView view) {
@@ -57,13 +59,9 @@ public final class ContainerFilterPrompt {
   }
 
   public NetworkTagEntry tagAt(NetworkTagView view, int windowX, int windowY) {
-    final int row = TagPromptLayout.rowAt(windowX, windowY);
-    if (row == TagPromptLayout.NO_ROW) {
-      return null;
-    }
+    final int index = list.indexAt(windowX, windowY);
     final List<NetworkTagEntry> tags = view.tags();
-    final int index = scroll.firstIndex() + row;
-    return index >= tags.size() ? null : tags.get(index);
+    return index < 0 || index >= tags.size() ? null : tags.get(index);
   }
 
   public void draw(
@@ -79,27 +77,15 @@ public final class ContainerFilterPrompt {
     if (row == null) {
       return;
     }
-    final int left = originX + TagPromptLayout.left();
-    final int top = originY + TagPromptLayout.top();
-    context.getMatrices().push();
-    context.getMatrices().translate(0.0F, 0.0F, ELEVATION);
-    TerminalSprite.PANEL.draw(context, left, top, TagPromptLayout.WIDTH, TagPromptLayout.HEIGHT);
-    drawLine(
+    TagPromptFrame.draw(
         context,
         textRenderer,
         TerminalScreenText.of("settings.container.filter.title", ContainerRowText.label(row)),
-        left,
-        top + TagPromptLayout.PADDING,
-        VanillaPalette.LABEL);
-    drawRows(context, textRenderer, row, tags, originX, originY, mouseX, mouseY);
-    drawLine(
-        context,
-        textRenderer,
         footerFor(row, tags),
-        left,
-        top + TagPromptLayout.HEIGHT - TagPromptLayout.PADDING - TagPromptLayout.LINE_HEIGHT,
-        VanillaPalette.MUTED);
-    context.getMatrices().pop();
+        list,
+        originX,
+        originY,
+        () -> drawRows(context, textRenderer, row, tags, originX, originY, mouseX, mouseY));
   }
 
   private void drawRows(
@@ -114,7 +100,7 @@ public final class ContainerFilterPrompt {
     final List<NetworkTagEntry> all = tags.tags();
     final NetworkTagEntry hovered = tagAt(tags, mouseX, mouseY);
     for (int visible = 0; visible < TagPromptLayout.VISIBLE_ROWS; visible++) {
-      final int index = scroll.firstIndex() + visible;
+      final int index = list.indexOfRow(visible);
       if (index >= all.size()) {
         return;
       }
@@ -125,7 +111,7 @@ public final class ContainerFilterPrompt {
           FilterColumnText.nameOf(tag),
           row.accepts(tag.id()),
           tag.equals(hovered),
-          originX + TagPromptLayout.left() + TagPromptLayout.PADDING,
+          originX + TagPromptLayout.textLeft(),
           originY + TagPromptLayout.rowY(visible));
     }
   }
@@ -140,11 +126,5 @@ public final class ContainerFilterPrompt {
             "settings.container.filter.count",
             row.acceptedTags().size(),
             CountedNoun.TAGS.of(tags.tags().size()));
-  }
-
-  private static void drawLine(
-      DrawContext context, TextRenderer textRenderer, Text line, int left, int top, int colour) {
-    final OrderedText trimmed = TrimmedText.toWidth(textRenderer, line, TagPromptLayout.ROW_WIDTH);
-    context.drawText(textRenderer, trimmed, left + TagPromptLayout.PADDING, top, colour, false);
   }
 }

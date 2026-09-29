@@ -4,7 +4,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.grahambartley.toomanychests.tag.TagNameOutcome;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
+import com.grahambartley.toomanychests.terminal.NetworkTagEntry;
+import com.grahambartley.toomanychests.terminal.NetworkTagView;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.IntStream;
+import net.minecraft.util.math.BlockPos;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -25,7 +33,7 @@ class TerminalPromptsTest {
   @ParameterizedTest
   @ValueSource(ints = {GLFW.GLFW_KEY_ESCAPE, GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_A})
   void withNoPromptUpEveryKeyIsLeftToTheScreen(int keyCode) {
-    assertFalse(prompts.keyPressed(keyCode, 0));
+    assertFalse(prompts.keyPressed(keyCode, 0, NetworkTagView.pending()));
   }
 
   @Test
@@ -61,7 +69,7 @@ class TerminalPromptsTest {
   void escapeClosesTheNamePromptWithoutClosingTheScreen() {
     prompts.naming().openForNewTag();
 
-    assertTrue(prompts.keyPressed(GLFW.GLFW_KEY_ESCAPE, 0));
+    assertTrue(prompts.keyPressed(GLFW.GLFW_KEY_ESCAPE, 0, NetworkTagView.pending()));
     assertFalse(prompts.isAnyOpen());
   }
 
@@ -90,5 +98,101 @@ class TerminalPromptsTest {
 
     assertFalse(prompts.naming().isRenaming());
     assertEquals("", prompts.naming().renaming());
+  }
+
+  private static NetworkTagView tagsOf(NetworkTagEntry... tags) {
+    return new NetworkTagView(true, List.of(tags), Optional.empty(), Set.of());
+  }
+
+  private static NetworkTagEntry preset(String id) {
+    return new NetworkTagEntry(id, id, true, 0, 0);
+  }
+
+  private static NetworkTagEntry custom(String id) {
+    return new NetworkTagEntry(id, id, false, 0, 0);
+  }
+
+  private void type(String text) {
+    for (char typed : text.toCharArray()) {
+      prompts.charTyped(typed);
+    }
+  }
+
+  @Test
+  void aNameThatBelongsToAPresetKeepsThePromptOpenWithTheTextAndSaysWhy() {
+    prompts.naming().openForNewTag();
+    type("Stone");
+
+    assertTrue(prompts.keyPressed(GLFW.GLFW_KEY_ENTER, 0, tagsOf(preset("stone"))));
+
+    assertTrue(prompts.naming().isOpen());
+    assertEquals("Stone", prompts.naming().name());
+    assertEquals(TagNameOutcome.PRESET_COLLISION, prompts.naming().refusal());
+  }
+
+  @Test
+  void aNameAnotherCustomTagHasKeepsThePromptOpenWithTheTextAndSaysWhy() {
+    prompts.naming().openForNewTag();
+    type("Castle");
+
+    prompts.keyPressed(GLFW.GLFW_KEY_ENTER, 0, tagsOf(preset("stone"), custom("castle")));
+
+    assertTrue(prompts.naming().isOpen());
+    assertEquals("Castle", prompts.naming().name());
+    assertEquals(TagNameOutcome.DUPLICATE, prompts.naming().refusal());
+  }
+
+  @Test
+  void renamingOntoAnotherTagsNameIsRefusedInThePrompt() {
+    prompts.naming().openForRename("castle", "Castle");
+    for (int deleted = 0; deleted < "Castle".length(); deleted++) {
+      prompts.keyPressed(GLFW.GLFW_KEY_BACKSPACE, 0, NetworkTagView.pending());
+    }
+    type("Keep");
+
+    prompts.keyPressed(GLFW.GLFW_KEY_ENTER, 0, tagsOf(custom("castle"), custom("keep")));
+
+    assertTrue(prompts.naming().isOpen());
+    assertEquals(TagNameOutcome.DUPLICATE, prompts.naming().refusal());
+  }
+
+  @Test
+  void theFilterPromptsScrollbarCanBeGrabbedDraggedAndLetGo() {
+    NetworkTagView thirteen =
+        tagsOf(
+            IntStream.range(0, 13)
+                .mapToObj(i -> custom("tag" + i))
+                .toArray(NetworkTagEntry[]::new));
+    prompts.filtering().open(new BlockPos(1, 2, 3));
+    prompts.fit(NetworkSettingsView.pending(), thirteen);
+
+    assertTrue(
+        prompts.mouseClicked(
+            NetworkSettingsView.pending(),
+            thirteen,
+            false,
+            TagPromptLayout.scrollbarX(),
+            TagPromptLayout.rowsTop(),
+            GridClick.LEFT_BUTTON));
+    assertTrue(prompts.isDraggingScrollbar());
+
+    prompts.dragScrollbarTo(TagPromptLayout.rowsTop() + TagPromptLayout.TRACK_HEIGHT);
+    assertEquals(
+        "tag9",
+        prompts
+            .filtering()
+            .tagAt(thirteen, TagPromptLayout.textLeft(), TagPromptLayout.rowY(0))
+            .id());
+
+    prompts.releaseScrollbar();
+    assertFalse(prompts.isDraggingScrollbar());
+    assertTrue(prompts.filtering().isOpen());
+  }
+
+  @Test
+  void withNoListPromptUpThereIsNoScrollbarToDrag() {
+    prompts.naming().openForNewTag();
+
+    assertFalse(prompts.isDraggingScrollbar());
   }
 }

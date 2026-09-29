@@ -26,7 +26,8 @@ public final class TerminalTooltips {
   public static void tab(
       DrawContext context, TextRenderer textRenderer, TerminalTab hovered, int mouseX, int mouseY) {
     if (hovered != null) {
-      context.drawTooltip(textRenderer, TerminalScreenText.of(hovered.label()), mouseX, mouseY);
+      WrappedTooltip.draw(
+          context, textRenderer, TerminalScreenText.of(hovered.label()), mouseX, mouseY);
     }
   }
 
@@ -47,7 +48,7 @@ public final class TerminalTooltips {
     if (mayTag) {
       lines.add(TagText.assignHint(MinecraftClient.IS_SYSTEM_MAC).formatted(Formatting.DARK_GRAY));
     }
-    context.drawTooltip(textRenderer, lines, mouseX, mouseY);
+    WrappedTooltip.draw(context, textRenderer, lines, mouseX, mouseY);
   }
 
   public static void container(
@@ -94,7 +95,7 @@ public final class TerminalTooltips {
                 .formatted(Formatting.DARK_GRAY));
       }
     }
-    context.drawTooltip(textRenderer, lines, mouseX, mouseY);
+    WrappedTooltip.draw(context, textRenderer, lines, mouseX, mouseY);
   }
 
   public static void copyTags(
@@ -111,7 +112,7 @@ public final class TerminalTooltips {
         || !TagsSectionLayout.isOverCopy(windowX, windowY)) {
       return;
     }
-    context.drawTooltip(textRenderer, TerminalScreenText.of("tags.copy"), mouseX, mouseY);
+    WrappedTooltip.draw(context, textRenderer, TerminalScreenText.of("tags.copy"), mouseX, mouseY);
   }
 
   public static void filterTag(
@@ -137,6 +138,6 @@ public final class TerminalTooltips {
                 "filter.tag.matching",
                 CountedNoun.ITEMS.ofFormatted(FilterColumnText.count(tag), tag.matchingItems()))
             .formatted(Formatting.GRAY));
-    context.drawTooltip(textRenderer, lines, mouseX, mouseY);
+    WrappedTooltip.draw(context, textRenderer, lines, mouseX, mouseY);
   }
 }

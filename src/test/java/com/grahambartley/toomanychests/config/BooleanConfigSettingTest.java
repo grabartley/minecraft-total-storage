@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Optional;
+import net.minecraft.screen.ScreenTexts;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -79,5 +80,11 @@ class BooleanConfigSettingTest {
 
   private static TooManyChestsConfig defaults() {
     return TooManyChestsConfig.defaults();
+  }
+
+  @ParameterizedTest
+  @CsvSource({"true, true", "TRUE, true", "' false ', false", "false, false"})
+  void aValueIsShownAsVanillasOnOrOff(String raw, boolean on) {
+    assertEquals(on ? ScreenTexts.ON : ScreenTexts.OFF, setting.displayValue(raw));
   }
 }

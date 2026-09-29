@@ -3,7 +3,9 @@ package com.grahambartley.toomanychests.screen;
 import com.grahambartley.toomanychests.TooManyChests;
 import com.grahambartley.toomanychests.config.ConfigSection;
 import com.grahambartley.toomanychests.config.ConfigSetting;
+import java.util.List;
 import net.minecraft.text.Text;
+import net.minecraft.text.Texts;
 
 public final class ServerConfigText {
   private static final String PREFIX = "screen." + TooManyChests.MOD_ID + ".config.";
@@ -38,11 +40,27 @@ public final class ServerConfigText {
   }
 
   public static Text bounds(ConfigSetting setting) {
-    return line("bounds", "%s, default %s", setting.allowedValues(), setting.defaultValue());
+    final Text allowed =
+        setting
+            .range()
+            .map(
+                range ->
+                    line(
+                        "range",
+                        "%s to %s",
+                        setting.displayValue(Integer.toString(range.min())),
+                        setting.displayValue(Integer.toString(range.max()))))
+            .orElseGet(() -> alternatives(setting));
+    return line("bounds", "%s, default %s", allowed, setting.displayValue(setting.defaultValue()));
   }
 
-  public static Text value(String rawValue) {
-    return Text.literal(rawValue);
+  private static Text alternatives(ConfigSetting setting) {
+    final List<Text> shown = setting.suggestions().stream().map(setting::displayValue).toList();
+    if (shown.size() < 2) {
+      return shown.isEmpty() ? Text.empty() : shown.get(0);
+    }
+    final Text leading = Texts.join(shown.subList(0, shown.size() - 1), Text.literal(", "));
+    return line("or", "%s or %s", leading, shown.get(shown.size() - 1));
   }
 
   private static Text line(String key, String english, Object... arguments) {
