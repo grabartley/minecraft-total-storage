@@ -49,7 +49,9 @@ public final class CommandMessages {
   }
 
   public static Text helpSort() {
-    return line("help.sort", "/tmc sort sorts the container you have open");
+    return line(
+        "help.sort",
+        "/tmc sort sorts the container you have open or are looking at, or else your inventory");
   }
 
   public static Text helpQuickStack() {
@@ -252,6 +254,21 @@ public final class CommandMessages {
     return line("sort.sorted", "Sorted");
   }
 
+  public static Text inventorySorted() {
+    return line("sort.inventory.sorted", "Sorted your inventory, as no container is in view");
+  }
+
+  public static Text inventoryAlreadySorted() {
+    return line(
+        "sort.inventory.unchanged",
+        "Your inventory was already sorted, and no container is in view");
+  }
+
+  public static Text inventoryNothingToSort() {
+    return line(
+        "sort.inventory.empty", "Your inventory has nothing to sort, and no container is in view");
+  }
+
   public static Text nothingToSort() {
     return line("sort.empty", "There is nothing in there to sort");
   }
@@ -279,6 +296,20 @@ public final class CommandMessages {
         "help.terminal.role",
         "/tmc terminal <pos> role <container> [general|filtered|excluded] reads or sets what the"
             + " network may do to a container");
+  }
+
+  public static Text helpTerminalName() {
+    return line(
+        "help.terminal.name",
+        "/tmc terminal <pos> name <container> [set <name>|clear] reads or sets what a container is"
+            + " called");
+  }
+
+  public static Text helpTerminalFilter() {
+    return line(
+        "help.terminal.filter",
+        "/tmc terminal <pos> filter <container> [add|remove <tag>|clear] reads or edits what a"
+            + " Filtered container accepts");
   }
 
   public static Text helpTerminalHighlight() {

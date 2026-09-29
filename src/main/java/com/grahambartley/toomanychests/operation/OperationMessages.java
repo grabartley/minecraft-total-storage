@@ -49,7 +49,18 @@ public final class OperationMessages {
                   CountedNoun.ITEMS.of(outcome.moved()),
                   leftovers(outcome.leftovers())));
       case NOTHING_TO_DEPOSIT -> Optional.of(line("deposit.empty", "There is nothing to store"));
-      case NO_SPACE -> Optional.of(line("deposit.full", "This network has no room left"));
+      case NO_SPACE ->
+          Optional.of(
+              line(
+                  "deposit.full",
+                  "No room for %s, the network is full",
+                  leftovers(outcome.leftovers())));
+      case ONLY_FILTERED_SPACE ->
+          Optional.of(
+              line(
+                  "deposit.filtered_only",
+                  "No room for %s, the free space only takes filtered items",
+                  leftovers(outcome.leftovers())));
       case RATE_LIMITED -> Optional.empty();
       case REFUSED -> Optional.of(line("refused", "That terminal is not yours to use right now"));
     };

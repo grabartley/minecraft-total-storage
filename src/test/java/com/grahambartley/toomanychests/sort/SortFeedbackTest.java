@@ -1,7 +1,9 @@
 package com.grahambartley.toomanychests.sort;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -31,5 +33,38 @@ class SortFeedbackTest {
     assertEquals(
         SortFeedback.messageFor(SortOutcome.NO_OPEN_SCREEN).getString(),
         SortFeedback.messageFor(SortOutcome.SCREEN_NOT_SORTABLE).getString());
+  }
+
+  @ParameterizedTest
+  @EnumSource(
+      value = SortOutcome.class,
+      names = {"SORTED", "ALREADY_SORTED", "NOTHING_TO_SORT"})
+  void anInventorySortedInsteadOfAContainerSaysSo(SortOutcome outcome) {
+    final String inventory =
+        SortFeedback.messageFor(new SortReply(SortSubject.INVENTORY, outcome)).getString();
+
+    assertNotEquals(SortFeedback.messageFor(outcome).getString(), inventory);
+    assertTrue(inventory.contains("inventory"), inventory);
+  }
+
+  @ParameterizedTest
+  @EnumSource(
+      value = SortOutcome.class,
+      names = {"SORTED", "ALREADY_SORTED", "NOTHING_TO_SORT"},
+      mode = EnumSource.Mode.EXCLUDE)
+  void anInventoryOutcomeThatSortedNothingReadsAsItAlwaysDoes(SortOutcome outcome) {
+    assertEquals(
+        SortFeedback.messageFor(outcome).getString(),
+        SortFeedback.messageFor(new SortReply(SortSubject.INVENTORY, outcome)).getString());
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = SortSubject.class, names = "INVENTORY", mode = EnumSource.Mode.EXCLUDE)
+  void aContainerReadsAsItAlwaysDoesWhetherOpenOrInView(SortSubject subject) {
+    for (final SortOutcome outcome : SortOutcome.values()) {
+      assertEquals(
+          SortFeedback.messageFor(outcome).getString(),
+          SortFeedback.messageFor(new SortReply(subject, outcome)).getString());
+    }
   }
 }

@@ -73,6 +73,42 @@ class FilterEvaluatorTest {
     assertEquals(expected, filter(ItemFilter.ofSearch(raw)));
   }
 
+  private static Stream<Arguments> identifierTerms() {
+    return Stream.of(
+        Arguments.of("#stone", List.of(COBBLESTONE)),
+        Arguments.of("#red", List.of(COGWHEEL)),
+        Arguments.of("#tone", List.of()),
+        Arguments.of("#stne", List.of()),
+        Arguments.of("@cre", List.of(COGWHEEL, CREATE_WRENCH)),
+        Arguments.of("@eate", List.of()),
+        Arguments.of("@crt", List.of()),
+        Arguments.of("@some", List.of(UNTAGGED)));
+  }
+
+  @ParameterizedTest
+  @MethodSource("identifierTerms")
+  void tagAndModTermsMatchAnIdentifierByExactOrPrefixOnly(
+      String raw, List<FilterCandidate> expected) {
+    assertEquals(expected, filter(ItemFilter.ofSearch(raw)));
+  }
+
+  @ParameterizedTest
+  @MethodSource("baseKitTerms")
+  void aMultiWordTagIsFoundByItsWholeIdOrAnyPrefix(String raw, boolean expected) {
+    FilterCandidate kit =
+        new FilterCandidate("minecraft:torch", "Torch", Set.of(FilterText.tagId("Base Kit")));
+
+    assertEquals(expected, accepts(kit, ItemFilter.ofSearch(raw)));
+  }
+
+  private static Stream<Arguments> baseKitTerms() {
+    return Stream.of(
+        Arguments.of("#base-kit", true),
+        Arguments.of("#base", true),
+        Arguments.of("#kit", false),
+        Arguments.of("#bkit", false));
+  }
+
   @Test
   void searchNarrowsWithinTheActiveTagsRatherThanSearchingPastThem() {
     ItemFilter filter =

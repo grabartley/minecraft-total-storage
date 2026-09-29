@@ -10,9 +10,12 @@ import net.minecraft.server.network.ServerPlayerEntity;
 
 public final class TerminalListingBroadcast {
   private final TerminalListingService listings;
+  private final TerminalTagPanelService tagPanels;
 
-  public TerminalListingBroadcast(TerminalListingService listings) {
+  public TerminalListingBroadcast(
+      TerminalListingService listings, TerminalTagPanelService tagPanels) {
     this.listings = Objects.requireNonNull(listings, "listings");
+    this.tagPanels = Objects.requireNonNull(tagPanels, "tagPanels");
   }
 
   public void register() {
@@ -27,6 +30,7 @@ public final class TerminalListingBroadcast {
       }
       for (final ServerPlayerEntity viewer : TerminalViewerSync.playersOn(server, terminal)) {
         listings.refresh(viewer);
+        tagPanels.contentsChanged(viewer);
       }
     }
   }

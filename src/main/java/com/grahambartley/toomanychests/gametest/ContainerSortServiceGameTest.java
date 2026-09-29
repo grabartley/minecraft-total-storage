@@ -12,6 +12,7 @@ import java.util.List;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -30,6 +31,7 @@ public final class ContainerSortServiceGameTest implements FabricGameTest {
   private static final BlockPos CONTAINER = new BlockPos(3, 1, 3);
   private static final BlockPos OTHER_CONTAINER = new BlockPos(1, 1, 1);
   private static final int UNOPENED_SYNC_ID = 77;
+  private static final int FIRST_MAIN_SLOT = PlayerInventory.getHotbarSize();
 
   private final ContainerSortService sorting = new ContainerSortService();
 
@@ -80,14 +82,41 @@ public final class ContainerSortServiceGameTest implements FabricGameTest {
   public void sortingThePlayerInventoryGathersItsPartStacks(TestContext context) {
     ServerPlayerEntity player = context.createMockCreativeServerPlayerInWorld();
     Inventory inventory = player.getInventory();
-    inventory.setStack(3, new ItemStack(Items.COBBLESTONE, 20));
+    inventory.setStack(12, new ItemStack(Items.COBBLESTONE, 20));
     inventory.setStack(20, new ItemStack(Items.COBBLESTONE, 30));
 
     SortOutcome outcome = sorting.sort(player, player.currentScreenHandler.syncId);
 
     context.assertTrue(outcome.wasSorted(), "An inventory should sort but reported " + outcome);
-    context.assertEquals(inventory.getStack(0).getCount(), 50, "Both part stacks should merge");
+    context.assertEquals(
+        inventory.getStack(FIRST_MAIN_SLOT).getCount(), 50, "Both part stacks should merge");
     context.assertEquals(totalIn(inventory), 50, "Nothing should be lost or invented");
+    finish(context, player);
+  }
+
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void sortingThePlayerInventoryLeavesEveryHotbarSlotAsItWas(TestContext context) {
+    ServerPlayerEntity player = context.createMockCreativeServerPlayerInWorld();
+    Inventory inventory = player.getInventory();
+    inventory.setStack(0, new ItemStack(Items.DIORITE, 5));
+    inventory.setStack(3, new ItemStack(Items.COBBLESTONE, 20));
+    inventory.setStack(8, new ItemStack(Items.IRON_PICKAXE, 1));
+    inventory.setStack(15, new ItemStack(Items.COBBLESTONE, 30));
+    inventory.setStack(30, new ItemStack(Items.OAK_LOG, 4));
+    List<ItemStack> hotbarBefore = snapshotOf(inventory).subList(0, FIRST_MAIN_SLOT);
+
+    SortOutcome outcome = sorting.sort(player, player.currentScreenHandler.syncId);
+
+    context.assertTrue(outcome.wasSorted(), "The main inventory should sort, reported " + outcome);
+    context.assertTrue(
+        matches(hotbarBefore, snapshotOf(inventory).subList(0, FIRST_MAIN_SLOT)),
+        "Every hotbar slot must hold exactly what it held before");
+    context.assertTrue(
+        inventory.getStack(FIRST_MAIN_SLOT).isOf(Items.COBBLESTONE)
+            && inventory.getStack(FIRST_MAIN_SLOT).getCount() == 30,
+        "The main inventory sorts without pulling from the hotbar, found "
+            + inventory.getStack(FIRST_MAIN_SLOT));
+    context.assertEquals(totalIn(inventory), 60, "Nothing should be lost or invented");
     finish(context, player);
   }
 
@@ -139,19 +168,21 @@ public final class ContainerSortServiceGameTest implements FabricGameTest {
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void aLockedInventorySlotKeepsItsPositionAndItsContents(TestContext context) {
     ServerPlayerEntity player = context.createMockCreativeServerPlayerInWorld();
-    LockedSlotsAttachment.set(player, LockedSlots.of(List.of(0)));
+    LockedSlotsAttachment.set(player, LockedSlots.of(List.of(FIRST_MAIN_SLOT)));
     Inventory inventory = player.getInventory();
-    inventory.setStack(0, new ItemStack(Items.DIAMOND, 1));
-    inventory.setStack(4, new ItemStack(Items.COBBLESTONE, 20));
-    inventory.setStack(9, new ItemStack(Items.COBBLESTONE, 30));
+    inventory.setStack(FIRST_MAIN_SLOT, new ItemStack(Items.DIAMOND, 1));
+    inventory.setStack(14, new ItemStack(Items.COBBLESTONE, 20));
+    inventory.setStack(20, new ItemStack(Items.COBBLESTONE, 30));
 
     SortOutcome outcome = sorting.sort(player, player.currentScreenHandler.syncId);
 
     context.assertTrue(outcome.wasSorted(), "The rest should still sort, reported " + outcome);
     context.assertTrue(
-        inventory.getStack(0).isOf(Items.DIAMOND) && inventory.getStack(0).getCount() == 1,
-        "The locked slot must be untouched, found " + inventory.getStack(0));
-    context.assertEquals(inventory.getStack(1).getCount(), 50, "The rest should merge around it");
+        inventory.getStack(FIRST_MAIN_SLOT).isOf(Items.DIAMOND)
+            && inventory.getStack(FIRST_MAIN_SLOT).getCount() == 1,
+        "The locked slot must be untouched, found " + inventory.getStack(FIRST_MAIN_SLOT));
+    context.assertEquals(
+        inventory.getStack(FIRST_MAIN_SLOT + 1).getCount(), 50, "The rest should merge around it");
     context.assertEquals(totalIn(inventory), 51, "Nothing should be lost or invented");
     finish(context, player);
   }
@@ -159,14 +190,14 @@ public final class ContainerSortServiceGameTest implements FabricGameTest {
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void everyLockedSlotSurvivesASortOfAFullInventory(TestContext context) {
     ServerPlayerEntity player = context.createMockCreativeServerPlayerInWorld();
-    LockedSlotsAttachment.set(player, LockedSlots.of(List.of(2, 17, 31)));
+    LockedSlotsAttachment.set(player, LockedSlots.of(List.of(12, 17, 31)));
     Inventory inventory = player.getInventory();
     for (int slot = 0; slot < LockedSlots.SLOT_COUNT; slot++) {
       inventory.setStack(slot, new ItemStack(Items.COBBLESTONE, slot + 1));
     }
     List<ItemStack> lockedBefore =
         List.of(
-            inventory.getStack(2).copy(),
+            inventory.getStack(12).copy(),
             inventory.getStack(17).copy(),
             inventory.getStack(31).copy());
     int before = totalIn(inventory);
@@ -174,7 +205,7 @@ public final class ContainerSortServiceGameTest implements FabricGameTest {
     sorting.sort(player, player.currentScreenHandler.syncId);
 
     context.assertTrue(
-        ItemStack.areEqual(inventory.getStack(2), lockedBefore.get(0))
+        ItemStack.areEqual(inventory.getStack(12), lockedBefore.get(0))
             && ItemStack.areEqual(inventory.getStack(17), lockedBefore.get(1))
             && ItemStack.areEqual(inventory.getStack(31), lockedBefore.get(2)),
         "Every locked slot must hold exactly what it held before");

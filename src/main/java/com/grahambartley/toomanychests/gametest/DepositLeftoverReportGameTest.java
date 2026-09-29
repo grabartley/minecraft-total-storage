@@ -4,6 +4,8 @@ import com.grahambartley.toomanychests.operation.DepositOutcome;
 import com.grahambartley.toomanychests.operation.DepositResult;
 import com.grahambartley.toomanychests.operation.DepositService;
 import com.grahambartley.toomanychests.operation.OperationMessages;
+import com.grahambartley.toomanychests.storage.ContainerAssignment;
+import com.grahambartley.toomanychests.storage.ContainerFilter;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.block.entity.BarrelBlockEntity;
 import net.minecraft.item.ItemStack;
@@ -254,5 +256,89 @@ public final class DepositLeftoverReportGameTest implements FabricGameTest {
             + " left over but the player holds "
             + NetworkOperationFixture.countCarried(player, Items.COBBLESTONE));
     NetworkOperationFixture.finish(context, player);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void freeSpaceThatOnlyFilteredContainersHoldIsNamedAsTheCause(TestContext context) {
+    NetworkOperationFixture.fullBarrel(context, NetworkOperationFixture.EAST_BARREL, Items.DIAMOND);
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.WEST_BARREL);
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    NetworkOperationFixture.assign(
+        context,
+        NetworkOperationFixture.WEST_BARREL,
+        ContainerAssignment.filtered(ContainerFilter.ofItems("minecraft:stone")));
+    player.getInventory().setStack(0, new ItemStack(Items.DIRT_PATH, STACK));
+    player.getInventory().setStack(1, new ItemStack(Items.DIRT_PATH, STACK));
+
+    DepositOutcome outcome =
+        deposits.depositAll(player, NetworkOperationFixture.handlerOf(player).syncId);
+    Text line = OperationMessages.forDeposit(outcome).orElseThrow();
+
+    context.assertTrue(
+        outcome.result() == DepositResult.ONLY_FILTERED_SPACE,
+        "Free filtered space should be named as the cause, got " + outcome.result());
+    context.assertTrue(
+        keyOf(line).equals("operation.too-many-chests.deposit.filtered_only"),
+        "Free filtered space borrowed another line, got " + keyOf(line));
+    context.assertTrue(
+        line.getString().contains("128 Dirt Path"),
+        "The line should name what was offered, read " + line.getString());
+    context.assertTrue(
+        NetworkOperationFixture.countCarried(player, Items.DIRT_PATH) == 2L * STACK,
+        "The inventory should be exactly as it was");
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aFullNetworkNamesWhatWouldNotGoIn(TestContext context) {
+    NetworkOperationFixture.fullBarrel(context, NetworkOperationFixture.EAST_BARREL, Items.DIAMOND);
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    player.getInventory().setStack(0, new ItemStack(Items.DIRT_PATH, 7));
+
+    DepositOutcome outcome =
+        deposits.depositAll(player, NetworkOperationFixture.handlerOf(player).syncId);
+    Text line = OperationMessages.forDeposit(outcome).orElseThrow();
+
+    context.assertTrue(
+        line.getString().contains("7 Dirt Path"),
+        "A full network should name what would not go in, read " + line.getString());
+    context.assertTrue(
+        NetworkOperationFixture.countCarried(player, Items.DIRT_PATH) == 7L,
+        "The inventory should be exactly as it was");
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void manyKindsRefusedAreSummarisedRatherThanListed(TestContext context) {
+    NetworkOperationFixture.fullBarrel(context, NetworkOperationFixture.EAST_BARREL, Items.DIAMOND);
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    player.getInventory().setStack(0, new ItemStack(Items.DIRT_PATH, 40));
+    player.getInventory().setStack(1, new ItemStack(Items.COBBLESTONE, 30));
+    player.getInventory().setStack(2, new ItemStack(Items.OAK_LOG, 20));
+    player.getInventory().setStack(3, new ItemStack(Items.APPLE, 10));
+
+    DepositOutcome outcome =
+        deposits.depositAll(player, NetworkOperationFixture.handlerOf(player).syncId);
+    String line = OperationMessages.forDeposit(outcome).orElseThrow().getString();
+
+    context.assertTrue(
+        line.contains("40 Dirt Path") && line.contains("30 Cobblestone"),
+        "The two largest kinds should be named, read " + line);
+    context.assertTrue(
+        line.contains("and 2 other kinds"), "The rest should be summarised, read " + line);
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  private static String keyOf(Text line) {
+    return ((TranslatableTextContent) line.getContent()).getKey();
   }
 }

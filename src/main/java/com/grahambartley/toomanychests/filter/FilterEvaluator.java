@@ -30,7 +30,7 @@ public final class FilterEvaluator {
 
   private static boolean matchesAnyTag(Set<String> tags, String term) {
     for (final String tag : tags) {
-      if (MatchStrength.of(tag, term).isMatch()) {
+      if (identifies(tag, term)) {
         return true;
       }
     }
@@ -42,10 +42,15 @@ public final class FilterEvaluator {
       return true;
     }
     for (final String term : terms) {
-      if (MatchStrength.of(modId, term).isMatch()) {
+      if (identifies(modId, term)) {
         return true;
       }
     }
     return false;
+  }
+
+  private static boolean identifies(String identifier, String term) {
+    final MatchStrength strength = MatchStrength.literal(identifier, term);
+    return strength == MatchStrength.EXACT || strength == MatchStrength.PREFIX;
   }
 }

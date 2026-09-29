@@ -9,6 +9,8 @@ public enum DepositResult {
 
   NO_SPACE,
 
+  ONLY_FILTERED_SPACE,
+
   REFUSED,
 
   RATE_LIMITED;

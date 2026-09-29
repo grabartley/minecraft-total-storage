@@ -4,6 +4,7 @@ import com.grahambartley.toomanychests.ModSounds;
 import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.lock.LockedSlots;
 import com.grahambartley.toomanychests.network.DepositRequestPayload;
+import com.grahambartley.toomanychests.terminal.NetworkCapacityService;
 import com.grahambartley.toomanychests.transaction.OperationResult;
 import com.grahambartley.toomanychests.transaction.StorageTransfers;
 import java.util.ArrayList;
@@ -21,13 +22,15 @@ import net.minecraft.sound.SoundCategory;
 
 public final class DepositService {
   private final DepositDestinations destinations;
+  private final NetworkCapacityService capacity;
 
   public DepositService() {
-    this(new DepositDestinations());
+    this(new DepositDestinations(), new NetworkCapacityService());
   }
 
-  public DepositService(DepositDestinations destinations) {
+  public DepositService(DepositDestinations destinations, NetworkCapacityService capacity) {
     this.destinations = Objects.requireNonNull(destinations, "destinations");
+    this.capacity = Objects.requireNonNull(capacity, "capacity");
   }
 
   public DepositOutcome deposit(ServerPlayerEntity player, DepositRequestPayload payload) {
@@ -71,7 +74,9 @@ public final class DepositService {
     final OperationResult<Stored> result =
         NetworkMutation.run(context, transaction -> store(context, offers, transaction));
     if (result.rolledBack()) {
-      return DepositOutcome.noSpace(offered, leftoversOf(offers));
+      return capacity.measure(context.world(), context.terminal()).freeSlots() > 0
+          ? DepositOutcome.onlyFilteredSpace(offered, leftoversOf(offers))
+          : DepositOutcome.noSpace(offered, leftoversOf(offers));
     }
     final Stored stored = result.orElse(Stored.nothing());
     return DepositOutcome.stored(offered, stored.moved(), stored.leftovers());

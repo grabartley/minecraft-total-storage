@@ -12,6 +12,7 @@ class DepositResultTest {
     "PARTIAL, true",
     "NOTHING_TO_DEPOSIT, false",
     "NO_SPACE, false",
+    "ONLY_FILTERED_SPACE, false",
     "REFUSED, false"
   })
   void onlyTheEndingsThatStoredSomethingCountAsHavingMovedItems(

@@ -47,6 +47,7 @@ public final class TerminalPower {
         Block.NOTIFY_ALL);
     if (receiving) {
       activate(world, pos);
+      ContainerHighlightService.poweredOn(world, pos);
     } else {
       deactivate(world, pos);
     }

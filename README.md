@@ -21,7 +21,7 @@ There are no other hard dependencies. Mod Menu, JEI and EMI are each loaded thro
 
 The storage terminal runs on redstone. A terminal reached by a signal is active: it indexes the containers around it once, keeps that listing current as they change, and can be opened. A terminal with no signal is completely inert, holding no listing and doing no work at all, and it says so when you try to open it. The block reports its own state, with a lit screen, vents and dust run when it is running.
 
-Powering one takes a moment's care, because the block answers a right-click by opening rather than by taking what you are holding. Sneak while you place a lever on it and the lever goes on the block, or put any solid block beside the terminal and attach the lever to that, which powers the terminal through its neighbour. A redstone torch, a button or any other signal reaching the block works the same way.
+**Power it from a side, the top or the back, never the front.** The front is the screen: it lights up when the terminal is running and grows a bar across its bottom when the network is nearly full, so it should stay clear, and a lever mounted there also sits where you click to open the terminal, so opening it would switch it off. A plain right-click on the terminal opens it rather than placing what you hold, so sneak while you place a lever on a side or the top. A redstone torch or a block of redstone beside it works too, and so does a lever on a neighbouring block, which powers the terminal through that neighbour.
 
 Cutting power is an off switch rather than a factory reset. A terminal's radius, roles, tags and access settings live on the block and survive a power cut, a chunk unload, and a world reload.
 
@@ -39,7 +39,7 @@ Searching and filtering narrow the whole network rather than the page you are lo
 
 The search box takes the keyboard the moment the terminal opens, so you type rather than click first. Matching is fuzzy against an item's name and its identifier, so `dch` finds a Dark Oak Chest, and the closest answers come first: the whole name, then what starts with what you typed, then what merely contains it. Escape empties the box before it closes the screen, so a query typed by accident costs one key rather than a reopened terminal. See [ADR 0028](docs/adr/0028-results-are-ranked-before-they-are-paged.md).
 
-Two prefixes make a query precise. `#tag` searches the network's tags and `@modid` narrows to one mod, and both combine with plain text, so `@create gear` finds the gears Create adds. Several tags or names each narrow the results while several mods widen them, because an item comes from exactly one mod and asking for two of them could only ever return nothing. See [ADR 0013](docs/adr/0013-search-terms-combine-by-kind.md).
+Two prefixes make a query precise. `#tag` searches the network's tags and `@modid` narrows to one mod. Both match a tag or mod id that starts with what you type, so `#stone` finds stone and not redstone, and both combine with plain text, so `@create gear` finds the gears Create adds. Several tags or names each narrow the results while several mods widen them, because an item comes from exactly one mod and asking for two of them could only ever return nothing. See [ADR 0013](docs/adr/0013-search-terms-combine-by-kind.md).
 
 The network is drawn as a grid of cells, each one an item and how much of that exact item the whole network holds. Items that differ only by their data components are separate cells with separate counts, so a damaged pickaxe and a fresh one never add up into one number. Counts are written out in full while they fit and compacted once they stop, always downwards: a cell reading `12.3k` is never promising more than is there, and the tooltip carries the real figure alongside how many containers it is spread across.
 
@@ -99,7 +99,7 @@ Shift-click a stack in your inventory and the network takes it. Pick a stack up 
 
 Where each item lands is the network's decision, made per item against the roles you gave your containers. A `Filtered` container that has declared the item takes it first, and one that already holds it is preferred over one that does not, so like items gather rather than scatter. `General` containers take what is left. `Excluded` containers are never written to, under any configuration.
 
-A full `Filtered` container falls through to a `General` one rather than refusing the item. A network with room for some of what you offered stores that much and names what is still in your hands, by item rather than as a bare total, because "thirty cobblestone" tells you which chest filled up where "thirty items" does not. A network with no room at all leaves your inventory exactly as it was and says so. Having nothing to store is a different message from having nowhere to put it.
+A full `Filtered` container falls through to a `General` one rather than refusing the item. A network with room for some of what you offered stores that much and names what is still in your hands, by item rather than as a bare total, because "thirty cobblestone" tells you which chest filled up where "thirty items" does not. A network with no room at all leaves your inventory exactly as it was and says so, naming what would not go in and why: either every slot is full, or the free space is all in `Filtered` containers that do not take those items, which is why the settings panel can show free slots while a deposit is refused. Having nothing to store is a different message from having nowhere to put it.
 
 Deposit all is rate limited, since it reads every container in the network at once, and so is rescanning. The cooldown is `expensiveOperationCooldownTicks`, ten ticks by default and settable to `0` to switch it off. It is counted per player and per operation, so emptying your inventory never spends your next rescan; see [ADR 0031](docs/adr/0031-expensive-operations-are-paced-per-player-and-per-operation.md). Asking again too soon says so rather than doing nothing, and changes nothing at all: a limit that half-worked would cost you items.
 
@@ -125,11 +125,11 @@ A chest does not need a terminal to be worth tidying, so **every container scree
 
 The button sends nothing but the intent to sort the screen that is open, and the server decides what that means, so a modified client cannot use it to reach a container it does not have open. It reports what happened on the action bar: sorted, already sorted, or nothing to sort. A server that would rather not offer it sets `sortButtonEnabled` to `false`, which greys the button out and refuses what the button sends, checked on the server rather than trusted to the client. `/tmc sort` is a separate surface and keeps working, which is what a player with no client mod uses.
 
-**`/tmc sort` sorts the container you have open, with no client mod at all.** That is the surface a completely unmodified client uses on a modded server, which is what makes this mod worth putting on a public one. There is no middle-click gesture: a survival client sends no slot-click packet for the pick-item button at all, so there is nothing for a server to read.
+**`/tmc sort` sorts the container you are looking at, with no client mod at all.** That is the surface a completely unmodified client uses on a modded server, which is what makes this mod worth putting on a public one. Vanilla will not open chat while a chest is open, so look at the chest, within reach, and run the command. It is held to the same rules as the button: a furnace or an anvil in view is refused and left alone, and a locked container stays locked. With nothing sortable in view it sorts your inventory and says so, and with a container screen already open it sorts that. There is no middle-click gesture: a survival client sends no slot-click packet for the pick-item button at all, so there is nothing for a server to read.
 
 There is also a **sort keybind**, bound to `B` by default and rebindable under Too Many Chests in the controls screen. It sorts the container screen in front of you, or your inventory, and it keeps working with the button hidden, which is the point of having it.
 
-**Locked slots stay where they are.** Sorting the player inventory sorts around them rather than through them, which is what makes it safe to press with a pickaxe pinned to a slot you know by muscle memory.
+**Sorting your inventory never touches the hotbar.** It orders the 27 main inventory slots and leaves all nine hotbar slots exactly as they were, by the button, the keybind or the command, because `B` is an easy key to hit by accident and a hotbar layout lives in muscle memory. **Locked slots stay where they are** too: the main inventory is sorted around them rather than through them.
 
 ## Locking a slot
 
@@ -181,7 +181,7 @@ Only the owner and operators can change any of it. Everyone else sees the same p
 
 ## Seeing what a terminal reaches
 
-"Why isn't that chest included" is the question a radius always produces, so the terminal answers it by outlining the containers it is holding, in the world. The outlines appear when you change the radius, and whenever you ask for them from the settings view or with `/tmc terminal <pos> highlight`. They fade after a few seconds: this is feedback, not an overlay. A double chest is outlined as the one container it is, across both of its blocks, and the outline follows the block state, so splitting a chest while the outline is up redraws it rather than leaving a stale box.
+"Why isn't that chest included" is the question a radius always produces, so the terminal answers it by outlining the containers it is holding, in the world. The outlines appear when a terminal is switched on, when you change the radius, and whenever you ask for them from the settings view or with `/tmc terminal <pos> highlight`. Switching it on outlines them for everyone nearby who may open it, which includes whoever flipped the lever; a terminal that was already on when its chunk loaded draws nothing. They fade after a few seconds: this is feedback, not an overlay. A double chest is outlined as the one container it is, across both of its blocks, and the outline follows the block state, so splitting a chest while the outline is up redraws it rather than leaving a stale box.
 
 Each outline is coloured by that container's role and shaped by it too, so all three roles survive a player who cannot separate the red from the green from the white: `General` is a plain line, `Filtered` is a dashed one, and `Excluded` is doubled. An unpowered terminal outlines nothing, because it is holding nothing.
 
@@ -313,7 +313,7 @@ Every server-wide setting is configurable from the console, so a server can be s
 | `/tmc terminal <pos> tags export <file>` | owner or operators | Writes its custom tag set to the world directory |
 | `/tmc terminal <pos> tags import <file> <merge\|replace>` | owner or operators | Reads a tag set back into it |
 | `/tmc terminal <pos> tags copy <pos> <merge\|replace>` | owner or operators on both | Copies another terminal's custom tag set into it |
-| `/tmc sort` | anyone | Sorts the container you have open |
+| `/tmc sort` | anyone | Sorts the container you have open, else the one you are looking at, else your inventory |
 | `/tmc quickstack` | anyone | Tops up matching stacks in the containers around you |
 
 Setting names and their values tab-complete. Changes are saved to the world immediately and pushed to connected clients. Operators are permission level 2.

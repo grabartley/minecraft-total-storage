@@ -120,7 +120,7 @@ class OperationMessagesTest {
   private static DepositOutcome depositEnding(DepositResult result) {
     return switch (result) {
       case DEPOSITED -> DepositOutcome.stored(64L, 64L, List.of());
-      case PARTIAL, NO_SPACE -> null;
+      case PARTIAL, NO_SPACE, ONLY_FILTERED_SPACE -> null;
       case NOTHING_TO_DEPOSIT -> DepositOutcome.nothingToDeposit();
       case RATE_LIMITED -> DepositOutcome.rateLimited();
       case REFUSED -> DepositOutcome.refused();

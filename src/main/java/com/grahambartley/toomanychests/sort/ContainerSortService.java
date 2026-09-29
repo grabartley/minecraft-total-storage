@@ -18,10 +18,16 @@ import net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.minecraft.inventory.Inventory;
+import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
+import net.minecraft.world.World;
 
 public final class ContainerSortService {
+  private static final int UNOPENED_SYNC_ID = -1;
+
   private final SortCandidateFactory candidates;
 
   public ContainerSortService() {
@@ -52,6 +58,49 @@ public final class ContainerSortService {
       return SortOutcome.SCREEN_NOT_SORTABLE;
     }
     return apply(player, target.get());
+  }
+
+  public SortReply sortForCommand(ServerPlayerEntity player) {
+    Objects.requireNonNull(player, "player");
+    final ScreenHandler open = player.currentScreenHandler;
+    if (open != null && open != player.playerScreenHandler) {
+      return new SortReply(SortSubject.OPEN_SCREEN, sort(player, open.syncId));
+    }
+    final Optional<NamedScreenHandlerFactory> inView = containerInView(player);
+    if (inView.isPresent()) {
+      return new SortReply(SortSubject.CONTAINER_IN_VIEW, sortUnopened(player, inView.get()));
+    }
+    return new SortReply(SortSubject.INVENTORY, sort(player, player.playerScreenHandler.syncId));
+  }
+
+  private static Optional<NamedScreenHandlerFactory> containerInView(ServerPlayerEntity player) {
+    final HitResult hit = player.raycast(player.getBlockInteractionRange(), 1.0f, false);
+    if (hit.getType() != HitResult.Type.BLOCK || !(hit instanceof BlockHitResult block)) {
+      return Optional.empty();
+    }
+    final World world = player.getWorld();
+    return Optional.ofNullable(
+        world
+            .getBlockState(block.getBlockPos())
+            .createScreenHandlerFactory(world, block.getBlockPos()));
+  }
+
+  private SortOutcome sortUnopened(ServerPlayerEntity player, NamedScreenHandlerFactory factory) {
+    final ScreenHandler unopened =
+        factory.createMenu(UNOPENED_SYNC_ID, player.getInventory(), player);
+    if (unopened == null) {
+      return SortOutcome.SCREEN_NOT_SORTABLE;
+    }
+    try {
+      if (!unopened.canUse(player)) {
+        return SortOutcome.SCREEN_NOT_SORTABLE;
+      }
+      return SortableSlots.resolve(unopened, player, LockedSlotsAttachment.get(player))
+          .map(target -> apply(player, target))
+          .orElse(SortOutcome.SCREEN_NOT_SORTABLE);
+    } finally {
+      unopened.onClosed(player);
+    }
   }
 
   private SortOutcome apply(ServerPlayerEntity player, SortTarget target) {
