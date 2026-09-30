@@ -74,7 +74,7 @@
   "screen.too-many-chests.terminal.settings.trusted.none": "Nobody but the owner",
   "screen.too-many-chests.terminal.settings.trusted.title": "Trusted players",
   "screen.too-many-chests.terminal.settings.trusted.remove": "Remove",
-  "screen.too-many-chests.terminal.settings.trusted.hint": "Type a name, then press Enter",
+  "screen.too-many-chests.terminal.settings.trusted.hint": "Type a name, press Enter",
   "screen.too-many-chests.terminal.settings.trusted.hint.row": "Click to choose who may use this terminal",
   "screen.too-many-chests.terminal.settings.trusted.already": "%s is already trusted",
   "screen.too-many-chests.terminal.settings.trusted.missing": "%s is not on the list",
