@@ -48,12 +48,10 @@ class TerminalSettingTest {
     assertFalse(TerminalSetting.TRUSTED.cyclesOnRowClick());
   }
 
-  @Test
-  void onlyTheTrustListOpensAPromptWhenItsRowIsClicked() {
-    assertTrue(TerminalSetting.TRUSTED.opensPromptOnRowClick());
-    assertFalse(TerminalSetting.ACCESS.opensPromptOnRowClick());
-    assertFalse(TerminalSetting.RADIUS.opensPromptOnRowClick());
-    assertFalse(TerminalSetting.CAPACITY.opensPromptOnRowClick());
+  @ParameterizedTest
+  @EnumSource(TerminalSetting.class)
+  void onlyTheTrustListOpensAPromptWhenItsRowIsClicked(TerminalSetting setting) {
+    assertEquals(setting == TerminalSetting.TRUSTED, setting.opensPromptOnRowClick());
   }
 
   @ParameterizedTest

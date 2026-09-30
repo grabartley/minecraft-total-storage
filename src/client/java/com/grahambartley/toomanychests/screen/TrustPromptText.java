@@ -11,8 +11,7 @@ public final class TrustPromptText {
       case UNKNOWN_PLAYER -> Text.translatable("argument.player.unknown");
       case ALREADY_TRUSTED -> TerminalScreenText.of("settings.trusted.already", player);
       case NOT_TRUSTED -> TerminalScreenText.of("settings.trusted.missing", player);
-      case DENIED -> TerminalScreenText.of("settings.trusted.hidden");
-      case ADDED, REMOVED -> Text.empty();
+      case ADDED, REMOVED, DENIED -> Text.empty();
     };
   }
 }

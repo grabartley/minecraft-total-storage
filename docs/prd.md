@@ -78,10 +78,11 @@ Recorded so the boundary is deliberate rather than accidental.
 
 | Actor | Who they are | What they need |
 |---|---|---|
-| **Player** | Anyone with the mod on their client or connecting to a server running it | Find items fast, deposit without deciding, keep their hotbar intact |
+| **Player** | Anyone with the mod installed, in singleplayer or on a server running it | Find items fast, deposit without deciding, keep their hotbar intact |
 | **Terminal owner** | The player who placed a given terminal | Control who reaches their storage and how it is organised |
 | **Server operator** | Permission level 2, or the owner of a singleplayer world | Configure the mod without a client, cap what players can cost the server, moderate |
 | **Pack author** | Assembles a modpack | Tune performance caps, override container eligibility, ship a standard configuration |
+
 **A player needs the mod installed to join a server running it.** A client without it is refused at login with a message that says why, before any of the mod's content is sent (ADR 0038).
 
 ---
@@ -554,7 +555,7 @@ The property that decides whether the mod is safe in a modpack. How the suite is
 |---|---|
 | PERF-1 | An unpowered terminal registers no listeners and does no per-tick work |
 | PERF-2 | The index is never polled; it reacts to container mutations and recomputes lazily on read |
-| PERF-3 | A full discovery scan runs on power-on, radius change, explicit rescan, a change to container eligibility, a chunk load touching the network's region (ADR 0014), and a block entity appearing in a chunk the region touches (ADR 0039), and on nothing else. The last two are deferred to the next tick and run once per chunk per tick |
+| PERF-3 | A full discovery scan runs on power-on, radius change, explicit rescan, a change to container eligibility, a chunk load touching the network's region (ADR 0014), and a block entity that may hold items appearing in a chunk the region touches (ADR 0039), and on nothing else. The last two are deferred to the next tick and run once per chunk per tick |
 | PERF-4 | Discovery iterates loaded chunk block-entity maps rather than testing every position in the volume |
 | PERF-5 | A world callback never queries the chunk manager; scans defer to the next tick (ADR 0026) |
 | PERF-6 | The listing is narrowed server-side and paged, never sent whole (ADR 0027) |

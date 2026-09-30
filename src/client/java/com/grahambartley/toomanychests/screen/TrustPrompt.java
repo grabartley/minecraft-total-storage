@@ -87,7 +87,7 @@ public final class TrustPrompt {
       forgetRefusal();
       return;
     }
-    if (reply.outcome().keepsTheTypedName()) {
+    if (!reply.outcome().changedTheList()) {
       refusal = reply.outcome();
       refusedName = reply.player();
     }

@@ -54,6 +54,7 @@
       "com.grahambartley.toomanychests.gametest.LockToggleServiceGameTest",
       "com.grahambartley.toomanychests.gametest.NetworkIndexInvalidationGameTest",
       "com.grahambartley.toomanychests.gametest.NetworkMembershipGameTest",
+      "com.grahambartley.toomanychests.gametest.StorageBlockEntitiesGameTest",
       "com.grahambartley.toomanychests.gametest.ContainerRoleEvictionGameTest",
       "com.grahambartley.toomanychests.gametest.TerminalBlockGameTest",
       "com.grahambartley.toomanychests.gametest.TerminalPowerGameTest",

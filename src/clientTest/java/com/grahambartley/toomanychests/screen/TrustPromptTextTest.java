@@ -32,8 +32,8 @@ class TrustPromptTextTest {
   @ParameterizedTest
   @EnumSource(
       value = TrustEditOutcome.class,
-      names = {"ADDED", "REMOVED"})
-  void aChangeThatWentThroughIsNotARefusal(TrustEditOutcome outcome) {
+      names = {"ADDED", "REMOVED", "DENIED"})
+  void anOutcomeThePromptDoesNotShowHasNoText(TrustEditOutcome outcome) {
     assertTrue(TrustPromptText.refusal(outcome, "Alex").getString().isEmpty());
   }
 

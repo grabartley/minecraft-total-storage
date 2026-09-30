@@ -16,8 +16,4 @@ public enum TrustEditOutcome {
   public boolean changedTheList() {
     return this == ADDED || this == REMOVED;
   }
-
-  public boolean keepsTheTypedName() {
-    return this == UNKNOWN_PLAYER || this == ALREADY_TRUSTED;
-  }
 }

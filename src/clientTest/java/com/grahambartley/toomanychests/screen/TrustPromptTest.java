@@ -81,7 +81,7 @@ class TrustPromptTest {
   @ParameterizedTest
   @EnumSource(
       value = TrustEditOutcome.class,
-      names = {"UNKNOWN_PLAYER", "ALREADY_TRUSTED"})
+      names = {"UNKNOWN_PLAYER", "ALREADY_TRUSTED", "NOT_TRUSTED"})
   void aRefusedNameStaysInThePromptAndSaysWhy(TrustEditOutcome outcome) {
     prompt.open();
     type("Nobody");

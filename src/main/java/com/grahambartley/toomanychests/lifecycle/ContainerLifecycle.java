@@ -1,5 +1,6 @@
 package com.grahambartley.toomanychests.lifecycle;
 
+import com.grahambartley.toomanychests.storage.StorageBlockEntities;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerBlockEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
 import net.minecraft.block.entity.BlockEntity;
@@ -33,7 +34,7 @@ public final class ContainerLifecycle {
   }
 
   private static void blockEntityLoaded(BlockEntity blockEntity, ServerWorld world) {
-    if (blockEntity == null || world == null || REGISTRY.isIdle()) {
+    if (world == null || REGISTRY.isIdle() || !StorageBlockEntities.mayHoldItems(blockEntity)) {
       return;
     }
     final RegistryKey<World> worldKey = world.getRegistryKey();

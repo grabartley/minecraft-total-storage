@@ -23,7 +23,7 @@ public final class ClientModRequirement {
     return clientHasTheMod ? Optional.empty() : Optional.of(refusal());
   }
 
-  public static Text refusal() {
+  private static Text refusal() {
     return Text.translatableWithFallback(
         "multiplayer." + TooManyChests.MOD_ID + ".client_mod_required",
         "This server runs Too Many Chests. Install the same mod on your game to join.");

@@ -6,18 +6,16 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 class TrustEditOutcomeTest {
-  @ParameterizedTest(name = "{0} changes the list: {1}, keeps the typed name: {2}")
+  @ParameterizedTest(name = "{0} changes the list: {1}")
   @CsvSource({
-    "ADDED, true, false",
-    "REMOVED, true, false",
-    "ALREADY_TRUSTED, false, true",
-    "NOT_TRUSTED, false, false",
-    "UNKNOWN_PLAYER, false, true",
-    "DENIED, false, false"
+    "ADDED, true",
+    "REMOVED, true",
+    "ALREADY_TRUSTED, false",
+    "NOT_TRUSTED, false",
+    "UNKNOWN_PLAYER, false",
+    "DENIED, false"
   })
-  void everyOutcomeSaysWhetherTheListMovedAndWhetherThePromptKeepsTheName(
-      TrustEditOutcome outcome, boolean changed, boolean keeps) {
+  void everyOutcomeSaysWhetherTheListMoved(TrustEditOutcome outcome, boolean changed) {
     assertEquals(changed, outcome.changedTheList());
-    assertEquals(keeps, outcome.keepsTheTypedName());
   }
 }
