@@ -45,6 +45,8 @@ Shared engineering standards across all the mods in this family live in [`../sta
 | [0035](0035-the-terminal-wears-vanillas-chrome.md) | The terminal wears vanilla's chrome rather than its own |
 | [0036](0036-a-long-operation-commits-one-step-at-a-time.md) | A long operation commits one step at a time |
 | [0037](0037-the-shipped-png-is-a-textures-only-source.md) | The shipped PNG is a texture's only source |
+| [0038](0038-the-mod-is-required-on-the-client.md) | The mod is required on the client to join a server running it |
+| [0039](0039-a-placed-container-joins-on-the-next-tick.md) | A container placed in range joins the network on the next tick |
 
 ## Writing A New Record
 

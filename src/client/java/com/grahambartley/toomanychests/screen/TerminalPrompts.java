@@ -23,6 +23,7 @@ public final class TerminalPrompts {
   private final TagSourcePrompt copying = new TagSourcePrompt();
   private final ContainerNamePrompt renaming = new ContainerNamePrompt();
   private final ContainerFilterPrompt filtering = new ContainerFilterPrompt();
+  private final TrustPrompt trusting = new TrustPrompt();
 
   private final int syncId;
 
@@ -46,17 +47,22 @@ public final class TerminalPrompts {
     return filtering;
   }
 
+  public TrustPrompt trusting() {
+    return trusting;
+  }
+
   public boolean isAnyOpen() {
     return amount.isOpen()
         || naming.isOpen()
         || renaming.isOpen()
         || tagging.isOpen()
         || filtering.isOpen()
+        || trusting.isOpen()
         || copying.isOpen();
   }
 
   public boolean ownsTheKeyboard() {
-    return amount.isOpen() || naming.isOpen() || renaming.isOpen();
+    return amount.isOpen() || naming.isOpen() || renaming.isOpen() || trusting.isOpen();
   }
 
   public boolean isTagging() {
@@ -79,6 +85,14 @@ public final class TerminalPrompts {
       filtering.close();
     }
     copying.fit(sources());
+    trusting.fit(settings);
+    if (trusting.isOpen() && settings.answered() && !settings.mayAdminister()) {
+      trusting.close();
+    }
+  }
+
+  public void tick() {
+    TrustReplyMirror.take(syncId).ifPresent(trusting::answered);
   }
 
   private boolean stillFiltered(NetworkSettingsView settings) {
@@ -116,6 +130,10 @@ public final class TerminalPrompts {
       filtering.draw(context, textRenderer, settings, tags, originX, originY, mouseX, mouseY);
       return true;
     }
+    if (trusting.isOpen()) {
+      trusting.draw(context, textRenderer, settings, originX, originY, mouseX, mouseY);
+      return true;
+    }
     if (tagging.isOpen()) {
       tagging.draw(context, textRenderer, tags, matching, originX, originY, mouseX, mouseY);
       return true;
@@ -133,6 +151,9 @@ public final class TerminalPrompts {
     }
     if (filtering.isOpen()) {
       return filtering.list();
+    }
+    if (trusting.isOpen()) {
+      return trusting.list();
     }
     if (tagging.isOpen()) {
       return tagging.list();
@@ -160,12 +181,9 @@ public final class TerminalPrompts {
   }
 
   public boolean scrolled(double verticalAmount) {
-    if (ownsTheKeyboard()) {
-      return true;
-    }
     final TagPromptList list = openList();
     if (list == null) {
-      return false;
+      return ownsTheKeyboard();
     }
     if (verticalAmount != 0.0) {
       list.scrollBy(verticalAmount > 0.0 ? -1 : 1);
@@ -202,6 +220,9 @@ public final class TerminalPrompts {
     if (filtering.isOpen()) {
       return filteringClicked(settings, tags, windowX, windowY, button);
     }
+    if (trusting.isOpen()) {
+      return trustingClicked(settings, windowX, windowY, button);
+    }
     if (copying.isOpen()) {
       return copyingClicked(shiftDown, windowX, windowY, button);
     }
@@ -225,6 +246,19 @@ public final class TerminalPrompts {
     }
     ModNetworkingClient.sendContainerFilterTag(
         syncId, row.container(), tag.id(), !row.accepts(tag.id()));
+    return true;
+  }
+
+  private boolean trustingClicked(
+      NetworkSettingsView settings, int windowX, int windowY, int button) {
+    if (button != GridClick.LEFT_BUTTON || !TagPromptLayout.isOverPrompt(windowX, windowY)) {
+      trusting.close();
+      return true;
+    }
+    final String removed = trusting.removalAt(settings, windowX, windowY);
+    if (removed != null) {
+      ModNetworkingClient.sendTrustEdit(syncId, removed, false);
+    }
     return true;
   }
 
@@ -271,6 +305,9 @@ public final class TerminalPrompts {
     if (renaming.isOpen()) {
       return handleContainerNameKey(renaming.keyPressed(keyCode, selectAllHeld));
     }
+    if (trusting.isOpen()) {
+      return handleTrustKey(trusting.keyPressed(keyCode, selectAllHeld));
+    }
     if (filtering.isOpen()) {
       if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
         filtering.close();
@@ -301,6 +338,9 @@ public final class TerminalPrompts {
     }
     if (renaming.isOpen()) {
       return handleContainerNameKey(renaming.charTyped(typed));
+    }
+    if (trusting.isOpen()) {
+      return soundIfRefused(trusting.charTyped(typed));
     }
     return tagging.isOpen() || filtering.isOpen();
   }
@@ -399,6 +439,19 @@ public final class TerminalPrompts {
     }
     if (outcome == PromptKey.CANCEL) {
       renaming.close();
+    }
+    return true;
+  }
+
+  private boolean handleTrustKey(PromptKey outcome) {
+    if (outcome == PromptKey.REFUSED) {
+      return soundIfRefused(outcome);
+    }
+    if (outcome == PromptKey.CONFIRM) {
+      ModNetworkingClient.sendTrustEdit(syncId, trusting.name(), true);
+    }
+    if (outcome == PromptKey.CANCEL) {
+      trusting.close();
     }
     return true;
   }

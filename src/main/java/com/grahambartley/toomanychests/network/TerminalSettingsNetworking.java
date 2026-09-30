@@ -43,6 +43,8 @@ public final class TerminalSettingsNetworking {
         .register(ContainerNameEditPayload.ID, ContainerNameEditPayload.CODEC);
     PayloadTypeRegistry.playC2S()
         .register(ContainerFilterEditPayload.ID, ContainerFilterEditPayload.CODEC);
+    PayloadTypeRegistry.playC2S()
+        .register(TerminalTrustEditPayload.ID, TerminalTrustEditPayload.CODEC);
     PayloadTypeRegistry.playC2S().register(TerminalActionPayload.ID, TerminalActionPayload.CODEC);
     PayloadTypeRegistry.playC2S().register(TagPanelRequestPayload.ID, TagPanelRequestPayload.CODEC);
     PayloadTypeRegistry.playC2S().register(TagEditPayload.ID, TagEditPayload.CODEC);
@@ -53,6 +55,8 @@ public final class TerminalSettingsNetworking {
     PayloadTypeRegistry.playS2C().register(TagPanelPayload.ID, TagPanelPayload.CODEC);
     PayloadTypeRegistry.playS2C().register(TerminalNoticePayload.ID, TerminalNoticePayload.CODEC);
     PayloadTypeRegistry.playS2C().register(NetworkSettingsPayload.ID, NetworkSettingsPayload.CODEC);
+    PayloadTypeRegistry.playS2C()
+        .register(TerminalTrustReplyPayload.ID, TerminalTrustReplyPayload.CODEC);
     PayloadTypeRegistry.playS2C()
         .register(ContainerHighlightPayload.ID, ContainerHighlightPayload.CODEC);
 
@@ -68,6 +72,10 @@ public final class TerminalSettingsNetworking {
         TerminalAccessEditPayload.ID,
         (payload, context) ->
             context.server().execute(() -> EDITS.setAccessMode(context.player(), payload)));
+    ServerPlayNetworking.registerGlobalReceiver(
+        TerminalTrustEditPayload.ID,
+        (payload, context) ->
+            context.server().execute(() -> EDITS.setTrust(context.player(), payload)));
     ServerPlayNetworking.registerGlobalReceiver(
         ContainerRoleEditPayload.ID,
         (payload, context) ->

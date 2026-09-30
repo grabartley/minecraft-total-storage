@@ -1,10 +1,15 @@
 package com.grahambartley.toomanychests.gametest;
 
+import com.grahambartley.toomanychests.access.TerminalAccessControl;
+import com.grahambartley.toomanychests.access.TrustEditOutcome;
+import com.grahambartley.toomanychests.access.TrustedPlayerNames;
+import com.grahambartley.toomanychests.block.entity.TerminalBlockEntity;
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.network.ContainerRoleEditPayload;
 import com.grahambartley.toomanychests.network.TerminalAccessEditPayload;
 import com.grahambartley.toomanychests.network.TerminalActionPayload;
 import com.grahambartley.toomanychests.network.TerminalRadiusEditPayload;
+import com.grahambartley.toomanychests.network.TerminalTrustEditPayload;
 import com.grahambartley.toomanychests.operation.OperationGuards;
 import com.grahambartley.toomanychests.screenhandler.TerminalScreenHandler;
 import com.grahambartley.toomanychests.screenhandler.TerminalSettingsEdits;
@@ -13,6 +18,8 @@ import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.ContainerRoleService;
 import com.grahambartley.toomanychests.terminal.TerminalAction;
 import com.grahambartley.toomanychests.terminal.TerminalLookup;
+import java.util.Set;
+import java.util.UUID;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -258,6 +265,94 @@ public final class TerminalSettingsEditsGameTest implements FabricGameTest {
             + containerCount(context)
             + " containers");
     NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void theOwnerCanTrustAPlayerTheServerKnowsByName(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    ServerPlayerEntity friend = NetworkOperationFixture.namedPlayer(context, "PanelFriend");
+
+    TrustEditOutcome outcome =
+        edits.setTrust(owner, new TerminalTrustEditPayload(syncId(owner), "PanelFriend", true));
+
+    context.assertTrue(outcome == TrustEditOutcome.ADDED, "Trusting gave " + outcome);
+    context.assertTrue(
+        trustedOn(context).contains(friend.getUuid()),
+        "The named player should be on the trust list");
+    NetworkOperationFixture.finish(context, owner, friend);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aNameTheServerDoesNotKnowIsRefusedAndTrustsNobody(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+
+    TrustEditOutcome outcome =
+        edits.setTrust(
+            owner, new TerminalTrustEditPayload(syncId(owner), "NobodyByThisName", true));
+
+    context.assertTrue(outcome == TrustEditOutcome.UNKNOWN_PLAYER, "Trusting gave " + outcome);
+    context.assertTrue(trustedOn(context).isEmpty(), "Nobody should have been trusted");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aGuestCannotEditTheTrustListHoweverTheyAsk(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    ServerPlayerEntity guest = NetworkOperationFixture.alsoOpen(context);
+    ServerPlayerEntity friend = NetworkOperationFixture.namedPlayer(context, "GuestsFriend");
+
+    TrustEditOutcome outcome =
+        edits.setTrust(guest, new TerminalTrustEditPayload(syncId(guest), "GuestsFriend", true));
+
+    context.assertTrue(outcome == TrustEditOutcome.DENIED, "A guest's edit gave " + outcome);
+    context.assertTrue(trustedOn(context).isEmpty(), "A guest put somebody on the trust list");
+    NetworkOperationFixture.finish(context, owner, guest, friend);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void removingATrustedPlayerFromThePanelClosesTheirScreen(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    ServerPlayerEntity friend = NetworkOperationFixture.standingPlayer(context);
+    context
+        .<TerminalBlockEntity>getBlockEntity(NetworkOperationFixture.TERMINAL)
+        .updateSettings(settings -> settings.withAccessMode(TerminalAccessMode.TRUSTED));
+    TerminalAccessControl.trust().trust(context.getWorld(), terminal(context), friend.getUuid());
+    context.useBlock(NetworkOperationFixture.TERMINAL, friend);
+    context.assertTrue(
+        friend.currentScreenHandler instanceof TerminalScreenHandler,
+        "The test needs the trusted player to have the terminal open");
+    String shownName = TrustedPlayerNames.nameOf(context.getWorld().getServer(), friend.getUuid());
+
+    TrustEditOutcome outcome =
+        edits.setTrust(owner, new TerminalTrustEditPayload(syncId(owner), shownName, false));
+
+    context.assertTrue(outcome == TrustEditOutcome.REMOVED, "Removing gave " + outcome);
+    context.assertFalse(
+        trustedOn(context).contains(friend.getUuid()), "The player is still trusted");
+    context.assertFalse(
+        friend.currentScreenHandler instanceof TerminalScreenHandler,
+        "The removed player's screen should have closed");
+    NetworkOperationFixture.finish(context, owner, friend);
+  }
+
+  private static Set<UUID> trustedOn(TestContext context) {
+    return TerminalLookup.settingsAt(context.getWorld(), terminal(context)).orElseThrow().trusted();
   }
 
   private int containerCount(TestContext context) {

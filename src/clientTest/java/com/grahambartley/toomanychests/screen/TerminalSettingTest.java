@@ -48,6 +48,14 @@ class TerminalSettingTest {
     assertFalse(TerminalSetting.TRUSTED.cyclesOnRowClick());
   }
 
+  @Test
+  void onlyTheTrustListOpensAPromptWhenItsRowIsClicked() {
+    assertTrue(TerminalSetting.TRUSTED.opensPromptOnRowClick());
+    assertFalse(TerminalSetting.ACCESS.opensPromptOnRowClick());
+    assertFalse(TerminalSetting.RADIUS.opensPromptOnRowClick());
+    assertFalse(TerminalSetting.CAPACITY.opensPromptOnRowClick());
+  }
+
   @ParameterizedTest
   @CsvSource({
     "RADIUS,settings.radius",

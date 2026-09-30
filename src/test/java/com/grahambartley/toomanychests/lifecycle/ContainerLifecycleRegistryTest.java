@@ -38,6 +38,7 @@ class ContainerLifecycleRegistryTest {
     registry.containerRemoved(OVERWORLD, POS);
     registry.chunkUnloaded(OVERWORLD, CHUNK);
     registry.chunkLoaded(OVERWORLD, CHUNK);
+    registry.containerPlaced(OVERWORLD, CHUNK);
 
     assertTrue(registry.isIdle());
   }
@@ -71,6 +72,19 @@ class ContainerLifecycleRegistryTest {
 
     assertEquals(List.of(CHUNK), listener.loaded);
     assertTrue(listener.unloaded.isEmpty());
+  }
+
+  @Test
+  void aPlacementIsDeliveredToEverySubscriberAsTheChunkItLandedIn() {
+    RecordingListener other = new RecordingListener();
+    registry.subscribe(listener);
+    registry.subscribe(other);
+
+    registry.containerPlaced(OVERWORLD, CHUNK);
+
+    assertEquals(List.of(CHUNK), listener.placed);
+    assertEquals(List.of(CHUNK), other.placed);
+    assertTrue(listener.loaded.isEmpty());
   }
 
   @Test
@@ -117,6 +131,9 @@ class ContainerLifecycleRegistryTest {
 
           @Override
           public void chunkLoaded(RegistryKey<World> worldKey, ChunkPos chunkPos) {}
+
+          @Override
+          public void containerPlaced(RegistryKey<World> worldKey, ChunkPos chunkPos) {}
         };
     registry.subscribe(quitter);
     registry.subscribe(other);
@@ -146,7 +163,10 @@ class ContainerLifecycleRegistryTest {
     registry.chunkUnloaded(OVERWORLD, null);
     registry.chunkLoaded(null, CHUNK);
     registry.chunkLoaded(OVERWORLD, null);
+    registry.containerPlaced(null, CHUNK);
+    registry.containerPlaced(OVERWORLD, null);
 
+    assertTrue(listener.placed.isEmpty());
     assertTrue(listener.removed.isEmpty());
     assertTrue(listener.unloaded.isEmpty());
     assertTrue(listener.loaded.isEmpty());
@@ -161,6 +181,7 @@ class ContainerLifecycleRegistryTest {
     private final List<StorageOrigin> removed = new ArrayList<>();
     private final List<ChunkPos> unloaded = new ArrayList<>();
     private final List<ChunkPos> loaded = new ArrayList<>();
+    private final List<ChunkPos> placed = new ArrayList<>();
 
     @Override
     public void containerRemoved(StorageOrigin origin) {
@@ -175,6 +196,11 @@ class ContainerLifecycleRegistryTest {
     @Override
     public void chunkLoaded(RegistryKey<World> worldKey, ChunkPos chunkPos) {
       loaded.add(chunkPos);
+    }
+
+    @Override
+    public void containerPlaced(RegistryKey<World> worldKey, ChunkPos chunkPos) {
+      placed.add(chunkPos);
     }
   }
 }

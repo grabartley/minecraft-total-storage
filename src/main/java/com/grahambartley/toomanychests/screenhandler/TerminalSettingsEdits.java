@@ -3,12 +3,16 @@ package com.grahambartley.toomanychests.screenhandler;
 import com.grahambartley.toomanychests.access.TerminalAccessControl;
 import com.grahambartley.toomanychests.access.TerminalAdmin;
 import com.grahambartley.toomanychests.access.TerminalCaller;
+import com.grahambartley.toomanychests.access.TerminalTrustService;
+import com.grahambartley.toomanychests.access.TrustEditOutcome;
 import com.grahambartley.toomanychests.network.ContainerFilterEditPayload;
 import com.grahambartley.toomanychests.network.ContainerNameEditPayload;
 import com.grahambartley.toomanychests.network.ContainerRoleEditPayload;
 import com.grahambartley.toomanychests.network.TerminalAccessEditPayload;
 import com.grahambartley.toomanychests.network.TerminalActionPayload;
 import com.grahambartley.toomanychests.network.TerminalRadiusEditPayload;
+import com.grahambartley.toomanychests.network.TerminalTrustEditPayload;
+import com.grahambartley.toomanychests.network.TerminalTrustReplyPayload;
 import com.grahambartley.toomanychests.operation.ExpensiveOperation;
 import com.grahambartley.toomanychests.operation.OperationGuards;
 import com.grahambartley.toomanychests.operation.TerminalNotice;
@@ -27,6 +31,7 @@ import com.grahambartley.toomanychests.terminal.TerminalRadius;
 import com.grahambartley.toomanychests.terminal.TerminalRadiusService;
 import java.util.Objects;
 import java.util.Optional;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 public final class TerminalSettingsEdits {
@@ -89,6 +94,31 @@ public final class TerminalSettingsEdits {
     TerminalAccessControl.trust()
         .setAccessMode(context.world(), context.terminal(), payload.mode());
     return pushed(context);
+  }
+
+  public TrustEditOutcome setTrust(ServerPlayerEntity player, TerminalTrustEditPayload payload) {
+    if (payload == null) {
+      return TrustEditOutcome.DENIED;
+    }
+    final TerminalOperationContext context = administrable(player, payload.syncId());
+    final TrustEditOutcome outcome =
+        context == null ? TrustEditOutcome.DENIED : trustEdit(context, payload);
+    if (ServerPlayNetworking.canSend(player, TerminalTrustReplyPayload.ID)) {
+      ServerPlayNetworking.send(
+          player, new TerminalTrustReplyPayload(payload.syncId(), payload.player(), outcome));
+    }
+    if (outcome.changedTheList()) {
+      pushed(context);
+    }
+    return outcome;
+  }
+
+  private static TrustEditOutcome trustEdit(
+      TerminalOperationContext context, TerminalTrustEditPayload payload) {
+    final TerminalTrustService trust = TerminalAccessControl.trust();
+    return payload.trusted()
+        ? trust.trustNamed(context.world(), context.terminal(), payload.player())
+        : trust.untrustNamed(context.world(), context.terminal(), payload.player());
   }
 
   public boolean setRole(ServerPlayerEntity player, ContainerRoleEditPayload payload) {

@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.tag.TagNameOutcome;
+import com.grahambartley.toomanychests.terminal.NetworkCapacity;
 import com.grahambartley.toomanychests.terminal.NetworkSettingsView;
 import com.grahambartley.toomanychests.terminal.NetworkTagEntry;
 import com.grahambartley.toomanychests.terminal.NetworkTagView;
@@ -194,5 +196,62 @@ class TerminalPromptsTest {
     prompts.naming().openForNewTag();
 
     assertFalse(prompts.isDraggingScrollbar());
+  }
+
+  @Test
+  void editingTheTrustListTakesTheKeyboardAndTheWheel() {
+    prompts.trusting().open();
+
+    assertTrue(prompts.isAnyOpen());
+    assertTrue(prompts.ownsTheKeyboard());
+    assertTrue(prompts.scrolled(1.0));
+  }
+
+  @Test
+  void typingWhileEditingTheTrustListReachesTheName() {
+    prompts.trusting().open();
+
+    assertTrue(prompts.charTyped('A'));
+    assertEquals("A", prompts.trusting().name());
+  }
+
+  @Test
+  void escapeClosesTheTrustPrompt() {
+    prompts.trusting().open();
+
+    assertTrue(prompts.keyPressed(GLFW.GLFW_KEY_ESCAPE, 0, NetworkTagView.pending()));
+    assertFalse(prompts.isAnyOpen());
+  }
+
+  @Test
+  void aClickOutsideTheTrustPromptDismissesIt() {
+    prompts.trusting().open();
+
+    assertTrue(
+        prompts.mouseClicked(
+            NetworkSettingsView.pending(), NetworkTagView.pending(), false, 0, 0, 0));
+    assertFalse(prompts.isAnyOpen());
+  }
+
+  @Test
+  void theTrustPromptClosesOnceTheViewerMayNoLongerAdministerTheTerminal() {
+    prompts.trusting().open();
+
+    prompts.fit(
+        NetworkSettingsView.answered(
+            4,
+            4,
+            16,
+            TerminalAccessMode.OPEN,
+            false,
+            true,
+            List.of(),
+            NetworkCapacity.EMPTY,
+            0,
+            0,
+            List.of()),
+        NetworkTagView.pending());
+
+    assertFalse(prompts.trusting().isOpen());
   }
 }

@@ -57,6 +57,14 @@ public final class TerminalSettingsClicks {
       return true;
     }
     final TerminalSetting setting = settings.settingAt(windowX, windowY);
+    if (setting != null && setting.opensPromptOnRowClick() && button == GridClick.LEFT_BUTTON) {
+      if (mayAdminister) {
+        prompts.trusting().open();
+      } else {
+        PromptRefusal.sound();
+      }
+      return true;
+    }
     final SettingsAction action =
         SettingsClick.of(button, setting != null && setting.cyclesOnRowClick(), mayAdminister);
     if (action == SettingsAction.NONE) {

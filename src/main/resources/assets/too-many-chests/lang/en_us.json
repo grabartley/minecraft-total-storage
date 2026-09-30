@@ -1,4 +1,5 @@
 {
+  "multiplayer.too-many-chests.client_mod_required": "This server runs Too Many Chests. Install the same mod on your game to join.",
   "tag.item.too-many-chests.preset.building_blocks": "Building Blocks",
   "tag.item.too-many-chests.preset.wood": "Wood",
   "tag.item.too-many-chests.preset.stone": "Stone",
@@ -71,6 +72,12 @@
   "screen.too-many-chests.terminal.settings.access": "Access",
   "screen.too-many-chests.terminal.settings.trusted": "Trusted",
   "screen.too-many-chests.terminal.settings.trusted.none": "Nobody but the owner",
+  "screen.too-many-chests.terminal.settings.trusted.title": "Trusted players",
+  "screen.too-many-chests.terminal.settings.trusted.remove": "Remove",
+  "screen.too-many-chests.terminal.settings.trusted.hint": "Type a name, then press Enter",
+  "screen.too-many-chests.terminal.settings.trusted.hint.row": "Click to choose who may use this terminal",
+  "screen.too-many-chests.terminal.settings.trusted.already": "%s is already trusted",
+  "screen.too-many-chests.terminal.settings.trusted.missing": "%s is not on the list",
   "screen.too-many-chests.terminal.settings.container.empty": "Empty",
   "screen.too-many-chests.terminal.settings.empty": "This terminal reaches no containers",
   "screen.too-many-chests.terminal.settings.offline": "This terminal has no network",

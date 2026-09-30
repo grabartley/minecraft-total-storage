@@ -14,13 +14,20 @@ import com.grahambartley.toomanychests.screenhandler.TerminalScreenHandler;
 import com.grahambartley.toomanychests.storage.ContainerAssignment;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.terminal.TerminalNetworks;
+import com.mojang.authlib.GameProfile;
+import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.Set;
+import java.util.UUID;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BarrelBlockEntity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.ClientConnection;
+import net.minecraft.network.NetworkSide;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ConnectedClientData;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
@@ -242,6 +249,28 @@ final class NetworkOperationFixture {
     TerminalNetworks.power().unloaded(context.getWorld(), context.getAbsolutePos(TERMINAL));
     TerminalNetworks.power().unloaded(context.getWorld(), context.getAbsolutePos(NORTH_TERMINAL));
     context.complete();
+  }
+
+  static ServerPlayerEntity namedPlayer(TestContext context, String name) {
+    final GameProfile profile = new GameProfile(UUID.randomUUID(), name);
+    final ConnectedClientData data = ConnectedClientData.createDefault(profile, false);
+    final MinecraftServer server = context.getWorld().getServer();
+    final ServerPlayerEntity player =
+        new ServerPlayerEntity(server, context.getWorld(), profile, data.syncedOptions()) {
+          @Override
+          public boolean isSpectator() {
+            return false;
+          }
+
+          @Override
+          public boolean isCreative() {
+            return true;
+          }
+        };
+    final ClientConnection connection = new ClientConnection(NetworkSide.SERVERBOUND);
+    new EmbeddedChannel(connection);
+    server.getPlayerManager().onPlayerConnect(connection, player, data);
+    return player;
   }
 
   static ServerPlayerEntity standingPlayer(TestContext context) {

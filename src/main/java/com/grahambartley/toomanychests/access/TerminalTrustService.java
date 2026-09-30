@@ -33,6 +33,29 @@ public final class TerminalTrustService {
     return change(world, pos, settings -> settings.withoutTrusted(player));
   }
 
+  public TrustEditOutcome trustNamed(ServerWorld world, BlockPos pos, String name) {
+    final UUID player = TrustedPlayerNames.find(world.getServer(), name).orElse(null);
+    if (player == null) {
+      return TrustEditOutcome.UNKNOWN_PLAYER;
+    }
+    return trust(world, pos, player) ? TrustEditOutcome.ADDED : TrustEditOutcome.ALREADY_TRUSTED;
+  }
+
+  public TrustEditOutcome untrustNamed(ServerWorld world, BlockPos pos, String name) {
+    final TerminalSettings settings = settingsAt(world, pos).orElse(null);
+    if (settings == null || name == null) {
+      return TrustEditOutcome.NOT_TRUSTED;
+    }
+    for (final UUID trusted : settings.trusted()) {
+      if (TrustedPlayerNames.nameOf(world.getServer(), trusted).equalsIgnoreCase(name)) {
+        return untrust(world, pos, trusted)
+            ? TrustEditOutcome.REMOVED
+            : TrustEditOutcome.NOT_TRUSTED;
+      }
+    }
+    return TrustEditOutcome.NOT_TRUSTED;
+  }
+
   private boolean change(
       ServerWorld world, BlockPos pos, java.util.function.UnaryOperator<TerminalSettings> edit) {
     final TerminalBlockEntity terminal = TerminalLookup.at(world, pos).orElse(null);

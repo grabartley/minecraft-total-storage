@@ -12,6 +12,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 class GridClickTest {
   private static final boolean SHIFT = true;
   private static final boolean NO_SHIFT = false;
+  private static final boolean TAG_MODIFIER = true;
+  private static final boolean NO_TAG_MODIFIER = false;
   private static final boolean HOLDING = true;
   private static final boolean EMPTY_HANDED = false;
   private static final boolean OVER_AN_ITEM = true;
@@ -72,40 +74,70 @@ class GridClickTest {
       boolean cursorHoldsStack,
       boolean cellHoldsRow,
       GridAction expected) {
-    assertEquals(expected, GridClick.of(button, shiftDown, cursorHoldsStack, cellHoldsRow));
+    assertEquals(
+        expected, GridClick.of(button, shiftDown, NO_TAG_MODIFIER, cursorHoldsStack, cellHoldsRow));
   }
 
   @ParameterizedTest
   @ValueSource(ints = {GridClick.LEFT_BUTTON, GridClick.RIGHT_BUTTON})
   void depositingDoesNotDependOnTheCellUnderThePointer(int button) {
     assertEquals(
-        GridClick.of(button, NO_SHIFT, HOLDING, OVER_AN_ITEM),
-        GridClick.of(button, NO_SHIFT, HOLDING, OVER_NOTHING));
+        GridClick.of(button, NO_SHIFT, NO_TAG_MODIFIER, HOLDING, OVER_AN_ITEM),
+        GridClick.of(button, NO_SHIFT, NO_TAG_MODIFIER, HOLDING, OVER_NOTHING));
   }
 
   @ParameterizedTest
   @ValueSource(ints = {GridClick.LEFT_BUTTON, GridClick.RIGHT_BUTTON, GridClick.MIDDLE_BUTTON})
   void anEmptyCellHasNothingToTakeFromIt(int button) {
-    assertEquals(GridAction.NONE, GridClick.of(button, NO_SHIFT, EMPTY_HANDED, OVER_NOTHING));
+    assertEquals(
+        GridAction.NONE,
+        GridClick.of(button, NO_SHIFT, NO_TAG_MODIFIER, EMPTY_HANDED, OVER_NOTHING));
   }
 
   @Test
   void shiftDoesNotChangeWhatAFullCursorDoes() {
     assertEquals(
         GridAction.DEPOSIT_CURSOR_STACK,
-        GridClick.of(GridClick.LEFT_BUTTON, SHIFT, HOLDING, OVER_AN_ITEM));
+        GridClick.of(GridClick.LEFT_BUTTON, SHIFT, NO_TAG_MODIFIER, HOLDING, OVER_AN_ITEM));
   }
 
   @ParameterizedTest
   @ValueSource(ints = {3, 4, 7})
   void aButtonWithNoMeaningHereIsIgnored(int button) {
-    assertEquals(GridAction.NONE, GridClick.of(button, NO_SHIFT, EMPTY_HANDED, OVER_AN_ITEM));
-    assertEquals(GridAction.NONE, GridClick.of(button, NO_SHIFT, HOLDING, OVER_AN_ITEM));
+    assertEquals(
+        GridAction.NONE,
+        GridClick.of(button, NO_SHIFT, NO_TAG_MODIFIER, EMPTY_HANDED, OVER_AN_ITEM));
+    assertEquals(
+        GridAction.NONE, GridClick.of(button, NO_SHIFT, NO_TAG_MODIFIER, HOLDING, OVER_AN_ITEM));
   }
 
   @Test
   void middleClickWhileHoldingSomethingIsNotADeposit() {
     assertEquals(
-        GridAction.NONE, GridClick.of(GridClick.MIDDLE_BUTTON, NO_SHIFT, HOLDING, OVER_AN_ITEM));
+        GridAction.NONE,
+        GridClick.of(GridClick.MIDDLE_BUTTON, NO_SHIFT, NO_TAG_MODIFIER, HOLDING, OVER_AN_ITEM));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void theTagModifierOnALeftClickOpensTaggingWhateverTheCursorOrShiftHolds(boolean held) {
+    assertEquals(
+        GridAction.OPEN_TAGGING,
+        GridClick.of(GridClick.LEFT_BUTTON, held, TAG_MODIFIER, held, OVER_AN_ITEM));
+  }
+
+  @Test
+  void theTagModifierOverAnEmptyCellHasNothingToTag() {
+    assertEquals(
+        GridAction.NONE,
+        GridClick.of(GridClick.LEFT_BUTTON, NO_SHIFT, TAG_MODIFIER, EMPTY_HANDED, OVER_NOTHING));
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {GridClick.RIGHT_BUTTON, GridClick.MIDDLE_BUTTON})
+  void theTagModifierOnlyChangesTheLeftButton(int button) {
+    assertEquals(
+        GridClick.of(button, NO_SHIFT, NO_TAG_MODIFIER, EMPTY_HANDED, OVER_AN_ITEM),
+        GridClick.of(button, NO_SHIFT, TAG_MODIFIER, EMPTY_HANDED, OVER_AN_ITEM));
   }
 }

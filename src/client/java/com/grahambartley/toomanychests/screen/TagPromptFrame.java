@@ -19,6 +19,26 @@ public final class TagPromptFrame {
       int originX,
       int originY,
       Runnable rows) {
+    draw(
+        context,
+        textRenderer,
+        heading,
+        list,
+        originX,
+        originY,
+        rows,
+        () -> drawFooter(context, textRenderer, footer, originX, originY));
+  }
+
+  public static void draw(
+      DrawContext context,
+      TextRenderer textRenderer,
+      Text heading,
+      TagPromptList list,
+      int originX,
+      int originY,
+      Runnable rows,
+      Runnable footer) {
     context.getMatrices().push();
     context.getMatrices().translate(0.0F, 0.0F, ELEVATION);
     TerminalSprite.PANEL.draw(
@@ -36,7 +56,7 @@ public final class TagPromptFrame {
         false);
     rows.run();
     list.drawScrollbar(context, originX, originY);
-    drawFooter(context, textRenderer, footer, originX, originY);
+    footer.run();
     context.getMatrices().pop();
   }
 

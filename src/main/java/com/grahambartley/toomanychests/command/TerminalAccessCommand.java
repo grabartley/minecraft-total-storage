@@ -2,6 +2,7 @@ package com.grahambartley.toomanychests.command;
 
 import com.grahambartley.toomanychests.access.TerminalAccessControl;
 import com.grahambartley.toomanychests.access.TerminalTrustService;
+import com.grahambartley.toomanychests.access.TrustedPlayerNames;
 import com.grahambartley.toomanychests.config.TerminalAccessMode;
 import com.grahambartley.toomanychests.terminal.TerminalSettings;
 import com.mojang.authlib.GameProfile;
@@ -109,7 +110,11 @@ public final class TerminalAccessCommand {
     }
     source.sendFeedback(() -> CommandMessages.terminalTrustHeader(pos), false);
     for (final UUID trusted : settings.trusted()) {
-      source.sendFeedback(() -> CommandMessages.terminalTrustEntry(nameOf(source, trusted)), false);
+      source.sendFeedback(
+          () ->
+              CommandMessages.terminalTrustEntry(
+                  TrustedPlayerNames.nameOf(source.getServer(), trusted)),
+          false);
     }
     return settings.trusted().size();
   }
@@ -156,18 +161,6 @@ public final class TerminalAccessCommand {
     return moved
         ? CommandMessages.terminalUntrusted(player, pos)
         : CommandMessages.terminalNotTrusted(player, pos);
-  }
-
-  private static String nameOf(ServerCommandSource source, UUID player) {
-    if (source.getServer().getUserCache() == null) {
-      return player.toString();
-    }
-    return source
-        .getServer()
-        .getUserCache()
-        .getByUuid(player)
-        .map(GameProfile::getName)
-        .orElseGet(player::toString);
   }
 
   private static TerminalTrustService trustService() {

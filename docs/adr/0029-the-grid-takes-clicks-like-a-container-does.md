@@ -15,12 +15,15 @@ The grid follows the rule every vanilla container already follows: **a full curs
 
 | Gesture | Over the grid | Over a player inventory slot |
 |---|---|---|
-| Left click, empty cursor | Take a stack onto the cursor | Vanilla: pick the stack up |
-| Right click, empty cursor | Take half a stack onto the cursor | Vanilla: pick half up |
-| Shift and left click | Take a stack into the inventory | **Deposit the whole stack** |
+| Left click, empty cursor | Take a stack onto the cursor, or everything in the cell if it holds less | Vanilla: pick the stack up |
+| Right click, empty cursor | Take half of that, rounded up | Vanilla: pick half up |
+| Shift and left click | Take a stack into the inventory, or everything in the cell if it holds less | **Deposit the whole stack** |
+| Ctrl or Cmd and left click | Open the tag panel for that item, for a player who may edit tags | Vanilla |
 | Middle click | Ask for a custom amount | Vanilla |
 | Left click, full cursor | **Deposit the whole cursor stack** | Vanilla: put the stack down |
 | Right click, full cursor | **Deposit one from the cursor** | Vanilla: put one down |
+
+"A stack" is the item's own maximum stack size, so sixteen ender pearls or one pickaxe. The amount is worked out from the count the cell shows, so a cell of 48 logs gives 48 on a left click and 24 on a right click, the way vanilla gives half of what a slot holds. The server still clamps the request to what the network really holds. A gesture that moves everything the cell showed reports nothing. Only a request that falls short of what the cell showed, because the listing was stale or another player got there first, reports a shortfall.
 
 Depositing over the grid ignores which cell the pointer is over, because a network has no slot to drop into.
 
