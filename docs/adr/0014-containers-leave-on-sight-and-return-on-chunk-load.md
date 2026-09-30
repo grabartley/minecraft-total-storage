@@ -1,6 +1,6 @@
 # ADR 0014: Containers leave the network on sight, and return only on a chunk load
 
-- **Status:** Accepted
+- **Status:** Accepted. The drawback that a placed chest waits for a chunk load is superseded by [ADR 0039](0039-a-placed-container-joins-on-the-next-tick.md): a container placed in range joins on the next tick.
 - **Date:** 2026-08-25
 
 ## Context

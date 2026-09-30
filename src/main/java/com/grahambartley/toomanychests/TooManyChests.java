@@ -8,6 +8,7 @@ import com.grahambartley.toomanychests.lifecycle.NextTick;
 import com.grahambartley.toomanychests.lifecycle.ServerThread;
 import com.grahambartley.toomanychests.lock.LockedSlotsAttachment;
 import com.grahambartley.toomanychests.mutation.ContainerMutations;
+import com.grahambartley.toomanychests.network.ClientModRequirement;
 import com.grahambartley.toomanychests.network.ModNetworking;
 import com.grahambartley.toomanychests.network.PayloadCapLog;
 import com.grahambartley.toomanychests.operation.NetworkOperations;
@@ -38,6 +39,7 @@ public class TooManyChests implements ModInitializer {
     ModScreenHandlers.initialize();
     LockedSlotsAttachment.register();
     ModNetworking.register();
+    ClientModRequirement.register();
     TooManyChestsCommand.register();
     ServerThread.register();
     NextTick.register();

@@ -98,6 +98,22 @@ public final class TerminalTooltips {
     WrappedTooltip.draw(context, textRenderer, lines, mouseX, mouseY);
   }
 
+  public static void trusted(
+      DrawContext context,
+      TextRenderer textRenderer,
+      NetworkSettingsView view,
+      TerminalSettingsPanel settings,
+      int windowX,
+      int windowY,
+      int mouseX,
+      int mouseY) {
+    if (!view.mayAdminister() || settings.settingAt(windowX, windowY) != TerminalSetting.TRUSTED) {
+      return;
+    }
+    WrappedTooltip.draw(
+        context, textRenderer, TerminalScreenText.of("settings.trusted.hint.row"), mouseX, mouseY);
+  }
+
   public static void copyTags(
       DrawContext context,
       TextRenderer textRenderer,

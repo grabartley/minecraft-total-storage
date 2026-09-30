@@ -35,7 +35,6 @@ Alongside it, two conveniences that work with no terminal at all: a **universal 
 | Safe in a modpack | Every item movement is one server-side transaction; conservation is asserted by adversarial gametests |
 | Costs nothing when idle | An unpowered terminal registers no listeners and does no per-tick work at all |
 | Works with the blocks players already own | Built on `ItemStorage.SIDED`, so vanilla and modded containers work with no per-block code |
-| Vanilla clients are not second-class | Sorting logic is server-side, reachable by command with no client mod |
 | Trustworthy near a curated chest | The `Excluded` role means the network lists a container but never writes to or reorders it |
 
 ### 1.4 Non-goals
@@ -79,13 +78,12 @@ Recorded so the boundary is deliberate rather than accidental.
 
 | Actor | Who they are | What they need |
 |---|---|---|
-| **Player** | Anyone with the mod on their client or connecting to a server running it | Find items fast, deposit without deciding, keep their hotbar intact |
+| **Player** | Anyone with the mod installed, in singleplayer or on a server running it | Find items fast, deposit without deciding, keep their hotbar intact |
 | **Terminal owner** | The player who placed a given terminal | Control who reaches their storage and how it is organised |
 | **Server operator** | Permission level 2, or the owner of a singleplayer world | Configure the mod without a client, cap what players can cost the server, moderate |
 | **Pack author** | Assembles a modpack | Tune performance caps, override container eligibility, ship a standard configuration |
-| **Vanilla client** | A player with no client mod, connected to a modded server | Sorting still works; the terminal does not |
 
-**Vanilla client is an actor, not an edge case.** The mod is server-installed and the sorting logic is server-side deliberately so this actor is served (ADR 0003).
+**A player needs the mod installed to join a server running it.** A client without it is refused at login with a message that says why, before any of the mod's content is sent (ADR 0038).
 
 ---
 
@@ -168,9 +166,10 @@ The player opens a terminal, types, and the item is on screen. Clicking takes it
 
 | Input | Result |
 |---|---|
-| Left click | One full stack, up to the item's max stack size |
-| Right click | Half a stack |
-| Shift + left click | Straight to the player's inventory rather than the cursor |
+| Left click | One full stack, up to the item's max stack size, or everything in the cell if it holds less |
+| Right click | Half of that, rounded up |
+| Shift + left click | The same as left click, but straight to the player's inventory rather than the cursor |
+| Ctrl or Cmd + left click | Opens the tag panel for that item, for a player who may edit tags |
 | Middle click | Prompt for a custom amount, which lands in the inventory rather than on the cursor |
 
 With a stack already on the cursor the same grid takes clicks the other way, depositing rather than withdrawing: left click hands over the whole stack, right click hands over one (ADR 0029).
@@ -187,7 +186,7 @@ With a stack already on the cursor the same grid takes clicks the other way, dep
 | FIND-8 | A filter column lists the network's tags with their counts, combinable with AND by default or OR, applying alongside the search box and clearable in one action |
 | FIND-9 | Escape clears the search before it closes the screen |
 | GET-1 | Each interaction above yields the correct amount |
-| GET-2 | Asking for more than exists grants everything available and reports the shortfall |
+| GET-2 | Asking for more than exists grants everything available and reports the shortfall. A click that takes everything its cell showed is not a shortfall and reports nothing |
 | GET-3 | A full inventory yields a partial withdrawal; the remainder stays in the network |
 | GET-4 | Locked slots are never used as a destination |
 | GET-5 | The two empty-handed endings are reported distinctly: the item is gone, or there is nowhere to put it. This includes losing a race for the last stack, which says the item is gone rather than staying silent. The report goes to the in-terminal notice, never the action bar, because the terminal is open when it fires. This is the rule SAFE-6's quietness is measured against: quiet means no error and no interruption, not no feedback |
@@ -231,7 +230,7 @@ Routing order, per item variant:
 | PUT-13 | Capacity counts only writable containers, excluding `Excluded` ones |
 | PUT-14 | Ties between candidate containers resolve deterministically |
 | PUT-15 | Quick-stack tops up matching stacks in nearby containers, introducing nothing new, with or without a terminal present |
-| PUT-16 | Quick-stack is reachable from a button in the player inventory, a rebindable keybind, and `/tmc quickstack`, so a vanilla client can use it |
+| PUT-16 | Quick-stack is reachable from a button in the player inventory, a rebindable keybind, and `/tmc quickstack` |
 
 **Not supported:** depositing into an `Excluded` container under any configuration; dropping an item that will not fit; quick-stack introducing an item into a container that does not already hold some.
 
@@ -320,9 +319,9 @@ Default order: category by preset tag grouping, then registry identifier, then d
 
 ### UC-6: Sort anything, from anywhere
 
-**Actor:** Any player, including a vanilla client
+**Actor:** Any player
 
-A sort button appears on every container screen and the player inventory. A keybind does the same without the mouse. A vanilla client with no mod installed sorts by command, because the logic is server-side. It looks at the container and runs `/tmc sort`, since vanilla will not open chat while a container screen is up.
+A sort button appears on every container screen and the player inventory. A keybind does the same without the mouse. Because the logic is server-side, `/tmc sort` does the same by command: the player looks at the container and runs it, since chat will not open while a container screen is up.
 
 | ID | Requirement |
 |---|---|
@@ -462,6 +461,7 @@ The server config sets the default mode for newly placed terminals, owner-locked
 | PERM-6 | Trust list entries resolve for offline players known to the server's user cache, and are stored by UUID |
 | PERM-7 | A settings change submitted by a client not entitled to make it is rejected and the panel resynced |
 | PERM-8 | The rules the interface enforces and the rules the commands enforce are one implementation, so the two cannot drift |
+| PERM-9 | The owner or an operator can add and remove trusted players from the terminal screen as well as by command, and a name the server does not know is refused with the command's own message |
 
 **A modified client is assumed.** Every permission rule is verified by submitting the packet directly, because hiding a button is not a permission check.
 
@@ -555,7 +555,7 @@ The property that decides whether the mod is safe in a modpack. How the suite is
 |---|---|
 | PERF-1 | An unpowered terminal registers no listeners and does no per-tick work |
 | PERF-2 | The index is never polled; it reacts to container mutations and recomputes lazily on read |
-| PERF-3 | A full discovery scan runs on power-on, radius change, explicit rescan, a change to container eligibility, and a chunk load touching the network's region (ADR 0014), and on nothing else |
+| PERF-3 | A full discovery scan runs on power-on, radius change, explicit rescan, a change to container eligibility, a chunk load touching the network's region (ADR 0014), and a block entity that may hold items appearing in a chunk the region touches (ADR 0039), and on nothing else. The last two are deferred to the next tick and run once per chunk per tick |
 | PERF-4 | Discovery iterates loaded chunk block-entity maps rather than testing every position in the volume |
 | PERF-5 | A world callback never queries the chunk manager; scans defer to the next tick (ADR 0026) |
 | PERF-6 | The listing is narrowed server-side and paged, never sent whole (ADR 0027) |
@@ -622,7 +622,6 @@ Conditions that must hold for a release, whatever the schedule.
 | REL-6 | A dedicated server boots with no client classes loaded and no unused hard dependency |
 | REL-7 | A player can build a working storage network from the README alone, and an operator can configure the mod from the reference |
 | REL-8 | Automated QA evidence exists for every interactive surface, captured against a dedicated server with more than one client connected |
-| REL-9 | A genuinely unmodded client is verified against a modded server for UC-6 |
 
 ---
 

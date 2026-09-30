@@ -21,6 +21,10 @@ public enum TerminalSetting {
     return this == ACCESS;
   }
 
+  public boolean opensPromptOnRowClick() {
+    return this == TRUSTED;
+  }
+
   public static TerminalSetting atRow(int row) {
     return row < 0 || row >= values().length ? null : values()[row];
   }

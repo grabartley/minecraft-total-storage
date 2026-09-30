@@ -2,11 +2,11 @@ package com.grahambartley.toomanychests.terminal;
 
 import com.grahambartley.toomanychests.access.TerminalAccessRules;
 import com.grahambartley.toomanychests.access.TerminalAccessService;
+import com.grahambartley.toomanychests.access.TrustedPlayerNames;
 import com.grahambartley.toomanychests.block.TerminalBlock;
 import com.grahambartley.toomanychests.config.ServerConfigService;
 import com.grahambartley.toomanychests.listing.ListingWindow;
 import com.grahambartley.toomanychests.network.PayloadCapLog;
-import com.mojang.authlib.GameProfile;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -71,19 +71,8 @@ public final class NetworkSettingsService {
         PayloadCapLog.reached("trusted players", NetworkSettingsView.MAX_TRUSTED, trusted.size());
         break;
       }
-      names.add(nameOf(server, player));
+      names.add(TrustedPlayerNames.nameOf(server, player));
     }
     return List.copyOf(names);
-  }
-
-  private static String nameOf(MinecraftServer server, UUID player) {
-    if (server == null || server.getUserCache() == null) {
-      return player.toString();
-    }
-    return server
-        .getUserCache()
-        .getByUuid(player)
-        .map(GameProfile::getName)
-        .orElseGet(player::toString);
   }
 }

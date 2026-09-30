@@ -13,8 +13,12 @@ import java.util.Optional;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.ChestBlock;
 import net.minecraft.block.entity.BarrelBlockEntity;
+import net.minecraft.block.entity.ChestBlockEntity;
+import net.minecraft.block.enums.ChestType;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -23,6 +27,7 @@ import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 
 public final class NetworkMembershipGameTest implements FabricGameTest {
@@ -34,6 +39,9 @@ public final class NetworkMembershipGameTest implements FabricGameTest {
   private static final BlockPos WATCHED = new BlockPos(2, 1, 2);
   private static final BlockPos ALSO_WATCHED = new BlockPos(4, 1, 4);
   private static final BlockPos OUT_OF_RANGE = new BlockPos(6, 1, 6);
+  private static final BlockPos CHEST_LEFT = new BlockPos(2, 1, 2);
+  private static final BlockPos CHEST_RIGHT = new BlockPos(3, 1, 2);
+  private static final int ADMISSION_TICKS = 2;
 
   private final StorageProviderResolver resolver = new StorageProviderResolver();
 
@@ -203,6 +211,95 @@ public final class NetworkMembershipGameTest implements FabricGameTest {
     context.complete();
   }
 
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = 40)
+  public void aContainerPlacedInRangeJoinsThePoweredNetworkWithoutARescan(TestContext context) {
+    stockBarrel(context, WATCHED, new ItemStack(Items.DIAMOND, 8));
+    NetworkMembership membership = poweredNetwork(context);
+    membership.index();
+
+    stockBarrel(context, ALSO_WATCHED, new ItemStack(Items.COBBLESTONE, 16));
+
+    context.waitAndRun(
+        ADMISSION_TICKS,
+        () -> {
+          context.assertTrue(
+              membership.session().isWatching(originOf(context, ALSO_WATCHED)),
+              "A barrel placed in range should join the network");
+          long cobblestone = membership.index().countOf(ItemVariant.of(Items.COBBLESTONE));
+          context.assertTrue(
+              cobblestone == 16L, "The new barrel's items should be listed, listed " + cobblestone);
+          membership.powerOff();
+          context.complete();
+        });
+  }
+
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = 40)
+  public void turningASingleChestIntoADoubleChestLeavesOneContainerHoldingBoth(
+      TestContext context) {
+    context.setBlockState(CHEST_LEFT, chest(ChestType.SINGLE));
+    ChestBlockEntity first = context.getBlockEntity(CHEST_LEFT);
+    first.setStack(0, new ItemStack(Items.DIAMOND, 8));
+    NetworkMembership membership = poweredNetwork(context);
+    membership.index();
+
+    context.setBlockState(CHEST_RIGHT, chest(ChestType.RIGHT));
+    context.setBlockState(CHEST_LEFT, chest(ChestType.LEFT));
+    ChestBlockEntity second = context.getBlockEntity(CHEST_RIGHT);
+    second.setStack(0, new ItemStack(Items.DIAMOND, 5));
+
+    context.waitAndRun(
+        ADMISSION_TICKS,
+        () -> {
+          context.assertTrue(
+              membership.containers().size() == 1,
+              "A double chest is one container, the network holds "
+                  + membership.containers().size());
+          long diamonds = membership.index().countOf(ItemVariant.of(Items.DIAMOND));
+          context.assertTrue(
+              diamonds == 13L, "Both halves' diamonds should be listed, listed " + diamonds);
+          membership.powerOff();
+          context.complete();
+        });
+  }
+
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = 40)
+  public void aContainerPlacedOutOfRangeLeavesTheNetworkAlone(TestContext context) {
+    stockBarrel(context, WATCHED, new ItemStack(Items.DIAMOND, 8));
+    NetworkMembership membership = poweredNetwork(context);
+    int containersBefore = membership.containers().size();
+
+    stockBarrel(context, OUT_OF_RANGE, new ItemStack(Items.DIAMOND, 8));
+
+    context.waitAndRun(
+        ADMISSION_TICKS,
+        () -> {
+          context.assertTrue(
+              membership.containers().size() == containersBefore,
+              "A barrel out of range should not join the network");
+          context.assertTrue(
+              membership.index().countOf(ItemVariant.of(Items.DIAMOND)) == 8L,
+              "Only the connected barrel's diamonds should be listed");
+          membership.powerOff();
+          context.complete();
+        });
+  }
+
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = 40)
+  public void aContainerPlacedNextToAnUnpoweredNetworkChangesNothing(TestContext context) {
+    NetworkMembership membership = poweredNetwork(context);
+    membership.powerOff();
+
+    stockBarrel(context, WATCHED, new ItemStack(Items.DIAMOND, 8));
+
+    context.waitAndRun(
+        ADMISSION_TICKS,
+        () -> {
+          context.assertTrue(
+              membership.containers().isEmpty(), "An unpowered network should admit nothing");
+          context.complete();
+        });
+  }
+
   private NetworkMembership poweredNetwork(TestContext context) {
     NetworkMembership membership = NetworkMembership.around(context.getWorld(), region(context));
     membership.powerOn();
@@ -281,5 +378,12 @@ public final class NetworkMembershipGameTest implements FabricGameTest {
     for (int slot = 0; slot < stacks.length; slot++) {
       barrel.setStack(slot, stacks[slot]);
     }
+  }
+
+  private static BlockState chest(ChestType type) {
+    return Blocks.CHEST
+        .getDefaultState()
+        .with(ChestBlock.FACING, Direction.NORTH)
+        .with(ChestBlock.CHEST_TYPE, type);
   }
 }

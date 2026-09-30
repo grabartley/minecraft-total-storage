@@ -11,4 +11,6 @@ public interface ContainerLifecycleListener {
   void chunkUnloaded(RegistryKey<World> worldKey, ChunkPos chunkPos);
 
   void chunkLoaded(RegistryKey<World> worldKey, ChunkPos chunkPos);
+
+  void containerPlaced(RegistryKey<World> worldKey, ChunkPos chunkPos);
 }

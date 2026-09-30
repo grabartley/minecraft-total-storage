@@ -12,10 +12,12 @@ import com.grahambartley.toomanychests.screen.NetworkSettingsMirror;
 import com.grahambartley.toomanychests.screen.NetworkTagMirror;
 import com.grahambartley.toomanychests.screen.TagSourceMirror;
 import com.grahambartley.toomanychests.screen.TerminalNoticeMirror;
+import com.grahambartley.toomanychests.screen.TrustReplyMirror;
 import com.grahambartley.toomanychests.storage.ContainerRole;
 import com.grahambartley.toomanychests.tag.TagSetImportMode;
 import com.grahambartley.toomanychests.terminal.TerminalAction;
 import java.util.Set;
+import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationNetworking;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
@@ -25,6 +27,8 @@ public final class ModNetworkingClient {
   private ModNetworkingClient() {}
 
   public static void register() {
+    ClientConfigurationNetworking.registerGlobalReceiver(
+        ClientModPresencePayload.ID, (payload, context) -> {});
     ClientPlayNetworking.registerGlobalReceiver(
         ConfigSyncPayload.ID,
         (payload, context) ->
@@ -65,6 +69,9 @@ public final class ModNetworkingClient {
                     () ->
                         TerminalNoticeMirror.accept(
                             payload.syncId(), payload.message(), payload.needsAnAnswer())));
+    ClientPlayNetworking.registerGlobalReceiver(
+        TerminalTrustReplyPayload.ID,
+        (payload, context) -> context.client().execute(() -> TrustReplyMirror.accept(payload)));
     ClientPlayConnectionEvents.DISCONNECT.register(
         (handler, client) -> {
           ClientConfigMirror.clear();
@@ -74,6 +81,7 @@ public final class ModNetworkingClient {
           TagSourceMirror.clear();
           ContainerHighlights.clear();
           TerminalNoticeMirror.clear();
+          TrustReplyMirror.clear();
         });
   }
 
@@ -178,5 +186,9 @@ public final class ModNetworkingClient {
       int syncId, ListingWindow window, String search, TagCombinationMode mode, Set<String> tags) {
     ClientPlayNetworking.send(
         new ListingRequestPayload(syncId, window.offset(), window.length(), search, mode, tags));
+  }
+
+  public static void sendTrustEdit(int syncId, String player, boolean trusted) {
+    ClientPlayNetworking.send(new TerminalTrustEditPayload(syncId, player, trusted));
   }
 }

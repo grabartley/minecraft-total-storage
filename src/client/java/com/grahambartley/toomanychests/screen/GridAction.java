@@ -9,6 +9,8 @@ public enum GridAction {
 
   PROMPT_FOR_AMOUNT,
 
+  OPEN_TAGGING,
+
   DEPOSIT_CURSOR_STACK,
 
   DEPOSIT_ONE_FROM_CURSOR,

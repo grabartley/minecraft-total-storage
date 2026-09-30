@@ -16,6 +16,7 @@ import com.grahambartley.toomanychests.terminal.TerminalAction;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
@@ -105,6 +106,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   protected void handledScreenTick() {
     super.handledScreenTick();
     TerminalNoticeMirror.tick();
+    prompts.tick();
   }
 
   @Override
@@ -191,6 +193,15 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
           textRenderer,
           settingsThisFrame,
           tagsThisFrame,
+          settings,
+          hoveredWindowX,
+          hoveredWindowY,
+          mouseX,
+          mouseY);
+      TerminalTooltips.trusted(
+          context,
+          textRenderer,
+          settingsThisFrame,
           settings,
           hoveredWindowX,
           hoveredWindowY,
@@ -459,24 +470,29 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
       return false;
     }
     final ListingRow<ItemVariant> row = items.page().status().hasRows() ? items.rowAt(cell) : null;
-    if (row != null
-        && button == GridClick.LEFT_BUTTON
-        && hasControlDown()
-        && tagsThisFrame.mayAdminister()) {
-      prompts.openTagging(row.variant());
-      return true;
-    }
     final GridAction action =
-        GridClick.of(button, hasShiftDown(), !handler.getCursorStack().isEmpty(), row != null);
-    if (action == GridAction.NONE) {
-      return false;
+        GridClick.of(
+            button,
+            hasShiftDown(),
+            tagsThisFrame.mayAdminister() && isTagModifierDown(),
+            !handler.getCursorStack().isEmpty(),
+            row != null);
+    switch (action) {
+      case NONE -> {
+        return false;
+      }
+      case OPEN_TAGGING -> prompts.openTagging(row.variant());
+      case PROMPT_FOR_AMOUNT -> prompts.openAmount(row);
+      default -> TerminalGridRequests.send(action, handler.syncId, row);
     }
-    if (action == GridAction.PROMPT_FOR_AMOUNT) {
-      prompts.openAmount(row);
-      return true;
-    }
-    TerminalGridRequests.send(action, handler.syncId, row == null ? null : row.variant());
     return true;
+  }
+
+  private boolean isTagModifierDown() {
+    final long window = client.getWindow().getHandle();
+    return hasControlDown()
+        || InputUtil.isKeyPressed(window, GLFW.GLFW_KEY_LEFT_CONTROL)
+        || InputUtil.isKeyPressed(window, GLFW.GLFW_KEY_RIGHT_CONTROL);
   }
 
   @Override

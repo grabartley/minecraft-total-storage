@@ -49,6 +49,12 @@ class TerminalSettingTest {
   }
 
   @ParameterizedTest
+  @EnumSource(TerminalSetting.class)
+  void onlyTheTrustListOpensAPromptWhenItsRowIsClicked(TerminalSetting setting) {
+    assertEquals(setting == TerminalSetting.TRUSTED, setting.opensPromptOnRowClick());
+  }
+
+  @ParameterizedTest
   @CsvSource({
     "RADIUS,settings.radius",
     "ACCESS,settings.access",

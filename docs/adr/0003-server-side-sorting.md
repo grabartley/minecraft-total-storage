@@ -1,6 +1,6 @@
 # ADR 0003: Sorting runs on the server
 
-- **Status:** Accepted
+- **Status:** Accepted. The claim that vanilla clients can still sort is superseded by [ADR 0038](0038-the-mod-is-required-on-the-client.md): a client needs the mod to join a server running it.
 - **Date:** 2026-08-22
 
 ## Context

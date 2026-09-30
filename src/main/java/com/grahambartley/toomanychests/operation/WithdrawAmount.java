@@ -5,12 +5,15 @@ import com.grahambartley.toomanychests.lock.LockedSlots;
 public final class WithdrawAmount {
   private WithdrawAmount() {}
 
-  public static int fullStack(int maxStackSize) {
-    return Math.max(0, maxStackSize);
+  public static int stackFrom(int maxStackSize, long held) {
+    if (maxStackSize <= 0 || held <= 0L) {
+      return 0;
+    }
+    return (int) Math.min(maxStackSize, held);
   }
 
-  public static int halfStack(int maxStackSize) {
-    return maxStackSize <= 0 ? 0 : (maxStackSize + 1) / 2;
+  public static int halfStackFrom(int maxStackSize, long held) {
+    return (stackFrom(maxStackSize, held) + 1) / 2;
   }
 
   public static long ceilingFor(int maxStackSize, WithdrawDestination destination) {

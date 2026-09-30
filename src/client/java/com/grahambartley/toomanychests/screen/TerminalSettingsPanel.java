@@ -237,7 +237,12 @@ public final class TerminalSettingsPanel {
     }
 
     if (!isCovered(TerminalSetting.TRUSTED.row())) {
-      drawRow(context, TerminalSetting.TRUSTED, originX, originY, false);
+      drawRow(
+          context,
+          TerminalSetting.TRUSTED,
+          originX,
+          originY,
+          hovered == TerminalSetting.TRUSTED && view.mayAdminister());
       labelled(
           context,
           textRenderer,
@@ -245,7 +250,7 @@ public final class TerminalSettingsPanel {
           trustedLine(view),
           originX,
           originY + TerminalSettingsLayout.rowY(TerminalSetting.TRUSTED.row()),
-          false);
+          view.mayAdminister());
     }
 
     if (!isCovered(TerminalSetting.CAPACITY.row())) {

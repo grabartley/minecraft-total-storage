@@ -10,7 +10,14 @@ public final class GridClick {
   private GridClick() {}
 
   public static GridAction of(
-      int button, boolean shiftDown, boolean cursorHoldsStack, boolean cellHoldsRow) {
+      int button,
+      boolean shiftDown,
+      boolean tagModifierDown,
+      boolean cursorHoldsStack,
+      boolean cellHoldsRow) {
+    if (tagModifierDown && cellHoldsRow && button == LEFT_BUTTON) {
+      return GridAction.OPEN_TAGGING;
+    }
     if (cursorHoldsStack) {
       return switch (button) {
         case LEFT_BUTTON -> GridAction.DEPOSIT_CURSOR_STACK;

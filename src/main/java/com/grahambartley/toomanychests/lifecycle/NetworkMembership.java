@@ -3,6 +3,7 @@ package com.grahambartley.toomanychests.lifecycle;
 import com.grahambartley.toomanychests.index.NetworkIndex;
 import com.grahambartley.toomanychests.index.NetworkIndexSession;
 import com.grahambartley.toomanychests.storage.ContainerDiscoveryScan;
+import com.grahambartley.toomanychests.storage.ContainerScanResult;
 import com.grahambartley.toomanychests.storage.ScanRegion;
 import com.grahambartley.toomanychests.storage.StorageOrigin;
 import com.grahambartley.toomanychests.terminal.ContainerRoleEviction;
@@ -21,6 +22,7 @@ public final class NetworkMembership implements ContainerLifecycleListener {
   private final ContainerDiscoveryScan discovery;
   private final ContainerLifecycleRegistry lifecycle;
   private final ContainerRoleEviction roles;
+  private final ContainerShapes shapes = new ContainerShapes();
 
   public NetworkMembership(
       ServerWorld world,
@@ -46,13 +48,16 @@ public final class NetworkMembership implements ContainerLifecycleListener {
   }
 
   public void powerOn() {
-    session.begin(discovery.scan(world, region));
+    final ContainerScanResult scan = discovery.scan(world, region);
+    shapes.remember(scan);
+    session.begin(scan);
     lifecycle.subscribe(this);
   }
 
   public void powerOff() {
     lifecycle.unsubscribe(this);
     session.end();
+    shapes.clear();
   }
 
   public NetworkIndex<ItemVariant> index() {
@@ -84,12 +89,23 @@ public final class NetworkMembership implements ContainerLifecycleListener {
 
   @Override
   public void chunkLoaded(RegistryKey<World> worldKey, ChunkPos chunkPos) {
+    rescanIfReached(worldKey, chunkPos);
+  }
+
+  @Override
+  public void containerPlaced(RegistryKey<World> worldKey, ChunkPos chunkPos) {
+    rescanIfReached(worldKey, chunkPos);
+  }
+
+  private void rescanIfReached(RegistryKey<World> worldKey, ChunkPos chunkPos) {
     if (!session.isActive() || !world.getRegistryKey().equals(worldKey)) {
       return;
     }
     if (!region.touchesChunk(chunkPos)) {
       return;
     }
-    session.reconcile(discovery.scan(world, region));
+    final ContainerScanResult scan = discovery.scan(world, region);
+    session.reconcile(scan);
+    shapes.reshaped(scan).forEach(session::containerChanged);
   }
 }

@@ -51,6 +51,15 @@ public final class ContainerLifecycleRegistry {
     }
   }
 
+  public void containerPlaced(RegistryKey<World> worldKey, ChunkPos chunkPos) {
+    if (listeners.isEmpty() || worldKey == null || chunkPos == null) {
+      return;
+    }
+    for (final ContainerLifecycleListener listener : subscribers()) {
+      listener.containerPlaced(worldKey, chunkPos);
+    }
+  }
+
   public boolean isIdle() {
     return listeners.isEmpty();
   }
