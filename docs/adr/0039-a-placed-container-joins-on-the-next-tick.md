@@ -29,4 +29,6 @@ An idle network does no extra work. The cost is one region scan per chunk per ti
 
 Accepted drawback: the type check is generous. A furnace or a hopper placed in range costs a scan even though the network may not take it, because the eligibility rules that would say so read the world, which ADR 0026 forbids inside the callback. The scan applies them.
 
+Accepted drawback: a modded container that is not an inventory and offers its storage only through a fallback provider fails the type check, because fallback providers cannot be asked without the world. It joins on the next chunk load or Rescan, as every container did before.
+
 Accepted drawback: breaking one half of a double chest still drops the pair until something else triggers a scan, for the reason ADR 0014 gives.
