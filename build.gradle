@@ -180,7 +180,6 @@ tasks.register("verifyMainSourceSideSafety") {
 			"com.grahambartley.totalstorage.mixin.client.",
 			"com.grahambartley.totalstorage.TotalStorageClient",
 			"com.grahambartley.totalstorage.TotalStorageDataGenerator",
-			"com.grahambartley.totalstorage.TotalStorageModMenu",
 			"com.grahambartley.totalstorage.ModKeyBindings",
 			"com.grahambartley.totalstorage.network.ModNetworkingClient",
 			"com.grahambartley.totalstorage.config.ClientConfigMirror"
