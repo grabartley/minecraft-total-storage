@@ -4,7 +4,7 @@ The buttons this mod draws inside screens it does not own: the one that sorts a 
 
 ## Sprite Reference
 
-Under `src/client/resources/assets/too-many-chests/textures/gui/sprites/`, in the client source set because a dedicated server must never load them.
+Under `src/client/resources/assets/total-storage/textures/gui/sprites/`, in the client source set because a dedicated server must never load them.
 
 Every one is drawn at its native size and carries no `.png.mcmeta`, so the default `stretch` scaling applies and never runs. The glyph is baked into each sprite rather than composed from a separate icon, so there is no offset for an implementation to get wrong.
 
@@ -66,7 +66,7 @@ The button must never overlap a slot. It is a click target sitting in someone el
 
 ## Anchors
 
-A player who wants these buttons somewhere else moves them with `screenButtonAnchor` in `config/too-many-chests/client.json`. The anchor moves every button this mod draws on a screen it does not own, so they stay one control family wherever they land:
+A player who wants these buttons somewhere else moves them with `screenButtonAnchor` in `config/total-storage/client.json`. The anchor moves every button this mod draws on a screen it does not own, so they stay one control family wherever they land:
 
 | Anchor | First button | Every button after it |
 |---|---|---|
@@ -113,7 +113,7 @@ The PNGs that ship are the sprites, exactly as they are for the terminal. Author
 
 ```bash
 python3 tools/gui_sprite.py build <scratch>/sort_button/normal.sprite.txt \
-	src/client/resources/assets/too-many-chests/textures/gui/sprites/sort_button/normal.png
+	src/client/resources/assets/total-storage/textures/gui/sprites/sort_button/normal.png
 ```
 
 Check any change at the size it ships at, not zoomed in:

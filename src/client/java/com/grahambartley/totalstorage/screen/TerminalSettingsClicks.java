@@ -1,0 +1,180 @@
+package com.grahambartley.totalstorage.screen;
+
+import com.grahambartley.totalstorage.network.ModNetworkingClient;
+import com.grahambartley.totalstorage.screenhandler.TagRowRegion;
+import com.grahambartley.totalstorage.screenhandler.TagsSectionLayout;
+import com.grahambartley.totalstorage.screenhandler.TerminalSettingsLayout;
+import com.grahambartley.totalstorage.terminal.ContainerRoleEntry;
+import com.grahambartley.totalstorage.terminal.NetworkSettingsView;
+import com.grahambartley.totalstorage.terminal.NetworkTagEntry;
+import com.grahambartley.totalstorage.terminal.NetworkTagView;
+import java.util.Objects;
+
+public final class TerminalSettingsClicks {
+  private final TerminalSettingsPanel settings;
+  private final TerminalTagsPanel tags;
+  private final TerminalPrompts prompts;
+
+  public TerminalSettingsClicks(
+      TerminalSettingsPanel settings, TerminalTagsPanel tags, TerminalPrompts prompts) {
+    this.settings = Objects.requireNonNull(settings, "settings");
+    this.tags = Objects.requireNonNull(tags, "tags");
+    this.prompts = Objects.requireNonNull(prompts, "prompts");
+  }
+
+  public boolean handle(
+      int syncId,
+      NetworkSettingsView view,
+      NetworkTagView tagView,
+      int firstVisibleTag,
+      boolean shiftDown,
+      int windowX,
+      int windowY,
+      int button) {
+    final boolean mayAdminister = view.mayAdminister();
+    return switch (settings.section()) {
+      case TERMINAL -> terminal(syncId, view, windowX, windowY, button, mayAdminister);
+      case CONTAINERS ->
+          container(syncId, view, shiftDown, windowX, windowY, button, mayAdminister);
+      case TAGS ->
+          tag(syncId, tagView, firstVisibleTag, settings.hiddenRows(), windowX, windowY, button);
+    };
+  }
+
+  private boolean terminal(
+      int syncId,
+      NetworkSettingsView view,
+      int windowX,
+      int windowY,
+      int button,
+      boolean mayAdminister) {
+    final SettingsControl control = settings.controlAt(windowX, windowY);
+    if (control.isSomething()) {
+      if (mayAdminister && button == GridClick.LEFT_BUTTON) {
+        ModNetworkingClient.sendRadiusEdit(
+            syncId, view.radius() + (control == SettingsControl.RADIUS_UP ? 1 : -1));
+      }
+      return true;
+    }
+    final TerminalSetting setting = settings.settingAt(windowX, windowY);
+    if (setting != null && setting.opensPromptOnRowClick() && button == GridClick.LEFT_BUTTON) {
+      if (mayAdminister) {
+        prompts.trusting().open();
+      } else {
+        PromptRefusal.sound();
+      }
+      return true;
+    }
+    final SettingsAction action =
+        SettingsClick.of(button, setting != null && setting.cyclesOnRowClick(), mayAdminister);
+    if (action == SettingsAction.NONE) {
+      return setting != null;
+    }
+    if (action != SettingsAction.REFUSED) {
+      ModNetworkingClient.sendAccessEdit(
+          syncId,
+          action == SettingsAction.CYCLE_BACK
+              ? AccessModeCycle.previous(view.accessMode())
+              : AccessModeCycle.next(view.accessMode()));
+    }
+    return true;
+  }
+
+  private boolean container(
+      int syncId,
+      NetworkSettingsView view,
+      boolean shiftDown,
+      int windowX,
+      int windowY,
+      int button,
+      boolean mayAdminister) {
+    final int index = settings.containerRowAt(windowX, windowY);
+    final ContainerRoleEntry entry = index == TerminalSettingsLayout.NO_ROW ? null : view.at(index);
+    if (entry != null && shiftDown) {
+      return openEditorFor(entry, button, mayAdminister);
+    }
+    final SettingsAction action = SettingsClick.of(button, entry != null, mayAdminister);
+    if (action == SettingsAction.NONE) {
+      return false;
+    }
+    if (action != SettingsAction.REFUSED) {
+      ModNetworkingClient.sendRoleEdit(
+          syncId,
+          entry.container(),
+          action == SettingsAction.CYCLE_BACK
+              ? ContainerRoleCycle.previous(entry.role())
+              : ContainerRoleCycle.next(entry.role()));
+    }
+    return true;
+  }
+
+  private boolean openEditorFor(ContainerRoleEntry entry, int button, boolean mayAdminister) {
+    if (button != GridClick.LEFT_BUTTON && button != GridClick.RIGHT_BUTTON) {
+      return false;
+    }
+    if (!mayAdminister) {
+      PromptRefusal.sound();
+      return true;
+    }
+    if (button == GridClick.RIGHT_BUTTON) {
+      prompts.renaming().open(entry.container(), entry.name());
+      return true;
+    }
+    if (!entry.isFiltered()) {
+      PromptRefusal.sound();
+      return true;
+    }
+    prompts.filtering().open(entry.container());
+    return true;
+  }
+
+  private boolean tag(
+      int syncId,
+      NetworkTagView view,
+      int firstVisibleTag,
+      int hiddenRows,
+      int windowX,
+      int windowY,
+      int button) {
+    if (button != GridClick.LEFT_BUTTON) {
+      return false;
+    }
+    if (TagsSectionLayout.isOverCopy(windowX, windowY)) {
+      if (view.mayAdminister()) {
+        prompts.copying().open();
+        ModNetworkingClient.sendTagSourcesRequest(syncId);
+      }
+      return true;
+    }
+    if (TagsSectionLayout.isOverNewTag(windowX, windowY)) {
+      if (view.mayAdminister()) {
+        prompts.naming().openForNewTag();
+      }
+      return true;
+    }
+    final TagRowRegion region = TagsSectionLayout.regionAt(windowX, windowY);
+    final NetworkTagEntry tag = tags.tagAt(view, firstVisibleTag, hiddenRows, windowX, windowY);
+    if (!region.isSomething() || tag == null) {
+      return false;
+    }
+    if (!view.mayAdminister()) {
+      return true;
+    }
+    if (region == TagRowRegion.DELETE) {
+      deleteOrArm(syncId, tag);
+      return true;
+    }
+    tags.disarm();
+    prompts.naming().openForRename(tag.id(), tag.displayName());
+    return true;
+  }
+
+  private void deleteOrArm(int syncId, NetworkTagEntry tag) {
+    if (tags.isArmed(tag.id())) {
+      tags.disarm();
+      ModNetworkingClient.sendTagDelete(syncId, tag.id());
+      return;
+    }
+    tags.arm(tag.id());
+  }
+}

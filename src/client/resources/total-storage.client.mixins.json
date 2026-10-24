@@ -1,0 +1,13 @@
+{
+	"required": true,
+	"package": "com.grahambartley.totalstorage.mixin.client",
+	"compatibilityLevel": "JAVA_21",
+	"client": [
+		"HandledScreenAccessor",
+		"HandledScreenMixin",
+		"InGameHudMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

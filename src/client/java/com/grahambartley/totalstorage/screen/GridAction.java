@@ -1,0 +1,19 @@
+package com.grahambartley.totalstorage.screen;
+
+public enum GridAction {
+  WITHDRAW_STACK_TO_CURSOR,
+
+  WITHDRAW_HALF_TO_CURSOR,
+
+  WITHDRAW_STACK_TO_INVENTORY,
+
+  PROMPT_FOR_AMOUNT,
+
+  OPEN_TAGGING,
+
+  DEPOSIT_CURSOR_STACK,
+
+  DEPOSIT_ONE_FROM_CURSOR,
+
+  NONE
+}

@@ -5,7 +5,7 @@
 
 ## Context
 
-Too Many Chests needs to read from and write to many kinds of container. The obvious approach is to handle each container type directly: special-case chests, then barrels, then shulker boxes, then discover that double chests are two block entities behind one screen, then discover that every other storage mod needs its own case too.
+Total Storage needs to read from and write to many kinds of container. The obvious approach is to handle each container type directly: special-case chests, then barrels, then shulker boxes, then discover that double chests are two block entities behind one screen, then discover that every other storage mod needs its own case too.
 
 The mod also needs transactional item movement, since concurrent multiplayer access without atomicity duplicates items.
 

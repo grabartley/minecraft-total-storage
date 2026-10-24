@@ -1,4 +1,4 @@
-# Too Many Chests
+# Total Storage
 
 A Fabric mod for Minecraft 1.21.1.
 
@@ -9,7 +9,7 @@ A better item storage solution for Minecraft.
 | Mod | Required | Side | Why |
 |---|---|---|---|
 | [Fabric API](https://modrinth.com/mod/fabric-api) `>=0.116.12+1.21.1` | Yes | Client and server | Networking, item transfer, entity attachments, screen events and gametest all come from it. The floor is the version whose transfer and attachment APIs this mod calls. |
-| [Mod Menu](https://modrinth.com/mod/modmenu) | No | Client | Adds the button that opens this mod's server settings screen. Without it the same settings are reachable from `/tmc config`. |
+| [Mod Menu](https://modrinth.com/mod/modmenu) | No | Client | Adds the button that opens this mod's server settings screen. Without it the same settings are reachable from `/ts config`. |
 | [JEI](https://modrinth.com/mod/jei) | No | Client | The terminal's recipe shows up in it, and this mod keeps its overlay clear of the buttons it draws. |
 | [EMI](https://modrinth.com/mod/emi) | No | Client | The same, for players who use EMI instead. |
 
@@ -77,7 +77,7 @@ Filing a large storage area one item at a time is not a plan, so **shift-clickin
 
 **A tag set moves between terminals rather than being rebuilt.** The copy control on the `+ New tag` row lists every other powered terminal you may administer, nearest first, with how many custom tags each one holds. Clicking one merges its custom tags into this network. Shift-clicking replaces this network's set with it, and asks once before it does, since replacing unfiles everything you had. Only custom tags move, because preset tags are worked out from the item and every network already has them, and the items filed under each tag come with it. An item this world has never heard of is kept rather than dropped, so a temporarily missing mod does not destroy how you filed things.
 
-The same set can be written to and read from a file, which is how a server owner seeds a standard set or moves one between worlds: `/tmc terminal <pos> tags export <file>` writes it to `too-many-chests/tag-sets/<file>.json` in the world directory, and `/tmc terminal <pos> tags import <file> <merge|replace>` reads it back. `/tmc terminal <pos> tags copy <pos> <merge|replace>` is the command form of the copy control. Every one of them needs administer permission on **both** terminals, so a tag set can never be lifted off a network you cannot already edit. A name a network cannot address is skipped and counted rather than failing the whole import.
+The same set can be written to and read from a file, which is how a server owner seeds a standard set or moves one between worlds: `/ts terminal <pos> tags export <file>` writes it to `total-storage/tag-sets/<file>.json` in the world directory, and `/ts terminal <pos> tags import <file> <merge|replace>` reads it back. `/ts terminal <pos> tags copy <pos> <merge|replace>` is the command form of the copy control. Every one of them needs administer permission on **both** terminals, so a tag set can never be lifted off a network you cannot already edit. A name a network cannot address is skipped and counted rather than failing the whole import.
 
 Making, renaming, deleting and assigning all need the same permission as any other network setting: the terminal's owner, or an operator. Someone who can merely open the terminal can filter by your tags but cannot restructure them, and that is enforced on the server rather than by hiding the controls, so a modified client cannot rename a tag on a network it does not own.
 
@@ -125,11 +125,11 @@ Only the owner and operators can run either, checked when the request arrives ra
 
 A chest does not need a terminal to be worth tidying, so **every container screen carries a sort button of its own**, in the clean band vanilla leaves above the first slot row. It is on the player inventory too, and on any modded screen that extends the vanilla container screen, without that mod knowing about this one. Screens whose slots mean something, a furnace or an anvil among them, never get one: rearranging an input into a fuel slot is not tidying. See [ADR 0018](docs/adr/0018-two-gates-decide-what-may-be-sorted.md).
 
-The button sends nothing but the intent to sort the screen that is open, and the server decides what that means, so a modified client cannot use it to reach a container it does not have open. It reports what happened on the action bar: sorted, already sorted, or nothing to sort. A server that would rather not offer it sets `sortButtonEnabled` to `false`, which greys the button out and refuses what the button sends, checked on the server rather than trusted to the client. `/tmc sort` is a separate surface and keeps working.
+The button sends nothing but the intent to sort the screen that is open, and the server decides what that means, so a modified client cannot use it to reach a container it does not have open. It reports what happened on the action bar: sorted, already sorted, or nothing to sort. A server that would rather not offer it sets `sortButtonEnabled` to `false`, which greys the button out and refuses what the button sends, checked on the server rather than trusted to the client. `/ts sort` is a separate surface and keeps working.
 
-**`/tmc sort` sorts the container you are looking at.** It is the same sort as the button, reachable from chat and from command blocks. Chat will not open while a chest is open, so look at the chest, within reach, and run the command. It is held to the same rules as the button: a furnace or an anvil in view is refused and left alone, and a container you could not open, a locked one or a chest or shulker box with a block on its lid among them, is not sorted either. Neither is an ender chest, whose contents are yours rather than the block's. Looking at anything that opens no screen, or at nothing at all, sorts your inventory instead and says so, and with a container screen already open it sorts that. The chest is opened and closed in the same tick to be sorted, so it clicks and counts as opened, loot and sculk sensors included, exactly as if you had opened it by hand. There is no middle-click gesture: a survival client sends no slot-click packet for the pick-item button at all, so there is nothing for a server to read.
+**`/ts sort` sorts the container you are looking at.** It is the same sort as the button, reachable from chat and from command blocks. Chat will not open while a chest is open, so look at the chest, within reach, and run the command. It is held to the same rules as the button: a furnace or an anvil in view is refused and left alone, and a container you could not open, a locked one or a chest or shulker box with a block on its lid among them, is not sorted either. Neither is an ender chest, whose contents are yours rather than the block's. Looking at anything that opens no screen, or at nothing at all, sorts your inventory instead and says so, and with a container screen already open it sorts that. The chest is opened and closed in the same tick to be sorted, so it clicks and counts as opened, loot and sculk sensors included, exactly as if you had opened it by hand. There is no middle-click gesture: a survival client sends no slot-click packet for the pick-item button at all, so there is nothing for a server to read.
 
-There is also a **sort keybind**, bound to `B` by default and rebindable under Too Many Chests in the controls screen. It sorts the container screen in front of you, or your inventory, and it keeps working with the button hidden, which is the point of having it.
+There is also a **sort keybind**, bound to `B` by default and rebindable under Total Storage in the controls screen. It sorts the container screen in front of you, or your inventory, and it keeps working with the button hidden, which is the point of having it.
 
 **Sorting your inventory never touches the hotbar.** It orders the 27 main inventory slots and leaves all nine hotbar slots exactly as they were, by the button, the keybind or the command, because `B` is an easy key to hit by accident and a hotbar layout lives in muscle memory. **Locked slots stay where they are** too: the main inventory is sorted around them rather than through them.
 
@@ -141,13 +141,13 @@ A locked slot wears a padlock badge in the top-left corner of the item, over the
 
 ## Quick stacking into what is nearby
 
-Quick stack takes what you are carrying and tops up the containers around you. It is on a button in your inventory screen, on a keybind bound to `V` by default, and on `/tmc quickstack`. It works on plain chests with no terminal anywhere: this is a convenience, not a network feature.
+Quick stack takes what you are carrying and tops up the containers around you. It is on a button in your inventory screen, on a keybind bound to `V` by default, and on `/ts quickstack`. It works on plain chests with no terminal anywhere: this is a convenience, not a network feature.
 
 It is deliberately conservative. **Quick stack only tops up a container that already holds the item**, never introduces a new one, which is what makes it safe to press without looking. It offers the whole inventory, hotbar included, since topping up an existing stack cannot cost you a tool: locking a slot is how you keep something out of it, and a locked slot is never quick stacked. Containers out of `quickStackRadius` are not considered, eight blocks by default, and neither are containers in unloaded chunks. Where a terminal does claim a container nearby, its role is honoured: `Excluded` is skipped and a `Filtered` container still only takes what it accepts. It is rate limited like the other operations that read a lot of containers at once, and it says how much it moved, or that there was nothing nearby that wanted anything. A server that would rather not offer it at all sets `quickStackEnabled` to `false`, which greys the button out and refuses the keybind and the command.
 
 ## Client options
 
-Everything above is the server's to decide, because everything above moves items. Where a mod button sits and whether a wash is drawn move nothing, so those are yours, and they live in `config/too-many-chests/client.json` on your own machine. The file is written with its defaults the first time the mod starts, and read at startup.
+Everything above is the server's to decide, because everything above moves items. Where a mod button sits and whether a wash is drawn move nothing, so those are yours, and they live in `config/total-storage/client.json` on your own machine. The file is written with its defaults the first time the mod starts, and read at startup.
 
 | Setting | Default | What it does |
 |---|---|---|
@@ -157,7 +157,7 @@ Everything above is the server's to decide, because everything above moves items
 
 Only one button fits the band vanilla leaves, so where a screen carries two, the player inventory being the one that does, the second moves outside the panel rather than crowding the title. See [`docs/sort-button-art.md`](docs/sort-button-art.md).
 
-Three keybinds live under Too Many Chests in the vanilla controls screen, all rebindable, and none of them takes a key vanilla already uses.
+Three keybinds live under Total Storage in the vanilla controls screen, all rebindable, and none of them takes a key vanilla already uses.
 
 | Key | Default | What it does |
 |---|---|---|
@@ -165,13 +165,13 @@ Three keybinds live under Too Many Chests in the vanilla controls screen, all re
 | Deposit all | `R` | Empties your inventory into the terminal you have open. Yields to the search box while the search box has the keyboard, and clicking anywhere else in the terminal hands it back |
 | Quick stack | `V` | Tops up the containers around you, from the inventory screen or with no screen open at all |
 
-**The server settings have a screen too.** With [Mod Menu](https://modrinth.com/mod/modmenu) installed, the configure button beside Too Many Chests opens every server-wide setting grouped by what it affects, each one showing its value in the words the terminal itself uses, such as `Owner only`, `ON` or `90%`, with a number's range and every setting's default beneath it. The command and the JSON file keep the raw ids. An operator, or the owner of a singleplayer world whether or not cheats are on, can change them and the change goes to the server, which checks the permission again before applying it. Everybody else sees the same screen read-only, because knowing what the radius cap is on the server you are playing on is reasonable even when changing it is not. Values follow the server, so a setting moved by command updates the screen under you as long as you have not started editing.
+**The server settings have a screen too.** With [Mod Menu](https://modrinth.com/mod/modmenu) installed, the configure button beside Total Storage opens every server-wide setting grouped by what it affects, each one showing its value in the words the terminal itself uses, such as `Owner only`, `ON` or `90%`, with a number's range and every setting's default beneath it. The command and the JSON file keep the raw ids. An operator, or the owner of a singleplayer world whether or not cheats are on, can change them and the change goes to the server, which checks the permission again before applying it. Everybody else sees the same screen read-only, because knowing what the radius cap is on the server you are playing on is reasonable even when changing it is not. Values follow the server, so a setting moved by command updates the screen under you as long as you have not started editing.
 
 ## Configuring a network
 
 The terminal has two views, switched with the tabs down its right-hand side: the items it holds, and how it is configured. The settings view is where a storage area stops being whatever happened to be in range and becomes something you arranged.
 
-The settings view has two sections. **Terminal** holds the radius, stepped from either end of its own row, the access mode, cycled by clicking its row, the trust list, and how much room the network has left. **Click the Trusted row to edit the trust list.** A prompt lists the players already trusted, each with a Remove button, and has a field underneath: type a player's name and press Enter to add them. The server looks the name up the same way `/tmc terminal <pos> trust` does, online or not, and a name it does not know is refused with the same message while what you typed stays in the field. A server in offline mode knows every name, as the command does. Removing a player who has the terminal open closes their screen and tells them why. **Containers** lists everything the network reaches, nearest first, each row showing what that container mostly holds so you can recognise it without reading coordinates. Clicking a row walks its role forwards and right-clicking walks it back, so marking a chest `Excluded` is two clicks from opening the terminal.
+The settings view has two sections. **Terminal** holds the radius, stepped from either end of its own row, the access mode, cycled by clicking its row, the trust list, and how much room the network has left. **Click the Trusted row to edit the trust list.** A prompt lists the players already trusted, each with a Remove button, and has a field underneath: type a player's name and press Enter to add them. The server looks the name up the same way `/ts terminal <pos> trust` does, online or not, and a name it does not know is refused with the same message while what you typed stays in the field. A server in offline mode knows every name, as the command does. Removing a player who has the terminal open closes their screen and tells them why. **Containers** lists everything the network reaches, nearest first, each row showing what that container mostly holds so you can recognise it without reading coordinates. Clicking a row walks its role forwards and right-clicking walks it back, so marking a chest `Excluded` is two clicks from opening the terminal.
 
 The two are separate because the window is already as tall as Minecraft will draw one on the smallest screen it supports. Sharing that height between a handful of settings and a list of fifty containers makes both unusable; giving each its own section costs one strip of tabs and leaves both room to read.
 
@@ -183,7 +183,7 @@ Only the owner and operators can change any of it. Everyone else sees the same p
 
 ## Seeing what a terminal reaches
 
-"Why isn't that chest included" is the question a radius always produces, so the terminal answers it by outlining the containers it is holding, in the world. The outlines appear when a terminal is switched on, when you change the radius, and whenever you ask for them from the settings view or with `/tmc terminal <pos> highlight`. Switching it on outlines them for everyone nearby who may open it, which includes whoever flipped the lever; a terminal that was already on when its chunk loaded draws nothing. They fade after a few seconds: this is feedback, not an overlay. A double chest is outlined as the one container it is, across both of its blocks, and the outline follows the block state, so splitting a chest while the outline is up redraws it rather than leaving a stale box.
+"Why isn't that chest included" is the question a radius always produces, so the terminal answers it by outlining the containers it is holding, in the world. The outlines appear when a terminal is switched on, when you change the radius, and whenever you ask for them from the settings view or with `/ts terminal <pos> highlight`. Switching it on outlines them for everyone nearby who may open it, which includes whoever flipped the lever; a terminal that was already on when its chunk loaded draws nothing. They fade after a few seconds: this is feedback, not an overlay. A double chest is outlined as the one container it is, across both of its blocks, and the outline follows the block state, so splitting a chest while the outline is up redraws it rather than leaving a stale box.
 
 Each outline is coloured by that container's role and shaped by it too, so all three roles survive a player who cannot separate the red from the green from the white: `General` is a plain line, `Filtered` is a dashed one, and `Excluded` is doubled. An unpowered terminal outlines nothing, because it is holding nothing.
 
@@ -199,7 +199,7 @@ Every container a terminal can see carries a role, which is what decides how far
 
 `Excluded` is the one that makes the rest safe to turn on. A curated potion chest stays exactly as you arranged it while staying searchable from the terminal. A `Filtered` container additionally records the tags and items it accepts, and that record is stored with its role.
 
-**A `Filtered` container is edited from its own row.** Shift-click it and the network's tags come up, preset and custom, with a tick against each one the container accepts, and a scrollbar beside them since a fresh network already has thirteen. Its row chip reads `Filtered 3` for three accepted tags, and `Filtered 0` in warning colour while it accepts nothing, because a filtered container with an empty filter receives nothing at all and that should be visible rather than silent. `/tmc terminal <pos> filter <container> add|remove <tag>` is the same edit for a server with no client mod, and `clear` empties it.
+**A `Filtered` container is edited from its own row.** Shift-click it and the network's tags come up, preset and custom, with a tick against each one the container accepts, and a scrollbar beside them since a fresh network already has thirteen. Its row chip reads `Filtered 3` for three accepted tags, and `Filtered 0` in warning colour while it accepts nothing, because a filtered container with an empty filter receives nothing at all and that should be visible rather than silent. `/ts terminal <pos> filter <container> add|remove <tag>` is the same edit for a server with no client mod, and `clear` empties it.
 
 **Containers can be named.** The chest by the door is "Potions", not `-10 -60 3`. Shift-right-click a row to name it, and the name replaces the position everywhere that container is listed, with the position still in its tooltip. Names are trimmed, capped at 32 characters and carry no control characters; confirming an empty field takes the name back off. A name lives on the terminal beside the role, so it survives a reload, a power cut and a chunk unload the same way roles do.
 
@@ -240,7 +240,7 @@ A terminal reaches every container around it through one screen, so on a shared 
 
 ## Configuration reference
 
-Server settings live in `too-many-chests/server-config.json` inside the world directory, so two worlds hold two independent sets. They are read at world load, written back with their defaults the first time, and every one of them is editable from `/tmc config` or from the Mod Menu settings screen. A value outside its range is clamped as the file loads and refused outright by the command, so a typo never silently half-applies. A malformed file is preserved beside itself and the defaults are loaded, rather than the broken file being overwritten.
+Server settings live in `total-storage/server-config.json` inside the world directory, so two worlds hold two independent sets. They are read at world load, written back with their defaults the first time, and every one of them is editable from `/ts config` or from the Mod Menu settings screen. A value outside its range is clamped as the file loads and refused outright by the command, so a typo never silently half-applies. A malformed file is preserved beside itself and the defaults are loaded, rather than the broken file being overwritten.
 
 **Defaults for new terminals**
 
@@ -255,7 +255,7 @@ Server settings live in `too-many-chests/server-config.json` inside the world di
 | Setting | Default | Range | What it affects |
 |---|---|---|---|
 | `sortOrdering` | `registry_id` | `registry_id`, `display_name` | How sorted containers are ordered. |
-| `sortButtonEnabled` | `true` | true or false | Whether the sort button and the sort keybind are offered. `/tmc sort` is a separate surface and keeps working. |
+| `sortButtonEnabled` | `true` | true or false | Whether the sort button and the sort keybind are offered. `/ts sort` is a separate surface and keeps working. |
 
 **Features**
 
@@ -275,48 +275,48 @@ These are the three settings a pack author should look at, because they are what
 | `movesPerTickBudget` | `64` | 1 to 1024 | How much work one network-wide operation may do in a single tick before continuing on the next. Lower means smoother ticks and slower operations. |
 | `largeOperationContainers` | `8` | 0 to 1024 | How many containers a network sort or consolidation may touch before the first press asks instead of starting. `0` never asks. |
 
-Container eligibility overrides are stored alongside these and edited with `/tmc config eligibility`. They force a block into or out of every network on the server, which is how you admit a modded container the rules do not recognise, or keep one out.
+Container eligibility overrides are stored alongside these and edited with `/ts config eligibility`. They force a block into or out of every network on the server, which is how you admit a modded container the rules do not recognise, or keep one out.
 
 ## Commands
 
-Every server-wide setting is configurable from the console, so a server can be set up without a client mod and without editing files. `/toomanychests` and its alias `/tmc` are the same tree.
+Every server-wide setting is configurable from the console, so a server can be set up without a client mod and without editing files. `/totalstorage` and its alias `/ts` are the same tree.
 
 | Command | Who | What it does |
 |---|---|---|
-| `/tmc` | anyone | Lists the commands |
-| `/tmc config list` | anyone | Every setting, its value, and its default |
-| `/tmc config get <setting>` | anyone | One setting's value |
-| `/tmc config set <setting> <value>` | operators, and a singleplayer host | Moves a setting, refusing a value outside its range |
-| `/tmc config reset <setting>` | operators, and a singleplayer host | Restores one setting's default |
-| `/tmc config reset all` | operators, and a singleplayer host | Restores every default |
-| `/tmc config eligibility list` | anyone | Blocks forced into or out of every network |
-| `/tmc config eligibility set <block> <true\|false>` | operators, and a singleplayer host | Forces a block eligible or ineligible |
-| `/tmc config eligibility clear <block>` | operators, and a singleplayer host | Stops forcing that block |
-| `/tmc config eligibility clear all` | operators, and a singleplayer host | Stops forcing every block |
-| `/tmc terminal <pos> radius` | anyone | One terminal's radius, and what it actually reaches |
-| `/tmc terminal <pos> radius <blocks>` | owner or operators | Sets one terminal's radius, clamped to the server maximum |
-| `/tmc terminal <pos> access` | anyone | Which access mode one terminal is in |
-| `/tmc terminal <pos> access <owner\|trusted\|open>` | owner or operators | Sets who may open that terminal |
-| `/tmc terminal <pos> trust` | owner or operators | The players that terminal trusts |
-| `/tmc terminal <pos> trust <players>` | owner or operators | Adds players to its trust list, online or not |
-| `/tmc terminal <pos> untrust <players>` | owner or operators | Removes players from its trust list |
-| `/tmc terminal <pos> info` | anyone | Summarises one terminal: power, radius, access, and its containers by role |
-| `/tmc terminal <pos> role <container>` | anyone | What one container's role is |
-| `/tmc terminal <pos> role <container> <general\|filtered\|excluded>` | owner or operators | Sets it, refusing a container the terminal does not reach |
-| `/tmc terminal <pos> name <container>` | anyone | What one container is called, if anything |
-| `/tmc terminal <pos> name <container> set <name>` | owner or operators | Names a container, trimmed and capped at 32 characters |
-| `/tmc terminal <pos> name <container> clear` | owner or operators | Takes the name back off |
-| `/tmc terminal <pos> filter <container>` | anyone | What one `Filtered` container accepts |
-| `/tmc terminal <pos> filter <container> add <tag>` | owner or operators | Adds a tag to what it accepts, refusing a tag the network does not hold |
-| `/tmc terminal <pos> filter <container> remove <tag>` | owner or operators | Takes a tag back off |
-| `/tmc terminal <pos> filter <container> clear` | owner or operators | Leaves it accepting nothing |
-| `/tmc terminal <pos> rescan` | owner or operators | Makes the terminal walk its region again, rate limited like the panel button |
-| `/tmc terminal <pos> highlight` | anyone who may open it | Outlines the containers it is holding |
-| `/tmc terminal <pos> tags export <file>` | owner or operators | Writes its custom tag set to the world directory |
-| `/tmc terminal <pos> tags import <file> <merge\|replace>` | owner or operators | Reads a tag set back into it |
-| `/tmc terminal <pos> tags copy <pos> <merge\|replace>` | owner or operators on both | Copies another terminal's custom tag set into it |
-| `/tmc sort` | anyone | Sorts the container you have open, else the one you are looking at, else your inventory |
-| `/tmc quickstack` | anyone | Tops up matching stacks in the containers around you |
+| `/ts` | anyone | Lists the commands |
+| `/ts config list` | anyone | Every setting, its value, and its default |
+| `/ts config get <setting>` | anyone | One setting's value |
+| `/ts config set <setting> <value>` | operators, and a singleplayer host | Moves a setting, refusing a value outside its range |
+| `/ts config reset <setting>` | operators, and a singleplayer host | Restores one setting's default |
+| `/ts config reset all` | operators, and a singleplayer host | Restores every default |
+| `/ts config eligibility list` | anyone | Blocks forced into or out of every network |
+| `/ts config eligibility set <block> <true\|false>` | operators, and a singleplayer host | Forces a block eligible or ineligible |
+| `/ts config eligibility clear <block>` | operators, and a singleplayer host | Stops forcing that block |
+| `/ts config eligibility clear all` | operators, and a singleplayer host | Stops forcing every block |
+| `/ts terminal <pos> radius` | anyone | One terminal's radius, and what it actually reaches |
+| `/ts terminal <pos> radius <blocks>` | owner or operators | Sets one terminal's radius, clamped to the server maximum |
+| `/ts terminal <pos> access` | anyone | Which access mode one terminal is in |
+| `/ts terminal <pos> access <owner\|trusted\|open>` | owner or operators | Sets who may open that terminal |
+| `/ts terminal <pos> trust` | owner or operators | The players that terminal trusts |
+| `/ts terminal <pos> trust <players>` | owner or operators | Adds players to its trust list, online or not |
+| `/ts terminal <pos> untrust <players>` | owner or operators | Removes players from its trust list |
+| `/ts terminal <pos> info` | anyone | Summarises one terminal: power, radius, access, and its containers by role |
+| `/ts terminal <pos> role <container>` | anyone | What one container's role is |
+| `/ts terminal <pos> role <container> <general\|filtered\|excluded>` | owner or operators | Sets it, refusing a container the terminal does not reach |
+| `/ts terminal <pos> name <container>` | anyone | What one container is called, if anything |
+| `/ts terminal <pos> name <container> set <name>` | owner or operators | Names a container, trimmed and capped at 32 characters |
+| `/ts terminal <pos> name <container> clear` | owner or operators | Takes the name back off |
+| `/ts terminal <pos> filter <container>` | anyone | What one `Filtered` container accepts |
+| `/ts terminal <pos> filter <container> add <tag>` | owner or operators | Adds a tag to what it accepts, refusing a tag the network does not hold |
+| `/ts terminal <pos> filter <container> remove <tag>` | owner or operators | Takes a tag back off |
+| `/ts terminal <pos> filter <container> clear` | owner or operators | Leaves it accepting nothing |
+| `/ts terminal <pos> rescan` | owner or operators | Makes the terminal walk its region again, rate limited like the panel button |
+| `/ts terminal <pos> highlight` | anyone who may open it | Outlines the containers it is holding |
+| `/ts terminal <pos> tags export <file>` | owner or operators | Writes its custom tag set to the world directory |
+| `/ts terminal <pos> tags import <file> <merge\|replace>` | owner or operators | Reads a tag set back into it |
+| `/ts terminal <pos> tags copy <pos> <merge\|replace>` | owner or operators on both | Copies another terminal's custom tag set into it |
+| `/ts sort` | anyone | Sorts the container you have open, else the one you are looking at, else your inventory |
+| `/ts quickstack` | anyone | Tops up matching stacks in the containers around you |
 
 Setting names and their values tab-complete. Changes are saved to the world immediately and pushed to connected clients. Operators are permission level 2.
 

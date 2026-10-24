@@ -1,4 +1,4 @@
-# Too Many Chests: Product Requirements
+# Total Storage: Product Requirements
 
 - **Release under specification:** `0.1.0`, pre-release alpha
 - **Minecraft:** 1.21.1, Fabric
@@ -230,7 +230,7 @@ Routing order, per item variant:
 | PUT-13 | Capacity counts only writable containers, excluding `Excluded` ones |
 | PUT-14 | Ties between candidate containers resolve deterministically |
 | PUT-15 | Quick-stack tops up matching stacks in nearby containers, introducing nothing new, with or without a terminal present |
-| PUT-16 | Quick-stack is reachable from a button in the player inventory, a rebindable keybind, and `/tmc quickstack` |
+| PUT-16 | Quick-stack is reachable from a button in the player inventory, a rebindable keybind, and `/ts quickstack` |
 
 **Not supported:** depositing into an `Excluded` container under any configuration; dropping an item that will not fit; quick-stack introducing an item into a container that does not already hold some.
 
@@ -295,7 +295,7 @@ Default order: category by preset tag grouping, then registry identifier, then d
 | SORT-1 | The comparator is deterministic and stable; sorting a sorted container produces zero moves and no resync |
 | SORT-2 | Ordering is language independent by default, with display-name ordering as an explicit option |
 | SORT-3 | Full stacks sort ahead of partial stacks of the same item |
-| SORT-4 | A sort request is honoured only for the screen handler the player currently has open, or, for `/tmc sort` with no container open, the container block the player is looking at within reach, which must pass the same gates its screen would and must open for that player, so a locked container and a spectator are refused |
+| SORT-4 | A sort request is honoured only for the screen handler the player currently has open, or, for `/ts sort` with no container open, the container block the player is looking at within reach, which must pass the same gates its screen would and must open for that player, so a locked container and a spectator are refused |
 | SORT-5 | Screens where reordering is meaningless or harmful are refused, unknown special-purpose screens included, by a deny list and a structural probe (ADR 0018) |
 | SORT-6 | Sorting runs in one transaction; a failure part way rolls back completely |
 | SORT-7 | Every viewer of a sorted container is resynced, both halves of a double chest included |
@@ -321,7 +321,7 @@ Default order: category by preset tag grouping, then registry identifier, then d
 
 **Actor:** Any player
 
-A sort button appears on every container screen and the player inventory. A keybind does the same without the mouse. Because the logic is server-side, `/tmc sort` does the same by command: the player looks at the container and runs it, since chat will not open while a container screen is up.
+A sort button appears on every container screen and the player inventory. A keybind does the same without the mouse. Because the logic is server-side, `/ts sort` does the same by command: the player looks at the container and runs it, since chat will not open while a container screen is up.
 
 | ID | Requirement |
 |---|---|
@@ -333,7 +333,7 @@ A sort button appears on every container screen and the player inventory. A keyb
 | BTN-6 | The button is hidden when the server does not have the mod installed |
 | BTN-7 | A rebindable keybind sorts the container the player has open, or their inventory |
 | BTN-8 | No default keybinding conflicts with a vanilla key |
-| BTN-9 | `/tmc sort` sorts the open container; with none open, the container block the player is looking at within reach; with nothing sortable in view, the inventory. A block in view whose screen is refused, a furnace or an anvil among them, is refused rather than falling back, and so is a container that will not open for the player and an ender chest |
+| BTN-9 | `/ts sort` sorts the open container; with none open, the container block the player is looking at within reach; with nothing sortable in view, the inventory. A block in view whose screen is refused, a furnace or an anvil among them, is refused rather than falling back, and so is a container that will not open for the player and an ender chest |
 | BTN-11 | The button is disableable in config, leaving the command working |
 | BTN-12 | Sorting the player inventory, by any entry point, orders the 27 main inventory slots only and never moves anything into or out of the hotbar |
 
@@ -380,7 +380,7 @@ An operator configures every behaviour from the console, with no client mod and 
 | CFG-1 | Server config is an immutable record persisted as JSON per world, not globally |
 | CFG-2 | A missing file yields defaults and writes them; a malformed file falls back, logs clearly, and is preserved rather than overwritten |
 | CFG-3 | Out-of-range values are clamped on load rather than rejected, so a bad edit never stops a server starting |
-| CFG-4 | Every setting is reachable from the command tree, rooted at `/toomanychests` with the alias `/tmc`, with tab completion for names and values. Most sit under `config list`, `get`, `set`, and `reset`, with bare `config` listing them; container eligibility has its own verbs |
+| CFG-4 | Every setting is reachable from the command tree, rooted at `/totalstorage` with the alias `/ts`, with tab completion for names and values. Most sit under `config list`, `get`, `set`, and `reset`, with bare `config` listing them; container eligibility has its own verbs |
 | CFG-5 | Mutating config commands require permission level 2; console execution works for all of them |
 | CFG-6 | Value validation reports the valid range rather than silently clamping at the command |
 | CFG-7 | Config syncs to clients on join and on change |
@@ -445,7 +445,7 @@ The server config sets the default mode for newly placed terminals, owner-locked
 | Change a network's settings by command | No | No | Own terminals | Any terminal |
 | Read server config, by command or screen | Yes | Yes | Yes | Yes |
 | Change server config, by command or screen | No | No | No | Yes, level 2 |
-| `/tmc sort`, `/tmc quickstack` | Yes | Yes | Yes | Yes |
+| `/ts sort`, `/ts quickstack` | Yes | Yes | Yes | Yes |
 | Sort a container they have open | Yes | Yes | Yes | Yes |
 | Lock their own slots | Yes | Yes | Yes | Yes |
 

@@ -92,7 +92,7 @@ fi
 
 drain_log
 
-for marker in '[Server thread/INFO] (ServerConfigService) Too Many Chests server config loaded for ' 'All dimensions are saved'; do
+for marker in '[Server thread/INFO] (ServerConfigService) Total Storage server config loaded for ' 'All dimensions are saved'; do
   if ! grep -qF "$marker" "$LOG"; then
     echo "::error::Server log is missing '${marker}'"
     exit 1

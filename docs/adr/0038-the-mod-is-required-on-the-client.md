@@ -6,7 +6,7 @@
 
 ## Context
 
-ADR 0003 put sorting on the server, and one of the reasons given was that a player with no mods installed could still sort a chest with `/tmc sort`. The PRD made that player an actor, and release criterion REL-9 required an unmodified client to be tested against a modded server.
+ADR 0003 put sorting on the server, and one of the reasons given was that a player with no mods installed could still sort a chest with `/ts sort`. The PRD made that player an actor, and release criterion REL-9 required an unmodified client to be tested against a modded server.
 
 The 0.1.0 playtest ran that test. An unmodified 1.21.1 client joined a dedicated server running the mod and was disconnected about a second later, failing to decode the recipe list. The server sends every recipe on join, the terminal recipe names the terminal item, and a vanilla client has no item with that id.
 
@@ -24,7 +24,7 @@ The check uses the channels the client registered, not anything the client says 
 
 A player without the mod sees a clear reason on the disconnect screen instead of a decode error.
 
-`/tmc sort` and `/tmc quickstack` stay. They are still how a player sorts without the button or the keybind, and how an operator reaches the same logic from the console.
+`/ts sort` and `/ts quickstack` stay. They are still how a player sorts without the button or the keybind, and how an operator reaches the same logic from the console.
 
 Accepted drawback: the mod cannot be put on a public server for players who will not install anything. Serving them would mean either a new dependency on a server-side content library or a set of packet rewrites for every place the terminal can appear, both of which are more to own than this promise was worth for 0.1.0.
 

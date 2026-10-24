@@ -7,7 +7,7 @@ Every colour and every bevel here is Minecraft's. A terminal opened beside a che
 Sprites live in the client source set, because a dedicated server must never load them:
 
 ```
-src/client/resources/assets/too-many-chests/textures/gui/sprites/<path>.png
+src/client/resources/assets/total-storage/textures/gui/sprites/<path>.png
 ```
 
 Anything under `textures/gui/sprites/` is stitched into the GUI atlas automatically. The screen never names a sprite by string. `TerminalSprite` is the catalogue, and a widget draws through it:
@@ -110,7 +110,7 @@ Pixel art is still easier to write as text than to push around in an editor, so 
 
 ```bash
 python3 tools/gui_sprite.py build <scratch>/panel.sprite.txt \
-	src/client/resources/assets/too-many-chests/textures/gui/sprites/chrome/panel.png
+	src/client/resources/assets/total-storage/textures/gui/sprites/chrome/panel.png
 ```
 
 A source is a palette block of `# k = RRGGBB[AA]` lines, a `# size = WxH` line, and one line per pixel row, each character a palette key or `.` for transparent. An unknown character or the wrong row count is an error rather than a silent crop. The tool also previews without launching the game:

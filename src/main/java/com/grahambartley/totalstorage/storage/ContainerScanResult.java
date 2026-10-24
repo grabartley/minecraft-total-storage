@@ -1,0 +1,31 @@
+package com.grahambartley.totalstorage.storage;
+
+import java.time.Duration;
+import java.util.List;
+import java.util.Objects;
+
+public record ContainerScanResult(
+    List<StorageProvider> providers, int chunksVisited, int chunksSkipped, long elapsedNanos) {
+  public static final long BUDGET_NANOS = Duration.ofMillis(10).toNanos();
+
+  public ContainerScanResult {
+    Objects.requireNonNull(providers, "providers");
+    providers = List.copyOf(providers);
+  }
+
+  public static ContainerScanResult empty() {
+    return new ContainerScanResult(List.of(), 0, 0, 0L);
+  }
+
+  public int containerCount() {
+    return providers.size();
+  }
+
+  public boolean skippedUnloadedChunks() {
+    return chunksSkipped > 0;
+  }
+
+  public boolean exceededBudget() {
+    return elapsedNanos > BUDGET_NANOS;
+  }
+}
