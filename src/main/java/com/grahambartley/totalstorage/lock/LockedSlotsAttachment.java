@@ -1,0 +1,52 @@
+package com.grahambartley.totalstorage.lock;
+
+import com.grahambartley.totalstorage.TotalStorage;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.RegistryByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
+import net.minecraft.util.Identifier;
+
+public final class LockedSlotsAttachment {
+  public static final Identifier ID = Identifier.of(TotalStorage.MOD_ID, "locked_slots");
+
+  public static final PacketCodec<RegistryByteBuf, LockedSlots> PACKET_CODEC =
+      PacketCodecs.VAR_INT
+          .collect(PacketCodecs.toList())
+          .xmap(LockedSlots::of, LockedSlots::sortedIndices)
+          .cast();
+
+  public static final AttachmentSyncPredicate SYNC_PREDICATE = AttachmentSyncPredicate.targetOnly();
+
+  public static final AttachmentType<LockedSlots> TYPE =
+      AttachmentRegistry.create(
+          ID,
+          builder ->
+              builder
+                  .persistent(LockedSlotsCodec.CODEC)
+                  .copyOnDeath()
+                  .syncWith(PACKET_CODEC, SYNC_PREDICATE));
+
+  private LockedSlotsAttachment() {}
+
+  public static void register() {}
+
+  public static LockedSlots get(PlayerEntity player) {
+    return player == null
+        ? LockedSlots.empty()
+        : player.getAttachedOrElse(TYPE, LockedSlots.empty());
+  }
+
+  public static void set(PlayerEntity player, LockedSlots locked) {
+    player.setAttached(TYPE, locked == null ? LockedSlots.empty() : locked);
+  }
+
+  public static LockedSlots toggle(PlayerEntity player, int slot) {
+    final LockedSlots toggled = get(player).toggled(slot);
+    set(player, toggled);
+    return toggled;
+  }
+}

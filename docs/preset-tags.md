@@ -1,7 +1,7 @@
 # Preset Tag Membership
 
 The thirteen preset tags are derived from vanilla and Fabric convention item tags, in
-`src/main/resources/data/too-many-chests/tags/item/preset/`. `PresetTagResolver` asks the registry
+`src/main/resources/data/total-storage/tags/item/preset/`. `PresetTagResolver` asks the registry
 which of them an item is in, and `PresetTagRules` falls back to Miscellaneous when none of them
 claim it, so TAG-2 holds by construction: every item resolves to at least one preset tag.
 

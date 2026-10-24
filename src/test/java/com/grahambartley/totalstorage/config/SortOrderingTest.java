@@ -1,0 +1,55 @@
+package com.grahambartley.totalstorage.config;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.grahambartley.totalstorage.EnglishLang;
+import java.util.Locale;
+import java.util.Optional;
+import net.minecraft.text.TranslatableTextContent;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
+
+class SortOrderingTest {
+  @ParameterizedTest
+  @EnumSource(SortOrdering.class)
+  void everyOrderingRoundTripsThroughItsId(SortOrdering ordering) {
+    assertEquals(Optional.of(ordering), SortOrdering.fromId(ordering.id()));
+  }
+
+  @ParameterizedTest
+  @EnumSource(SortOrdering.class)
+  void idsAreLowercase(SortOrdering ordering) {
+    assertEquals(ordering.id().toLowerCase(Locale.ROOT), ordering.id());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"REGISTRY_ID", " registry_id ", "Registry_Id"})
+  void parsingIgnoresCaseAndSurroundingSpace(String id) {
+    assertEquals(Optional.of(SortOrdering.REGISTRY_ID), SortOrdering.fromId(id));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"", "alphabetical", "registry id"})
+  void anUnrecognisedIdIsEmpty(String id) {
+    assertTrue(SortOrdering.fromId(id).isEmpty());
+  }
+
+  @Test
+  void aNullIdIsEmpty() {
+    assertTrue(SortOrdering.fromId(null).isEmpty());
+  }
+
+  @ParameterizedTest
+  @CsvSource({"REGISTRY_ID, Registry order", "DISPLAY_NAME, Display name"})
+  void theOrderingsReadAsAPlayerWouldSayThem(SortOrdering ordering, String english) {
+    assertEquals(english, EnglishLang.of(keyOf(ordering)));
+  }
+
+  private static String keyOf(SortOrdering ordering) {
+    return ((TranslatableTextContent) ordering.displayName().getContent()).getKey();
+  }
+}

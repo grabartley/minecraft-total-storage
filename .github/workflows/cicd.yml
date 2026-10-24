@@ -119,7 +119,7 @@ jobs:
         if: github.event_name == 'pull_request' || github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
-          name: too-many-chests-${{ github.sha }}
+          name: total-storage-${{ github.sha }}
           path: build/libs/*.jar
 
       - name: Compute next version

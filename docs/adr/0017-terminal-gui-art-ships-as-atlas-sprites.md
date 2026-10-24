@@ -15,7 +15,7 @@ Since 1.20.2 the game stitches `textures/gui/sprites/` into a GUI atlas on its o
 
 ## Decision
 
-**Terminal GUI art ships as individual sprites under `assets/too-many-chests/textures/gui/sprites/`, with nine-slice metadata on everything whose drawn size is not known in advance.**
+**Terminal GUI art ships as individual sprites under `assets/total-storage/textures/gui/sprites/`, with nine-slice metadata on everything whose drawn size is not known in advance.**
 
 Nothing in the screen code names a pixel offset. A widget names a sprite and a rectangle, and the border comes out the right width whatever that rectangle is.
 

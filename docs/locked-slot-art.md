@@ -13,7 +13,7 @@ A locked slot carries two cues, and they are not interchangeable:
 
 ## Sprite Reference
 
-Under `src/client/resources/assets/too-many-chests/textures/gui/sprites/`, in the client source set because a dedicated server must never load it.
+Under `src/client/resources/assets/total-storage/textures/gui/sprites/`, in the client source set because a dedicated server must never load it.
 
 | Sprite id | Size | Scaling | Use |
 |---|---|---|---|
@@ -56,7 +56,7 @@ The PNG that ships is the badge, and the repository holds nothing else that desc
 
 ```bash
 python3 tools/gui_sprite.py build <scratch>/locked.sprite.txt \
-	src/client/resources/assets/too-many-chests/textures/gui/sprites/slot/locked.png
+	src/client/resources/assets/total-storage/textures/gui/sprites/slot/locked.png
 ```
 
 Check any edit at every GUI scale before committing, since the badge is the smallest art in the mod and a pixel moved at 4x can close the arch at 1x:

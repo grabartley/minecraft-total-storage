@@ -1,6 +1,6 @@
 # Engineering Standards
 
-These standards apply to every mod in this family: Dogs Unleashed, Loot Lock, More Doors, Not Enough Arrows, Teleport Effects, and Too Many Chests. They exist because the same decisions kept being re-made from memory.
+These standards apply to every mod in this family: Dogs Unleashed, Loot Lock, More Doors, Not Enough Arrows, Teleport Effects, and Total Storage. They exist because the same decisions kept being re-made from memory.
 
 Dogs Unleashed is the reference implementation. When this document and that codebase disagree, the codebase is probably right and this document needs updating.
 
@@ -70,4 +70,4 @@ The registers are not interchangeable and a message never goes to two of them. A
 
 - Every change updates the documentation it invalidates, in the same pull request.
 - Reasoning behind an architectural decision belongs in an architecture decision record under `docs/adr/`, not in a comment and not in a commit message.
-- **The source carries no comments at all.** Not explanatory ones, not javadoc, not "why" ones. Naming and structure carry the meaning, and anything that genuinely needs explaining is either a decision record or a sign the code should be reshaped until it does not. Too Many Chests enforces this with Checkstyle rather than trusting memory: a single `MatchXpath` rule over the parsed comment nodes fails the build at `file:line` on any comment in any source set, javadoc included, and never edits source to do it. See its [ADR 0034](adr/0034-a-linter-forbids-comments-rather-than-a-formatter-stripping-them.md) for why a linter does this and a formatter must not.
+- **The source carries no comments at all.** Not explanatory ones, not javadoc, not "why" ones. Naming and structure carry the meaning, and anything that genuinely needs explaining is either a decision record or a sign the code should be reshaped until it does not. Total Storage enforces this with Checkstyle rather than trusting memory: a single `MatchXpath` rule over the parsed comment nodes fails the build at `file:line` on any comment in any source set, javadoc included, and never edits source to do it. See its [ADR 0034](adr/0034-a-linter-forbids-comments-rather-than-a-formatter-stripping-them.md) for why a linter does this and a formatter must not.

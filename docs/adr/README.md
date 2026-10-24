@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-These records capture **why** Too Many Chests is built the way it is. They are not specifications: what the mod is lives in [`../prd.md`](../prd.md), and the issues and epics remain the working specification on acceptance criteria.
+These records capture **why** Total Storage is built the way it is. They are not specifications: what the mod is lives in [`../prd.md`](../prd.md), and the issues and epics remain the working specification on acceptance criteria.
 
 A record is historical. When a decision changes, add a new record superseding the old one rather than editing it, so the reasoning behind the original choice is not lost.
 

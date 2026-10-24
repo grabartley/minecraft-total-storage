@@ -5,7 +5,7 @@
 
 ## Context
 
-The terminal is the mod. Everything else in Too Many Chests is reachable through it, so its recipe is not a balance detail at the edge of the mod, it is the gate on whether anybody sees the mod at all.
+The terminal is the mod. Everything else in Total Storage is reachable through it, so its recipe is not a balance detail at the edge of the mod, it is the gate on whether anybody sees the mod at all.
 
 That gate can be set wrong in both directions. Cheap enough to craft on day one and the mod replaces the storage problem before the player has one, which removes the very thing it was built to make pleasant. Expensive enough to need the End and the mod becomes an endgame reward, arriving after the player has already built the chest room it was meant to spare them. The second failure is the one storage mods usually make, and it is worse, because a feature nobody reaches may as well not ship.
 

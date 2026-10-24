@@ -1,0 +1,110 @@
+package com.grahambartley.totalstorage.gametest;
+
+import com.grahambartley.totalstorage.config.ConfigBuilder;
+import com.grahambartley.totalstorage.config.ServerConfigChanges;
+import com.grahambartley.totalstorage.config.ServerConfigListener;
+import com.grahambartley.totalstorage.config.ServerConfigService;
+import com.grahambartley.totalstorage.config.TotalStorageConfig;
+import com.grahambartley.totalstorage.network.ConfigSync;
+import java.util.ArrayList;
+import java.util.List;
+import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.OperatorEntry;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.test.GameTest;
+import net.minecraft.test.TestContext;
+
+public final class ConfigSyncGameTest implements FabricGameTest {
+  private static final String BATCH = "server-config";
+  private static final int TICK_LIMIT = 20;
+  private static final int EDITED_RADIUS = 32;
+
+  @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void anEditFromANonOperatorLeavesTheConfigAlone(TestContext context) {
+    ServerPlayerEntity player = context.createMockCreativeServerPlayerInWorld();
+    TotalStorageConfig original = ServerConfigService.current();
+
+    ConfigSync.handleEdit(player, radiusOf(EDITED_RADIUS));
+
+    context.assertTrue(
+        !player.hasPermissionLevel(ServerConfigService.OP_PERMISSION_LEVEL),
+        "A freshly connected mock player should not be an operator");
+    context.assertTrue(
+        ServerConfigService.current().equals(original),
+        "A non-operator edit must change nothing but read " + ServerConfigService.current());
+    disconnectAndComplete(context, player);
+  }
+
+  @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void anEditFromAnOperatorBecomesTheLiveConfig(TestContext context) {
+    MinecraftServer server = context.getWorld().getServer();
+    ServerPlayerEntity player = context.createMockCreativeServerPlayerInWorld();
+    TotalStorageConfig original = ServerConfigService.current();
+    grantOperator(server, player);
+
+    ConfigSync.handleEdit(player, radiusOf(EDITED_RADIUS));
+    int live = ServerConfigService.current().maxTerminalRadius();
+
+    server.getPlayerManager().getOpList().remove(player.getGameProfile());
+    ServerConfigService.update(server, original);
+    context.assertTrue(
+        live == EDITED_RADIUS, "An operator edit should be adopted but the radius read " + live);
+    disconnectAndComplete(context, player);
+  }
+
+  @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void anEditThatIsRefusedIsNotHalfApplied(TestContext context) {
+    ServerPlayerEntity player = context.createMockCreativeServerPlayerInWorld();
+    TotalStorageConfig original = ServerConfigService.current();
+
+    ConfigSync.handleEdit(player, null);
+
+    context.assertTrue(
+        ServerConfigService.current().equals(original),
+        "An edit carrying no config must change nothing but read " + ServerConfigService.current());
+    disconnectAndComplete(context, player);
+  }
+
+  @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void everyAcceptedChangeIsAnnouncedOnce(TestContext context) {
+    MinecraftServer server = context.getWorld().getServer();
+    TotalStorageConfig original = ServerConfigService.current();
+    List<TotalStorageConfig> heard = new ArrayList<>();
+    ServerConfigListener recorder = (changedServer, config) -> heard.add(config);
+    ServerConfigChanges.subscribe(recorder);
+
+    ServerConfigService.update(server, radiusOf(EDITED_RADIUS));
+
+    ServerConfigChanges.unsubscribe(recorder);
+    ServerConfigService.update(server, original);
+    context.assertTrue(
+        heard.size() == 1, "One accepted change should be announced once, not " + heard.size());
+    context.assertTrue(
+        heard.get(0).maxTerminalRadius() == EDITED_RADIUS,
+        "Listeners should hear the new values, not the old ones");
+    context.complete();
+  }
+
+  private static void grantOperator(MinecraftServer server, ServerPlayerEntity player) {
+    server
+        .getPlayerManager()
+        .getOpList()
+        .add(
+            new OperatorEntry(
+                player.getGameProfile(), ServerConfigService.OP_PERMISSION_LEVEL, false));
+  }
+
+  private static TotalStorageConfig radiusOf(int maxTerminalRadius) {
+    return ConfigBuilder.from(TotalStorageConfig.defaults())
+        .maxTerminalRadius(maxTerminalRadius)
+        .build();
+  }
+
+  private static void disconnectAndComplete(TestContext context, ServerPlayerEntity... players) {
+    for (final ServerPlayerEntity player : players) {
+      context.getWorld().getServer().getPlayerManager().remove(player);
+    }
+    context.complete();
+  }
+}

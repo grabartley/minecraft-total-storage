@@ -1,0 +1,26 @@
+{
+  "block.terminal.power_on": {
+    "subtitle": "subtitles.total-storage.terminal.power_on",
+    "sounds": [
+      "total-storage:terminal/power_on"
+    ]
+  },
+  "block.terminal.power_off": {
+    "subtitle": "subtitles.total-storage.terminal.power_off",
+    "sounds": [
+      "total-storage:terminal/power_off"
+    ]
+  },
+  "block.terminal.screen_open": {
+    "subtitle": "subtitles.total-storage.terminal.screen_open",
+    "sounds": [
+      "total-storage:terminal/screen_open"
+    ]
+  },
+  "block.terminal.deposit_confirm": {
+    "subtitle": "subtitles.total-storage.terminal.deposit_confirm",
+    "sounds": [
+      "total-storage:terminal/deposit_confirm"
+    ]
+  }
+}

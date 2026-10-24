@@ -17,7 +17,7 @@ Third, what happens to an item no preset claims. A player who cannot find an ite
 
 An item holds every preset it matches, not one.
 
-Each preset is backed by a mod-owned item tag under `too-many-chests:preset/`, composed in data out of vanilla tags, convention (`#c:`) tags, and a curated item list only where neither has a suitable tag. Membership is read live from the tag bindings on every lookup rather than snapshotted at load.
+Each preset is backed by a mod-owned item tag under `total-storage:preset/`, composed in data out of vanilla tags, convention (`#c:`) tags, and a curated item list only where neither has a suitable tag. Membership is read live from the tag bindings on every lookup rather than snapshotted at load.
 
 `Miscellaneous` has no tag. It is what the resolver returns when nothing else matched, and it never appears alongside a real preset.
 
@@ -25,7 +25,7 @@ Food is the one preset that also consults a data component. Any item carrying a 
 
 ## Consequences
 
-Composing in data is what keeps the presets current. A vanilla item added in a future version arrives already tagged, and a modded item that follows the convention tags lands in a sensible preset with no code change. A pack can extend or override a preset the same way it would any other tag, exactly as it can already for the `too-many-chests:network_ineligible` block tag.
+Composing in data is what keeps the presets current. A vanilla item added in a future version arrives already tagged, and a modded item that follows the convention tags lands in a sensible preset with no code change. A pack can extend or override a preset the same way it would any other tag, exactly as it can already for the `total-storage:network_ineligible` block tag.
 
 Reading membership live means a datapack reload reclassifies items immediately, with no migration and no stale index to invalidate.
 

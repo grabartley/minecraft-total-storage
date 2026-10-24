@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "total-storage:block/terminal_front_on",
+    "north": "total-storage:block/terminal_front_on",
+    "east": "total-storage:block/terminal_side_on",
+    "south": "total-storage:block/terminal_side_on",
+    "west": "total-storage:block/terminal_side_on",
+    "up": "total-storage:block/terminal_top_on",
+    "down": "total-storage:block/terminal_bottom"
+  }
+}

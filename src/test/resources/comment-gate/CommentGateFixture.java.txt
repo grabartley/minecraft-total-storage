@@ -1,4 +1,4 @@
-package com.grahambartley.toomanychests;
+package com.grahambartley.totalstorage;
 
 /** Javadoc on the type. */
 public final class CommentGateFixture {

@@ -16,7 +16,7 @@ The art is already cut for a specific blockstate. Registration has to match it o
 
 ## Textures
 
-All 16x16 and fully opaque, under `assets/too-many-chests/textures/block/`.
+All 16x16 and fully opaque, under `assets/total-storage/textures/block/`.
 
 | Texture | Face | Unpowered | Powered |
 |---|---|---|---|
@@ -44,7 +44,7 @@ Two complete texture sets rather than one set plus an overlay is the vanilla pat
 
 ## Sounds
 
-Mono Vorbis under `assets/too-many-chests/sounds/terminal/`, registered through `sounds.json`. Registration has to declare these four identifiers:
+Mono Vorbis under `assets/total-storage/sounds/terminal/`, registered through `sounds.json`. Registration has to declare these four identifiers:
 
 | Sound event | File | Length | Intent |
 |---|---|---|---|
@@ -89,14 +89,14 @@ Pixel art is still easier to write as text, and the GUI sprite tool renders a pa
 
 ```bash
 python3 tools/gui_sprite.py build <scratch>/terminal_front.sprite.txt \
-	src/main/resources/assets/too-many-chests/textures/block/terminal_front.png
+	src/main/resources/assets/total-storage/textures/block/terminal_front.png
 ```
 
 Sounds are synthesised rather than recorded, so the source of truth is the synthesis itself:
 
 ```bash
 python3 tools/terminal_sounds.py \
-	src/main/resources/assets/too-many-chests/sounds/terminal
+	src/main/resources/assets/total-storage/sounds/terminal
 ```
 
 That needs `numpy` and either `oggenc` or an `ffmpeg` built with `libvorbis`. Editing a cue means editing its builder function, which states the frequencies, the decay constants and the envelope in one place.
