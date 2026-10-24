@@ -1,0 +1,161 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: temurin
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+
+      - name: Check formatting (Spotless)
+        run: ./gradlew spotlessCheck --configuration-cache --build-cache
+
+      - name: Run tests with coverage
+        run: ./gradlew check --configuration-cache --build-cache
+
+      - name: Publish unit test report
+        uses: mikepenz/action-junit-report@v4
+        if: success() || failure()
+        with:
+          report_paths: "**/build/test-results/*/TEST-*.xml"
+          check_name: JUnit Test Report
+          detailed_summary: true
+          include_passed: true
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: success() || failure()
+        with:
+          name: coverage-report
+          path: build/reports/jacoco/test/html/
+
+  gametests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: temurin
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+
+      - name: Run gametests
+        run: ./gradlew runGametest --no-daemon --stacktrace
+
+      - name: Publish gametest report
+        uses: mikepenz/action-junit-report@v4
+        if: success() || failure()
+        with:
+          report_paths: build/gametest-results.xml
+          check_name: Gametest Report
+          detailed_summary: true
+          include_passed: true
+
+      - name: Upload gametest run dir on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-run-logs-gametest-${{ github.sha }}
+          path: build/gametest/
+
+  server-smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: temurin
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+
+      - name: Dedicated server smoke boot
+        run: .github/scripts/server-smoke-boot.sh
+
+      - name: Upload server logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-run-logs-server-smoke-${{ github.sha }}
+          if-no-files-found: ignore
+          path: |
+            run/logs/
+            run/crash-reports/
+
+  snapshot-jar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: temurin
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+
+      - name: Build snapshot JAR
+        run: ./gradlew assemble -Pversion=1.0.0-SNAPSHOT-${{ github.sha }}
+
+      - name: Upload snapshot JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: total-storage-${{ github.sha }}
+          path: build/libs/*.jar

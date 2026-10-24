@@ -1,12 +1,6 @@
 name: CI/CD
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       bump:
@@ -110,17 +104,6 @@ jobs:
         with:
           name: coverage-report
           path: build/reports/jacoco/test/html/
-
-      - name: Build snapshot JAR
-        if: github.event_name == 'pull_request' || github.event_name == 'push'
-        run: ./gradlew build -Pversion=1.0.0-SNAPSHOT-${{ github.sha }}
-
-      - name: Upload snapshot JAR
-        if: github.event_name == 'pull_request' || github.event_name == 'push'
-        uses: actions/upload-artifact@v4
-        with:
-          name: total-storage-${{ github.sha }}
-          path: build/libs/*.jar
 
       - name: Compute next version
         if: github.event_name == 'workflow_dispatch'
