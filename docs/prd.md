@@ -189,7 +189,7 @@ With a stack already on the cursor the same grid takes clicks the other way, dep
 | GET-2 | Asking for more than exists grants everything available and reports the shortfall. A click that takes everything its cell showed is not a shortfall and reports nothing |
 | GET-3 | A full inventory yields a partial withdrawal; the remainder stays in the network |
 | GET-4 | Locked slots are never used as a destination |
-| GET-5 | The two empty-handed endings are reported distinctly: the item is gone, or there is nowhere to put it. This includes losing a race for the last stack, which says the item is gone rather than staying silent. The report goes to the in-terminal notice, never the action bar, because the terminal is open when it fires. This is the rule SAFE-6's quietness is measured against: quiet means no error and no interruption, not no feedback |
+| GET-5 | The two empty-handed endings are reported distinctly: the item is gone, or there is nowhere to put it. This includes losing a race for the last stack, which says the item is gone rather than staying silent. The report goes to the terminal's status line, never the action bar, because the terminal is open when it fires. This is the rule SAFE-6's quietness is measured against: quiet means no error and no interruption, not no feedback |
 
 **Not supported:** withdrawing to a specific container; naming a slot or position in a request; the client deciding what a withdrawal may take.
 
@@ -226,7 +226,7 @@ Routing order, per item variant:
 | PUT-9 | A network with no room leaves the inventory untouched and says so |
 | PUT-10 | Items that cannot be stored stay in their original slots where possible |
 | PUT-11 | Feedback distinguishes "nothing to deposit" from "no space", tells a full network apart from free space that only `Filtered` containers hold and from free slots that cannot hold the item, and names what could not be stored by item and count |
-| PUT-12 | The terminal shows network capacity, with a configurable near-full warning threshold |
+| PUT-12 | The terminal shows network capacity in its action dock, as a bar and the free slot count, with a configurable near-full warning threshold that adds a warning icon and the words "Almost full" |
 | PUT-13 | Capacity counts only writable containers, excluding `Excluded` ones |
 | PUT-14 | Ties between candidate containers resolve deterministically |
 | PUT-15 | Quick-stack tops up matching stacks in nearby containers, introducing nothing new, with or without a terminal present |
@@ -304,10 +304,10 @@ Default order: category by preset tag grouping, then registry identifier, then d
 | SORT-10 | Consolidation gathers each variant into the fewest containers, then sorts them |
 | SORT-11 | `Excluded` containers are never written to or reordered by any network-initiated operation, and stay readable and withdrawable throughout (ADR 0004) |
 | SORT-12 | `Filtered` containers receive only matching items during consolidation |
-| SORT-13 | Network sort and consolidate are explicit terminal actions, with confirmation above a size threshold, progress, and a summary naming containers touched and `Excluded` ones skipped |
+| SORT-13 | Network sort and consolidate are explicit terminal actions. Above a size threshold the first press arms the button and a second press confirms. While the operation runs, its button becomes an accent Stop button showing the percentage done. A finished operation says nothing beyond its sound and its result |
 | SORT-18 | Anything an operation says while a terminal is open is drawn inside that terminal, since the action bar renders behind an open screen; a confirmation the player cannot read is not a confirmation |
 | SORT-14 | A long operation is budgeted per tick, by the containers and slots it reads, and continues across ticks rather than blocking the server (ADR 0036) |
-| SORT-15 | An in-progress operation can be cancelled between steps: nothing further is started, every committed step stands, and no item is lost (ADR 0036) |
+| SORT-15 | An in-progress operation can be cancelled between steps, by pressing its Stop button: nothing further is started, every committed step stands, and no item is lost (ADR 0036) |
 | SORT-16 | The terminal stays responsive while a large operation runs |
 | SORT-17 | Both are rate limited and require owner or operator permission, checked when the request arrives rather than when the button is drawn |
 
@@ -357,8 +357,9 @@ A player locks the slots holding their tools, weapons, and food. No automated op
 | LOCK-4 | Alt with left click toggles the lock on the slot under the cursor, in any screen showing the player inventory. There is no lock mode (ADR 0016) |
 | LOCK-5 | The gesture never moves an item, and is swallowed whether or not it lands on a lockable slot, so a mis-click does nothing rather than throwing something on the floor (ADR 0016) |
 | LOCK-6 | An out-of-range slot index from a forged packet is rejected |
-| LOCK-7 | A locked slot is tinted, and carries a badge readable without colour that leaves the stack count and durability bar untouched and the item still identifiable |
-| LOCK-8 | The tint is a per-player client display option that can be turned off, leaving the badge as the indicator; it is not a server-wide setting |
+| LOCK-7 | A locked slot carries a small 5x6 two-tone padlock badge in the top-left corner of the slot, readable without colour, that leaves the stack count and durability bar untouched and the item still identifiable. Locks are drawn in screens that show the player inventory, never on the in-game hotbar |
+| LOCK-8 | A tint behind locked slots is a per-player client display option, off by default, with the badge as the indicator either way; it is not a server-wide setting |
+| LOCK-12 | Holding Alt in a screen showing the player inventory rings every slot that can be locked, and only then does a locked item's tooltip add a line saying it is locked and how to unlock it. Without Alt, a locked item's tooltip is the vanilla tooltip |
 | LOCK-9 | Every path the mod drives on the player's behalf honours locks: sorting by any entry point, deposit all, quick-stack, and any future loadout preset swap (ADR 0010). "Automated" means the mod chose which slots to move, not that the player pressed something |
 | LOCK-10 | A gesture in which the player chose the slot is never blocked by a lock: dragging, shift-clicking and hotbar swapping, wherever they are aimed. A shift-click from a locked slot onto the terminal grid moves the stack, exactly as a shift-click into a chest does, because the player picked that slot. The one-sentence rule is that a lock stops the mod moving a slot, never the player |
 | LOCK-11 | Sorting an inventory with locked slots scattered through its main inventory sorts around them, leaving them in place |
@@ -591,9 +592,15 @@ Every screen the mod draws is a Minecraft screen. A player opens the terminal fr
 | UI-1 | Every interface the mod draws uses vanilla's container chrome: its chassis, its bevels, its slot frames and its label greys, copied from Minecraft's own textures rather than designed to resemble them |
 | UI-2 | A slot is 18 pixels with its item drawn at `+1,+1` wherever the mod draws one, so the mod's grids line up column for column with the player inventory below them |
 | UI-3 | Hovering, item counts, durability bars and cooldown sweeps are drawn by the game's own calls, so an item in a mod grid renders exactly as it does in a chest |
-| UI-4 | No chrome the mod draws, meaning its panels, rows, controls, fields, slots, icons and text, paints a colour the palette does not hold, and every colour in that palette is one Minecraft itself uses, whether in a texture or in a screen's own drawing code, except one accent, which marks a row that is switched on or armed and is always accompanied by a shape and a word |
+| UI-4 | No chrome the mod draws, meaning its panels, rows, controls, fields, slots, icons and text, paints a colour the palette does not hold, and every colour in that palette is one Minecraft itself uses, whether in a texture or in a screen's own drawing code, except one accent, which marks a row or button that is switched on or armed and is always accompanied by a shape or a word that says the same thing |
 | UI-5 | Conformance is tested rather than reviewed: the build reads Minecraft's own textures and fails if a colour drifts or if any shipped sprite paints one that is not in the palette |
 | UI-6 | A colour drawn over pixels the mod does not own, a state tint on a slot or an outline on world geometry, is exempt from UI-4 and is documented where it lives |
+| UI-7 | The terminal's Items and Settings views are tabs on the right edge of its panel. Settings has three sub tabs: Terminal, Containers and Tags |
+| UI-8 | An action dock sits left of the player inventory. It shows network room above the actions for the current view: deposit all, sort and gather on Items; scan again and show in world on Containers; new tag and copy from on Tags |
+| UI-9 | A button with a label is text only, like a vanilla button. A button with no label is a square icon button with a tooltip |
+| UI-10 | A prompt opens as its own panel centred over the dimmed terminal, never inside it, and shows its keys, such as Enter and Esc, as keycaps |
+| UI-11 | A success says nothing beyond its sound and its visible result. A failure or partial result shows as one line in the terminal's status line, which replaces the "Inventory" label for a few seconds and gives the full message in a tooltip on hover. Nothing the terminal says is drawn over the item grid |
+| UI-12 | Every label, button and message fits in the Minecraft font at GUI scales 1 through 4 without clipping or overlapping another control. A name too long for its row is shortened and shown in full on hover |
 
 ### 8.6 Compatibility
 
