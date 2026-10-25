@@ -42,3 +42,4 @@ TODO.md
 .claude/tmp/
 .claude/worktrees/
 .codex/
+.playwright-mcp/
