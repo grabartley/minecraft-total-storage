@@ -112,24 +112,16 @@ class ContainerRowTextTest {
   }
 
   @Test
-  void noTwoRolesShareAWordOrAColour() {
+  void noTwoRolesShareAWord() {
     assertNotEquals(
         keyOf(ContainerRowText.role(ContainerRole.GENERAL)),
         keyOf(ContainerRowText.role(ContainerRole.EXCLUDED)));
-    assertNotEquals(
-        ContainerRowText.roleColour(ContainerRole.GENERAL),
-        ContainerRowText.roleColour(ContainerRole.EXCLUDED));
-    assertNotEquals(
-        ContainerRowText.roleColour(ContainerRole.FILTERED),
-        ContainerRowText.roleColour(ContainerRole.EXCLUDED));
   }
 
   @Test
   void aContainerWithNoRoleReadsAsTheDefaultOne() {
     assertEquals(
         keyOf(ContainerRowText.role(ContainerRole.DEFAULT)), keyOf(ContainerRowText.role(null)));
-    assertEquals(
-        ContainerRowText.roleColour(ContainerRole.DEFAULT), ContainerRowText.roleColour(null));
   }
 
   @Test

@@ -35,6 +35,8 @@ public final class TagsSectionLayout {
 
   public static final int COUNT_GAP = 6;
 
+  public static final int TEXT_HEIGHT = 8;
+
   public static final int FOOTER_Y =
       TerminalSettingsLayout.LIST_Y
           + LIST_HEIGHT
@@ -43,7 +45,7 @@ public final class TagsSectionLayout {
                   - 1
                   - TerminalSettingsLayout.LIST_Y
                   - LIST_HEIGHT
-                  - 8)
+                  - TEXT_HEIGHT)
               / 2;
 
   private TagsSectionLayout() {}

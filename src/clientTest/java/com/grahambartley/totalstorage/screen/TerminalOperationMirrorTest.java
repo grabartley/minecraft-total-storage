@@ -1,9 +1,6 @@
 package com.grahambartley.totalstorage.screen;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.totalstorage.operation.ExpensiveOperation;
 import com.grahambartley.totalstorage.operation.NetworkOperationPhase;
@@ -28,8 +25,7 @@ class TerminalOperationMirrorTest {
   @Test
   void aTerminalWithNothingGoingOnIsIdle() {
     assertEquals(NetworkOperationPhase.IDLE, TerminalOperationMirror.phaseOf(SYNC_ID, SORT));
-    assertFalse(TerminalOperationMirror.isRunningOn(SYNC_ID));
-    assertNull(TerminalOperationMirror.operation());
+    assertEquals(NetworkOperationPhase.IDLE, TerminalOperationMirror.phaseOf(SYNC_ID, GATHER));
   }
 
   @Test
@@ -39,9 +35,6 @@ class TerminalOperationMirrorTest {
     assertEquals(NetworkOperationPhase.RUNNING, TerminalOperationMirror.phaseOf(SYNC_ID, SORT));
     assertEquals(NetworkOperationPhase.IDLE, TerminalOperationMirror.phaseOf(SYNC_ID, GATHER));
     assertEquals(NetworkOperationPhase.IDLE, TerminalOperationMirror.phaseOf(ANOTHER_SCREEN, SORT));
-    assertTrue(TerminalOperationMirror.isRunningOn(SYNC_ID));
-    assertFalse(TerminalOperationMirror.isRunningOn(ANOTHER_SCREEN));
-    assertEquals(SORT, TerminalOperationMirror.operation());
   }
 
   @ParameterizedTest(name = "{0}% shown as {1}%")
@@ -53,11 +46,13 @@ class TerminalOperationMirrorTest {
   }
 
   @Test
-  void anArmedOperationWaitsAsLongAsTheServerAllowsAConfirmation() {
-    TerminalOperationMirror.accept(SYNC_ID, GATHER, NetworkOperationPhase.ARMED, 0);
+  void anArmedOperationTakesOverFromTheOneShownBefore() {
+    TerminalOperationMirror.accept(SYNC_ID, SORT, NetworkOperationPhase.RUNNING, 70);
 
-    assertEquals(OperationConfirmations.WINDOW_TICKS, TerminalOperationMirror.armedTicksLeft());
-    assertFalse(TerminalOperationMirror.isRunningOn(SYNC_ID));
+    TerminalOperationMirror.accept(SYNC_ID, GATHER, NetworkOperationPhase.ARMED, 70);
+
+    assertEquals(NetworkOperationPhase.ARMED, TerminalOperationMirror.phaseOf(SYNC_ID, GATHER));
+    assertEquals(NetworkOperationPhase.IDLE, TerminalOperationMirror.phaseOf(SYNC_ID, SORT));
   }
 
   @Test
@@ -72,7 +67,6 @@ class TerminalOperationMirrorTest {
     TerminalOperationMirror.tick();
 
     assertEquals(NetworkOperationPhase.IDLE, TerminalOperationMirror.phaseOf(SYNC_ID, GATHER));
-    assertNull(TerminalOperationMirror.operation());
   }
 
   @Test
@@ -83,7 +77,7 @@ class TerminalOperationMirrorTest {
       TerminalOperationMirror.tick();
     }
 
-    assertTrue(TerminalOperationMirror.isRunningOn(SYNC_ID));
+    assertEquals(NetworkOperationPhase.RUNNING, TerminalOperationMirror.phaseOf(SYNC_ID, SORT));
   }
 
   @Test
@@ -92,8 +86,7 @@ class TerminalOperationMirrorTest {
 
     TerminalOperationMirror.accept(SYNC_ID, SORT, NetworkOperationPhase.IDLE, 100);
 
-    assertFalse(TerminalOperationMirror.isRunningOn(SYNC_ID));
-    assertNull(TerminalOperationMirror.operation());
+    assertEquals(NetworkOperationPhase.IDLE, TerminalOperationMirror.phaseOf(SYNC_ID, SORT));
   }
 
   @Test
@@ -120,7 +113,6 @@ class TerminalOperationMirrorTest {
   void tickingWithNothingArmedIsHarmless() {
     TerminalOperationMirror.tick();
 
-    assertEquals(0, TerminalOperationMirror.armedTicksLeft());
-    assertNull(TerminalOperationMirror.operation());
+    assertEquals(NetworkOperationPhase.IDLE, TerminalOperationMirror.phaseOf(SYNC_ID, SORT));
   }
 }

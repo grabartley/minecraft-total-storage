@@ -53,19 +53,7 @@ public final class TerminalOperationMirror {
     return syncId == openSyncId && asked == operation ? phase : NetworkOperationPhase.IDLE;
   }
 
-  public static boolean isRunningOn(int openSyncId) {
-    return syncId == openSyncId && phase == NetworkOperationPhase.RUNNING;
-  }
-
-  public static ExpensiveOperation operation() {
-    return operation;
-  }
-
   public static int percentDone() {
     return percentDone;
-  }
-
-  public static int armedTicksLeft() {
-    return armedTicksLeft;
   }
 }

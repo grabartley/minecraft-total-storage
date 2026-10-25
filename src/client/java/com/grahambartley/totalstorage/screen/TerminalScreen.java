@@ -1,6 +1,5 @@
 package com.grahambartley.totalstorage.screen;
 
-import com.grahambartley.totalstorage.config.TerminalAccessMode;
 import com.grahambartley.totalstorage.listing.ListingRow;
 import com.grahambartley.totalstorage.listing.ListingStatus;
 import com.grahambartley.totalstorage.listing.ListingWindow;
@@ -13,7 +12,6 @@ import com.grahambartley.totalstorage.screenhandler.TerminalScreenHandler;
 import com.grahambartley.totalstorage.screenhandler.TerminalScreenLayout;
 import com.grahambartley.totalstorage.terminal.NetworkSettingsView;
 import com.grahambartley.totalstorage.terminal.NetworkTagView;
-import com.grahambartley.totalstorage.terminal.TerminalAction;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
@@ -33,6 +31,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   private final TerminalPrompts prompts;
   private final TerminalSettingsClicks settingsClicks;
+  private final TerminalScrollbars scrollbars;
 
   private final TerminalRequests requests;
 
@@ -60,6 +59,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     this.requests = new TerminalRequests(handler.syncId);
     this.prompts = new TerminalPrompts(handler.syncId);
     this.settingsClicks = new TerminalSettingsClicks(settings, tagsPanel, prompts);
+    this.scrollbars = new TerminalScrollbars(prompts, settings, filters, items);
   }
 
   @Override
@@ -68,9 +68,12 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     search = new TerminalSearchBox(textRenderer, x, y, search == null ? "" : search.text());
     addDrawableChild(search.widget());
     filters.attach(this::addDrawableChild, x, y, selection);
-    dock = new TerminalActionDock(this::addDrawableChild, x, y, new DockActions());
+    dock =
+        new TerminalActionDock(
+            this::addDrawableChild, x, y, new TerminalDockActions(handler.syncId, prompts));
     settingsButtons =
-        new TerminalSettingsButtons(this::addDrawableChild, x, y, new SettingsEdits());
+        new TerminalSettingsButtons(
+            this::addDrawableChild, x, y, new TerminalSettingsEditSender(handler.syncId, prompts));
     setInitialFocus(search.widget());
     updateWidgets(TerminalListingMirror.page().status());
     if (TerminalListingMirror.isShowing(handler.syncId)) {
@@ -508,30 +511,10 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     ModNetworkingClient.sendDepositAllRequest(handler.syncId);
   }
 
-  private void act(TerminalAction action) {
-    ModNetworkingClient.sendTerminalAction(handler.syncId, action);
-  }
-
   @Override
   public boolean mouseDragged(
       double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-    if (prompts.isDraggingScrollbar()) {
-      prompts.dragScrollbarTo(windowY(mouseY));
-      return true;
-    }
-    if (prompts.isAnyOpen()) {
-      return true;
-    }
-    if (settings.isDraggingScrollbar()) {
-      settings.dragScrollbarTo(windowY(mouseY));
-      return true;
-    }
-    if (filters.isDraggingScrollbar()) {
-      filters.dragScrollbarTo(windowY(mouseY));
-      return true;
-    }
-    if (items.scrollbar().isDragging()) {
-      items.dragScrollbarTo(windowY(mouseY));
+    if (scrollbars.dragTo(windowY(mouseY)) || prompts.isAnyOpen()) {
       return true;
     }
     return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
@@ -573,20 +556,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   @Override
   public boolean mouseReleased(double mouseX, double mouseY, int button) {
-    if (button == GridClick.LEFT_BUTTON && prompts.isDraggingScrollbar()) {
-      prompts.releaseScrollbar();
-      return true;
-    }
-    if (button == GridClick.LEFT_BUTTON && settings.isDraggingScrollbar()) {
-      settings.releaseScrollbar();
-      return true;
-    }
-    if (button == GridClick.LEFT_BUTTON && filters.isDraggingScrollbar()) {
-      filters.releaseScrollbar();
-      return true;
-    }
-    if (button == GridClick.LEFT_BUTTON && items.scrollbar().isDragging()) {
-      items.scrollbar().release();
+    if (button == GridClick.LEFT_BUTTON && scrollbars.release()) {
       return true;
     }
     return super.mouseReleased(mouseX, mouseY, button);
@@ -612,58 +582,5 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   private int windowY(double mouseY) {
     return (int) Math.floor(mouseY) - y;
-  }
-
-  private final class DockActions implements TerminalActionDock.Actions {
-    @Override
-    public void depositAll() {
-      depositEverything();
-    }
-
-    @Override
-    public void network(ExpensiveOperation operation) {
-      act(
-          operation == ExpensiveOperation.CONSOLIDATE
-              ? TerminalAction.CONSOLIDATE
-              : TerminalAction.SORT_NETWORK);
-    }
-
-    @Override
-    public void rescan() {
-      act(TerminalAction.RESCAN);
-    }
-
-    @Override
-    public void outline() {
-      act(TerminalAction.HIGHLIGHT);
-    }
-
-    @Override
-    public void newTag() {
-      prompts.naming().openForNewTag();
-    }
-
-    @Override
-    public void copyTags() {
-      prompts.copying().open();
-      ModNetworkingClient.sendTagSourcesRequest(handler.syncId);
-    }
-  }
-
-  private final class SettingsEdits implements TerminalSettingsButtons.Edits {
-    @Override
-    public void access(TerminalAccessMode mode) {
-      ModNetworkingClient.sendAccessEdit(handler.syncId, mode);
-    }
-
-    @Override
-    public void trusted() {
-      prompts.trusting().open();
-    }
-
-    @Override
-    public void radius(int blocks) {
-      ModNetworkingClient.sendRadiusEdit(handler.syncId, blocks);
-    }
   }
 }

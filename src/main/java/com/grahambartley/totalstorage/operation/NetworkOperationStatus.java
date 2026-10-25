@@ -4,6 +4,7 @@ import com.grahambartley.totalstorage.network.NetworkOperationStatusPayload;
 import com.grahambartley.totalstorage.screenhandler.TerminalScreenHandler;
 import com.grahambartley.totalstorage.screenhandler.TerminalViewerSync;
 import com.grahambartley.totalstorage.terminal.TerminalAddress;
+import java.util.Optional;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -27,17 +28,25 @@ public final class NetworkOperationStatus {
         .forEach(viewer -> send(viewer, operation, NetworkOperationPhase.IDLE, 0));
   }
 
+  public static Optional<NetworkOperationStatusPayload> payloadFor(
+      ServerPlayerEntity player,
+      ExpensiveOperation operation,
+      NetworkOperationPhase phase,
+      int percent) {
+    if (player == null || !(player.currentScreenHandler instanceof TerminalScreenHandler handler)) {
+      return Optional.empty();
+    }
+    return Optional.of(
+        new NetworkOperationStatusPayload(handler.syncId, operation, phase, percent));
+  }
+
   private static void send(
       ServerPlayerEntity player,
       ExpensiveOperation operation,
       NetworkOperationPhase phase,
       int percent) {
-    if (player == null
-        || !(player.currentScreenHandler instanceof TerminalScreenHandler handler)
-        || !ServerPlayNetworking.canSend(player, NetworkOperationStatusPayload.ID)) {
-      return;
-    }
-    ServerPlayNetworking.send(
-        player, new NetworkOperationStatusPayload(handler.syncId, operation, phase, percent));
+    payloadFor(player, operation, phase, percent)
+        .filter(payload -> ServerPlayNetworking.canSend(player, NetworkOperationStatusPayload.ID))
+        .ifPresent(payload -> ServerPlayNetworking.send(player, payload));
   }
 }

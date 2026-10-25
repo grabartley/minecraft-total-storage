@@ -63,7 +63,9 @@ public final class TerminalSettingsLayout {
           + (FRAME_HEIGHT - 2 - SETTING_COUNT * BUTTON_HEIGHT - (SETTING_COUNT - 1) * SETTING_GAP)
               / 2;
 
-  public static final int DESCRIPTION_WIDTH = BUTTON_X - 6 - CONTENT_X;
+  public static final int DESCRIPTION_GAP = 6;
+
+  public static final int DESCRIPTION_WIDTH = BUTTON_X - DESCRIPTION_GAP - CONTENT_X;
 
   private TerminalSettingsLayout() {}
 

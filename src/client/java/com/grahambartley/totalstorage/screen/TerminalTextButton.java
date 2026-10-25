@@ -7,14 +7,9 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 
 public final class TerminalTextButton extends ClickableWidget {
-  public static final int TEXT_MARGIN = 2;
-
-  private static final int LINE_HEIGHT = 8;
-
   private final Runnable onPress;
   private final Runnable onSecondaryPress;
 
@@ -54,34 +49,21 @@ public final class TerminalTextButton extends ClickableWidget {
     return accent;
   }
 
-  public static int faceInset() {
-    return 2;
-  }
-
   @Override
   protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
-    final boolean hovered = isSelected();
-    VanillaSprite.button(active, hovered).draw(context, getX(), getY(), getWidth(), getHeight());
-    if (accent && active) {
-      TerminalChrome.fill(
-          context,
-          getX() + faceInset(),
-          getY() + faceInset(),
-          getWidth() - 2 * faceInset(),
-          getHeight() - 2 * faceInset() - 1,
-          VanillaPalette.ACCENT);
-    }
     final TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-    final int room = getWidth() - 2 * TEXT_MARGIN;
-    final OrderedText label = TrimmedText.toWidth(textRenderer, getMessage(), room);
-    context.drawText(
+    ButtonFace.draw(
+        context,
         textRenderer,
-        label,
-        getX() + (getWidth() - textRenderer.getWidth(label) + 1) / 2,
-        getY() + (getHeight() - LINE_HEIGHT) / 2,
-        VanillaPalette.opaque(
-            active ? VanillaPalette.BUTTON_TEXT : VanillaPalette.BUTTON_TEXT_DISABLED),
-        true);
+        getMessage(),
+        getX(),
+        getY(),
+        getWidth(),
+        getHeight(),
+        active,
+        isSelected(),
+        accent);
+    final int room = ButtonFace.labelRoom(getWidth());
     showTooltip(
         hint != null ? hint : textRenderer.getWidth(getMessage()) > room ? getMessage() : null);
   }

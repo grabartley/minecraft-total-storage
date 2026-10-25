@@ -23,14 +23,16 @@ public final class LockTooltipLines {
     return applies(altDown, LockedSlotState.isLocked(slot));
   }
 
-  public static List<HintLine> hints() {
+  public static List<HintLine> hints(boolean onMac) {
     return List.of(
         HintLine.of(HintLine.badge(), HintLine.words(Text.translatable(PREFIX + "locked"))),
-        HintLine.of(HintLine.key("alt"), HintLine.words(Text.translatable(PREFIX + "unlock"))));
+        HintLine.of(
+            HintLine.key(onMac ? "option" : "alt"),
+            HintLine.words(Text.translatable(PREFIX + "unlock"))));
   }
 
-  public static Optional<TooltipData> withHints(Optional<TooltipData> data) {
-    return data.isPresent() ? data : Optional.of(new HintTooltipData(hints()));
+  public static Optional<TooltipData> withHints(Optional<TooltipData> data, boolean onMac) {
+    return data.isPresent() ? data : Optional.of(new HintTooltipData(hints(onMac)));
   }
 
   public static List<Text> withText(List<Text> lines, boolean itemHasItsOwnData) {

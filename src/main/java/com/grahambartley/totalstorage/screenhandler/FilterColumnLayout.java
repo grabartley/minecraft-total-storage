@@ -35,11 +35,11 @@ public final class FilterColumnLayout {
 
   public static final int ROW_X = X + 1;
 
-  public static final int ROW_WIDTH = 76;
-
   public static final int SCROLLBAR_WIDTH = 5;
 
   public static final int SCROLLBAR_X = X + WIDTH - 1 - SCROLLBAR_WIDTH;
+
+  public static final int ROW_WIDTH = SCROLLBAR_X - 1 - ROW_X;
 
   public static final int TEXT_MARGIN = 3;
 

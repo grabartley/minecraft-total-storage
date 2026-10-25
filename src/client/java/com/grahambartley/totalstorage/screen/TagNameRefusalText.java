@@ -9,7 +9,8 @@ public final class TagNameRefusalText {
 
   public static Text of(TagNameOutcome outcome) {
     return switch (outcome) {
-      case BLANK, OK -> TerminalScreenText.of("tags.name.refused.blank");
+      case OK -> throw new IllegalArgumentException("an accepted name has no refusal to show");
+      case BLANK -> TerminalScreenText.of("tags.name.refused.blank");
       case TOO_LONG -> TerminalScreenText.of("tags.name.refused.too_long", TagNameRule.MAX_LENGTH);
       case ILLEGAL_CHARACTER -> TerminalScreenText.of("tags.name.refused.illegal");
       case DUPLICATE -> TerminalScreenText.of("tags.name.refused.duplicate");

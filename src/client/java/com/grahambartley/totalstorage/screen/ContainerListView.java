@@ -139,17 +139,21 @@ public final class ContainerListView {
         .draw(context, ROLE_X, roleY(row), ROLE_WIDTH, ROLE_HEIGHT);
     final OrderedText role =
         TrimmedText.toWidth(
-            textRenderer,
-            ContainerRowText.roleChip(entry),
-            ROLE_WIDTH - 2 * TerminalTextButton.TEXT_MARGIN);
+            textRenderer, ContainerRowText.roleChip(entry), ButtonFace.labelRoom(ROLE_WIDTH));
     context.drawText(
         textRenderer,
         role,
         ROLE_X + (ROLE_WIDTH - textRenderer.getWidth(role) + 1) / 2,
         roleY(row) + (ROLE_HEIGHT - 8) / 2,
-        VanillaPalette.opaque(
-            changeable ? VanillaPalette.BUTTON_TEXT : VanillaPalette.BUTTON_TEXT_DISABLED),
+        VanillaPalette.opaque(roleTextColour(entry, changeable)),
         true);
+  }
+
+  public static int roleTextColour(ContainerRoleEntry entry, boolean changeable) {
+    if (!changeable) {
+      return VanillaPalette.BUTTON_TEXT_DISABLED;
+    }
+    return entry.acceptsNothing() ? VanillaPalette.WARNING : VanillaPalette.BUTTON_TEXT;
   }
 
   public static List<Text> tooltip(ContainerRoleEntry entry, NetworkTagView tags) {

@@ -186,22 +186,16 @@ public final class TerminalTagsPanel {
       DrawContext context, TextRenderer textRenderer, boolean hovered, int row) {
     final int x = TagsSectionLayout.ARMED_X;
     final int y = TagsSectionLayout.armedY(row);
-    VanillaSprite.button(true, hovered)
-        .draw(context, x, y, TagsSectionLayout.ARMED_WIDTH, TagsSectionLayout.ARMED_HEIGHT);
-    TerminalChrome.fill(
+    ButtonFace.draw(
         context,
-        x + TerminalTextButton.faceInset(),
-        y + TerminalTextButton.faceInset(),
-        TagsSectionLayout.ARMED_WIDTH - 2 * TerminalTextButton.faceInset(),
-        TagsSectionLayout.ARMED_HEIGHT - 2 * TerminalTextButton.faceInset() - 1,
-        VanillaPalette.ACCENT);
-    final Text label = TerminalScreenText.of("tags.delete.armed");
-    context.drawText(
         textRenderer,
-        TrimmedText.toWidth(textRenderer, label, TagsSectionLayout.ARMED_WIDTH - 4),
-        x + (TagsSectionLayout.ARMED_WIDTH - textRenderer.getWidth(label) + 1) / 2,
-        y + (TagsSectionLayout.ARMED_HEIGHT - 8) / 2,
-        VanillaPalette.opaque(VanillaPalette.BUTTON_TEXT),
+        TerminalScreenText.of("tags.delete.armed"),
+        x,
+        y,
+        TagsSectionLayout.ARMED_WIDTH,
+        TagsSectionLayout.ARMED_HEIGHT,
+        true,
+        hovered,
         true);
   }
 

@@ -126,4 +126,77 @@ class OperationMessagesTest {
       case REFUSED -> DepositOutcome.refused();
     };
   }
+
+  @ParameterizedTest
+  @CsvSource({
+    "WITHDRAWN, DONE",
+    "PARTIAL_NO_STOCK, PARTIAL",
+    "PARTIAL_NO_ROOM, PARTIAL",
+    "NOTHING_AVAILABLE, FAILED",
+    "NO_ROOM, FAILED",
+    "REFUSED, FAILED"
+  })
+  void everyWithdrawalResultShowsInTheToneOfHowItWent(
+      WithdrawResult result, TerminalNoticeTone tone) {
+    assertEquals(tone, OperationMessages.toneOf(result));
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "DEPOSITED, DONE",
+    "RATE_LIMITED, DONE",
+    "PARTIAL, PARTIAL",
+    "NOTHING_TO_DEPOSIT, PARTIAL",
+    "NO_SPACE, FAILED",
+    "ONLY_FILTERED_SPACE, FAILED",
+    "NO_FITTING_SPACE, FAILED",
+    "REFUSED, FAILED"
+  })
+  void everyDepositResultShowsInTheToneOfHowItWent(DepositResult result, TerminalNoticeTone tone) {
+    assertEquals(tone, OperationMessages.toneOf(result));
+  }
+
+  @ParameterizedTest
+  @CsvSource({"NO_STOCK", "NO_ROOM"})
+  void aPartialWithdrawalLeadsWithHowMuchItTook(ShortfallCause cause) {
+    final Optional<Text> headline =
+        OperationMessages.headlineForWithdrawal(WithdrawOutcome.partial(64L, 9L, cause));
+
+    assertEquals(PREFIX + "withdraw.partial.headline", keyOf(headline));
+    assertEquals(9L, argumentsOf(headline)[0]);
+    assertEquals(64L, argumentsOf(headline)[1]);
+  }
+
+  @ParameterizedTest
+  @CsvSource({"NO_STOCK, withdraw.gone.headline", "NO_ROOM, withdraw.full.headline"})
+  void aWithdrawalThatTookNothingLeadsWithWhy(ShortfallCause cause, String key) {
+    assertEquals(
+        PREFIX + key,
+        keyOf(OperationMessages.headlineForWithdrawal(WithdrawOutcome.nothingMoved(64L, cause))));
+  }
+
+  @Test
+  void aWholeWithdrawalHasNoHeadline() {
+    assertTrue(OperationMessages.headlineForWithdrawal(WithdrawOutcome.filled(64L)).isEmpty());
+  }
+
+  @Test
+  void aDepositThatStoredNothingLeadsWithWhy() {
+    assertEquals(
+        PREFIX + "deposit.full.headline",
+        keyOf(OperationMessages.headlineForDeposit(DepositOutcome.noSpace(0L, List.of()))));
+    assertEquals(
+        PREFIX + "deposit.filtered_only.headline",
+        keyOf(
+            OperationMessages.headlineForDeposit(DepositOutcome.onlyFilteredSpace(0L, List.of()))));
+    assertEquals(
+        PREFIX + "deposit.unfitting.headline",
+        keyOf(OperationMessages.headlineForDeposit(DepositOutcome.noFittingSpace(0L, List.of()))));
+  }
+
+  @Test
+  void aWholeDepositHasNoHeadline() {
+    assertTrue(
+        OperationMessages.headlineForDeposit(DepositOutcome.stored(64L, 64L, List.of())).isEmpty());
+  }
 }

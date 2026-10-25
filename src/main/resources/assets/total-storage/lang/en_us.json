@@ -311,6 +311,7 @@
   "screen.total-storage.terminal.filter.custom": "Your tags",
   "screen.total-storage.terminal.filter.mode.hint": "Show items with all of the chosen tags, or any of them",
   "screen.total-storage.terminal.key.alt": "Alt",
+  "screen.total-storage.terminal.key.option": "Option",
   "screen.total-storage.terminal.key.click": "Click",
   "screen.total-storage.terminal.key.right_click": "Right-click",
   "screen.total-storage.terminal.key.middle": "Middle",

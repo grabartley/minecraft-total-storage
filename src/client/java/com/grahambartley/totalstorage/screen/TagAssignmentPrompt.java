@@ -72,12 +72,7 @@ public final class TagAssignmentPrompt {
   }
 
   public static HintLine bulkKeys(int matching) {
-    return HintLine.of(
-        HintLine.key("shift"),
-        HintLine.words(
-            matching == 1
-                ? TerminalScreenText.of("tags.assign.bulk.one")
-                : TerminalScreenText.of("tags.assign.bulk", matching)));
+    return HintLine.of(HintLine.key("shift"), HintLine.words(TagText.bulkHint(matching)));
   }
 
   private void drawRows(

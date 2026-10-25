@@ -88,13 +88,6 @@ public final class ContainerRowText {
     return Text.literal(tagId);
   }
 
-  public static int roleColour(ContainerRole role) {
-    return switch (safe(role)) {
-      case GENERAL, FILTERED -> VanillaPalette.LABEL;
-      case EXCLUDED -> VanillaPalette.ACCENT;
-    };
-  }
-
   private static ContainerRole safe(ContainerRole role) {
     return role == null ? ContainerRole.DEFAULT : role;
   }

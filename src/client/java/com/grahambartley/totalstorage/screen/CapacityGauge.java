@@ -12,6 +12,8 @@ public final class CapacityGauge {
 
   public static final int LINE_GAP = 3;
 
+  private static final int LINE_HEIGHT = 9;
+
   private CapacityGauge() {}
 
   public static boolean isNearlyFull(NetworkSettingsView view) {
@@ -99,6 +101,6 @@ public final class CapacityGauge {
     return windowX >= x
         && windowX < x + width
         && windowY >= y
-        && windowY < y + BAR_HEIGHT + LINE_GAP + 9;
+        && windowY < y + BAR_HEIGHT + LINE_GAP + LINE_HEIGHT;
   }
 }

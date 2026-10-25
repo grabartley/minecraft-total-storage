@@ -12,6 +12,7 @@ import com.grahambartley.totalstorage.screen.ScreenKeyboardFocus;
 import com.grahambartley.totalstorage.screen.SortRequests;
 import java.util.List;
 import java.util.Optional;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
@@ -107,6 +108,6 @@ public abstract class HandledScreenMixin {
     if (!LockTooltipLines.applies(focusedSlot, Screen.hasAltDown())) {
       return data;
     }
-    return LockTooltipLines.withHints(data);
+    return LockTooltipLines.withHints(data, MinecraftClient.IS_SYSTEM_MAC);
   }
 }

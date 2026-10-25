@@ -37,31 +37,32 @@ class LockTooltipLinesTest {
     assertEquals(applies, LockTooltipLines.applies(altDown, locked));
   }
 
-  @Test
-  void theHintsShowTheBadgeMeaningLockedThenAltToUnlock() {
-    final List<HintLine> hints = LockTooltipLines.hints();
+  @ParameterizedTest
+  @CsvSource({"false, alt", "true, option"})
+  void theHintsShowTheBadgeMeaningLockedThenTheModifierToUnlock(boolean onMac, String key) {
+    final List<HintLine> hints = LockTooltipLines.hints(onMac);
 
     assertEquals(2, hints.size());
     assertEquals(new HintLine.LockBadge(), hints.get(0).parts().get(0));
     assertEquals(PREFIX + "locked", keyOf(((HintLine.Words) hints.get(0).parts().get(1)).text()));
     assertEquals(
-        "screen.total-storage.terminal.key.alt",
+        "screen.total-storage.terminal.key." + key,
         keyOf(((HintLine.Key) hints.get(1).parts().get(0)).label()));
     assertEquals(PREFIX + "unlock", keyOf(((HintLine.Words) hints.get(1).parts().get(1)).text()));
   }
 
   @Test
   void anItemWithoutItsOwnTooltipDataGetsTheLockHints() {
-    final Optional<TooltipData> data = LockTooltipLines.withHints(Optional.empty());
+    final Optional<TooltipData> data = LockTooltipLines.withHints(Optional.empty(), false);
 
-    assertEquals(Optional.of(new HintTooltipData(LockTooltipLines.hints())), data);
+    assertEquals(Optional.of(new HintTooltipData(LockTooltipLines.hints(false))), data);
   }
 
   @Test
   void anItemWithItsOwnTooltipDataKeepsIt() {
     final Optional<TooltipData> own = Optional.of(mock(TooltipData.class));
 
-    assertSame(own, LockTooltipLines.withHints(own));
+    assertSame(own, LockTooltipLines.withHints(own, true));
   }
 
   @Test

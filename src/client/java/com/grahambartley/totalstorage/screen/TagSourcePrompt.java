@@ -107,13 +107,7 @@ public final class TagSourcePrompt {
       if (armed) {
         VanillaSprite.button(true, source.equals(hovered))
             .draw(context, left, top, geometry.rowWidth(), geometry.rowHeight());
-        TerminalChrome.fill(
-            context,
-            left + TerminalTextButton.faceInset(),
-            top + TerminalTextButton.faceInset(),
-            geometry.rowWidth() - 2 * TerminalTextButton.faceInset(),
-            geometry.rowHeight() - 2 * TerminalTextButton.faceInset() - 1,
-            VanillaPalette.ACCENT);
+        ButtonFace.drawAccent(context, left, top, geometry.rowWidth(), geometry.rowHeight());
       } else if (source.equals(hovered)) {
         TerminalChrome.drawHover(context, left, top, geometry.rowWidth(), geometry.rowHeight());
       }

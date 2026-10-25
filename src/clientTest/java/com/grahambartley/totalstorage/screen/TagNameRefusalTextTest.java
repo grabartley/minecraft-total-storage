@@ -2,6 +2,7 @@ package com.grahambartley.totalstorage.screen;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.grahambartley.totalstorage.tag.TagNameOutcome;
 import com.grahambartley.totalstorage.tag.TagNameRule;
@@ -20,7 +21,6 @@ class TagNameRefusalTextTest {
 
   @ParameterizedTest(name = "{0}")
   @CsvSource({
-    "OK, blank",
     "BLANK, blank",
     "ILLEGAL_CHARACTER, illegal",
     "DUPLICATE, duplicate",
@@ -31,6 +31,11 @@ class TagNameRefusalTextTest {
 
     assertEquals(PREFIX + reason, content.getKey());
     assertEquals(0, content.getArgs().length);
+  }
+
+  @Test
+  void anAcceptedNameHasNoRefusalToShow() {
+    assertThrows(IllegalArgumentException.class, () -> TagNameRefusalText.of(TagNameOutcome.OK));
   }
 
   @Test

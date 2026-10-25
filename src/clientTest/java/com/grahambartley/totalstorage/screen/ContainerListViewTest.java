@@ -195,4 +195,19 @@ class ContainerListViewTest {
 
     assertEquals(expected, hints.stream().map(ContainerListViewTest::wordKeysOf).toList());
   }
+
+  static Stream<Arguments> roleTextColours() {
+    return Stream.of(
+        Arguments.of(ContainerRole.GENERAL, true, VanillaPalette.BUTTON_TEXT),
+        Arguments.of(ContainerRole.FILTERED, true, VanillaPalette.WARNING),
+        Arguments.of(ContainerRole.EXCLUDED, true, VanillaPalette.BUTTON_TEXT),
+        Arguments.of(ContainerRole.FILTERED, false, VanillaPalette.BUTTON_TEXT_DISABLED));
+  }
+
+  @ParameterizedTest(name = "{0} changeable={1}")
+  @MethodSource("roleTextColours")
+  void aFilteredContainerAcceptingNothingSaysSoInWarningColour(
+      ContainerRole role, boolean changeable, int colour) {
+    assertEquals(colour, ContainerListView.roleTextColour(entry(0, role), changeable));
+  }
 }
