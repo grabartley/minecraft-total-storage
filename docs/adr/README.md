@@ -47,6 +47,8 @@ Shared engineering standards across all the mods in this family live in [`../sta
 | [0037](0037-the-shipped-png-is-a-textures-only-source.md) | The shipped PNG is a texture's only source |
 | [0038](0038-the-mod-is-required-on-the-client.md) | The mod is required on the client to join a server running it |
 | [0039](0039-a-placed-container-joins-on-the-next-tick.md) | A container placed in range joins the network on the next tick |
+| [0040](0040-the-terminal-reports-failures-not-successes.md) | The terminal reports failures, not successes |
+| [0041](0041-a-lock-shows-as-a-badge-and-alt-shows-what-can-be-locked.md) | A lock shows as a badge, and Alt shows what can be locked |
 
 ## Writing A New Record
 
