@@ -32,6 +32,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class TerminalActionDockTest {
@@ -285,15 +286,17 @@ class TerminalActionDockTest {
         new Object[] {42}, ((TranslatableTextContent) running.getMessage().getContent()).getArgs());
   }
 
-  @Test
-  void aViewerWhoMayNotRunTheJobSeesItsProgressButCannotStopIt() {
+  @ParameterizedTest(name = "online={0} mayRun={1}")
+  @CsvSource({"false, true", "true, false"})
+  void aViewerWhoCannotRunTheJobSeesItsProgressButCannotStopIt(boolean online, boolean mayRun) {
     dock.update(
         state(
             TerminalTab.ITEMS,
             SettingsSection.TERMINAL,
             s -> {
               s.networkRow = NetworkActionRow.of(NetworkOperationPhase.RUNNING, null, 42);
-              s.mayRunNetworkActions = false;
+              s.online = online;
+              s.mayRunNetworkActions = mayRun;
             }));
 
     final TerminalTextButton running = button(RUNNING);

@@ -18,6 +18,7 @@ import com.grahambartley.totalstorage.terminal.NetworkTagEntry;
 import com.grahambartley.totalstorage.terminal.NetworkTagView;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.IntStream;
 import net.minecraft.util.math.BlockPos;
 import org.junit.jupiter.api.Test;
@@ -93,11 +94,11 @@ class TerminalScrollbarsTest {
 
   @Test
   void aHeldFilterScrollbarFollowsTheDragAndLetsGoOnRelease() {
-    final List<NetworkTagEntry> tags = new java.util.ArrayList<>();
-    for (int tag = 0; tag < FilterColumnLayout.ROWS + 6; tag++) {
-      tags.add(new NetworkTagEntry("tag" + tag, "Tag " + tag, true, 0, 1));
-    }
-    filters.fit(new NetworkTagView(true, tags, Optional.empty(), java.util.Set.of()));
+    final List<NetworkTagEntry> tags =
+        IntStream.range(0, FilterColumnLayout.ROWS + 6)
+            .mapToObj(tag -> new NetworkTagEntry("tag" + tag, "Tag " + tag, true, 0, 1))
+            .toList();
+    filters.fit(new NetworkTagView(true, tags, Optional.empty(), Set.of()));
     filters.click(
         new FilterSelection(),
         FilterColumnLayout.SCROLLBAR_X,
