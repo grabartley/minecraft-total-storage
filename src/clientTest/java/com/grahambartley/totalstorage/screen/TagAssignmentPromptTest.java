@@ -13,7 +13,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class TagAssignmentPromptTest {
-  private static final int ROW_LEFT = TagPromptLayout.left() + TagPromptLayout.PADDING;
+  private static final int ROW_LEFT = TagPromptLayout.LIST.left();
 
   private static NetworkTagEntry custom(String id) {
     return new NetworkTagEntry(id, id, false, 0, 0);
@@ -39,7 +39,7 @@ class TagAssignmentPromptTest {
     NetworkTagView view = viewOf(List.of(preset("wood"), custom("castle"), preset("stone")));
     prompt.fit(view);
 
-    assertEquals(custom("castle"), prompt.tagAt(view, ROW_LEFT, TagPromptLayout.rowY(0)));
+    assertEquals(custom("castle"), prompt.tagAt(view, ROW_LEFT, TagPromptLayout.LIST.rowY(0)));
   }
 
   @Test
@@ -49,7 +49,7 @@ class TagAssignmentPromptTest {
     prompt.fit(view);
 
     for (int row = 1; row < TagPromptLayout.VISIBLE_ROWS; row++) {
-      assertNull(prompt.tagAt(view, ROW_LEFT, TagPromptLayout.rowY(row)));
+      assertNull(prompt.tagAt(view, ROW_LEFT, TagPromptLayout.LIST.rowY(row)));
     }
   }
 
@@ -59,7 +59,7 @@ class TagAssignmentPromptTest {
     NetworkTagView view = viewOf(List.of(preset("wood"), preset("stone")));
     prompt.fit(view);
 
-    assertNull(prompt.tagAt(view, ROW_LEFT, TagPromptLayout.rowY(0)));
+    assertNull(prompt.tagAt(view, ROW_LEFT, TagPromptLayout.LIST.rowY(0)));
     assertFalse(prompt.list().scrollBy(1));
   }
 
@@ -73,6 +73,6 @@ class TagAssignmentPromptTest {
     prompt.fit(tooMany);
 
     assertTrue(prompt.list().scrollBy(1));
-    assertEquals(custom("b"), prompt.tagAt(tooMany, ROW_LEFT, TagPromptLayout.rowY(0)));
+    assertEquals(custom("b"), prompt.tagAt(tooMany, ROW_LEFT, TagPromptLayout.LIST.rowY(0)));
   }
 }

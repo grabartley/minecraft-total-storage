@@ -9,18 +9,6 @@ public final class NetworkOperationMessages {
 
   private NetworkOperationMessages() {}
 
-  public static Text started(ExpensiveOperation operation) {
-    return operation == ExpensiveOperation.CONSOLIDATE
-        ? line("consolidate.started", "Gathering scattered items, click again to stop")
-        : line("sort.network.started", "Sorting every container, click again to stop");
-  }
-
-  public static Text progress(ExpensiveOperation operation, OperationReport report) {
-    return operation == ExpensiveOperation.CONSOLIDATE
-        ? line("consolidate.progress", "Consolidating, %s%% done", report.percentDone())
-        : line("sort.network.progress", "Sorting, %s%% done", report.percentDone());
-  }
-
   public static Text finished(ExpensiveOperation operation, OperationReport report) {
     final Text summary =
         operation == ExpensiveOperation.CONSOLIDATE ? gathered(report) : sorted(report);
@@ -63,16 +51,11 @@ public final class NetworkOperationMessages {
             CountedNoun.CONTAINERS.of(report.containersSorted()));
   }
 
-  public static Text confirm(ExpensiveOperation operation, int containers) {
-    return operation == ExpensiveOperation.CONSOLIDATE
-        ? line(
-            "consolidate.confirm",
-            "This network holds %s, click again to gather every scattered stack",
-            CountedNoun.CONTAINERS.of(containers))
-        : line(
-            "sort.network.confirm",
-            "This network holds %s, click again to sort every one",
-            CountedNoun.CONTAINERS.of(containers));
+  public static Text skipped(OperationReport report) {
+    return line(
+        "skipped.headline",
+        "Skipped %s",
+        CountedNoun.CONTAINERS.of(report.excludedSkipped() + report.restrictedSkipped()));
   }
 
   public static Text nothingToDo(ExpensiveOperation operation) {

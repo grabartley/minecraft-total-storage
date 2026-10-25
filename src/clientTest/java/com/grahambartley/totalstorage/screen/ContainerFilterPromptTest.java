@@ -91,10 +91,7 @@ class ContainerFilterPromptTest {
     NetworkTagView tags = tagsOf("ores", "wood", "food");
 
     assertEquals(
-        "ores",
-        prompt
-            .tagAt(tags, TagPromptLayout.left() + TagPromptLayout.PADDING, TagPromptLayout.rowY(0))
-            .id());
+        "ores", prompt.tagAt(tags, TagPromptLayout.LIST.left(), TagPromptLayout.LIST.rowY(0)).id());
   }
 
   @Test
@@ -109,10 +106,7 @@ class ContainerFilterPromptTest {
     prompt.open(WHERE);
 
     assertNull(
-        prompt.tagAt(
-            tagsOf("ores"),
-            TagPromptLayout.left() + TagPromptLayout.PADDING,
-            TagPromptLayout.rowY(1)));
+        prompt.tagAt(tagsOf("ores"), TagPromptLayout.LIST.left(), TagPromptLayout.LIST.rowY(1)));
   }
 
   @Test
@@ -131,9 +125,6 @@ class ContainerFilterPromptTest {
 
     assertTrue(prompt.list().scrollBy(1));
     assertEquals(
-        "b",
-        prompt
-            .tagAt(tags, TagPromptLayout.left() + TagPromptLayout.PADDING, TagPromptLayout.rowY(0))
-            .id());
+        "b", prompt.tagAt(tags, TagPromptLayout.LIST.left(), TagPromptLayout.LIST.rowY(0)).id());
   }
 }

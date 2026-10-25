@@ -1,7 +1,5 @@
 package com.grahambartley.totalstorage.screen;
 
-import com.grahambartley.totalstorage.screenhandler.TerminalScreenLayout;
-
 public enum TerminalTab {
   ITEMS,
 
@@ -19,8 +17,7 @@ public enum TerminalTab {
     return this == SETTINGS ? "settings" : "items";
   }
 
-  public static TerminalTab at(int windowX, int windowY) {
-    final int index = TerminalScreenLayout.tabAt(windowX, windowY);
-    return index == TerminalScreenLayout.NO_CELL ? null : values()[index];
+  public TerminalSprite icon() {
+    return this == SETTINGS ? TerminalSprite.SETTINGS : TerminalSprite.ITEMS;
   }
 }

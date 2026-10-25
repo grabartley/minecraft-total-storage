@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.grahambartley.totalstorage.filter.TagCombinationMode;
 import com.grahambartley.totalstorage.screenhandler.FilterColumnLayout;
 import com.grahambartley.totalstorage.terminal.NetworkTagEntry;
 import com.grahambartley.totalstorage.terminal.NetworkTagView;
@@ -22,7 +21,7 @@ class TerminalFilterColumnTest {
   private static NetworkTagView viewOf(int tags) {
     final List<NetworkTagEntry> entries = new ArrayList<>();
     for (int tag = 0; tag < tags; tag++) {
-      entries.add(new NetworkTagEntry("tag" + tag, "Tag " + tag, false, 0, tag));
+      entries.add(new NetworkTagEntry("tag" + tag, "Tag " + tag, true, 0, tag));
     }
     return new NetworkTagView(true, entries, Optional.empty(), Set.of());
   }
@@ -32,8 +31,7 @@ class TerminalFilterColumnTest {
   }
 
   private boolean clickRow(NetworkTagView view, int row) {
-    return column.click(
-        view, selection, rowX(), FilterColumnLayout.rowY(row), GridClick.LEFT_BUTTON);
+    return column.click(selection, rowX(), FilterColumnLayout.rowY(row), GridClick.LEFT_BUTTON);
   }
 
   @Test
@@ -59,50 +57,13 @@ class TerminalFilterColumnTest {
   }
 
   @Test
-  void theClearControlDropsEveryFilterInOneAction() {
-    final NetworkTagView view = viewOf(3);
-    column.fit(view);
-    clickRow(view, 0);
-    clickRow(view, 1);
-
-    assertTrue(
-        column.click(
-            view,
-            selection,
-            FilterColumnLayout.CLEAR_X + 1,
-            FilterColumnLayout.Y + 1,
-            GridClick.LEFT_BUTTON));
-    assertFalse(selection.isFiltering());
-  }
-
-  @Test
-  void theModeControlSwapsBetweenNarrowingAndBroadening() {
-    final NetworkTagView view = viewOf(3);
-    column.fit(view);
-    clickRow(view, 0);
-
-    assertTrue(
-        column.click(
-            view,
-            selection,
-            FilterColumnLayout.X + 1,
-            FilterColumnLayout.Y + 1,
-            GridClick.LEFT_BUTTON));
-    assertEquals(TagCombinationMode.OR, selection.mode());
-  }
-
-  @Test
   void aClickOutsideTheColumnIsLeftToTheScreen() {
     final NetworkTagView view = viewOf(3);
     column.fit(view);
 
     assertFalse(
         column.click(
-            view,
-            selection,
-            FilterColumnLayout.X - 5,
-            FilterColumnLayout.Y,
-            GridClick.LEFT_BUTTON));
+            selection, FilterColumnLayout.X - 5, FilterColumnLayout.Y, GridClick.LEFT_BUTTON));
   }
 
   @Test
@@ -111,7 +72,7 @@ class TerminalFilterColumnTest {
     column.fit(view);
 
     assertFalse(
-        column.click(view, selection, rowX(), FilterColumnLayout.rowY(0), GridClick.RIGHT_BUTTON));
+        column.click(selection, rowX(), FilterColumnLayout.rowY(0), GridClick.RIGHT_BUTTON));
     assertFalse(selection.isFiltering());
   }
 
@@ -130,7 +91,7 @@ class TerminalFilterColumnTest {
     column.fit(view);
     column.scroll().scrollBy(2);
 
-    final NetworkTagEntry tag = column.tagAt(view, rowX(), FilterColumnLayout.rowY(0));
+    final NetworkTagEntry tag = column.tagAt(rowX(), FilterColumnLayout.rowY(0));
 
     assertEquals("tag2", tag.id());
   }
@@ -141,7 +102,38 @@ class TerminalFilterColumnTest {
     column.fit(view);
 
     assertFalse(column.scroll().overflows());
-    assertNull(column.tagAt(view, rowX(), FilterColumnLayout.rowY(FilterColumnLayout.ROWS - 1)));
+    assertNull(column.tagAt(rowX(), FilterColumnLayout.rowY(FilterColumnLayout.ROWS - 1)));
+  }
+
+  @Test
+  void yourOwnTagsAreListedAfterThePresetsBelowADivider() {
+    final NetworkTagView view =
+        new NetworkTagView(
+            true,
+            List.of(
+                new NetworkTagEntry("castle", "Castle", false, 1, 4),
+                new NetworkTagEntry("wood", "tag.wood", true, 0, 9)),
+            Optional.empty(),
+            Set.of());
+    column.fit(view);
+
+    assertEquals("wood", column.tagAt(rowX(), FilterColumnLayout.rowY(0)).id());
+    assertNull(column.tagAt(rowX(), FilterColumnLayout.rowY(1)));
+    assertEquals("castle", column.tagAt(rowX(), FilterColumnLayout.rowY(2)).id());
+  }
+
+  @Test
+  void clickingTheDividerFiltersNothing() {
+    final NetworkTagView view =
+        new NetworkTagView(
+            true,
+            List.of(new NetworkTagEntry("castle", "Castle", false, 1, 4)),
+            Optional.empty(),
+            Set.of());
+    column.fit(view);
+
+    assertTrue(clickRow(view, 0));
+    assertFalse(selection.isFiltering());
   }
 
   @Test
@@ -151,7 +143,6 @@ class TerminalFilterColumnTest {
 
     assertTrue(
         column.click(
-            view,
             selection,
             FilterColumnLayout.SCROLLBAR_X,
             FilterColumnLayout.CONTENT_Y + 1,

@@ -2,18 +2,13 @@ package com.grahambartley.totalstorage.screen;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.totalstorage.filter.TagCombinationMode;
 import com.grahambartley.totalstorage.terminal.NetworkTagEntry;
-import java.util.List;
-import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableTextContent;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 class FilterColumnTextTest {
   private static NetworkTagEntry preset(String id) {
@@ -25,30 +20,15 @@ class FilterColumnTextTest {
   }
 
   @Test
-  void aCustomTagIsMarkedInTheColumnSoItsOwnerKnowsItIsTheirs() {
-    assertTrue(
-        FilterColumnText.columnNameOf(custom("Castle"))
-            .getString()
-            .startsWith(FilterColumnText.CUSTOM_MARKER),
-        "a custom tag should be marked apart from the presets");
-  }
-
-  @Test
-  void aPresetIsNotMarkedBecauseItCannotBeEdited() {
-    assertFalse(
-        FilterColumnText.columnNameOf(preset("wood"))
-            .getString()
-            .startsWith(FilterColumnText.CUSTOM_MARKER));
-  }
-
-  @Test
-  void theMarkerIsShapeRatherThanColourSoItSurvivesGreyscale() {
-    assertFalse(FilterColumnText.CUSTOM_MARKER.isBlank());
-  }
-
-  @Test
-  void aTagIsNamedWithoutItsMarkerAwayFromTheColumn() {
+  void aCustomTagIsNamedAsItsOwnerTypedIt() {
     assertEquals("Castle", FilterColumnText.nameOf(custom("Castle")).getString());
+  }
+
+  @Test
+  void aPresetIsNamedThroughItsTranslation() {
+    assertEquals(
+        "tag.item.total-storage.preset.wood",
+        ((TranslatableTextContent) FilterColumnText.nameOf(preset("wood")).getContent()).getKey());
   }
 
   @ParameterizedTest
@@ -65,33 +45,5 @@ class FilterColumnTextTest {
         FilterColumnText.mode(TagCombinationMode.AND)
             .getString()
             .equals(FilterColumnText.mode(TagCombinationMode.OR).getString()));
-  }
-
-  @ParameterizedTest
-  @ValueSource(ints = {0, -1})
-  void withNoFilterOnTheModeSaysOnlyWhatItCombines(int active) {
-    assertEquals(
-        FilterColumnText.mode(TagCombinationMode.AND).getString(),
-        FilterColumnText.mode(TagCombinationMode.AND, active).getString());
-  }
-
-  @ParameterizedTest
-  @ValueSource(ints = {1, 2, 9})
-  void anActiveFilterIsCountedBesideTheModeSoAScrolledListStillSaysSo(int active) {
-    final Text counted = FilterColumnText.mode(TagCombinationMode.AND, active);
-
-    assertNotEquals(FilterColumnText.mode(TagCombinationMode.AND).getString(), counted.getString());
-    assertTrue(
-        List.of(((TranslatableTextContent) counted.getContent()).getArgs()).contains(active));
-  }
-
-  @Test
-  void aCustomTagIsListedInTheFormTheSearchBoxExpects() {
-    final NetworkTagEntry tag = new NetworkTagEntry("base-kit", "Base Kit", false, 1, 1);
-
-    assertEquals(
-        FilterColumnText.CUSTOM_MARKER + "base-kit",
-        FilterColumnText.columnNameOf(tag).getString());
-    assertEquals("Base Kit", FilterColumnText.nameOf(tag).getString());
   }
 }

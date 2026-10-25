@@ -19,6 +19,7 @@ public final class TerminalResync {
 
   public static void contents(ServerPlayerEntity player) {
     ModNetworking.listings().refresh(player);
+    TerminalSettingsNetworking.panels().refresh(player);
     TerminalSettingsNetworking.tagPanels().contentsChanged(player);
   }
 }

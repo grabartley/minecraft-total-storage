@@ -12,17 +12,18 @@ import org.junit.jupiter.params.provider.ValueSource;
 class FilterColumnLayoutTest {
   @Test
   void theColumnSitsInsideThePanelWithoutOverlappingTheGrid() {
-    assertTrue(FilterColumnLayout.X >= TerminalScreenLayout.PANEL_BORDER);
+    assertTrue(FilterColumnLayout.X >= TerminalScreenLayout.EDGE);
     assertTrue(
-        FilterColumnLayout.X + FilterColumnLayout.WIDTH <= TerminalScreenLayout.INSET_X,
-        "the column runs into the grid inset");
+        FilterColumnLayout.X + FilterColumnLayout.WIDTH < TerminalScreenLayout.GRID_X,
+        "the column runs into the grid");
   }
 
   @Test
   void theColumnEndsWhereTheGridEnds() {
     assertEquals(
-        TerminalScreenLayout.INSET_Y + TerminalScreenLayout.INSET_HEIGHT,
+        TerminalScreenLayout.GRID_Y + TerminalScreenLayout.GRID_HEIGHT,
         FilterColumnLayout.Y + FilterColumnLayout.HEIGHT);
+    assertEquals(TerminalScreenLayout.SEARCH_Y, FilterColumnLayout.Y);
   }
 
   @Test
@@ -69,21 +70,37 @@ class FilterColumnLayoutTest {
   }
 
   @Test
+  void aNameAndItsCountNeverMeet() {
+    final int countWidth = 12;
+
+    assertTrue(
+        FilterColumnLayout.nameLeft(true) + FilterColumnLayout.nameWidth(countWidth, true)
+            < FilterColumnLayout.countLeft(countWidth));
+    assertTrue(
+        FilterColumnLayout.nameLeft(false) + FilterColumnLayout.nameWidth(countWidth, false)
+            < FilterColumnLayout.countLeft(countWidth));
+  }
+
+  @Test
+  void aCheckMarkPushesTheNameRightByItsOwnWidthAndGap() {
+    assertEquals(
+        FilterColumnLayout.nameLeft(false)
+            + FilterColumnLayout.CHECK_SIZE
+            + FilterColumnLayout.CHECK_GAP,
+        FilterColumnLayout.nameLeft(true));
+  }
+
+  @Test
+  void aCountTooWideForTheRowLeavesNoRoomRatherThanANegativeWidth() {
+    assertEquals(0, FilterColumnLayout.nameWidth(FilterColumnLayout.ROW_WIDTH, true));
+  }
+
+  @Test
   void theHeaderControlsDoNotOverlapEachOther() {
     assertTrue(FilterColumnLayout.X + FilterColumnLayout.MODE_WIDTH <= FilterColumnLayout.CLEAR_X);
     assertTrue(
         FilterColumnLayout.CLEAR_X + FilterColumnLayout.CONTROL_SIZE
             <= FilterColumnLayout.X + FilterColumnLayout.WIDTH);
-  }
-
-  @Test
-  void theHeaderControlsAnswerOnlyForTheirOwnRegion() {
-    assertTrue(FilterColumnLayout.isOverMode(FilterColumnLayout.X + 1, FilterColumnLayout.Y + 1));
-    assertFalse(FilterColumnLayout.isOverClear(FilterColumnLayout.X + 1, FilterColumnLayout.Y + 1));
-    assertTrue(
-        FilterColumnLayout.isOverClear(FilterColumnLayout.CLEAR_X + 1, FilterColumnLayout.Y + 1));
-    assertFalse(
-        FilterColumnLayout.isOverMode(FilterColumnLayout.CLEAR_X + 1, FilterColumnLayout.Y + 1));
   }
 
   @Test

@@ -46,9 +46,10 @@ public final class ContainerNamePrompt {
         context,
         textRenderer,
         TerminalScreenText.of("settings.container.name.title"),
-        TerminalScreenText.of("settings.container.name.hint"),
-        VanillaPalette.MUTED,
         entry.text(),
+        TerminalScreenText.of("settings.container.name.placeholder"),
+        null,
+        TextPromptPanel.saveKeys(),
         originX,
         originY);
   }

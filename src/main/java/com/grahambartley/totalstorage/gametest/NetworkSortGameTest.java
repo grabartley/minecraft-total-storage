@@ -1,10 +1,14 @@
 package com.grahambartley.totalstorage.gametest;
 
 import com.grahambartley.totalstorage.network.TerminalActionPayload;
+import com.grahambartley.totalstorage.operation.ExpensiveOperation;
+import com.grahambartley.totalstorage.operation.NetworkJobOutcome;
+import com.grahambartley.totalstorage.operation.NetworkOperationMessages;
 import com.grahambartley.totalstorage.operation.NetworkOperations;
 import com.grahambartley.totalstorage.operation.NetworkSortJob;
 import com.grahambartley.totalstorage.operation.OperationGuards;
 import com.grahambartley.totalstorage.operation.OperationReport;
+import com.grahambartley.totalstorage.operation.TerminalNoticeTone;
 import com.grahambartley.totalstorage.screenhandler.TerminalActions;
 import com.grahambartley.totalstorage.screenhandler.TerminalSettingsEdits;
 import com.grahambartley.totalstorage.screenhandler.TerminalSettingsService;
@@ -84,6 +88,32 @@ public final class NetworkSortGameTest implements FabricGameTest {
         second.containersSorted(), 0, "A sorted network should need no second pass");
     context.assertEquals(east.getStack(0).getCount(), 50, "The arrangement should be unchanged");
     NetworkOperationFixture.assertConserved(context, before, Items.COBBLESTONE, owner);
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aSortThatSkippedAContainerEndsAsAPartialResultNamingTheSkip(TestContext context) {
+    BarrelBlockEntity excluded =
+        NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    scatter(excluded, Items.COBBLESTONE, 20, 30);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    NetworkOperationFixture.assign(
+        context, NetworkOperationFixture.EAST_BARREL, ContainerRole.EXCLUDED);
+
+    OperationReport report =
+        NetworkOperationFixture.runToCompletion(
+            context, new NetworkSortJob(NetworkOperationFixture.operationContext(context, owner)));
+    NetworkJobOutcome outcome = NetworkJobOutcome.of(ExpensiveOperation.SORT_NETWORK, report);
+
+    context.assertEquals(
+        outcome.tone(), TerminalNoticeTone.PARTIAL, "A run that skipped a container is partial");
+    context.assertEquals(
+        outcome.headline(),
+        NetworkOperationMessages.skipped(report),
+        "The headline should say how many containers were skipped");
     NetworkOperationFixture.finish(context, owner);
   }
 

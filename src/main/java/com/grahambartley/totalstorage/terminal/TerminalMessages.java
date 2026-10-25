@@ -106,6 +106,11 @@ public final class TerminalMessages {
             TagSkipSummary.of(skips));
   }
 
+  public static Text tagsSkipped(int skipped) {
+    return Text.translatableWithFallback(
+        PREFIX + "tags-skipped", "Skipped %s", CountedNoun.TAGS.of(skipped));
+  }
+
   public static Text tagsCopiedNothing() {
     return line("tags-copied-none", "That terminal had nothing this one was missing");
   }

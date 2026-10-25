@@ -22,6 +22,8 @@ class TerminalScreenLayoutTest {
 
   private static final int VANILLA_SLOT_SIZE = 18;
 
+  private static final int VANILLA_PANEL_BORDER = 4;
+
   private static final int VANILLA_SLOT_ITEM_OFFSET = 1;
 
   static Stream<Integer> everySlot() {
@@ -118,24 +120,6 @@ class TerminalScreenLayoutTest {
         TerminalScreenLayout.y(TerminalScreenLayout.HOTBAR_START));
   }
 
-  @Test
-  void theRecessedAreaClearsThePlayerInventoryLabel() {
-    assertTrue(
-        TerminalScreenLayout.INSET_Y + TerminalScreenLayout.INSET_HEIGHT
-            <= TerminalScreenLayout.INVENTORY_LABEL_Y,
-        "The inset ends at "
-            + (TerminalScreenLayout.INSET_Y + TerminalScreenLayout.INSET_HEIGHT)
-            + " but the label starts at "
-            + TerminalScreenLayout.INVENTORY_LABEL_Y);
-  }
-
-  @Test
-  void theRecessedAreaSitsInsideTheWindow() {
-    assertTrue(
-        TerminalScreenLayout.INSET_X + TerminalScreenLayout.INSET_WIDTH
-            <= TerminalScreenLayout.WINDOW_WIDTH);
-  }
-
   @ParameterizedTest
   @ValueSource(ints = {-1, 36, 100})
   void anIndexThatIsNotASlotIsRefusedRatherThanGuessedAt(int handlerIndex) {
@@ -158,7 +142,7 @@ class TerminalScreenLayoutTest {
   void everySlotClearsTheChassisFrameRatherThanMerelyFittingInTheWindow(int handlerIndex) {
     int x = TerminalScreenLayout.x(handlerIndex);
     int y = TerminalScreenLayout.y(handlerIndex);
-    int border = TerminalScreenLayout.PANEL_BORDER;
+    int border = TerminalScreenLayout.EDGE;
     int size = TerminalScreenLayout.SLOT_SIZE;
 
     assertTrue(x - 1 >= border, "left edge at " + (x - 1) + " is under the frame");
@@ -173,122 +157,14 @@ class TerminalScreenLayoutTest {
 
   @Test
   void theTitleClearsTheChassisFrame() {
-    assertTrue(TerminalScreenLayout.TITLE_Y >= TerminalScreenLayout.PANEL_BORDER);
-    assertTrue(TerminalScreenLayout.TITLE_X >= TerminalScreenLayout.PANEL_BORDER);
-  }
-
-  @Test
-  void theRecessedAreaClearsTheChassisFrame() {
-    assertTrue(TerminalScreenLayout.INSET_X >= TerminalScreenLayout.PANEL_BORDER);
-    assertTrue(TerminalScreenLayout.INSET_Y >= TerminalScreenLayout.PANEL_BORDER);
-    assertTrue(
-        TerminalScreenLayout.INSET_X + TerminalScreenLayout.INSET_WIDTH
-            <= TerminalScreenLayout.WINDOW_WIDTH - TerminalScreenLayout.PANEL_BORDER);
+    assertTrue(TerminalScreenLayout.TITLE_Y >= VANILLA_PANEL_BORDER);
+    assertTrue(TerminalScreenLayout.TITLE_X >= VANILLA_PANEL_BORDER);
   }
 
   @Test
   void theWindowFitsTheSmallestScreenVanillaWillDrawItAt() {
     assertTrue(TerminalScreenLayout.WINDOW_WIDTH <= 320, "wider than a 320x240 screen");
     assertTrue(TerminalScreenLayout.WINDOW_HEIGHT <= 240, "taller than a 320x240 screen");
-  }
-
-  @Test
-  void theTitleSitsAboveTheRecessedArea() {
-    assertTrue(TerminalScreenLayout.TITLE_Y + 9 <= TerminalScreenLayout.INSET_Y);
-  }
-
-  @Test
-  void theSearchBoxSitsBetweenTheTitleAndTheRecessedArea() {
-    assertTrue(
-        TerminalScreenLayout.TITLE_Y + 9 <= TerminalScreenLayout.SEARCH_Y,
-        "the search box overlaps the title");
-    assertTrue(
-        TerminalScreenLayout.SEARCH_Y + TerminalScreenLayout.SEARCH_HEIGHT
-            <= TerminalScreenLayout.INSET_Y,
-        "the search box overlaps the recess");
-  }
-
-  @Test
-  void theSearchBoxSpansTheRecessItNarrows() {
-    assertEquals(TerminalScreenLayout.INSET_X, TerminalScreenLayout.SEARCH_X);
-    assertEquals(TerminalScreenLayout.INSET_WIDTH, TerminalScreenLayout.SEARCH_WIDTH);
-    assertTrue(
-        TerminalScreenLayout.SEARCH_X + TerminalScreenLayout.SEARCH_WIDTH
-            <= TerminalScreenLayout.WINDOW_WIDTH - TerminalScreenLayout.PANEL_BORDER,
-        "the search box runs under the chassis frame");
-  }
-
-  @Test
-  void theToolbarSitsBesideTheRecessRatherThanOverIt() {
-    assertTrue(
-        TerminalScreenLayout.TOOLBAR_X
-            >= TerminalScreenLayout.INSET_X + TerminalScreenLayout.INSET_WIDTH,
-        "the toolbar overlaps the recess");
-    assertEquals(TerminalScreenLayout.SEARCH_Y, TerminalScreenLayout.TOOLBAR_Y);
-  }
-
-  @Test
-  void aNoticeIsDrawnAcrossTheListingItInterrupts() {
-    assertEquals(TerminalScreenLayout.GRID_X, TerminalScreenLayout.NOTICE_X);
-    assertEquals(TerminalScreenLayout.GRID_Y, TerminalScreenLayout.NOTICE_Y);
-    assertTrue(
-        TerminalScreenLayout.NOTICE_X + TerminalScreenLayout.NOTICE_WIDTH
-            <= TerminalScreenLayout.INSET_X + TerminalScreenLayout.INSET_WIDTH,
-        "a notice runs past the recess it is drawn in");
-    assertTrue(
-        TerminalScreenLayout.noticeHeight(TerminalScreenLayout.NOTICE_MAX_LINES)
-            <= TerminalScreenLayout.GRID_HEIGHT,
-        "the tallest notice covers more than the listing it interrupts");
-    assertEquals(
-        TerminalScreenLayout.noticeRows(2) * TerminalScreenLayout.SLOT_SIZE,
-        TerminalScreenLayout.noticeHeight(2),
-        "a notice must end on a slot boundary so no half row shows under it");
-  }
-
-  @Test
-  void aNoticeCannotBeTallerThanTheLinesItIsAllowed() {
-    assertThrows(IllegalArgumentException.class, () -> TerminalScreenLayout.noticeRows(0));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> TerminalScreenLayout.noticeRows(TerminalScreenLayout.NOTICE_MAX_LINES + 1));
-  }
-
-  @Test
-  void theActionColumnHoldsEveryActionTheTerminalDraws() {
-    assertTrue(
-        TerminalScreenLayout.actionY(2) + TerminalScreenLayout.BUTTON_SIZE
-            <= TerminalScreenLayout.INSET_Y + TerminalScreenLayout.INSET_HEIGHT,
-        "the third action runs past the recess it sits beside");
-    assertThrows(
-        IndexOutOfBoundsException.class,
-        () -> TerminalScreenLayout.actionY(3),
-        "a fourth action has nowhere to go and must say so");
-  }
-
-  @Test
-  void aToolbarButtonIsDrawnInsideTheChassisFrame() {
-    assertTrue(
-        TerminalScreenLayout.TOOLBAR_X + TerminalScreenLayout.BUTTON_SIZE
-            <= TerminalScreenLayout.WINDOW_WIDTH - TerminalScreenLayout.PANEL_BORDER,
-        "the button runs under the chassis frame");
-    assertTrue(
-        TerminalScreenLayout.TOOLBAR_Y >= TerminalScreenLayout.PANEL_BORDER,
-        "the button runs under the chassis frame");
-  }
-
-  @Test
-  void theToolbarIsGivenRoomWithoutUnbalancingTheWindow() {
-    assertEquals(
-        TerminalScreenLayout.EDGE,
-        TerminalScreenLayout.WINDOW_WIDTH
-            - (TerminalScreenLayout.TOOLBAR_X + TerminalScreenLayout.BUTTON_SIZE));
-  }
-
-  @Test
-  void anIconCentresInTheButtonAroundIt() {
-    assertEquals(
-        TerminalScreenLayout.BUTTON_SIZE,
-        2 * TerminalScreenLayout.ICON_INSET + TerminalScreenLayout.ICON_SIZE);
   }
 
   @Test
@@ -335,63 +211,6 @@ class TerminalScreenLayoutTest {
             TerminalScreenLayout.SEARCH_Y + TerminalScreenLayout.SEARCH_HEIGHT - 1));
   }
 
-  static Stream<Integer> everyTab() {
-    return IntStream.range(0, TerminalScreenLayout.TAB_COUNT).boxed();
-  }
-
-  @ParameterizedTest
-  @MethodSource("everyTab")
-  void everyTabIsDrawnInTheToolbarColumn(int tab) {
-    int top = TerminalScreenLayout.tabY(tab);
-
-    assertTrue(top >= TerminalScreenLayout.TOOLBAR_Y, "tab at " + top);
-    assertTrue(
-        top + TerminalScreenLayout.BUTTON_SIZE <= TerminalScreenLayout.ACTIONS_Y,
-        "the tab strip runs into the actions below it");
-  }
-
-  @Test
-  void theTabsTouchSoTheyReadAsOneStrip() {
-    assertEquals(
-        TerminalScreenLayout.tabY(0) + TerminalScreenLayout.BUTTON_SIZE,
-        TerminalScreenLayout.tabY(1));
-  }
-
-  @ParameterizedTest
-  @ValueSource(ints = {-1, 2, 100})
-  void anIndexThatIsNotATabIsRefusedRatherThanGuessedAt(int tab) {
-    assertThrows(IndexOutOfBoundsException.class, () -> TerminalScreenLayout.tabY(tab));
-  }
-
-  @Test
-  void theToolbarHasRoomForTheActionsBesideTheStrip() {
-    int last = TerminalScreenLayout.actionY(1) + TerminalScreenLayout.BUTTON_SIZE;
-
-    assertTrue(
-        last <= TerminalScreenLayout.INSET_Y + TerminalScreenLayout.INSET_HEIGHT,
-        "the actions run past the recess, ending at " + last);
-  }
-
-  @Test
-  void theActionsAreSeparatedFromTheStripTheySitUnder() {
-    assertTrue(
-        TerminalScreenLayout.actionY(0)
-            >= TerminalScreenLayout.tabY(TerminalScreenLayout.TAB_COUNT - 1)
-                + TerminalScreenLayout.BUTTON_SIZE,
-        "the first action overlaps the last tab");
-  }
-
-  @Test
-  void aClickBesideTheToolbarIsOverNoTab() {
-    assertEquals(
-        TerminalScreenLayout.NO_CELL,
-        TerminalScreenLayout.tabAt(
-            TerminalScreenLayout.TOOLBAR_X - 1, TerminalScreenLayout.TOOLBAR_Y));
-    assertEquals(
-        TerminalScreenLayout.NO_CELL,
-        TerminalScreenLayout.tabAt(TerminalScreenLayout.GRID_X, TerminalScreenLayout.GRID_Y));
-  }
-
   @Test
   void aRecessNeverAsksForMoreRowsThanAPageMayCarry() {
     assertTrue(
@@ -413,40 +232,6 @@ class TerminalScreenLayoutTest {
     assertEquals(
         TerminalScreenLayout.LISTING_ROWS * TerminalScreenLayout.SLOT_SIZE,
         TerminalScreenLayout.GRID_HEIGHT);
-  }
-
-  @Test
-  void theGridAndItsScrollbarClearTheRecessFrame() {
-    assertTrue(
-        TerminalScreenLayout.GRID_X - TerminalScreenLayout.INSET_X
-            >= TerminalScreenLayout.INSET_BORDER,
-        "The grid starts under the recess frame");
-    assertTrue(
-        TerminalScreenLayout.GRID_Y - TerminalScreenLayout.INSET_Y
-            >= TerminalScreenLayout.INSET_BORDER,
-        "The grid starts under the recess frame");
-    assertTrue(
-        TerminalScreenLayout.SCROLLBAR_X + TerminalScreenLayout.SCROLLBAR_WIDTH
-            <= TerminalScreenLayout.INSET_X
-                + TerminalScreenLayout.INSET_WIDTH
-                - TerminalScreenLayout.INSET_BORDER,
-        "The scrollbar ends under the recess frame");
-    assertTrue(
-        TerminalScreenLayout.GRID_Y + TerminalScreenLayout.GRID_HEIGHT
-            <= TerminalScreenLayout.INSET_Y
-                + TerminalScreenLayout.INSET_HEIGHT
-                - TerminalScreenLayout.INSET_BORDER,
-        "The grid ends under the recess frame");
-  }
-
-  @Test
-  void theRecessIsExactlyAsWideAsWhatItHolds() {
-    assertEquals(
-        2 * TerminalScreenLayout.INSET_BORDER
-            + TerminalScreenLayout.GRID_WIDTH
-            + TerminalScreenLayout.SCROLLBAR_GAP
-            + TerminalScreenLayout.SCROLLBAR_WIDTH,
-        TerminalScreenLayout.INSET_WIDTH);
   }
 
   @Test
@@ -614,63 +399,92 @@ class TerminalScreenLayoutTest {
   }
 
   @Test
-  void withNoNoticeUpTheGridMapsCellToCellBothWays() {
-    for (int cell = 0; cell < TerminalScreenLayout.LISTING_PAGE_SIZE; cell++) {
-      assertEquals(cell, TerminalScreenLayout.pageCellAt(cell, 0));
-      assertEquals(cell, TerminalScreenLayout.screenCellFor(cell, 0));
-    }
-  }
-
-  @ParameterizedTest
-  @ValueSource(ints = {1, 2, 3})
-  void aNoticePushesEveryRowDownRatherThanHidingTheTopOnes(int hiddenRows) {
-    final int covered = hiddenRows * TerminalScreenLayout.LISTING_COLUMNS;
-
-    for (int pageCell = 0;
-        pageCell < TerminalScreenLayout.LISTING_PAGE_SIZE - covered;
-        pageCell++) {
-      final int screenCell = TerminalScreenLayout.screenCellFor(pageCell, hiddenRows);
-
-      assertEquals(pageCell + covered, screenCell);
-      assertEquals(pageCell, TerminalScreenLayout.pageCellAt(screenCell, hiddenRows));
-    }
-  }
-
-  @ParameterizedTest
-  @ValueSource(ints = {1, 2, 3})
-  void acellUnderTheNoticeBelongsToNothingTheGridCanBeClickedOn(int hiddenRows) {
-    for (int cell = 0; cell < hiddenRows * TerminalScreenLayout.LISTING_COLUMNS; cell++) {
-      assertEquals(TerminalScreenLayout.NO_CELL, TerminalScreenLayout.pageCellAt(cell, hiddenRows));
-    }
-  }
-
-  @ParameterizedTest
-  @ValueSource(ints = {1, 2, 3})
-  void apageCellPushedPastTheBottomIsNotDrawnAtAll(int hiddenRows) {
-    final int covered = hiddenRows * TerminalScreenLayout.LISTING_COLUMNS;
-
-    for (int pageCell = TerminalScreenLayout.LISTING_PAGE_SIZE - covered;
-        pageCell < TerminalScreenLayout.LISTING_PAGE_SIZE;
-        pageCell++) {
-      assertEquals(
-          TerminalScreenLayout.NO_CELL, TerminalScreenLayout.screenCellFor(pageCell, hiddenRows));
-    }
+  void theSearchBoxSitsBetweenTheTitleAndTheGrid() {
+    assertTrue(
+        TerminalScreenLayout.TITLE_Y + 9 <= TerminalScreenLayout.SEARCH_Y,
+        "the search box overlaps the title");
+    assertTrue(
+        TerminalScreenLayout.SEARCH_Y + TerminalScreenLayout.SEARCH_HEIGHT
+            < TerminalScreenLayout.GRID_Y,
+        "the search box touches the grid");
   }
 
   @Test
-  void nothingUnderThePointerStaysNothingWhicheverWayItIsMapped() {
+  void theSearchBoxSpansTheGridAndItsScrollbar() {
+    assertEquals(TerminalScreenLayout.GRID_X, TerminalScreenLayout.SEARCH_X);
     assertEquals(
-        TerminalScreenLayout.NO_CELL,
-        TerminalScreenLayout.pageCellAt(TerminalScreenLayout.NO_CELL, 2));
-    assertEquals(
-        TerminalScreenLayout.NO_CELL,
-        TerminalScreenLayout.screenCellFor(TerminalScreenLayout.NO_CELL, 2));
+        TerminalScreenLayout.SCROLLBAR_X + TerminalScreenLayout.SCROLLBAR_WIDTH,
+        TerminalScreenLayout.SEARCH_X + TerminalScreenLayout.SEARCH_WIDTH);
   }
 
-  @ParameterizedTest
-  @ValueSource(ints = {-1, Integer.MIN_VALUE})
-  void aNegativeNoticeHeightCoversNothing(int hiddenRows) {
-    assertEquals(4, TerminalScreenLayout.pageCellAt(4, hiddenRows));
-    assertEquals(4, TerminalScreenLayout.screenCellFor(4, hiddenRows));
+  @Test
+  void theListingKeepsTheSameMarginFromTheRightEdgeAsTheSideColumnFromTheLeft() {
+    assertEquals(
+        TerminalScreenLayout.SIDE_X,
+        TerminalScreenLayout.WINDOW_WIDTH
+            - (TerminalScreenLayout.SCROLLBAR_X + TerminalScreenLayout.SCROLLBAR_WIDTH));
+  }
+
+  @Test
+  void theSideColumnEndsBeforeTheGridBegins() {
+    assertTrue(
+        TerminalScreenLayout.SIDE_X + TerminalScreenLayout.SIDE_WIDTH
+            < TerminalScreenLayout.GRID_X);
+  }
+
+  @Test
+  void theSearchIconAndTextSitInsideTheSearchBoxWithoutTouching() {
+    assertTrue(TerminalScreenLayout.SEARCH_ICON_X > TerminalScreenLayout.SEARCH_X);
+    assertTrue(TerminalScreenLayout.SEARCH_ICON_Y >= TerminalScreenLayout.SEARCH_Y);
+    assertTrue(
+        TerminalScreenLayout.SEARCH_ICON_Y + TerminalScreenLayout.SEARCH_ICON_SIZE
+            <= TerminalScreenLayout.SEARCH_Y + TerminalScreenLayout.SEARCH_HEIGHT);
+    assertTrue(
+        TerminalScreenLayout.SEARCH_TEXT_X
+            > TerminalScreenLayout.SEARCH_ICON_X + TerminalScreenLayout.SEARCH_ICON_SIZE,
+        "the search text touches its icon");
+  }
+
+  @Test
+  void theInventoryLabelSitsBetweenTheGridAndTheInventory() {
+    assertTrue(
+        TerminalScreenLayout.INVENTORY_LABEL_Y
+            > TerminalScreenLayout.GRID_Y + TerminalScreenLayout.GRID_HEIGHT,
+        "the label touches the grid");
+    assertTrue(
+        TerminalScreenLayout.INVENTORY_LABEL_Y + 9
+            < TerminalScreenLayout.MAIN_INVENTORY_Y - TerminalScreenLayout.SLOT_ITEM_OFFSET,
+        "the label touches the inventory");
+  }
+
+  @Test
+  void theStatusLineReplacesTheInventoryLabelAcrossTheListingWidth() {
+    assertEquals(TerminalScreenLayout.INVENTORY_LABEL_X, TerminalScreenLayout.STATUS_X);
+    assertEquals(TerminalScreenLayout.INVENTORY_LABEL_Y, TerminalScreenLayout.STATUS_Y);
+    assertEquals(TerminalScreenLayout.SEARCH_WIDTH, TerminalScreenLayout.STATUS_WIDTH);
+  }
+
+  @Test
+  void theStatusLineIsFoundAtItsOwnCornersAndNowhereElse() {
+    final int right = TerminalScreenLayout.STATUS_X + TerminalScreenLayout.STATUS_WIDTH;
+    final int bottom = TerminalScreenLayout.STATUS_Y + TerminalScreenLayout.STATUS_HEIGHT;
+
+    assertTrue(
+        TerminalScreenLayout.isOverStatus(
+            TerminalScreenLayout.STATUS_X, TerminalScreenLayout.STATUS_Y));
+    assertTrue(TerminalScreenLayout.isOverStatus(right - 1, bottom - 1));
+    assertFalse(
+        TerminalScreenLayout.isOverStatus(
+            TerminalScreenLayout.STATUS_X - 1, TerminalScreenLayout.STATUS_Y));
+    assertFalse(TerminalScreenLayout.isOverStatus(right, TerminalScreenLayout.STATUS_Y));
+    assertFalse(TerminalScreenLayout.isOverStatus(TerminalScreenLayout.STATUS_X, bottom));
+  }
+
+  @Test
+  void theHotbarEndsAboveTheBottomEdge() {
+    assertTrue(
+        TerminalScreenLayout.BOTTOM_Y
+            <= TerminalScreenLayout.WINDOW_HEIGHT - TerminalScreenLayout.EDGE,
+        "the hotbar runs into the bottom edge at " + TerminalScreenLayout.BOTTOM_Y);
   }
 }

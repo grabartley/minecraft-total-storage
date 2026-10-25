@@ -1,17 +1,18 @@
 package com.grahambartley.totalstorage.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
 class ClientPreferencesTest {
   @Test
-  void aFreshInstallShowsBothIndicatorsWhereVanillaLeavesRoom() {
+  void aFreshInstallShowsTheSortButtonButLeavesLockedSlotsUntinted() {
     final ClientPreferences defaults = ClientPreferences.defaults();
 
     assertTrue(defaults.sortButtonVisible());
-    assertTrue(defaults.lockedSlotTintVisible());
+    assertFalse(defaults.lockedSlotTintVisible());
     assertEquals(ScreenButtonAnchor.INSIDE_TOP_RIGHT, defaults.screenButtonAnchor());
   }
 

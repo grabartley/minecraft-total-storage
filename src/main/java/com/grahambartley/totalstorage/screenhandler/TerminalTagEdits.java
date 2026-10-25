@@ -84,13 +84,13 @@ public final class TerminalTagEdits {
 
   private static void report(ServerPlayerEntity player, TagEdit action, TagEditResult result) {
     switch (result.outcome()) {
-      case DENIED -> TerminalNotice.tell(player, TerminalMessages.notYours());
-      case UNKNOWN_TAG -> TerminalNotice.tell(player, TerminalMessages.tagUnknown());
-      case PRESET_IMMUTABLE -> TerminalNotice.tell(player, TerminalMessages.tagIsPreset());
+      case DENIED -> TerminalNotice.failed(player, TerminalMessages.notYours());
+      case UNKNOWN_TAG -> TerminalNotice.failed(player, TerminalMessages.tagUnknown());
+      case PRESET_IMMUTABLE -> TerminalNotice.failed(player, TerminalMessages.tagIsPreset());
       case TOO_MANY_TAGS ->
-          TerminalNotice.tell(player, TerminalMessages.tagLimitReached(NetworkTagSet.MAX_CUSTOM));
+          TerminalNotice.failed(player, TerminalMessages.tagLimitReached(NetworkTagSet.MAX_CUSTOM));
       case NAME_REJECTED ->
-          TerminalNotice.tell(player, TerminalMessages.tagNameRejected(result.name()));
+          TerminalNotice.failed(player, TerminalMessages.tagNameRejected(result.name()));
       case CHANGED -> reportChange(player, action, result);
       default -> {}
     }
@@ -99,11 +99,11 @@ public final class TerminalTagEdits {
   private static void reportChange(
       ServerPlayerEntity player, TagEdit action, TagEditResult result) {
     if (action == TagEdit.DELETE) {
-      TerminalNotice.tell(player, TerminalMessages.tagDeleted(result.affected()));
+      TerminalNotice.done(player, TerminalMessages.tagDeleted(result.affected()));
       return;
     }
     if (action == TagEdit.ASSIGN_MATCHING) {
-      TerminalNotice.tell(player, TerminalMessages.tagAssignedTo(result.affected()));
+      TerminalNotice.done(player, TerminalMessages.tagAssignedTo(result.affected()));
     }
   }
 

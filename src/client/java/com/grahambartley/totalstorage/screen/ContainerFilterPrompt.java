@@ -4,7 +4,6 @@ import com.grahambartley.totalstorage.terminal.ContainerRoleEntry;
 import com.grahambartley.totalstorage.terminal.NetworkSettingsView;
 import com.grahambartley.totalstorage.terminal.NetworkTagEntry;
 import com.grahambartley.totalstorage.terminal.NetworkTagView;
-import com.grahambartley.totalstorage.text.CountedNoun;
 import java.util.List;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -76,9 +75,14 @@ public final class ContainerFilterPrompt {
     TagPromptFrame.draw(
         context,
         textRenderer,
-        TerminalScreenText.of("settings.container.filter.title", ContainerRowText.label(row)),
-        footerFor(row, tags),
+        ContainerBlocks.at(row.container()),
+        TerminalScreenText.of(
+            "settings.container.filter.title",
+            ContainerRowText.title(row, ContainerBlocks.at(row.container()))),
         list,
+        HintLine.of(HintLine.key("esc"), HintLine.words("hint.done")),
+        tags.tags().isEmpty() ? null : footerFor(row, tags),
+        tags.tags().isEmpty() ? TerminalScreenText.of("settings.container.filter.notags") : null,
         originX,
         originY,
         () -> drawRows(context, textRenderer, row, tags, originX, originY, mouseX, mouseY));
@@ -107,8 +111,8 @@ public final class ContainerFilterPrompt {
           FilterColumnText.nameOf(tag),
           row.accepts(tag.id()),
           tag.equals(hovered),
-          originX + TagPromptLayout.textLeft(),
-          originY + TagPromptLayout.rowY(visible));
+          originX + TagPromptLayout.LIST.left(),
+          originY + TagPromptLayout.LIST.rowY(visible));
     }
   }
 
@@ -117,10 +121,8 @@ public final class ContainerFilterPrompt {
       return TerminalScreenText.of("settings.container.filter.notags");
     }
     return row.acceptsNothing()
-        ? TerminalScreenText.of("settings.container.filter.empty")
+        ? TerminalScreenText.of("settings.container.filter.empty.short")
         : TerminalScreenText.of(
-            "settings.container.filter.count",
-            row.acceptedTags().size(),
-            CountedNoun.TAGS.of(tags.tags().size()));
+            "settings.container.filter.count", row.acceptedTags().size(), tags.tags().size());
   }
 }

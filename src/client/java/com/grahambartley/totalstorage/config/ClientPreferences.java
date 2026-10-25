@@ -7,7 +7,7 @@ public record ClientPreferences(
   public static final boolean DEFAULT_SORT_BUTTON_VISIBLE = true;
   public static final ScreenButtonAnchor DEFAULT_SCREEN_BUTTON_ANCHOR =
       ScreenButtonAnchor.INSIDE_TOP_RIGHT;
-  public static final boolean DEFAULT_LOCKED_SLOT_TINT_VISIBLE = true;
+  public static final boolean DEFAULT_LOCKED_SLOT_TINT_VISIBLE = false;
 
   private static final ClientPreferences DEFAULTS =
       new ClientPreferences(

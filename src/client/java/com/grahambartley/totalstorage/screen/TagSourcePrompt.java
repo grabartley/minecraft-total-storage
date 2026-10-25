@@ -68,11 +68,18 @@ public final class TagSourcePrompt {
     TagPromptFrame.draw(
         context,
         textRenderer,
+        null,
         TerminalScreenText.of("tags.copy.title"),
-        sources.isEmpty()
-            ? TerminalScreenText.of("tags.copy.none")
-            : TerminalScreenText.of("tags.copy.hint"),
         list,
+        sources.isEmpty()
+            ? HintLine.of(HintLine.key("esc"), HintLine.words("hint.close"))
+            : HintLine.of(
+                HintLine.key("click"),
+                HintLine.words("hint.merge"),
+                HintLine.key("shift"),
+                HintLine.words("hint.replace")),
+        null,
+        sources.isEmpty() ? TerminalScreenText.of("tags.copy.none") : null,
         originX,
         originY,
         () -> drawRows(context, textRenderer, sources, originX, originY, mouseX, mouseY));
@@ -87,37 +94,46 @@ public final class TagSourcePrompt {
       int mouseX,
       int mouseY) {
     final OwnedTerminal hovered = sourceAt(sources, mouseX, mouseY);
+    final PromptListGeometry geometry = TagPromptLayout.LIST;
     for (int row = 0; row < TagPromptLayout.VISIBLE_ROWS; row++) {
       final int index = list.indexOfRow(row);
       if (index >= sources.size()) {
         return;
       }
       final OwnedTerminal source = sources.get(index);
-      final int left = originX + TagPromptLayout.textLeft();
-      final int top = originY + TagPromptLayout.rowY(row);
+      final int left = originX + geometry.left();
+      final int top = originY + geometry.rowY(row);
       final boolean armed = isArmed(source);
-      TerminalChrome.drawActiveRow(
-          context,
-          armed,
-          source.equals(hovered),
-          left,
-          top,
-          TagPromptLayout.ROW_WIDTH,
-          TagPromptLayout.ROW_HEIGHT);
+      if (armed) {
+        VanillaSprite.button(true, source.equals(hovered))
+            .draw(context, left, top, geometry.rowWidth(), geometry.rowHeight());
+        TerminalChrome.fill(
+            context,
+            left + TerminalTextButton.faceInset(),
+            top + TerminalTextButton.faceInset(),
+            geometry.rowWidth() - 2 * TerminalTextButton.faceInset(),
+            geometry.rowHeight() - 2 * TerminalTextButton.faceInset() - 1,
+            VanillaPalette.ACCENT);
+      } else if (source.equals(hovered)) {
+        TerminalChrome.drawHover(context, left, top, geometry.rowWidth(), geometry.rowHeight());
+      }
       final OrderedText text =
           TrimmedText.toWidth(
               textRenderer,
-              armed ? TerminalScreenText.of("tags.copy.replace.confirm") : TagText.source(source),
-              TagPromptLayout.ROW_WIDTH - 2 * TagPromptLayout.TEXT_MARGIN);
+              armed ? TerminalScreenText.of("tags.copy.replace.armed") : TagText.source(source),
+              geometry.rowWidth() - 2 * TagPromptLayout.TEXT_MARGIN);
       context.drawText(
           textRenderer,
           text,
-          left + TagPromptLayout.TEXT_MARGIN,
-          top + (TagPromptLayout.ROW_HEIGHT - TagPromptLayout.LINE_HEIGHT) / 2 + 1,
           armed
-              ? VanillaPalette.WARNING
-              : source.holdsAnythingToCopy() ? VanillaPalette.LABEL : VanillaPalette.MUTED,
-          false);
+              ? left + (geometry.rowWidth() - textRenderer.getWidth(text) + 1) / 2
+              : left + TagPromptLayout.TEXT_MARGIN,
+          top + (geometry.rowHeight() - 8) / 2,
+          VanillaPalette.opaque(
+              armed
+                  ? VanillaPalette.BUTTON_TEXT
+                  : source.holdsAnythingToCopy() ? VanillaPalette.LABEL : VanillaPalette.MUTED),
+          armed);
     }
   }
 }

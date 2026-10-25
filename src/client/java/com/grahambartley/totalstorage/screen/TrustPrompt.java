@@ -9,11 +9,52 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
 
 public final class TrustPrompt {
-  public static final int REMOVE_WIDTH = 40;
+  public static final int REMOVE_WIDTH = 44;
 
-  private static final int FIELD_HEIGHT = 12;
+  public static final int REMOVE_HEIGHT = 12;
 
-  private final TagPromptList list = new TagPromptList();
+  public static final int ROW_HEIGHT = 16;
+
+  public static final int VISIBLE_ROWS = 3;
+
+  public static final int LINE_HEIGHT = 9;
+
+  public static final int LIST_HEIGHT = VISIBLE_ROWS * ROW_HEIGHT + 2;
+
+  public static final int HEAD_SIZE = 8;
+
+  public static final PromptFrame FRAME =
+      PromptFrame.centred(
+          LINE_HEIGHT
+              + 4
+              + LIST_HEIGHT
+              + 5
+              + PromptField.HEIGHT
+              + TextPromptPanel.REFUSAL_GAP
+              + LINE_HEIGHT
+              + TextPromptPanel.KEYS_GAP
+              + KeyCaps.HEIGHT);
+
+  public static final int LIST_TOP = FRAME.contentTop() + LINE_HEIGHT + 4;
+
+  public static final PromptListGeometry LIST =
+      new PromptListGeometry(
+          FRAME.contentLeft() + 1,
+          LIST_TOP + 1,
+          PromptFrame.CONTENT_WIDTH - 2 - 2 - 5,
+          ROW_HEIGHT,
+          VISIBLE_ROWS,
+          FRAME.contentLeft() + PromptFrame.CONTENT_WIDTH - 1 - 5,
+          5);
+
+  public static final int FIELD_TOP = LIST_TOP + LIST_HEIGHT + 5;
+
+  public static final int REFUSAL_TOP =
+      FIELD_TOP + PromptField.HEIGHT + TextPromptPanel.REFUSAL_GAP;
+
+  public static final int KEYS_TOP = REFUSAL_TOP + LINE_HEIGHT + TextPromptPanel.KEYS_GAP;
+
+  private final TagPromptList list = new TagPromptList(LIST);
 
   private PlayerNameEntry entry;
   private TrustEditOutcome refusal;
@@ -102,9 +143,16 @@ public final class TrustPrompt {
     return index < 0 || index >= trusted.size() ? null : trusted.get(index);
   }
 
+  public static int removeX() {
+    return LIST.left() + LIST.rowWidth() - 2 - REMOVE_WIDTH;
+  }
+
   public static boolean isOverRemove(int windowX) {
-    final int rowRight = TagPromptLayout.textLeft() + TagPromptLayout.ROW_WIDTH;
-    return windowX >= rowRight - REMOVE_WIDTH && windowX < rowRight;
+    return windowX >= removeX() && windowX < removeX() + REMOVE_WIDTH;
+  }
+
+  public static boolean isInside(int windowX, int windowY) {
+    return FRAME.isInside(windowX, windowY);
   }
 
   private void forgetRefusal() {
@@ -123,15 +171,52 @@ public final class TrustPrompt {
     if (!isOpen()) {
       return;
     }
-    TagPromptFrame.draw(
+    final int left = originX + FRAME.contentLeft();
+    PromptFrame.begin(context);
+    FRAME.drawPanel(context, originX, originY);
+    PromptHeader.drawTitle(
         context,
         textRenderer,
         TerminalScreenText.of("settings.trusted.title"),
-        list,
-        originX,
-        originY,
-        () -> drawRows(context, textRenderer, view.trusted(), originX, originY, mouseX, mouseY),
-        () -> drawEntry(context, textRenderer, originX, originY));
+        left,
+        originY + FRAME.contentTop(),
+        PromptFrame.CONTENT_WIDTH);
+    TerminalChrome.drawInset(
+        context, left, originY + LIST_TOP, PromptFrame.CONTENT_WIDTH, LIST_HEIGHT);
+    drawRows(context, textRenderer, view.trusted(), originX, originY, mouseX, mouseY);
+    list.drawScrollbar(context, originX, originY);
+    PromptField.draw(
+        context,
+        textRenderer,
+        left,
+        originY + FIELD_TOP,
+        PromptFrame.CONTENT_WIDTH,
+        name(),
+        TerminalScreenText.of("settings.trusted.placeholder"),
+        null,
+        refusal != null);
+    if (refusal != null) {
+      PromptField.drawRefusal(
+          context,
+          textRenderer,
+          TrustPromptText.refusal(refusal, refusedName),
+          left,
+          originY + REFUSAL_TOP,
+          PromptFrame.CONTENT_WIDTH);
+    }
+    KeyCaps.draw(
+        context,
+        textRenderer,
+        HintLine.of(
+            HintLine.key("enter"),
+            HintLine.words("hint.add"),
+            HintLine.key("esc"),
+            HintLine.words("hint.close")),
+        left,
+        originY + KEYS_TOP,
+        VanillaPalette.MUTED,
+        false);
+    PromptFrame.end(context);
   }
 
   private void drawRows(
@@ -142,80 +227,47 @@ public final class TrustPrompt {
       int originY,
       int mouseX,
       int mouseY) {
-    final int left = originX + TagPromptLayout.textLeft();
+    final int left = originX + LIST.left();
     if (trusted.isEmpty()) {
       context.drawText(
           textRenderer,
           TerminalScreenText.of("settings.trusted.none"),
-          left + TagPromptLayout.TEXT_MARGIN,
-          originY + textY(0),
-          VanillaPalette.MUTED,
+          left + 3,
+          originY + LIST.rowY(0) + (ROW_HEIGHT - 8) / 2,
+          VanillaPalette.opaque(VanillaPalette.MUTED),
           false);
       return;
     }
     final int hovered = list.indexAt(mouseX, mouseY);
-    for (int visible = 0; visible < TagPromptLayout.VISIBLE_ROWS; visible++) {
+    for (int visible = 0; visible < VISIBLE_ROWS; visible++) {
       final int index = list.indexOfRow(visible);
       if (index >= trusted.size()) {
         return;
       }
-      final boolean overRemove = index == hovered && isOverRemove(mouseX);
-      TerminalChrome.drawRow(
-          context,
-          index == hovered,
-          left,
-          originY + TagPromptLayout.rowY(visible),
-          TagPromptLayout.ROW_WIDTH,
-          TagPromptLayout.ROW_HEIGHT);
+      final int top = originY + LIST.rowY(visible);
+      final String player = trusted.get(index);
+      PlayerHeads.draw(context, player, left + 3, top + (ROW_HEIGHT - HEAD_SIZE) / 2, HEAD_SIZE);
+      final int nameLeft = left + 3 + HEAD_SIZE + 4;
       context.drawText(
           textRenderer,
           TrimmedText.toWidth(
-              textRenderer,
-              Text.literal(trusted.get(index)),
-              TagPromptLayout.ROW_WIDTH - REMOVE_WIDTH - 2 * TagPromptLayout.TEXT_MARGIN),
-          left + TagPromptLayout.TEXT_MARGIN,
-          originY + textY(visible),
-          VanillaPalette.LABEL,
+              textRenderer, Text.literal(player), originX + removeX() - 6 - nameLeft),
+          nameLeft,
+          top + (ROW_HEIGHT - 8) / 2,
+          VanillaPalette.opaque(VanillaPalette.LABEL),
           false);
+      final boolean overRemove = index == hovered && isOverRemove(mouseX);
+      final int removeTop = top + (ROW_HEIGHT - REMOVE_HEIGHT) / 2;
+      VanillaSprite.button(true, overRemove)
+          .draw(context, originX + removeX(), removeTop, REMOVE_WIDTH, REMOVE_HEIGHT);
       final Text remove = TerminalScreenText.of("settings.trusted.remove");
       context.drawText(
           textRenderer,
-          remove,
-          left
-              + TagPromptLayout.ROW_WIDTH
-              - TagPromptLayout.TEXT_MARGIN
-              - textRenderer.getWidth(remove),
-          originY + textY(visible),
-          overRemove ? VanillaPalette.ACCENT : VanillaPalette.MUTED,
-          false);
+          TrimmedText.toWidth(textRenderer, remove, REMOVE_WIDTH - 4),
+          originX + removeX() + (REMOVE_WIDTH - textRenderer.getWidth(remove) + 1) / 2,
+          removeTop + (REMOVE_HEIGHT - 8) / 2,
+          VanillaPalette.opaque(VanillaPalette.BUTTON_TEXT),
+          true);
     }
-  }
-
-  private static int textY(int visibleRow) {
-    return TagPromptLayout.rowY(visibleRow)
-        + (TagPromptLayout.ROW_HEIGHT - TagPromptLayout.LINE_HEIGHT) / 2
-        + 1;
-  }
-
-  private void drawEntry(DrawContext context, TextRenderer textRenderer, int originX, int originY) {
-    final int left = originX + TagPromptLayout.textLeft();
-    final int fieldTop = originY + TagPromptLayout.footerTop() - TagPromptLayout.GAP;
-    TerminalSprite.FIELD_FOCUSED.draw(
-        context, left, fieldTop, TagPromptLayout.TEXT_WIDTH, FIELD_HEIGHT);
-    context.drawText(
-        textRenderer, name(), left + 2, fieldTop + 2, VanillaPalette.FIELD_TEXT, false);
-    context.drawText(
-        textRenderer,
-        TrimmedText.toWidth(textRenderer, hint(), TagPromptLayout.TEXT_WIDTH),
-        left,
-        fieldTop + FIELD_HEIGHT + 2,
-        refusal == null ? VanillaPalette.MUTED : VanillaPalette.WARNING,
-        false);
-  }
-
-  private Text hint() {
-    return refusal == null
-        ? TerminalScreenText.of("settings.trusted.hint")
-        : TrustPromptText.refusal(refusal, refusedName);
   }
 }

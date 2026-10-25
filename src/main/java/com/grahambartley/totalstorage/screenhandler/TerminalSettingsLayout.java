@@ -3,85 +3,101 @@ package com.grahambartley.totalstorage.screenhandler;
 public final class TerminalSettingsLayout {
   public static final int NO_ROW = -1;
 
-  public static final int INSET_X = TerminalScreenLayout.FILTER_X;
+  public static final int FRAME_X = TerminalScreenLayout.EDGE;
 
-  public static final int INSET_Y = TerminalScreenLayout.SEARCH_Y;
+  public static final int FRAME_Y = TerminalScreenLayout.GRID_Y - 2;
 
-  public static final int INSET_WIDTH =
-      TerminalScreenLayout.INSET_X + TerminalScreenLayout.INSET_WIDTH - INSET_X;
+  public static final int FRAME_WIDTH =
+      TerminalScreenLayout.SCROLLBAR_X + TerminalScreenLayout.SCROLLBAR_WIDTH - FRAME_X;
 
-  public static final int INSET_HEIGHT =
-      TerminalScreenLayout.INSET_Y + TerminalScreenLayout.INSET_HEIGHT - INSET_Y;
-
-  public static final int PANEL_X = INSET_X + TerminalScreenLayout.INSET_BORDER;
-
-  public static final int PANEL_Y = INSET_Y + TerminalScreenLayout.INSET_BORDER;
-
-  public static final int PANEL_WIDTH = INSET_WIDTH - 2 * TerminalScreenLayout.INSET_BORDER;
-
-  public static final int PANEL_HEIGHT = INSET_HEIGHT - 2 * TerminalScreenLayout.INSET_BORDER;
+  public static final int FRAME_HEIGHT =
+      TerminalScreenLayout.GRID_Y + TerminalScreenLayout.GRID_HEIGHT - FRAME_Y;
 
   public static final int SECTION_COUNT = 3;
 
-  public static final int SECTION_TAB_HEIGHT = 12;
+  public static final int SECTION_TAB_WIDTH = FRAME_WIDTH / SECTION_COUNT;
 
-  public static final int SECTION_GAP = 2;
+  public static final int SECTION_TAB_Y = TerminalScreenLayout.HEADER_Y + 2;
 
-  public static final int SECTION_TAB_WIDTH = PANEL_WIDTH / SECTION_COUNT;
+  public static final int SECTION_TAB_HEIGHT = FRAME_Y + 1 - SECTION_TAB_Y;
 
-  public static final int CONTENT_Y = PANEL_Y + SECTION_TAB_HEIGHT + SECTION_GAP;
+  public static final int SELECTED_TAB_Y = TerminalScreenLayout.HEADER_Y;
 
-  public static final int CONTENT_HEIGHT = PANEL_HEIGHT - SECTION_TAB_HEIGHT - SECTION_GAP;
+  public static final int SELECTED_TAB_HEIGHT = FRAME_Y + 2 - SELECTED_TAB_Y;
 
-  public static final int ROW_HEIGHT = TerminalScreenLayout.SLOT_SIZE;
+  public static final int PADDING = 9;
 
-  public static final int ROWS = CONTENT_HEIGHT / ROW_HEIGHT;
+  public static final int CONTENT_X = FRAME_X + PADDING;
 
-  public static final int ROW_WIDTH =
-      PANEL_WIDTH - TerminalScreenLayout.SCROLLBAR_GAP - TerminalScreenLayout.SCROLLBAR_WIDTH;
+  public static final int CONTENT_RIGHT = FRAME_X + FRAME_WIDTH - PADDING;
 
-  public static final int FULL_ROW_WIDTH = PANEL_WIDTH;
+  public static final int LIST_X = FRAME_X + 4;
 
-  public static final int SCROLLBAR_X =
-      PANEL_X + PANEL_WIDTH - TerminalScreenLayout.SCROLLBAR_WIDTH;
+  public static final int LIST_Y = FRAME_Y + 4;
 
-  public static final int CONTROL_SIZE = 16;
+  public static final int SCROLLBAR_WIDTH = 6;
 
-  public static final int CONTROL_INSET = (ROW_HEIGHT - CONTROL_SIZE) / 2;
+  public static final int SCROLLBAR_X = FRAME_X + FRAME_WIDTH - 5 - SCROLLBAR_WIDTH;
+
+  public static final int LIST_WIDTH = SCROLLBAR_X - 4 - LIST_X;
+
+  public static final int ROW_HEIGHT = 21;
+
+  public static final int ROWS = 4;
+
+  public static final int LIST_HEIGHT = ROWS * ROW_HEIGHT;
+
+  public static final int BUTTON_WIDTH = 100;
+
+  public static final int BUTTON_HEIGHT = 20;
+
+  public static final int BUTTON_X = CONTENT_RIGHT - BUTTON_WIDTH;
+
+  public static final int SETTING_GAP = 6;
+
+  public static final int SETTING_COUNT = 3;
+
+  public static final int SETTINGS_Y =
+      FRAME_Y
+          + 1
+          + (FRAME_HEIGHT - 2 - SETTING_COUNT * BUTTON_HEIGHT - (SETTING_COUNT - 1) * SETTING_GAP)
+              / 2;
+
+  public static final int DESCRIPTION_WIDTH = BUTTON_X - 6 - CONTENT_X;
 
   private TerminalSettingsLayout() {}
 
+  public static int settingY(int row) {
+    if (row < 0 || row >= SETTING_COUNT) {
+      throw new IndexOutOfBoundsException("no terminal setting at row " + row);
+    }
+    return SETTINGS_Y + row * (BUTTON_HEIGHT + SETTING_GAP);
+  }
+
   public static int sectionTabX(int section) {
     requireSection(section);
-    return PANEL_X + section * SECTION_TAB_WIDTH;
+    return FRAME_X + section * SECTION_TAB_WIDTH;
   }
 
   public static int sectionTabAt(int windowX, int windowY) {
-    if (windowY < PANEL_Y || windowY >= PANEL_Y + SECTION_TAB_HEIGHT) {
+    if (windowY < SELECTED_TAB_Y || windowY >= FRAME_Y) {
       return NO_ROW;
     }
-    final int section = Math.floorDiv(windowX - PANEL_X, SECTION_TAB_WIDTH);
-    return windowX < PANEL_X || section >= SECTION_COUNT ? NO_ROW : section;
+    final int section = Math.floorDiv(windowX - FRAME_X, SECTION_TAB_WIDTH);
+    return windowX < FRAME_X || section >= SECTION_COUNT ? NO_ROW : section;
   }
 
   public static int rowY(int row) {
     requireRow(row);
-    return CONTENT_Y + row * ROW_HEIGHT;
+    return LIST_Y + row * ROW_HEIGHT;
   }
 
   public static int rowAt(int windowX, int windowY) {
-    if (windowX < PANEL_X || windowX >= PANEL_X + FULL_ROW_WIDTH) {
+    if (windowX < LIST_X || windowX >= LIST_X + LIST_WIDTH) {
       return NO_ROW;
     }
-    final int row = Math.floorDiv(windowY - CONTENT_Y, ROW_HEIGHT);
-    return windowY < CONTENT_Y || row >= ROWS ? NO_ROW : row;
-  }
-
-  public static boolean isOverScrollbar(int windowX, int windowY) {
-    return windowX >= SCROLLBAR_X
-        && windowX < SCROLLBAR_X + TerminalScreenLayout.SCROLLBAR_WIDTH
-        && windowY >= CONTENT_Y
-        && windowY < CONTENT_Y + CONTENT_HEIGHT;
+    final int row = Math.floorDiv(windowY - LIST_Y, ROW_HEIGHT);
+    return windowY < LIST_Y || row >= ROWS ? NO_ROW : row;
   }
 
   private static void requireSection(int section) {

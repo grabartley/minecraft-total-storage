@@ -17,7 +17,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.lwjgl.glfw.GLFW;
 
 class TrustPromptTest {
-  private static final int ROW_RIGHT = TagPromptLayout.textLeft() + TagPromptLayout.ROW_WIDTH;
+  private static final int ROW_RIGHT = TrustPrompt.removeX() + TrustPrompt.REMOVE_WIDTH;
 
   private final TrustPrompt prompt = new TrustPrompt();
 
@@ -178,8 +178,8 @@ class TrustPromptTest {
     prompt.open();
     prompt.fit(view);
 
-    assertEquals("Alex", prompt.removalAt(view, ROW_RIGHT - 1, TagPromptLayout.rowY(0) + 1));
-    assertEquals("Sam", prompt.removalAt(view, ROW_RIGHT - 1, TagPromptLayout.rowY(1) + 1));
+    assertEquals("Alex", prompt.removalAt(view, ROW_RIGHT - 1, TrustPrompt.LIST.rowY(0) + 1));
+    assertEquals("Sam", prompt.removalAt(view, ROW_RIGHT - 1, TrustPrompt.LIST.rowY(1) + 1));
   }
 
   @Test
@@ -188,7 +188,7 @@ class TrustPromptTest {
     prompt.open();
     prompt.fit(view);
 
-    assertNull(prompt.removalAt(view, TagPromptLayout.textLeft() + 1, TagPromptLayout.rowY(0) + 1));
+    assertNull(prompt.removalAt(view, TrustPrompt.LIST.left() + 1, TrustPrompt.LIST.rowY(0) + 1));
   }
 
   @Test
@@ -197,7 +197,7 @@ class TrustPromptTest {
     prompt.open();
     prompt.fit(view);
 
-    assertNull(prompt.removalAt(view, ROW_RIGHT - 1, TagPromptLayout.rowY(1) + 1));
+    assertNull(prompt.removalAt(view, ROW_RIGHT - 1, TrustPrompt.LIST.rowY(1) + 1));
   }
 
   @Test
@@ -207,6 +207,6 @@ class TrustPromptTest {
     prompt.fit(view);
 
     assertTrue(prompt.list().scrollBy(1));
-    assertEquals("B", prompt.removalAt(view, ROW_RIGHT - 1, TagPromptLayout.rowY(0) + 1));
+    assertEquals("B", prompt.removalAt(view, ROW_RIGHT - 1, TrustPrompt.LIST.rowY(0) + 1));
   }
 }

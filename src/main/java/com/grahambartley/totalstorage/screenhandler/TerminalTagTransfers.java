@@ -15,6 +15,7 @@ import com.grahambartley.totalstorage.terminal.TerminalMessages;
 import java.util.Objects;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 
 public final class TerminalTagTransfers {
   private final TerminalTagPanelService panels;
@@ -79,12 +80,19 @@ public final class TerminalTagTransfers {
 
   private static void report(ServerPlayerEntity player, TagTransferResult result) {
     switch (result.outcome()) {
-      case CHANGED ->
-          TerminalNotice.tell(
-              player, TerminalMessages.tagsCopied(result.imported(), result.skips()));
-      case UNCHANGED -> TerminalNotice.tell(player, TerminalMessages.tagsCopiedNothing());
-      default -> TerminalNotice.tell(player, TerminalMessages.notYours());
+      case CHANGED -> reportCopied(player, result);
+      case UNCHANGED -> TerminalNotice.partial(player, TerminalMessages.tagsCopiedNothing());
+      default -> TerminalNotice.failed(player, TerminalMessages.notYours());
     }
+  }
+
+  private static void reportCopied(ServerPlayerEntity player, TagTransferResult result) {
+    final Text message = TerminalMessages.tagsCopied(result.imported(), result.skips());
+    if (result.skips().isEmpty()) {
+      TerminalNotice.done(player, message);
+      return;
+    }
+    TerminalNotice.partial(player, TerminalMessages.tagsSkipped(result.skips().total()), message);
   }
 
   private void pushed(TerminalOperationContext context) {

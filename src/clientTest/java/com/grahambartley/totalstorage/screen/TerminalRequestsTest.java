@@ -34,11 +34,6 @@ class TerminalRequestsTest {
             public void settingsShowing(int syncId, int offset, int length) {
               sent.add("showing " + syncId + " " + offset + "," + length);
             }
-
-            @Override
-            public void settingsClosed(int syncId) {
-              sent.add("closed " + syncId);
-            }
           });
 
   @Test
@@ -46,7 +41,6 @@ class TerminalRequestsTest {
     requests.showSettings(ListingWindow.EMPTY);
 
     assertEquals(List.of("showing 7 0,0"), sent);
-    assertTrue(requests.isSettingsShowing());
   }
 
   @Test
@@ -60,39 +54,11 @@ class TerminalRequestsTest {
   }
 
   @Test
-  void leavingTheSettingsTabTellsTheServerOnce() {
-    requests.showSettings(new ListingWindow(0, 6));
-    sent.clear();
-
-    requests.hideSettings();
-    requests.hideSettings();
-
-    assertEquals(List.of("closed 7"), sent);
-    assertFalse(requests.isSettingsShowing());
-  }
-
-  @Test
-  void aPanelNobodyOpenedIsNeverClosed() {
-    requests.hideSettings();
-
-    assertEquals(List.of(), sent);
-  }
-
-  @Test
   void theWindowAlreadyAskedForIsNotAskedForAgain() {
     requests.showSettings(new ListingWindow(0, 6));
 
     assertFalse(requests.needsContainers(new ListingWindow(0, 6)));
     assertTrue(requests.needsContainers(new ListingWindow(6, 6)));
-  }
-
-  @Test
-  void closingThePanelForgetsTheWindowItHeld() {
-    requests.showSettings(new ListingWindow(0, 6));
-
-    requests.hideSettings();
-
-    assertTrue(requests.needsContainers(new ListingWindow(0, 6)));
   }
 
   @Test

@@ -1,53 +1,31 @@
 package com.grahambartley.totalstorage.screen;
 
-import com.grahambartley.totalstorage.config.ClientConfigMirror;
 import com.grahambartley.totalstorage.screenhandler.TagsSectionLayout;
-import com.grahambartley.totalstorage.screenhandler.TerminalScreenLayout;
 import com.grahambartley.totalstorage.screenhandler.TerminalSettingsLayout;
-import com.grahambartley.totalstorage.storage.ContainerRole;
-import com.grahambartley.totalstorage.terminal.ContainerRoleEntry;
-import com.grahambartley.totalstorage.terminal.NetworkCapacity;
 import com.grahambartley.totalstorage.terminal.NetworkSettingsView;
-import java.util.List;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 
 public final class TerminalSettingsPanel {
-  private static final int TEXT_INSET = TerminalChrome.CONTENT_INSET;
-  private static final int ICON_SIZE = 16;
   private static final int LINE_HEIGHT = 9;
 
-  private static final int CHIP_WIDTH = 52;
+  private static final int LABEL_OFFSET = 2;
 
-  private static final int CONTENTS_WIDTH =
-      TerminalSettingsLayout.ROW_WIDTH - CHIP_WIDTH - 3 * TEXT_INSET - ICON_SIZE;
+  private static final int DESCRIPTION_OFFSET = 11;
 
   private final ListingScroll scroll = new ListingScroll(1, TerminalSettingsLayout.ROWS);
 
-  private final TerminalScrollbar scrollbar =
-      new TerminalScrollbar(scroll, TerminalSettingsLayout.CONTENT_HEIGHT);
+  private final TerminalScrollbar containerScrollbar =
+      new TerminalScrollbar(scroll, TerminalSettingsLayout.LIST_HEIGHT);
+
+  private final TerminalScrollbar tagScrollbar =
+      new TerminalScrollbar(scroll, TagsSectionLayout.LIST_HEIGHT);
 
   private SettingsSection section = SettingsSection.TERMINAL;
 
-  private int hiddenRows;
-
   public SettingsSection section() {
     return section;
-  }
-
-  public void coverTopRows(int rows) {
-    hiddenRows = Math.max(0, Math.min(TerminalSettingsLayout.ROWS, rows));
-  }
-
-  public int hiddenRows() {
-    return hiddenRows;
-  }
-
-  public boolean isCoveredAt(int windowX, int windowY) {
-    final int row = TerminalSettingsLayout.rowAt(windowX, windowY);
-    return row != TerminalSettingsLayout.NO_ROW && isCovered(row);
   }
 
   public boolean scrolls() {
@@ -57,35 +35,55 @@ public final class TerminalSettingsPanel {
   public void show(SettingsSection shown) {
     section = shown;
     scroll.scrollTo(0);
-    scrollbar.release();
+    containerScrollbar.release();
+    tagScrollbar.release();
   }
 
   public ListingScroll scroll() {
     return scroll;
   }
 
+  private TerminalScrollbar scrollbar() {
+    return section == SettingsSection.TAGS ? tagScrollbar : containerScrollbar;
+  }
+
+  private int trackHeight() {
+    return section == SettingsSection.TAGS
+        ? TagsSectionLayout.LIST_HEIGHT
+        : TerminalSettingsLayout.LIST_HEIGHT;
+  }
+
   public boolean isOverScrollbar(int windowX, int windowY) {
-    return scrolls() && TerminalSettingsLayout.isOverScrollbar(windowX, windowY);
+    return scrolls()
+        && windowX >= TerminalSettingsLayout.SCROLLBAR_X
+        && windowX < TerminalSettingsLayout.SCROLLBAR_X + TerminalSettingsLayout.SCROLLBAR_WIDTH
+        && windowY >= TerminalSettingsLayout.LIST_Y
+        && windowY < TerminalSettingsLayout.LIST_Y + trackHeight();
+  }
+
+  public boolean isOverList(int windowX, int windowY) {
+    return scrolls()
+        && windowX >= TerminalSettingsLayout.LIST_X
+        && windowX < TerminalSettingsLayout.SCROLLBAR_X + TerminalSettingsLayout.SCROLLBAR_WIDTH
+        && windowY >= TerminalSettingsLayout.LIST_Y
+        && windowY < TerminalSettingsLayout.LIST_Y + trackHeight();
   }
 
   public boolean grabScrollbar(int windowY) {
-    return scrolls() && scrollbar.grab(windowY - TerminalSettingsLayout.CONTENT_Y);
+    return scrolls() && scrollbar().grab(windowY - TerminalSettingsLayout.LIST_Y);
   }
 
   public boolean isDraggingScrollbar() {
-    return scrolls() && scrollbar.isDragging();
+    return scrolls() && scrollbar().isDragging();
   }
 
   public void dragScrollbarTo(int windowY) {
-    scrollbar.dragTo(windowY - TerminalSettingsLayout.CONTENT_Y);
+    scrollbar().dragTo(windowY - TerminalSettingsLayout.LIST_Y);
   }
 
   public void releaseScrollbar() {
-    scrollbar.release();
-  }
-
-  TerminalScrollbar scrollbar() {
-    return scrollbar;
+    containerScrollbar.release();
+    tagScrollbar.release();
   }
 
   public void fit(NetworkSettingsView view, int customTags) {
@@ -93,412 +91,150 @@ public final class TerminalSettingsPanel {
         switch (section) {
           case TERMINAL -> 0;
           case CONTAINERS -> view.containerTotal();
-          case TAGS -> customTags + TagsSectionLayout.FIRST_TAG_ROW;
+          case TAGS -> customTags;
         });
   }
 
   public int containerRowAt(int windowX, int windowY) {
-    if (section != SettingsSection.CONTAINERS
-        || TerminalSettingsLayout.isOverScrollbar(windowX, windowY)) {
+    if (section != SettingsSection.CONTAINERS) {
       return TerminalSettingsLayout.NO_ROW;
     }
-    final int row = visibleRowAt(windowX, windowY);
+    final int row = TerminalSettingsLayout.rowAt(windowX, windowY);
     return row == TerminalSettingsLayout.NO_ROW ? row : scroll.firstIndex() + row;
   }
 
-  public SettingsControl controlAt(int windowX, int windowY) {
-    if (section != SettingsSection.TERMINAL || isCovered(TerminalSetting.RADIUS.row())) {
-      return SettingsControl.NONE;
-    }
-    return SettingsControl.at(windowX, windowY);
-  }
-
-  public TerminalSetting settingAt(int windowX, int windowY) {
-    if (section != SettingsSection.TERMINAL) {
-      return null;
-    }
-    final int row = visibleRowAt(windowX, windowY);
-    return row == TerminalSettingsLayout.NO_ROW ? null : TerminalSetting.atRow(row);
-  }
-
-  private int visibleRowAt(int windowX, int windowY) {
-    final int row = TerminalSettingsLayout.rowAt(windowX, windowY);
-    return row == TerminalSettingsLayout.NO_ROW || row < hiddenRows
-        ? TerminalSettingsLayout.NO_ROW
-        : row;
-  }
-
-  private boolean isCovered(int row) {
-    return row < hiddenRows;
-  }
-
-  public void draw(
-      DrawContext context,
-      TextRenderer textRenderer,
-      NetworkSettingsView view,
-      int originX,
-      int originY,
-      int mouseX,
-      int mouseY) {
-    drawSectionTabs(context, textRenderer, originX, originY, mouseX, mouseY);
-    if (section == SettingsSection.TAGS) {
-      drawScrollbar(context, originX, originY);
-      return;
-    }
-    if (section == SettingsSection.TERMINAL) {
-      drawTerminalSection(context, textRenderer, view, originX, originY, mouseX, mouseY);
-      return;
-    }
-    drawContainerSection(context, textRenderer, view, originX, originY, mouseX, mouseY);
-  }
-
-  private void drawSectionTabs(
-      DrawContext context,
-      TextRenderer textRenderer,
-      int originX,
-      int originY,
-      int mouseX,
-      int mouseY) {
+  public void drawBackground(
+      DrawContext context, int originX, int originY, int mouseX, int mouseY) {
     final int hovered = TerminalSettingsLayout.sectionTabAt(mouseX, mouseY);
     for (final SettingsSection shown : SettingsSection.values()) {
-      final int left = originX + TerminalSettingsLayout.sectionTabX(shown.index());
-      final int top = originY + TerminalSettingsLayout.PANEL_Y;
-      TerminalChrome.tab(shown == section, hovered == shown.index())
-          .draw(
+      if (shown != section) {
+        TerminalChrome.drawSectionTab(
+            context,
+            originX + TerminalSettingsLayout.sectionTabX(shown.index()),
+            originY + TerminalSettingsLayout.SECTION_TAB_Y,
+            TerminalSettingsLayout.SECTION_TAB_WIDTH,
+            TerminalSettingsLayout.SECTION_TAB_HEIGHT,
+            false);
+        if (hovered == shown.index()) {
+          TerminalChrome.drawHover(
               context,
-              left,
-              top,
-              TerminalSettingsLayout.SECTION_TAB_WIDTH,
-              TerminalSettingsLayout.SECTION_TAB_HEIGHT);
-      final Text label = TerminalScreenText.of(shown.label());
+              originX + TerminalSettingsLayout.sectionTabX(shown.index()) + 2,
+              originY + TerminalSettingsLayout.SECTION_TAB_Y + 2,
+              TerminalSettingsLayout.SECTION_TAB_WIDTH - 4,
+              TerminalSettingsLayout.SECTION_TAB_HEIGHT - 3);
+        }
+      }
+    }
+    TerminalChrome.drawRaisedFrame(
+        context,
+        originX + TerminalSettingsLayout.FRAME_X,
+        originY + TerminalSettingsLayout.FRAME_Y,
+        TerminalSettingsLayout.FRAME_WIDTH,
+        TerminalSettingsLayout.FRAME_HEIGHT);
+    TerminalChrome.drawSectionTab(
+        context,
+        originX + TerminalSettingsLayout.sectionTabX(section.index()),
+        originY + TerminalSettingsLayout.SELECTED_TAB_Y,
+        TerminalSettingsLayout.SECTION_TAB_WIDTH,
+        TerminalSettingsLayout.SELECTED_TAB_HEIGHT,
+        true);
+    if (scrolls() && scroll.totalRows() > 0) {
+      TerminalChrome.drawScrollbar(
+          context,
+          scrollbar(),
+          originX + TerminalSettingsLayout.SCROLLBAR_X,
+          originY + TerminalSettingsLayout.LIST_Y,
+          TerminalSettingsLayout.SCROLLBAR_WIDTH,
+          trackHeight());
+    }
+  }
+
+  public void drawForeground(
+      DrawContext context, TextRenderer textRenderer, NetworkSettingsView view) {
+    drawSectionLabels(context, textRenderer);
+    if (section == SettingsSection.TERMINAL) {
+      drawTerminalSection(context, textRenderer, view);
+    }
+  }
+
+  private void drawSectionLabels(DrawContext context, TextRenderer textRenderer) {
+    for (final SettingsSection shown : SettingsSection.values()) {
+      final boolean selected = shown == section;
+      final int left = TerminalSettingsLayout.sectionTabX(shown.index());
+      final int top =
+          selected
+              ? TerminalSettingsLayout.SELECTED_TAB_Y + 4
+              : TerminalSettingsLayout.SECTION_TAB_Y + 3;
+      final int room = TerminalSettingsLayout.SECTION_TAB_WIDTH - 8;
+      final var label =
+          TrimmedText.toWidth(textRenderer, TerminalScreenText.of(shown.label()), room);
       context.drawText(
           textRenderer,
           label,
-          left + (TerminalSettingsLayout.SECTION_TAB_WIDTH - textRenderer.getWidth(label)) / 2,
-          top + (TerminalSettingsLayout.SECTION_TAB_HEIGHT - LINE_HEIGHT) / 2 + 1,
-          shown == section ? VanillaPalette.LABEL : VanillaPalette.MUTED,
+          left + (TerminalSettingsLayout.SECTION_TAB_WIDTH - textRenderer.getWidth(label) + 1) / 2,
+          top,
+          VanillaPalette.opaque(selected ? VanillaPalette.LABEL : VanillaPalette.BEVEL_HIGHLIGHT),
+          !selected);
+    }
+  }
+
+  private static void drawTerminalSection(
+      DrawContext context, TextRenderer textRenderer, NetworkSettingsView view) {
+    for (final TerminalSetting setting : TerminalSetting.values()) {
+      final int top = TerminalSettingsLayout.settingY(setting.row());
+      context.drawText(
+          textRenderer,
+          TrimmedText.toWidth(
+              textRenderer,
+              TerminalScreenText.of(setting.label()),
+              TerminalSettingsLayout.DESCRIPTION_WIDTH),
+          TerminalSettingsLayout.CONTENT_X,
+          top + LABEL_OFFSET,
+          VanillaPalette.opaque(VanillaPalette.LABEL),
+          false);
+      context.drawText(
+          textRenderer,
+          TrimmedText.toWidth(
+              textRenderer,
+              TerminalSettingsText.description(setting, view),
+              TerminalSettingsLayout.DESCRIPTION_WIDTH),
+          TerminalSettingsLayout.CONTENT_X,
+          top + DESCRIPTION_OFFSET,
+          VanillaPalette.opaque(VanillaPalette.MUTED),
           false);
     }
-  }
-
-  private void drawTerminalSection(
-      DrawContext context,
-      TextRenderer textRenderer,
-      NetworkSettingsView view,
-      int originX,
-      int originY,
-      int mouseX,
-      int mouseY) {
-    final TerminalSetting hovered = settingAt(mouseX, mouseY);
-    final SettingsControl control = controlAt(mouseX, mouseY);
-    final boolean answered = view.answered();
-    if (!isCovered(TerminalSetting.RADIUS.row())) {
-      drawRow(context, TerminalSetting.RADIUS, originX, originY, false);
-      stepper(
-          context,
-          textRenderer,
-          "-",
-          originX + SettingsControl.radiusDownX(),
-          originY + SettingsControl.radiusY(),
-          answered && view.mayAdminister() && view.radius() > view.minRadius(),
-          control == SettingsControl.RADIUS_DOWN);
-      stepper(
-          context,
-          textRenderer,
-          "+",
-          originX + SettingsControl.radiusUpX(),
-          originY + SettingsControl.radiusY(),
-          answered && view.mayAdminister() && view.radius() < view.maxRadius(),
-          control == SettingsControl.RADIUS_UP);
-      centred(
-          context,
-          textRenderer,
-          radiusLine(view),
-          originX,
-          originY + TerminalSettingsLayout.rowY(TerminalSetting.RADIUS.row()),
-          VanillaPalette.LABEL);
-    }
-
-    if (!isCovered(TerminalSetting.ACCESS.row())) {
-      drawRow(
-          context,
-          TerminalSetting.ACCESS,
-          originX,
-          originY,
-          hovered == TerminalSetting.ACCESS && view.mayAdminister());
-      labelled(
-          context,
-          textRenderer,
-          TerminalScreenText.of(TerminalSetting.ACCESS.label()),
-          answered ? view.accessMode().displayName() : pendingValue(),
-          originX,
-          originY + TerminalSettingsLayout.rowY(TerminalSetting.ACCESS.row()),
-          view.mayAdminister());
-    }
-
-    if (!isCovered(TerminalSetting.TRUSTED.row())) {
-      drawRow(
-          context,
-          TerminalSetting.TRUSTED,
-          originX,
-          originY,
-          hovered == TerminalSetting.TRUSTED && view.mayAdminister());
-      labelled(
-          context,
-          textRenderer,
-          TerminalScreenText.of(TerminalSetting.TRUSTED.label()),
-          trustedLine(view),
-          originX,
-          originY + TerminalSettingsLayout.rowY(TerminalSetting.TRUSTED.row()),
-          view.mayAdminister());
-    }
-
-    if (!isCovered(TerminalSetting.CAPACITY.row())) {
-      drawRow(context, TerminalSetting.CAPACITY, originX, originY, false);
-      capacity(
-          context,
-          textRenderer,
-          view,
-          originX,
-          originY + TerminalSettingsLayout.rowY(TerminalSetting.CAPACITY.row()));
-    }
-  }
-
-  private static Text radiusLine(NetworkSettingsView view) {
-    if (!view.answered()) {
-      return TerminalScreenText.of(TerminalSetting.RADIUS.label(), "-", "-");
-    }
-    return view.isClamped()
-        ? TerminalScreenText.of("settings.radius.clamped", view.radius(), view.effectiveRadius())
-        : TerminalScreenText.of(TerminalSetting.RADIUS.label(), view.radius(), view.maxRadius());
-  }
-
-  private static Text trustedLine(NetworkSettingsView view) {
-    if (!view.answered()) {
-      return pendingValue();
-    }
-    if (!view.mayAdminister()) {
-      return TerminalScreenText.of("settings.trusted.hidden");
-    }
-    return view.trusted().isEmpty()
-        ? TerminalScreenText.of("settings.trusted.none")
-        : Text.literal(String.join(", ", view.trusted()));
-  }
-
-  private static Text pendingValue() {
-    return TerminalScreenText.of("settings.pending");
-  }
-
-  private static void capacity(
-      DrawContext context,
-      TextRenderer textRenderer,
-      NetworkSettingsView view,
-      int originX,
-      int rowY) {
-    final NetworkCapacity room = view.capacity();
-    final int left = originX + TerminalSettingsLayout.PANEL_X;
-    final int textY = rowY + (TerminalSettingsLayout.ROW_HEIGHT - 1 - LINE_HEIGHT) / 2;
+    final Text radius = TerminalSettingsText.radiusValue(view);
+    final int valueLeft =
+        TerminalSettingsButtons.RADIUS_DOWN_X + TerminalSettingsButtons.STEPPER_SIZE;
+    final int valueWidth = TerminalSettingsButtons.RADIUS_UP_X - valueLeft;
+    final var shown = TrimmedText.toWidth(textRenderer, radius, valueWidth - 4);
     context.drawText(
         textRenderer,
-        TerminalScreenText.of(TerminalSetting.CAPACITY.label()),
-        left + TEXT_INSET,
-        textY,
-        VanillaPalette.MUTED,
-        false);
-    final Text value = capacityValue(view, room);
-    context.drawText(
-        textRenderer,
-        value,
-        left + TerminalSettingsLayout.FULL_ROW_WIDTH - TEXT_INSET - textRenderer.getWidth(value),
-        textY,
-        view.answered()
-                && room.isNearCapacity(ClientConfigMirror.current().nearCapacityWarningPercent())
-            ? VanillaPalette.WARNING
-            : VanillaPalette.LABEL,
+        shown,
+        valueLeft + (valueWidth - textRenderer.getWidth(shown) + 1) / 2,
+        TerminalSettingsLayout.settingY(TerminalSetting.RADIUS.row())
+            + (TerminalSettingsLayout.BUTTON_HEIGHT - LINE_HEIGHT) / 2
+            + 1,
+        VanillaPalette.opaque(VanillaPalette.LABEL),
         false);
   }
 
-  private static Text capacityValue(NetworkSettingsView view, NetworkCapacity room) {
-    if (!view.answered()) {
-      return pendingValue();
+  public Text descriptionTooltipAt(
+      TextRenderer textRenderer, NetworkSettingsView view, int windowX, int windowY) {
+    if (section != SettingsSection.TERMINAL
+        || windowX < TerminalSettingsLayout.CONTENT_X
+        || windowX >= TerminalSettingsLayout.CONTENT_X + TerminalSettingsLayout.DESCRIPTION_WIDTH) {
+      return null;
     }
-    return room.isUnknown()
-        ? TerminalScreenText.of("settings.capacity.unknown")
-        : TerminalScreenText.of("settings.capacity.slots", room.freeSlots(), room.totalSlots());
-  }
-
-  private void drawContainerSection(
-      DrawContext context,
-      TextRenderer textRenderer,
-      NetworkSettingsView view,
-      int originX,
-      int originY,
-      int mouseX,
-      int mouseY) {
-    drawScrollbar(context, originX, originY);
-    if (!view.hasContainers()) {
-      if (!isCovered(0)) {
-        centred(
-            context,
-            textRenderer,
-            TerminalScreenText.of(emptyContainersKey(view)),
-            originX,
-            originY + TerminalSettingsLayout.rowY(0),
-            VanillaPalette.MUTED);
-      }
-      return;
-    }
-    final int hovered = containerRowAt(mouseX, mouseY);
-    for (int row = hiddenRows; row < TerminalSettingsLayout.ROWS; row++) {
-      final int index = scroll.firstIndex() + row;
-      final ContainerRoleEntry entry = view.at(index);
-      if (entry != null) {
-        drawContainerRow(
-            context,
-            textRenderer,
-            entry,
-            originX,
-            originY,
-            row,
-            index == hovered && view.mayAdminister(),
-            view.mayAdminister());
+    for (final TerminalSetting setting : TerminalSetting.values()) {
+      final int top = TerminalSettingsLayout.settingY(setting.row()) + DESCRIPTION_OFFSET;
+      if (windowY >= top && windowY < top + LINE_HEIGHT) {
+        final Text description = TerminalSettingsText.description(setting, view);
+        return textRenderer.getWidth(description) > TerminalSettingsLayout.DESCRIPTION_WIDTH
+            ? description
+            : null;
       }
     }
-  }
-
-  private static String emptyContainersKey(NetworkSettingsView view) {
-    if (!view.answered()) {
-      return "settings.pending";
-    }
-    return view.powered() ? "settings.empty" : "settings.offline";
-  }
-
-  private static void drawContainerRow(
-      DrawContext context,
-      TextRenderer textRenderer,
-      ContainerRoleEntry entry,
-      int originX,
-      int originY,
-      int row,
-      boolean hovered,
-      boolean changeable) {
-    final int left = originX + TerminalSettingsLayout.PANEL_X;
-    final int top = originY + TerminalSettingsLayout.rowY(row);
-    TerminalChrome.drawActiveRow(
-        context,
-        entry.role() == ContainerRole.EXCLUDED,
-        hovered,
-        left,
-        top,
-        TerminalSettingsLayout.ROW_WIDTH,
-        TerminalSettingsLayout.ROW_HEIGHT - 1);
-    final int iconY = top + (TerminalSettingsLayout.ROW_HEIGHT - 1 - ICON_SIZE) / 2;
-    entry.icon().ifPresent(icon -> context.drawItem(icon.toStack(), left + TEXT_INSET, iconY));
-    final int textY = top + (TerminalSettingsLayout.ROW_HEIGHT - 1 - LINE_HEIGHT) / 2;
-    final int contentsLeft = left + TEXT_INSET + ICON_SIZE + TEXT_INSET;
-    context.drawText(
-        textRenderer,
-        TrimmedText.toWidth(textRenderer, ContainerRowText.identity(entry), CONTENTS_WIDTH),
-        contentsLeft,
-        textY,
-        changeable ? VanillaPalette.LABEL : VanillaPalette.MUTED,
-        false);
-    context.drawText(
-        textRenderer,
-        TrimmedText.toWidth(textRenderer, ContainerRowText.roleChip(entry), CHIP_WIDTH),
-        left + TerminalSettingsLayout.ROW_WIDTH - CHIP_WIDTH,
-        textY,
-        changeable ? ContainerRowText.chipColour(entry) : VanillaPalette.MUTED,
-        false);
-  }
-
-  private static void drawRow(
-      DrawContext context, TerminalSetting setting, int originX, int originY, boolean hovered) {
-    TerminalChrome.drawRow(
-        context,
-        hovered,
-        originX + TerminalSettingsLayout.PANEL_X,
-        originY + TerminalSettingsLayout.rowY(setting.row()),
-        TerminalSettingsLayout.FULL_ROW_WIDTH,
-        TerminalSettingsLayout.ROW_HEIGHT - 1);
-  }
-
-  private static void labelled(
-      DrawContext context,
-      TextRenderer textRenderer,
-      Text name,
-      Text value,
-      int originX,
-      int rowY,
-      boolean changeable) {
-    final int left = originX + TerminalSettingsLayout.PANEL_X;
-    final int textY = rowY + (TerminalSettingsLayout.ROW_HEIGHT - 1 - LINE_HEIGHT) / 2;
-    context.drawText(textRenderer, name, left + TEXT_INSET, textY, VanillaPalette.MUTED, false);
-    final int room =
-        TerminalSettingsLayout.FULL_ROW_WIDTH - 2 * TEXT_INSET - textRenderer.getWidth(name) - 4;
-    final List<OrderedText> lines = textRenderer.wrapLines(value, Math.max(1, room));
-    if (lines.isEmpty()) {
-      return;
-    }
-    context.drawText(
-        textRenderer,
-        lines.get(0),
-        left
-            + TerminalSettingsLayout.FULL_ROW_WIDTH
-            - TEXT_INSET
-            - textRenderer.getWidth(lines.get(0)),
-        textY,
-        changeable ? VanillaPalette.LABEL : VanillaPalette.MUTED,
-        false);
-  }
-
-  private static void centred(
-      DrawContext context,
-      TextRenderer textRenderer,
-      Text text,
-      int originX,
-      int rowY,
-      int colour) {
-    final int room = TerminalSettingsLayout.FULL_ROW_WIDTH;
-    final List<OrderedText> lines = textRenderer.wrapLines(text, room - 2 * SettingsControl.size());
-    if (lines.isEmpty()) {
-      return;
-    }
-    context.drawText(
-        textRenderer,
-        lines.get(0),
-        originX + TerminalSettingsLayout.PANEL_X + (room - textRenderer.getWidth(lines.get(0))) / 2,
-        rowY + (TerminalSettingsLayout.ROW_HEIGHT - 1 - LINE_HEIGHT) / 2,
-        colour,
-        false);
-  }
-
-  private static void stepper(
-      DrawContext context,
-      TextRenderer textRenderer,
-      String glyph,
-      int x,
-      int y,
-      boolean enabled,
-      boolean hovered) {
-    final int size = SettingsControl.size();
-    TerminalChrome.controlOrUnavailable(enabled, hovered).draw(context, x, y, size, size);
-    context.drawText(
-        textRenderer,
-        glyph,
-        x + (size - textRenderer.getWidth(glyph)) / 2,
-        y + (size - LINE_HEIGHT) / 2 + 1,
-        enabled ? VanillaPalette.LABEL : VanillaPalette.MUTED,
-        false);
-  }
-
-  private void drawScrollbar(DrawContext context, int originX, int originY) {
-    TerminalChrome.drawScrollbar(
-        context,
-        scrollbar,
-        originX + TerminalSettingsLayout.SCROLLBAR_X,
-        originY + TerminalSettingsLayout.CONTENT_Y,
-        TerminalScreenLayout.SCROLLBAR_WIDTH,
-        TerminalSettingsLayout.CONTENT_HEIGHT);
+    return null;
   }
 }

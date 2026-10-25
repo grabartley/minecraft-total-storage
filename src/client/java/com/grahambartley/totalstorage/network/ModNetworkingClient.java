@@ -12,6 +12,7 @@ import com.grahambartley.totalstorage.screen.NetworkSettingsMirror;
 import com.grahambartley.totalstorage.screen.NetworkTagMirror;
 import com.grahambartley.totalstorage.screen.TagSourceMirror;
 import com.grahambartley.totalstorage.screen.TerminalNoticeMirror;
+import com.grahambartley.totalstorage.screen.TerminalOperationMirror;
 import com.grahambartley.totalstorage.screen.TrustReplyMirror;
 import com.grahambartley.totalstorage.storage.ContainerRole;
 import com.grahambartley.totalstorage.tag.TagSetImportMode;
@@ -68,7 +69,22 @@ public final class ModNetworkingClient {
                 .execute(
                     () ->
                         TerminalNoticeMirror.accept(
-                            payload.syncId(), payload.message(), payload.needsAnAnswer())));
+                            payload.syncId(),
+                            payload.tone(),
+                            payload.headline(),
+                            payload.message())));
+    ClientPlayNetworking.registerGlobalReceiver(
+        NetworkOperationStatusPayload.ID,
+        (payload, context) ->
+            context
+                .client()
+                .execute(
+                    () ->
+                        TerminalOperationMirror.accept(
+                            payload.syncId(),
+                            payload.operation(),
+                            payload.phase(),
+                            payload.percentDone())));
     ClientPlayNetworking.registerGlobalReceiver(
         TerminalTrustReplyPayload.ID,
         (payload, context) -> context.client().execute(() -> TrustReplyMirror.accept(payload)));
@@ -81,6 +97,7 @@ public final class ModNetworkingClient {
           TagSourceMirror.clear();
           ContainerHighlights.clear();
           TerminalNoticeMirror.clear();
+          TerminalOperationMirror.clear();
           TrustReplyMirror.clear();
         });
   }
@@ -116,10 +133,6 @@ public final class ModNetworkingClient {
 
   public static void sendSettingsRequest(int syncId, int offset, int length) {
     ClientPlayNetworking.send(NetworkSettingsRequestPayload.showing(syncId, offset, length));
-  }
-
-  public static void sendSettingsClosed(int syncId) {
-    ClientPlayNetworking.send(NetworkSettingsRequestPayload.closed(syncId));
   }
 
   public static void sendRadiusEdit(int syncId, int blocks) {

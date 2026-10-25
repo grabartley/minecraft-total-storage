@@ -36,7 +36,7 @@ public final class OperationGuards {
 
   public static boolean allows(ServerPlayerEntity player, ExpensiveOperation operation) {
     final Optional<Text> refusal = refuse(player, operation);
-    refusal.ifPresent(message -> TerminalNotice.tell(player, message));
+    refusal.ifPresent(message -> TerminalNotice.partial(player, message));
     return refusal.isEmpty();
   }
 }

@@ -5,8 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.totalstorage.config.TerminalAccessMode;
-import com.grahambartley.totalstorage.screenhandler.TagsSectionLayout;
-import com.grahambartley.totalstorage.screenhandler.TerminalScreenLayout;
 import com.grahambartley.totalstorage.screenhandler.TerminalSettingsLayout;
 import com.grahambartley.totalstorage.storage.ContainerRole;
 import com.grahambartley.totalstorage.terminal.ContainerRoleEntry;
@@ -18,7 +16,6 @@ import java.util.stream.IntStream;
 import net.minecraft.util.math.BlockPos;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class TerminalSettingsPanelTest {
@@ -61,344 +58,154 @@ class TerminalSettingsPanelTest {
     return IntStream.range(0, TerminalSettingsLayout.ROWS).boxed();
   }
 
+  private static int listX() {
+    return TerminalSettingsLayout.LIST_X + 1;
+  }
+
   @ParameterizedTest
   @MethodSource("everyRow")
   void aClickOnARowFindsThatRowWhileTheListIsAtTheTop(int row) {
-    TerminalSettingsPanel panel = containers();
+    final TerminalSettingsPanel panel = containers();
+    panel.fit(viewOf(20), 0);
 
-    assertEquals(
-        row,
-        panel.containerRowAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(row)));
+    assertEquals(row, panel.containerRowAt(listX(), TerminalSettingsLayout.rowY(row) + 1));
   }
 
   @Test
   void aClickOnARowFollowsWhereTheListIsScrolledTo() {
-    TerminalSettingsPanel panel = containers();
-    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 3), 0);
-    panel.scroll().scrollBy(2);
+    final TerminalSettingsPanel panel = containers();
+    panel.fit(viewOf(20), 0);
+    panel.scroll().scrollBy(3);
 
-    assertEquals(
-        2, panel.containerRowAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(0)));
+    assertEquals(4, panel.containerRowAt(listX(), TerminalSettingsLayout.rowY(1) + 1));
   }
 
   @Test
   void aClickOutsideTheListFindsNoRow() {
-    TerminalSettingsPanel panel = containers();
+    final TerminalSettingsPanel panel = containers();
+    panel.fit(viewOf(20), 0);
 
-    assertTrue(
-        panel.containerRowAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.CONTENT_Y - 1)
-            < 0);
-    assertTrue(
-        panel.containerRowAt(TerminalSettingsLayout.PANEL_X - 1, TerminalSettingsLayout.CONTENT_Y)
-            < 0);
-  }
-
-  @Test
-  void aClickOnTheScrollbarIsNotAContainerRow() {
-    assertTrue(
-        containers()
-                .containerRowAt(TerminalScreenLayout.SCROLLBAR_X, TerminalSettingsLayout.CONTENT_Y)
-            < 0);
-  }
-
-  @Test
-  void aClickAtTheSamePointOnTheTerminalSectionIsStillASetting() {
     assertEquals(
-        TerminalSetting.RADIUS,
-        new TerminalSettingsPanel()
-            .settingAt(TerminalScreenLayout.SCROLLBAR_X, TerminalSettingsLayout.CONTENT_Y));
+        TerminalSettingsLayout.NO_ROW,
+        panel.containerRowAt(TerminalSettingsLayout.LIST_X - 1, TerminalSettingsLayout.LIST_Y));
+    assertEquals(
+        TerminalSettingsLayout.NO_ROW,
+        panel.containerRowAt(listX(), TerminalSettingsLayout.LIST_Y - 1));
+    assertEquals(
+        TerminalSettingsLayout.NO_ROW,
+        panel.containerRowAt(TerminalSettingsLayout.SCROLLBAR_X, TerminalSettingsLayout.LIST_Y));
   }
 
   @Test
   void theTerminalSectionHasNoContainerRows() {
-    TerminalSettingsPanel panel = new TerminalSettingsPanel();
+    final TerminalSettingsPanel panel = new TerminalSettingsPanel();
+    panel.fit(viewOf(20), 0);
 
-    assertTrue(
-        panel.containerRowAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(0)) < 0);
-    assertEquals(SettingsSection.TERMINAL, panel.section());
+    assertEquals(
+        TerminalSettingsLayout.NO_ROW,
+        panel.containerRowAt(listX(), TerminalSettingsLayout.rowY(0) + 1));
   }
 
   @Test
-  void theContainersSectionHasNoSettingRows() {
-    assertEquals(
-        null,
-        containers().settingAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(0)));
-  }
+  void theScrollbarIsOnlyThereForASectionThatScrolls() {
+    final TerminalSettingsPanel terminal = new TerminalSettingsPanel();
+    final TerminalSettingsPanel listed = containers();
 
-  @ParameterizedTest
-  @EnumSource(TerminalSetting.class)
-  void everySettingIsFoundWhereItsRowIsDrawn(TerminalSetting setting) {
-    TerminalSettingsPanel panel = new TerminalSettingsPanel();
-
-    assertEquals(
-        setting,
-        panel.settingAt(
-            TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(setting.row())));
-  }
-
-  @Test
-  void aRowUnderTheNoticeStripCannotBeClicked() {
-    TerminalSettingsPanel panel = containers();
-
-    panel.coverTopRows(2);
-
-    assertTrue(
-        panel.containerRowAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(0)) < 0);
-    assertTrue(
-        panel.containerRowAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(1)) < 0);
-    assertEquals(
-        2, panel.containerRowAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(2)));
-  }
-
-  @Test
-  void aSettingUnderTheNoticeStripCannotBeClicked() {
-    TerminalSettingsPanel panel = new TerminalSettingsPanel();
-
-    panel.coverTopRows(1);
-
-    assertEquals(
-        null,
-        panel.settingAt(
-            TerminalSettingsLayout.PANEL_X,
-            TerminalSettingsLayout.rowY(TerminalSetting.RADIUS.row())));
-    assertEquals(
-        TerminalSetting.ACCESS,
-        panel.settingAt(
-            TerminalSettingsLayout.PANEL_X,
-            TerminalSettingsLayout.rowY(TerminalSetting.ACCESS.row())));
-  }
-
-  @Test
-  void aRadiusStepperUnderTheNoticeStripCannotBeClicked() {
-    TerminalSettingsPanel panel = new TerminalSettingsPanel();
-
-    panel.coverTopRows(1);
-
-    assertEquals(
-        SettingsControl.NONE,
-        panel.controlAt(SettingsControl.radiusDownX(), SettingsControl.radiusY()));
-    assertEquals(
-        SettingsControl.NONE,
-        panel.controlAt(SettingsControl.radiusUpX(), SettingsControl.radiusY()));
-  }
-
-  @Test
-  void anUncoveredRadiusStepperIsStillClickable() {
-    assertEquals(
-        SettingsControl.RADIUS_DOWN,
-        new TerminalSettingsPanel()
-            .controlAt(SettingsControl.radiusDownX(), SettingsControl.radiusY()));
-  }
-
-  @Test
-  void theContainersSectionHasNoRadiusSteppers() {
-    assertEquals(
-        SettingsControl.NONE,
-        containers().controlAt(SettingsControl.radiusDownX(), SettingsControl.radiusY()));
-  }
-
-  @Test
-  void theTagsSectionRowsUnderTheNoticeStripAreCoveredToo() {
-    TerminalSettingsPanel panel = new TerminalSettingsPanel();
-    panel.show(SettingsSection.TAGS);
-
-    panel.coverTopRows(2);
-
-    assertTrue(
-        panel.isCoveredAt(
-            TerminalSettingsLayout.PANEL_X,
-            TerminalSettingsLayout.rowY(TagsSectionLayout.NEW_TAG_ROW)));
-    assertTrue(
-        panel.isCoveredAt(
-            TerminalSettingsLayout.PANEL_X,
-            TerminalSettingsLayout.rowY(TagsSectionLayout.FIRST_TAG_ROW)));
-    assertFalse(panel.isCoveredAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(2)));
-  }
-
-  @Test
-  void aClickOutsideAnyRowIsNeverTreatedAsCovered() {
-    TerminalSettingsPanel panel = containers();
-    panel.coverTopRows(TerminalSettingsLayout.ROWS);
-
-    assertFalse(panel.isCoveredAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.PANEL_Y));
-  }
-
-  @Test
-  void theScrollbarUnderTheNoticeStripIsCoveredTooRatherThanGrabbable() {
-    TerminalSettingsPanel panel = containers();
-
-    panel.coverTopRows(2);
-
-    assertTrue(panel.isCoveredAt(TerminalScreenLayout.SCROLLBAR_X, TerminalSettingsLayout.rowY(0)));
     assertFalse(
-        panel.isCoveredAt(TerminalScreenLayout.SCROLLBAR_X, TerminalSettingsLayout.rowY(2)));
+        terminal.isOverScrollbar(
+            TerminalSettingsLayout.SCROLLBAR_X, TerminalSettingsLayout.LIST_Y));
+    assertTrue(
+        listed.isOverScrollbar(TerminalSettingsLayout.SCROLLBAR_X, TerminalSettingsLayout.LIST_Y));
+    assertFalse(
+        listed.isOverScrollbar(
+            TerminalSettingsLayout.SCROLLBAR_X - 1, TerminalSettingsLayout.LIST_Y));
   }
 
   @Test
-  void aNoticeTallerThanThePanelCoversNoMoreRowsThanThereAre() {
-    TerminalSettingsPanel panel = containers();
+  void theTagsScrollbarIsAsTallAsTheTagRowsAndNoTaller() {
+    final TerminalSettingsPanel panel = new TerminalSettingsPanel();
+    panel.show(SettingsSection.TAGS);
+    final int bottom =
+        TerminalSettingsLayout.LIST_Y
+            + com.grahambartley.totalstorage.screenhandler.TagsSectionLayout.LIST_HEIGHT;
 
-    panel.coverTopRows(Integer.MAX_VALUE);
-
-    assertEquals(TerminalSettingsLayout.ROWS, panel.hiddenRows());
-  }
-
-  @Test
-  void aNoticeThatHasGoneUncoversTheRowsAgain() {
-    TerminalSettingsPanel panel = containers();
-    panel.coverTopRows(2);
-
-    panel.coverTopRows(0);
-
-    assertEquals(
-        0, panel.containerRowAt(TerminalSettingsLayout.PANEL_X, TerminalSettingsLayout.rowY(0)));
+    assertTrue(panel.isOverScrollbar(TerminalSettingsLayout.SCROLLBAR_X, bottom - 1));
+    assertFalse(panel.isOverScrollbar(TerminalSettingsLayout.SCROLLBAR_X, bottom));
   }
 
   @Test
   void switchingSectionReturnsTheListToItsTop() {
-    TerminalSettingsPanel panel = containers();
-    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 5), 0);
-    panel.scroll().scrollBy(3);
-
-    panel.show(SettingsSection.TERMINAL);
-    panel.show(SettingsSection.CONTAINERS);
-
-    assertEquals(0, panel.scroll().firstIndex());
-  }
-
-  @Test
-  void onlyTheContainerListScrolls() {
-    TerminalSettingsPanel panel = containers();
-    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 5), 0);
-
-    assertTrue(panel.scrolls());
-    panel.show(SettingsSection.TERMINAL);
-    assertFalse(panel.scrolls());
-    assertTrue(
-        panel.scroll().overflows(),
-        "with a stale count still overflowing, the section is the only thing refusing the grab");
-  }
-
-  @Test
-  void noWayInReachesAScrollbarTheOpenSectionIsNotShowing() {
-    TerminalSettingsPanel panel = containers();
-    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 5), 0);
-    int onTheThumb = TerminalSettingsLayout.CONTENT_Y + 1;
-
-    assertTrue(panel.isOverScrollbar(TerminalScreenLayout.SCROLLBAR_X, onTheThumb));
-    assertTrue(panel.grabScrollbar(onTheThumb));
-    assertTrue(panel.isDraggingScrollbar());
-
-    panel.show(SettingsSection.TERMINAL);
-
-    assertFalse(panel.isOverScrollbar(TerminalScreenLayout.SCROLLBAR_X, onTheThumb));
-    assertFalse(panel.grabScrollbar(onTheThumb));
-    assertFalse(panel.isDraggingScrollbar());
-  }
-
-  @Test
-  void aClickOnTheRadiusStepperIsNotAGrabOnTheScrollbar() {
-    TerminalSettingsPanel panel = new TerminalSettingsPanel();
-    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 5), 0);
-    int rightmost = SettingsControl.radiusUpX() + SettingsControl.size() - 1;
-
-    assertFalse(panel.isOverScrollbar(rightmost, SettingsControl.radiusY()));
-    assertFalse(panel.grabScrollbar(SettingsControl.radiusY()));
-  }
-
-  @Test
-  void aClickOnTheRadiusStepperIsOverNoContainerRow() {
-    TerminalSettingsPanel panel = new TerminalSettingsPanel();
-
-    assertEquals(
-        TerminalSettingsLayout.NO_ROW,
-        panel.containerRowAt(
-            SettingsControl.radiusUpX() + SettingsControl.size() - 1, SettingsControl.radiusY()));
-  }
-
-  @Test
-  void theScrollIsBroughtBackInsideAListThatShrank() {
-    TerminalSettingsPanel panel = containers();
-    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 5), 0);
+    final TerminalSettingsPanel panel = containers();
+    panel.fit(viewOf(20), 0);
     panel.scroll().scrollBy(5);
 
-    panel.fit(viewOf(1), 0);
+    panel.show(SettingsSection.TAGS);
 
     assertEquals(0, panel.scroll().firstIndex());
+    assertEquals(SettingsSection.TAGS, panel.section());
   }
 
-  private static TerminalSettingsPanel tags() {
+  @Test
+  void onlyTheListSectionsScroll() {
     final TerminalSettingsPanel panel = new TerminalSettingsPanel();
+
+    assertFalse(panel.scrolls());
+    panel.show(SettingsSection.CONTAINERS);
+    assertTrue(panel.scrolls());
     panel.show(SettingsSection.TAGS);
-    return panel;
-  }
-
-  @Test
-  void theLastCustomTagCanBeReachedByScrolling() {
-    final int total = TagsSectionLayout.TAG_ROWS + 5;
-    TerminalSettingsPanel panel = tags();
-    panel.fit(viewOf(0), total);
-
-    panel.scroll().scrollTo(panel.scroll().maxTopRow());
-
-    assertEquals(
-        total - 1,
-        panel.scroll().firstIndex() + TagsSectionLayout.TAG_ROWS - 1,
-        "the last tag can never be drawn, so it can never be renamed or deleted");
-  }
-
-  @Test
-  void aTagListThatFitsDoesNotScroll() {
-    TerminalSettingsPanel panel = tags();
-
-    panel.fit(viewOf(0), TagsSectionLayout.TAG_ROWS);
-
-    assertFalse(panel.scroll().overflows());
-    assertEquals(0, panel.scroll().maxTopRow());
-  }
-
-  @Test
-  void oneTagMoreThanFitsStartsScrolling() {
-    TerminalSettingsPanel panel = tags();
-
-    panel.fit(viewOf(0), TagsSectionLayout.TAG_ROWS + 1);
-
-    assertTrue(panel.scroll().overflows());
-  }
-
-  @Test
-  void theNewTagRowIsCountedSoTheLastTagStillReaches() {
-    TerminalSettingsPanel panel = tags();
-
-    panel.fit(viewOf(0), TagsSectionLayout.TAG_ROWS + 1);
-
-    assertEquals(
-        TagsSectionLayout.FIRST_TAG_ROW,
-        panel.scroll().totalRows() - (TagsSectionLayout.TAG_ROWS + 1),
-        "the new tag row has to be counted or the last tag falls off the end");
-  }
-
-  @Test
-  void aNetworkWithNoCustomTagsScrollsNowhere() {
-    TerminalSettingsPanel panel = tags();
-
-    panel.fit(viewOf(0), 0);
-
-    assertFalse(panel.scroll().overflows());
-  }
-
-  @Test
-  void theTagsSectionScrollsWhileTheTerminalSectionDoesNot() {
-    assertTrue(tags().scrolls());
-    assertFalse(new TerminalSettingsPanel().scrolls());
+    assertTrue(panel.scrolls());
   }
 
   @Test
   void theTerminalSectionNeverScrollsHoweverMuchItIsGiven() {
-    TerminalSettingsPanel panel = new TerminalSettingsPanel();
-
-    panel.fit(viewOf(TerminalSettingsLayout.ROWS + 50), 50);
+    final TerminalSettingsPanel panel = new TerminalSettingsPanel();
+    panel.fit(viewOf(40), 40);
 
     assertFalse(panel.scroll().overflows());
+  }
+
+  @Test
+  void theScrollIsBroughtBackInsideAListThatShrank() {
+    final TerminalSettingsPanel panel = containers();
+    panel.fit(viewOf(20), 0);
+    panel.scroll().scrollBy(10);
+
+    panel.fit(viewOf(5), 0);
+
+    assertEquals(1, panel.scroll().firstIndex());
+  }
+
+  @Test
+  void theTagsSectionScrollsOverTheCustomTagsOnly() {
+    final TerminalSettingsPanel panel = new TerminalSettingsPanel();
+    panel.show(SettingsSection.TAGS);
+
+    panel.fit(viewOf(40), TerminalSettingsLayout.ROWS);
+    assertFalse(panel.scroll().overflows());
+
+    panel.fit(viewOf(40), TerminalSettingsLayout.ROWS + 1);
+    assertTrue(panel.scroll().overflows());
+  }
+
+  @Test
+  void grabbingTheScrollbarOfAListThatFitsDoesNothing() {
+    final TerminalSettingsPanel panel = containers();
+    panel.fit(viewOf(2), 0);
+
+    assertFalse(panel.grabScrollbar(TerminalSettingsLayout.LIST_Y + 1));
+    assertFalse(panel.isDraggingScrollbar());
+  }
+
+  @Test
+  void draggingTheScrollbarToTheBottomShowsTheLastContainers() {
+    final TerminalSettingsPanel panel = containers();
+    panel.fit(viewOf(20), 0);
+
+    assertTrue(panel.grabScrollbar(TerminalSettingsLayout.LIST_Y));
+    panel.dragScrollbarTo(TerminalSettingsLayout.LIST_Y + TerminalSettingsLayout.LIST_HEIGHT + 40);
+
+    assertEquals(20 - TerminalSettingsLayout.ROWS, panel.scroll().firstIndex());
+    panel.releaseScrollbar();
+    assertFalse(panel.isDraggingScrollbar());
   }
 }

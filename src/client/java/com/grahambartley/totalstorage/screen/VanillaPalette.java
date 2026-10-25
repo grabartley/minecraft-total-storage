@@ -19,13 +19,29 @@ public final class VanillaPalette {
 
   public static final int WARNING = 0xFF6060;
 
+  public static final int FAILURE = 0xAA0000;
+
   public static final int ACCENT = 0xC43A2E;
 
   public static final int DISABLED = SUNKEN_FILL;
 
-  public static final int FIELD_TEXT = BEVEL_HIGHLIGHT;
+  public static final int BUTTON_TEXT = BEVEL_HIGHLIGHT;
+
+  public static final int BUTTON_TEXT_DISABLED = 0xA0A0A0;
+
+  public static final int FIELD_TEXT = 0xE0E0E0;
+
+  public static final int FIELD_HINT = 0x808080;
+
+  public static final int FIELD_REFUSED = WARNING;
+
+  public static final int HOVER = 0x80FFFFFF;
 
   public static final int COUNT = BEVEL_HIGHLIGHT;
 
   private VanillaPalette() {}
+
+  public static int opaque(int colour) {
+    return 0xFF000000 | colour;
+  }
 }

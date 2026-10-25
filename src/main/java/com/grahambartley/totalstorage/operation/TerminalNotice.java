@@ -9,15 +9,33 @@ import net.minecraft.text.Text;
 public final class TerminalNotice {
   private TerminalNotice() {}
 
-  public static void tell(ServerPlayerEntity player, Text message) {
-    send(player, message, false);
+  public static void done(ServerPlayerEntity player, Text message) {
+    send(player, TerminalNoticeTone.DONE, message, message);
   }
 
-  public static void ask(ServerPlayerEntity player, Text message) {
-    send(player, message, true);
+  public static void partial(ServerPlayerEntity player, Text message) {
+    partial(player, message, message);
   }
 
-  private static void send(ServerPlayerEntity player, Text message, boolean needsAnAnswer) {
+  public static void partial(ServerPlayerEntity player, Text headline, Text message) {
+    send(player, TerminalNoticeTone.PARTIAL, headline, message);
+  }
+
+  public static void failed(ServerPlayerEntity player, Text message) {
+    failed(player, message, message);
+  }
+
+  public static void failed(ServerPlayerEntity player, Text headline, Text message) {
+    send(player, TerminalNoticeTone.FAILED, headline, message);
+  }
+
+  public static void report(
+      ServerPlayerEntity player, TerminalNoticeTone tone, Text headline, Text message) {
+    send(player, tone, headline, message);
+  }
+
+  private static void send(
+      ServerPlayerEntity player, TerminalNoticeTone tone, Text headline, Text message) {
     if (player == null || message == null) {
       return;
     }
@@ -26,7 +44,9 @@ public final class TerminalNotice {
       player.sendMessage(message, true);
       return;
     }
-    ServerPlayNetworking.send(
-        player, new TerminalNoticePayload(handler.syncId, message, needsAnAnswer));
+    if (tone.isShownInTheTerminal()) {
+      ServerPlayNetworking.send(
+          player, new TerminalNoticePayload(handler.syncId, tone, headline, message));
+    }
   }
 }

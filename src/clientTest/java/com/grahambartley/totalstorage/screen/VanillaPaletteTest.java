@@ -8,9 +8,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.stream.Stream;
 import javax.imageio.ImageIO;
+import net.minecraft.util.Formatting;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class VanillaPaletteTest {
@@ -19,6 +21,14 @@ class VanillaPaletteTest {
   private static final int HANDLED_SCREEN_TITLE_COLOUR = 4210752;
 
   private static final int ANVIL_PROBLEM_COLOUR = 16736352;
+
+  private static final int PRESSABLE_WIDGET_INACTIVE_TEXT_COLOUR = 10526880;
+
+  private static final int TEXT_FIELD_EDITABLE_COLOUR = 14737632;
+
+  private static final int TEXT_FIELD_SUGGESTION_COLOUR = -8355712;
+
+  private static final int HANDLED_SCREEN_SLOT_HIGHLIGHT = -2130706433;
 
   private static final BufferedImage CHEST_TEXTURE = chest();
 
@@ -60,5 +70,39 @@ class VanillaPaletteTest {
   @Test
   void warningTextIsTheColourVanillaReportsAProblemIn() {
     assertEquals(ANVIL_PROBLEM_COLOUR, VanillaPalette.WARNING);
+  }
+
+  static Stream<Arguments> textColoursVanillaAlsoUses() {
+    return Stream.of(
+        Arguments.of("failure text", VanillaPalette.FAILURE, Formatting.DARK_RED.getColorValue()),
+        Arguments.of("button text", VanillaPalette.BUTTON_TEXT, Formatting.WHITE.getColorValue()),
+        Arguments.of(
+            "disabled button text",
+            VanillaPalette.BUTTON_TEXT_DISABLED,
+            PRESSABLE_WIDGET_INACTIVE_TEXT_COLOUR),
+        Arguments.of("field text", VanillaPalette.FIELD_TEXT, TEXT_FIELD_EDITABLE_COLOUR),
+        Arguments.of(
+            "a field hint", VanillaPalette.FIELD_HINT, TEXT_FIELD_SUGGESTION_COLOUR & 0xFFFFFF),
+        Arguments.of("a refused field", VanillaPalette.FIELD_REFUSED, ANVIL_PROBLEM_COLOUR),
+        Arguments.of("a muted label", VanillaPalette.MUTED, Formatting.DARK_GRAY.getColorValue()));
+  }
+
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("textColoursVanillaAlsoUses")
+  void everyTextColourBorrowedFromVanillaIsTheOneVanillaUses(String what, int colour, int vanilla) {
+    assertEquals(vanilla, colour, what + " does not match Minecraft's own colour");
+  }
+
+  @Test
+  void theHoverWashIsTheTranslucentWhiteVanillaLaysOverAHoveredSlot() {
+    assertEquals(HANDLED_SCREEN_SLOT_HIGHLIGHT, VanillaPalette.HOVER);
+  }
+
+  @ParameterizedTest(name = "{0}")
+  @CsvSource({"0x000000, 0xFF000000", "0xC6C6C6, 0xFFC6C6C6", "0x40C6C6C6, 0xFFC6C6C6"})
+  void anOpaqueColourHasFullAlphaAndKeepsItsRgb(String colour, String expected) {
+    assertEquals(
+        Integer.parseUnsignedInt(expected.substring(2), 16),
+        VanillaPalette.opaque(Integer.parseUnsignedInt(colour.substring(2), 16)));
   }
 }

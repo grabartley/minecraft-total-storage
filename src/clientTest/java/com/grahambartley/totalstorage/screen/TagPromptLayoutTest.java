@@ -1,111 +1,54 @@
 package com.grahambartley.totalstorage.screen;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.totalstorage.screenhandler.TerminalScreenLayout;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 class TagPromptLayoutTest {
+  private static final PromptFrame FRAME = TagPromptLayout.FRAME;
+  private static final PromptListGeometry LIST = TagPromptLayout.LIST;
+
   @Test
-  void thePromptSitsInsideTheItemGridInsetItWasOpenedFrom() {
-    assertTrue(TagPromptLayout.left() >= TerminalScreenLayout.INSET_X);
-    assertTrue(TagPromptLayout.top() >= TerminalScreenLayout.INSET_Y);
-    assertTrue(
-        TagPromptLayout.left() + TagPromptLayout.WIDTH
-            <= TerminalScreenLayout.INSET_X + TerminalScreenLayout.INSET_WIDTH);
-    assertTrue(
-        TagPromptLayout.top() + TagPromptLayout.HEIGHT
-            <= TerminalScreenLayout.INSET_Y + TerminalScreenLayout.INSET_HEIGHT);
+  void thePromptSitsInsideTheTerminalWindow() {
+    assertTrue(FRAME.left() >= 0 && FRAME.top() >= 0);
+    assertTrue(FRAME.left() + FRAME.width() <= TerminalScreenLayout.WINDOW_WIDTH);
+    assertTrue(FRAME.bottom() <= TerminalScreenLayout.WINDOW_HEIGHT);
   }
 
   @Test
-  void everyRowFitsBetweenTheHeadingAndTheFooter() {
-    assertTrue(
-        TagPromptLayout.rowsTop() >= TagPromptLayout.headingTop() + TagPromptLayout.LINE_HEIGHT);
-    assertTrue(
-        TagPromptLayout.rowY(TagPromptLayout.VISIBLE_ROWS - 1) + TagPromptLayout.ROW_HEIGHT
-            <= TagPromptLayout.footerTop());
-  }
-
-  @Test
-  void theFooterHasRoomForItsLinesInsideThePanel() {
-    assertTrue(
-        TagPromptLayout.footerTop() + TagPromptLayout.FOOTER_LINES * TagPromptLayout.LINE_HEIGHT
-            <= TagPromptLayout.top() + TagPromptLayout.HEIGHT - TagPromptLayout.PADDING);
-  }
-
-  @Test
-  void theScrollbarRunsBesideTheRowsInsideThePanel() {
-    assertTrue(
-        TagPromptLayout.scrollbarX() >= TagPromptLayout.textLeft() + TagPromptLayout.ROW_WIDTH);
-    assertTrue(
-        TagPromptLayout.scrollbarX() + TagPromptLayout.SCROLLBAR_WIDTH
-            <= TagPromptLayout.left() + TagPromptLayout.WIDTH - TagPromptLayout.PADDING);
-  }
-
-  @Test
-  void aPointOnTheScrollbarIsNotARowAndAPointOnARowIsNotTheScrollbar() {
-    int trackY = TagPromptLayout.rowsTop();
-    assertTrue(TagPromptLayout.isOverScrollbar(TagPromptLayout.scrollbarX(), trackY));
+  void theListStartsBelowTheHeaderWithAGap() {
     assertEquals(
-        TagPromptLayout.NO_ROW, TagPromptLayout.rowAt(TagPromptLayout.scrollbarX(), trackY));
-    assertFalse(TagPromptLayout.isOverScrollbar(TagPromptLayout.textLeft(), trackY));
+        TagPromptLayout.headerTop() + TagPromptLayout.HEADER_HEIGHT + TagPromptLayout.HEADER_GAP,
+        LIST.top());
   }
 
   @Test
-  void theScrollbarEndsWhereTheRowsEnd() {
-    int x = TagPromptLayout.scrollbarX();
-    assertFalse(TagPromptLayout.isOverScrollbar(x, TagPromptLayout.rowsTop() - 1));
+  void theKeysSitBelowTheListAndInsideTheFrame() {
+    assertTrue(TagPromptLayout.keysTop() > LIST.top() + LIST.trackHeight());
     assertTrue(
-        TagPromptLayout.isOverScrollbar(
-            x, TagPromptLayout.rowsTop() + TagPromptLayout.TRACK_HEIGHT - 1));
-    assertFalse(
-        TagPromptLayout.isOverScrollbar(
-            x, TagPromptLayout.rowsTop() + TagPromptLayout.TRACK_HEIGHT));
-    assertFalse(
-        TagPromptLayout.isOverScrollbar(
-            x + TagPromptLayout.SCROLLBAR_WIDTH, TagPromptLayout.rowsTop()));
-  }
-
-  @ParameterizedTest
-  @ValueSource(ints = {-1, 100})
-  void anIndexThatIsNotARowIsRefusedRatherThanGuessedAt(int row) {
-    assertThrows(IndexOutOfBoundsException.class, () -> TagPromptLayout.rowY(row));
+        TagPromptLayout.keysTop() + KeyCaps.HEIGHT <= FRAME.bottom() - PromptFrame.PADDING_BOTTOM);
   }
 
   @Test
-  void aPointInsideARowResolvesToThatRow() {
-    for (int row = 0; row < TagPromptLayout.VISIBLE_ROWS; row++) {
-      assertEquals(
-          row, TagPromptLayout.rowAt(TagPromptLayout.textLeft(), TagPromptLayout.rowY(row)));
-    }
-  }
-
-  @Test
-  void aPointBesideTheRowsIsNotARow() {
+  void theScrollbarSitsBesideTheRowsWithAGapAndInsideThePadding() {
+    assertEquals(LIST.left() + LIST.rowWidth() + TagPromptLayout.SCROLLBAR_GAP, LIST.scrollbarX());
     assertEquals(
-        TagPromptLayout.NO_ROW,
-        TagPromptLayout.rowAt(TagPromptLayout.left() - 1, TagPromptLayout.rowsTop()));
-    assertEquals(
-        TagPromptLayout.NO_ROW,
-        TagPromptLayout.rowAt(TagPromptLayout.textLeft(), TagPromptLayout.rowsTop() - 1));
+        FRAME.contentLeft() + PromptFrame.CONTENT_WIDTH, LIST.scrollbarX() + LIST.scrollbarWidth());
   }
 
   @Test
-  void thePromptRegionCoversTheWholePanelAndNothingOutsideIt() {
-    assertTrue(TagPromptLayout.isOverPrompt(TagPromptLayout.left(), TagPromptLayout.top()));
-    assertTrue(
-        TagPromptLayout.isOverPrompt(
-            TagPromptLayout.left() + TagPromptLayout.WIDTH - 1,
-            TagPromptLayout.top() + TagPromptLayout.HEIGHT - 1));
-    assertFalse(TagPromptLayout.isOverPrompt(TagPromptLayout.left() - 1, TagPromptLayout.top()));
-    assertFalse(
-        TagPromptLayout.isOverPrompt(
-            TagPromptLayout.left(), TagPromptLayout.top() + TagPromptLayout.HEIGHT));
+  void aClickInsideThePromptIsOverItAndOneBesideItIsNot() {
+    assertTrue(TagPromptLayout.isOverPrompt(FRAME.left(), FRAME.top()));
+    assertTrue(TagPromptLayout.isOverPrompt(FRAME.left() + FRAME.width() - 1, FRAME.bottom() - 1));
+    assertTrue(!TagPromptLayout.isOverPrompt(FRAME.left() - 1, FRAME.top()));
+    assertTrue(!TagPromptLayout.isOverPrompt(FRAME.left(), FRAME.bottom()));
+  }
+
+  @Test
+  void aTickFitsInsideItsCheckBox() {
+    assertTrue(TagPromptLayout.TICK_SIZE < TagPromptLayout.CHECK_SIZE);
+    assertTrue(TagPromptLayout.CHECK_SIZE <= TagPromptLayout.ROW_HEIGHT);
   }
 }

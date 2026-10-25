@@ -17,22 +17,20 @@ class SettingsSectionTest {
   void aClickAnywhereOnASectionTabReachesIt(SettingsSection section) {
     int left = TerminalSettingsLayout.sectionTabX(section.index());
 
-    assertEquals(section, SettingsSection.at(left, TerminalSettingsLayout.PANEL_Y));
+    assertEquals(section, SettingsSection.at(left, TerminalSettingsLayout.SECTION_TAB_Y));
     assertEquals(
         section,
         SettingsSection.at(
             left + TerminalSettingsLayout.SECTION_TAB_WIDTH - 1,
-            TerminalSettingsLayout.PANEL_Y + TerminalSettingsLayout.SECTION_TAB_HEIGHT - 1));
+            TerminalSettingsLayout.FRAME_Y - 1));
   }
 
   @Test
   void aClickBelowTheStripIsNoSection() {
+    assertNull(SettingsSection.at(TerminalSettingsLayout.FRAME_X, TerminalSettingsLayout.FRAME_Y));
     assertNull(
         SettingsSection.at(
-            TerminalSettingsLayout.PANEL_X,
-            TerminalSettingsLayout.PANEL_Y + TerminalSettingsLayout.SECTION_TAB_HEIGHT));
-    assertNull(
-        SettingsSection.at(TerminalSettingsLayout.PANEL_X - 1, TerminalSettingsLayout.PANEL_Y));
+            TerminalSettingsLayout.FRAME_X - 1, TerminalSettingsLayout.SECTION_TAB_Y));
   }
 
   @Test

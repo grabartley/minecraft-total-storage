@@ -20,29 +20,33 @@ Why sprites rather than one sheet is recorded in [ADR 0017](adr/0017-terminal-gu
 
 ## Sprite Reference
 
-The set is named for the chrome it draws, not for the widget that draws it, so a recessed row, a recessed scrollbar channel and a slot are one sprite rather than three identical ones.
+Where vanilla already ships the right sprite, the terminal draws vanilla's own through `VanillaSprite`, so it changes with a resource pack exactly as a chest or the creative inventory does:
+
+| Vanilla sprite | Use |
+|---|---|
+| `widget/button`, `widget/button_highlighted`, `widget/button_disabled` | Every text button and icon button |
+| `widget/text_field`, `widget/text_field_highlighted` | The search box and every prompt field |
+| `container/slot` | A grid cell, and the icon slot in a container row |
+| `container/creative_inventory/scroller`, `scroller_disabled` | The grid scroller |
+| `icon/search` | The magnifier in the search box |
+
+The mod's own sprites cover what vanilla has no sprite for. The set is named for the chrome it draws, not for the widget that draws it.
 
 `Scaling` is what happens when the sprite is drawn at a size other than its native one. `stretch` sprites are meant to be drawn at their native size. `nine_slice` sprites keep their border at any size and tile only the edges and the middle, so a border of 3 means the outer 3 pixels on each side are fixed.
 
 | Sprite id | Size | Scaling | Use |
 |---|---|---|---|
 | `chrome/panel` | 16x16 | nine_slice 4 | The window chassis, and the panel behind a prompt |
-| `chrome/sunken` | 16x16 | nine_slice 1 | Any recessed surface: a slot, a grid cell, the screen recess, a scrollbar channel, a checkbox |
-| `chrome/raised` | 16x16 | nine_slice 3 | A raised control: a resting button, the current tab, a scrollbar thumb |
-| `chrome/raised_lit` | 16x16 | nine_slice 3 | A raised control under the pointer |
-| `chrome/pressed` | 16x16 | nine_slice 3 | A control that has receded: a tab that is not the current one |
-| `chrome/flat` | 16x16 | nine_slice 3 | A resting list row, and an unavailable control |
-| `chrome/field` | 16x16 | nine_slice 3 | Text field, unfocused |
-| `chrome/field_focused` | 16x16 | nine_slice 3 | Text field, focused |
-| `icon/check` | 6x6 | stretch | The tick inside a ticked checkbox |
-| `icon/deposit_all` | 12x12 | stretch | Deposit all action |
-| `icon/rescan` | 12x12 | stretch | Rescan the network |
-| `icon/highlight` | 12x12 | stretch | Re-highlight containers in world |
-| `icon/clear_all` | 8x8 | stretch | Clear every active filter |
-| `icon/items` | 12x12 | stretch | Item view tab |
-| `icon/settings` | 12x12 | stretch | Settings tab |
-| `icon/sort_network` | 12x12 | stretch | Sort every container in the network |
-| `icon/consolidate` | 12x12 | stretch | Gather scattered stacks together |
+| `chrome/sunken` | 16x16 | nine_slice 1 | Any recessed surface: the empty grid, a list frame, a scrollbar channel, a checkbox |
+| `chrome/raised` | 16x16 | nine_slice 3 | A list scrollbar thumb, and the rename and delete controls on a tag row |
+| `chrome/raised_lit` | 16x16 | nine_slice 3 | The rename and delete controls under the pointer |
+| `icon/check_light` | 6x6 | stretch | The tick inside a ticked checkbox |
+| `icon/cross` | 8x8 | stretch | Clear every active filter |
+| `icon/cross_disabled` | 8x8 | stretch | Clear, when nothing is filtering |
+| `icon/rename` | 8x8 | stretch | Rename a tag |
+| `icon/delete` | 8x8 | stretch | Delete a tag |
+| `icon/items` | 12x12 | stretch | Items side tab |
+| `icon/settings` | 12x12 | stretch | Settings side tab |
 | `empty/network` | 32x32 | stretch | The network holds no containers |
 | `empty/no_results` | 32x32 | stretch | The search and filters match nothing |
 
@@ -50,17 +54,14 @@ The set is named for the chrome it draws, not for the widget that draws it, so a
 
 ## Layout Rules
 
-- **A grid cell is a vanilla slot.** 18x18, with the 16x16 item drawn at `+1,+1`, which is exactly what a chest does. `TerminalScreenLayout.SLOT_SIZE` is the one constant behind both the grid and the player inventory, so the grid's nine columns line up with the nine below them rather than merely resembling them.
-- **Cells tile with no spacing.** Adjacent slot frames share their bevel the way vanilla's do, which is what makes a dense grid legible without a gutter.
-- **Hover is not a sprite.** A hovered cell is drawn by `HandledScreen.drawSlotHighlight`, the same call vanilla makes for a hovered slot, so it highlights identically.
+- **The window is 278x222**, with the Items and Settings tabs hanging off its right edge. The selected tab joins the panel; the other sits apart.
+- **A grid cell is a vanilla slot.** 18x18, with the 16x16 item drawn at `+1,+1`, which is exactly what a chest does. `TerminalScreenLayout.SLOT_SIZE` is the one constant behind both the 9x5 grid and the player inventory, so the grid's nine columns line up with the nine below them.
+- **Hover is not a sprite.** A hovered cell is drawn by `HandledScreen.drawSlotHighlight`, the same call vanilla makes for a hovered slot.
 - **Item overlays go through `DrawContext.drawItemInSlot`**, so a damaged tool shows vanilla's durability bar and an item on cooldown shows vanilla's sweep. The aggregated count is drawn over that, scaled down when the compacted label is wider than the item.
-- **Icons are 12x12 and centre in a 20x20 button at `+4,+4`.**
-- **A settings row is 18px**, the slot pitch again, which is what lets a container row carry a 16x16 item icon and a settings row carry a 16x16 control.
-- **The settings view splits into sections behind a strip of tabs.** Each section gets four 18px rows, which is what the recess height allows.
-- **The toolbar is a column down the right of the window, not a row above the recess.** A row would have cost the grid a line of cells.
-- **The filter column has no fixed width.** Every row sprite is nine-sliced, so the column may be any width without clipping the grid; widen the window rather than the grid when the column grows.
-- **The scrollbar is 8 wide.** The track takes the full height of the grid area; the thumb is nine-sliced vertically and may be any height down to 6.
-- **A tag prompt is a list with its own 4-wide scrollbar**, the filter column's width, beside its rows. It is centred on the grid recess rather than the grid, which is what gives its footer room for two lines.
+- **The left column holds the filters above the action dock.** Match all or any and the clear button sit on the search row; the dock under the filters shows the network gauge and the current view's text buttons.
+- **The settings view is one raised frame behind three section tabs**: Terminal, Containers and Tags. A container row is 21 tall, so it holds a vanilla slot and a 20 tall button with room to spare.
+- **Text never runs past its box.** A label that does not fit is cut with an ellipsis, and the full text shows in a tooltip.
+- **Prompts are 180 wide and centred over a dimmed terminal.** Every prompt ends in keycap hints, and a refused entry turns the field border red and adds one warning line, without moving anything else.
 - **Tooltips wrap at 200 scaled pixels**, or at half the screen when that is narrower, so a long line never pushes a tooltip off the edge at GUI scale 4.
 
 ## State Cues
@@ -69,16 +70,17 @@ Every state differs from its neighbour by shape, not only by colour, so the scre
 
 | Pair | Shape cue |
 |---|---|
-| Row resting → hovered | The flat face gains a bevel and a second highlight ring |
-| Row hovered → active | A two pixel accent bar is painted down the left edge, over whichever chrome the row is already wearing |
-| Button resting → hovered | A second highlight ring closes around the face |
-| Button resting → disabled | The bevel is removed entirely and the button reads flat |
-| Tab current → not current | The bevel inverts, so the tab reads pressed in rather than standing proud |
-| Search box unfocused → focused | A second ring appears inside the first, so focus reads as a deeper recess |
+| Button resting → hovered | Vanilla's white outline appears around the button |
+| Button resting → disabled | Vanilla's flat disabled face, with grey text |
+| Side tab current → not current | The current tab joins the panel; the others sit apart, darker and set back |
+| Section tab current → not current | The current tab is taller and opens into the frame below it |
+| Field unfocused → focused | Vanilla's focused field outline |
+| Field accepted → refused | A red border and one warning line under the field |
 | Grid cell resting → hovered | Vanilla's own slot highlight is painted over the item |
 | Checkbox unticked → ticked | A tick appears inside the recess |
-| Scroll thumb → disabled | The bevel is removed entirely |
-| Container row, general → excluded | The accent bar appears on the left edge, and the role is written out beside it |
+| Sort or Gather → armed | The button reads "Confirm?" on an accent face |
+| Sort or Gather → running | One wide accent button reads "Stop" and the percentage done |
+| Status line partial → failed | The same hoverable line, grey for a partial result and dark red for a failure, always led by a warning glyph |
 | Empty network vs no results | A dashed crate outline against a magnifier: different silhouettes, not a recoloured one |
 | In-world outline, general vs excluded | The excluded container is outlined twice, one box inset inside the other, so it reads as a doubled line rather than a differently coloured one |
 
@@ -96,11 +98,11 @@ Every chrome colour is sampled from a Minecraft texture, and `VanillaPaletteTest
 | `W` | `FFFFFF` | Bevel highlight, up and left | The chassis's top and left bevel, and a slot's bottom and right edge |
 | `o` | `404040` | Label text | The title of every vanilla container |
 
-No sprite paints anything else. One colour is the mod's own, `C43A2E`, and it is painted rather than shipped: `TerminalChrome` fills a two pixel bar down the left edge of a row, over whichever chrome that row is already wearing, so an active row keeps its hover state instead of trading it away. The accent is redstone red because redstone power is the terminal's on switch, so the block and its screen share one visual idea. It marks a row that is switched on or armed, which is three things: a tag that is currently filtering the listing, a container the network may not write to, and a tag armed for deletion. None of them leans on the colour, since the bar is a shape and each row also says in words what it is doing. A tag an item already carries is the one active state that does not take the bar: its row holds a ticked checkbox where the bar would go, and a tick already says it better.
+No sprite paints anything else. One colour is the mod's own, `C43A2E`, and it is painted rather than shipped. The accent is redstone red because redstone power is the terminal's on switch, so the block and its screen share one visual idea. It marks something armed or running, never decoration: the face of Sort or Gather while it asks "Confirm?" and while it shows "Stop" with the percentage done, a tag armed for deletion, a terminal picked to copy tags from, the Excluded role on a container, and the network gauge when it is nearly full. None of them leans on the colour, since each also says in words what it is doing.
 
 Two colours the mod draws are deliberately outside this palette and belong to other vocabularies: the in-world container outlines in `HighlightColour`, which have to read against arbitrary world geometry rather than against a grey panel, and the locked-slot wash in `LockedSlotTint`, documented in [`locked-slot-art.md`](locked-slot-art.md). Neither is chrome.
 
-Text reuses chrome rather than inventing greys: secondary text is the chassis shadow, unavailable text is the recessed floor, and a text field's content is the bevel highlight, which is what vanilla's own in-container search field uses. The one other text colour is `FF6060`, which is what vanilla writes "too expensive" in on an anvil.
+Text reuses chrome rather than inventing greys: secondary text is the chassis shadow, unavailable text is the recessed floor, and a text field's content is the bevel highlight, which is what vanilla's own in-container search field uses. The other text colours are `FF6060`, which is what vanilla writes "too expensive" in on an anvil, for a refused entry, and `AA0000`, vanilla dark red, for a failed action in the status line.
 
 ## Editing A Sprite
 

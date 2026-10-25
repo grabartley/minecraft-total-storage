@@ -23,11 +23,6 @@ public final class TerminalRequests {
         public void settingsShowing(int syncId, int offset, int length) {
           ModNetworkingClient.sendSettingsRequest(syncId, offset, length);
         }
-
-        @Override
-        public void settingsClosed(int syncId) {
-          ModNetworkingClient.sendSettingsClosed(syncId);
-        }
       };
 
   private final int syncId;
@@ -35,7 +30,6 @@ public final class TerminalRequests {
   private final ListingCriteria listing = new ListingCriteria();
 
   private ListingWindow containers = ListingWindow.EMPTY;
-  private boolean settingsShowing;
 
   public TerminalRequests(int syncId) {
     this(syncId, NETWORKING);
@@ -60,26 +54,12 @@ public final class TerminalRequests {
     sender.rows(syncId, listing.window(), listing.search(), listing.mode(), listing.tags());
   }
 
-  public boolean isSettingsShowing() {
-    return settingsShowing;
-  }
-
   public boolean needsContainers(ListingWindow window) {
     return !containers.equals(window);
   }
 
   public void showSettings(ListingWindow window) {
-    settingsShowing = true;
     containers = window == null ? ListingWindow.EMPTY : window;
     sender.settingsShowing(syncId, containers.offset(), containers.length());
-  }
-
-  public void hideSettings() {
-    if (!settingsShowing) {
-      return;
-    }
-    settingsShowing = false;
-    containers = ListingWindow.EMPTY;
-    sender.settingsClosed(syncId);
   }
 }

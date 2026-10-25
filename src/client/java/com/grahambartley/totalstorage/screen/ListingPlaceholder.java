@@ -4,21 +4,24 @@ import com.grahambartley.totalstorage.listing.ListingStatus;
 import java.util.Optional;
 import net.minecraft.text.Text;
 
-public record ListingPlaceholder(TerminalSprite sprite, Text message) {
+public record ListingPlaceholder(TerminalSprite sprite, Text message, Optional<Text> hint) {
   public static final int SPRITE_SIZE = 32;
 
   public static final int MESSAGE_GAP = 6;
 
   public static Optional<ListingPlaceholder> forStatus(ListingStatus status) {
     return switch (status) {
-      case EMPTY_NETWORK -> Optional.of(of(TerminalSprite.EMPTY_NETWORK, "empty.network"));
-      case NO_RESULTS -> Optional.of(of(TerminalSprite.NO_RESULTS, "empty.no_results"));
-      case OFFLINE -> Optional.of(of(TerminalSprite.EMPTY_NETWORK, "offline"));
+      case EMPTY_NETWORK ->
+          Optional.of(of(TerminalSprite.EMPTY_NETWORK, "empty.network", "empty.network.hint"));
+      case NO_RESULTS ->
+          Optional.of(of(TerminalSprite.NO_RESULTS, "empty.no_results", "empty.no_results.hint"));
+      case OFFLINE -> Optional.of(of(TerminalSprite.EMPTY_NETWORK, "offline", "offline.hint"));
       case PENDING, LIVE -> Optional.empty();
     };
   }
 
-  private static ListingPlaceholder of(TerminalSprite sprite, String messageKey) {
-    return new ListingPlaceholder(sprite, TerminalScreenText.of(messageKey));
+  private static ListingPlaceholder of(TerminalSprite sprite, String messageKey, String hintKey) {
+    return new ListingPlaceholder(
+        sprite, TerminalScreenText.of(messageKey), Optional.of(TerminalScreenText.of(hintKey)));
   }
 }

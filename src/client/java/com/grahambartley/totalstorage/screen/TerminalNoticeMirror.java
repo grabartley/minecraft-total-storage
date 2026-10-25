@@ -1,29 +1,31 @@
 package com.grahambartley.totalstorage.screen;
 
+import com.grahambartley.totalstorage.operation.TerminalNoticeTone;
 import net.minecraft.text.Text;
 
 public final class TerminalNoticeMirror {
   public static final int SHOWN_TICKS = 100;
 
-  public static final int ANSWER_TICKS = 200;
-
   private static final int NO_SCREEN = -1;
 
+  private static TerminalNoticeTone tone = TerminalNoticeTone.DONE;
+  private static Text headline;
   private static Text message;
-  private static boolean needsAnAnswer;
   private static int syncId = NO_SCREEN;
   private static int ticksLeft;
 
   private TerminalNoticeMirror() {}
 
-  public static void accept(int noticedSyncId, Text noticed, boolean answerNeeded) {
-    if (noticed == null) {
+  public static void accept(
+      int noticedSyncId, TerminalNoticeTone noticedTone, Text noticedHeadline, Text noticed) {
+    if (noticed == null || noticedTone == null || !noticedTone.isShownInTheTerminal()) {
       return;
     }
     syncId = noticedSyncId;
+    tone = noticedTone;
     message = noticed;
-    needsAnAnswer = answerNeeded;
-    ticksLeft = answerNeeded ? ANSWER_TICKS : SHOWN_TICKS;
+    headline = noticedHeadline == null ? noticed : noticedHeadline;
+    ticksLeft = SHOWN_TICKS;
   }
 
   public static void tick() {
@@ -36,8 +38,9 @@ public final class TerminalNoticeMirror {
   }
 
   public static void clear() {
+    tone = TerminalNoticeTone.DONE;
+    headline = null;
     message = null;
-    needsAnAnswer = false;
     syncId = NO_SCREEN;
     ticksLeft = 0;
   }
@@ -46,12 +49,16 @@ public final class TerminalNoticeMirror {
     return message != null && syncId == openSyncId && ticksLeft > 0;
   }
 
-  public static Text message() {
-    return message;
+  public static TerminalNoticeTone tone() {
+    return tone;
   }
 
-  public static boolean needsAnAnswer() {
-    return needsAnAnswer;
+  public static Text headline() {
+    return headline;
+  }
+
+  public static Text message() {
+    return message;
   }
 
   public static int ticksLeft() {

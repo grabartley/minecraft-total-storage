@@ -2,6 +2,7 @@ package com.grahambartley.totalstorage.screen;
 
 import com.grahambartley.totalstorage.listing.ListingRow;
 import com.grahambartley.totalstorage.network.ModNetworkingClient;
+import com.grahambartley.totalstorage.operation.TerminalNoticeTone;
 import com.grahambartley.totalstorage.operation.WithdrawAmount;
 import com.grahambartley.totalstorage.operation.WithdrawDestination;
 import com.grahambartley.totalstorage.tag.TagSetImportMode;
@@ -14,6 +15,7 @@ import java.util.List;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 
 public final class TerminalPrompts {
@@ -102,6 +104,13 @@ public final class TerminalPrompts {
 
   private List<OwnedTerminal> sources() {
     return TagSourceMirror.sourcesFor(syncId);
+  }
+
+  public Text refusalTooltipAt(int windowX, int windowY) {
+    if (naming.isOpen() && TextPromptPanel.isOverRefusal(windowX, windowY)) {
+      return naming.fullRefusal();
+    }
+    return null;
   }
 
   public boolean draw(
@@ -199,21 +208,25 @@ public final class TerminalPrompts {
       int windowY,
       int button) {
     if (amount.isOpen()) {
-      amount.close();
+      if (!WithdrawAmountPrompt.isInside(windowX, windowY)) {
+        amount.close();
+      }
       return true;
     }
     if (naming.isOpen()) {
-      naming.close();
+      if (!TextPromptPanel.FRAME.isInside(windowX, windowY)) {
+        naming.close();
+      }
       return true;
     }
     if (renaming.isOpen()) {
-      renaming.close();
+      if (!TextPromptPanel.FRAME.isInside(windowX, windowY)) {
+        renaming.close();
+      }
       return true;
     }
     final TagPromptList list = openList();
-    if (list != null
-        && button == GridClick.LEFT_BUTTON
-        && TagPromptLayout.isOverScrollbar(windowX, windowY)) {
+    if (list != null && button == GridClick.LEFT_BUTTON && list.isOverScrollbar(windowX, windowY)) {
       list.grabScrollbar(windowX, windowY);
       return true;
     }
@@ -231,8 +244,11 @@ public final class TerminalPrompts {
 
   private boolean filteringClicked(
       NetworkSettingsView settings, NetworkTagView tags, int windowX, int windowY, int button) {
-    if (button != GridClick.LEFT_BUTTON || !TagPromptLayout.isOverPrompt(windowX, windowY)) {
+    if (!TagPromptLayout.isOverPrompt(windowX, windowY)) {
       filtering.close();
+      return true;
+    }
+    if (button != GridClick.LEFT_BUTTON) {
       return true;
     }
     final ContainerRoleEntry row = filtering.rowIn(settings);
@@ -251,8 +267,11 @@ public final class TerminalPrompts {
 
   private boolean trustingClicked(
       NetworkSettingsView settings, int windowX, int windowY, int button) {
-    if (button != GridClick.LEFT_BUTTON || !TagPromptLayout.isOverPrompt(windowX, windowY)) {
+    if (!TrustPrompt.isInside(windowX, windowY)) {
       trusting.close();
+      return true;
+    }
+    if (button != GridClick.LEFT_BUTTON) {
       return true;
     }
     final String removed = trusting.removalAt(settings, windowX, windowY);
@@ -263,8 +282,11 @@ public final class TerminalPrompts {
   }
 
   private boolean copyingClicked(boolean shiftDown, int windowX, int windowY, int button) {
-    if (button != GridClick.LEFT_BUTTON || !TagPromptLayout.isOverPrompt(windowX, windowY)) {
+    if (!TagPromptLayout.isOverPrompt(windowX, windowY)) {
       copying.close();
+      return true;
+    }
+    if (button != GridClick.LEFT_BUTTON) {
       return true;
     }
     final OwnedTerminal source = copying.sourceAt(sources(), windowX, windowY);
@@ -347,8 +369,11 @@ public final class TerminalPrompts {
 
   private boolean taggingClicked(
       NetworkTagView tags, boolean shiftDown, int windowX, int windowY, int button) {
-    if (button != GridClick.LEFT_BUTTON || !TagPromptLayout.isOverPrompt(windowX, windowY)) {
+    if (!TagPromptLayout.isOverPrompt(windowX, windowY)) {
       closeTagging();
+      return true;
+    }
+    if (button != GridClick.LEFT_BUTTON) {
       return true;
     }
     final NetworkTagEntry tag = tagging.tagAt(tags, windowX, windowY);
@@ -391,8 +416,9 @@ public final class TerminalPrompts {
     }
     TerminalNoticeMirror.accept(
         syncId,
-        TerminalScreenText.of("amount.clamped", amount.requested(), amount.amount()),
-        false);
+        TerminalNoticeTone.PARTIAL,
+        TerminalScreenText.of("amount.clamped.headline", amount.amount()),
+        TerminalScreenText.of("amount.clamped", amount.requested(), amount.amount()));
   }
 
   private static boolean soundIfRefused(PromptKey outcome) {

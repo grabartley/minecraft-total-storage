@@ -1,23 +1,12 @@
 package com.grahambartley.totalstorage.screen;
 
-import com.grahambartley.totalstorage.screenhandler.TerminalScreenLayout;
-import java.util.ArrayList;
-import java.util.List;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.Text;
 
 public final class WithdrawAmountPrompt {
-  private static final int PADDING = 8;
-  private static final int LINE_HEIGHT = 9;
-  private static final int FIELD_HEIGHT = 12;
-  private static final int GAP = 4;
-
-  private static final int MIN_WIDTH = 120;
-
-  private static final float ELEVATION = 300.0F;
+  private static final int GAP = 5;
+  private static final int KEYS_GAP = 6;
 
   private ItemVariant variant;
   private AmountEntry entry;
@@ -60,73 +49,54 @@ public final class WithdrawAmountPrompt {
     return isOpen() ? entry.charTyped(typed) : PromptKey.HANDLED;
   }
 
+  public static final PromptFrame FRAME =
+      PromptFrame.centred(
+          PromptHeader.HEIGHT + GAP + PromptField.HEIGHT + KEYS_GAP + KeyCaps.HEIGHT);
+
   public void draw(DrawContext context, TextRenderer textRenderer, int originX, int originY) {
     if (!isOpen()) {
       return;
     }
-    final int width = Math.min(TerminalScreenLayout.GRID_WIDTH, MIN_WIDTH);
-    final int inner = width - 2 * PADDING;
-    final List<OrderedText> heading =
-        textRenderer.wrapLines(
-            TerminalScreenText.of("amount.title", variant.toStack().getName()), inner);
-    final List<OrderedText> available =
-        textRenderer.wrapLines(TerminalScreenText.of("amount.available", entry.ceiling()), inner);
-    final List<OrderedText> hint =
-        textRenderer.wrapLines(
-            TerminalScreenText.of(entry.takesEverything() ? "amount.hint.all" : "amount.hint"),
-            inner);
-    final int height =
-        2 * PADDING
-            + 3 * GAP
-            + FIELD_HEIGHT
-            + LINE_HEIGHT * (heading.size() + available.size() + hint.size());
-
-    final int left =
-        originX + TerminalScreenLayout.GRID_X + (TerminalScreenLayout.GRID_WIDTH - width) / 2;
-    final int top =
-        originY + TerminalScreenLayout.GRID_Y + (TerminalScreenLayout.GRID_HEIGHT - height) / 2;
-
-    context.getMatrices().push();
-    context.getMatrices().translate(0.0F, 0.0F, ELEVATION);
-    TerminalSprite.PANEL.draw(context, left, top, width, height);
-    int lineY = top + PADDING;
-    lineY =
-        drawLines(context, textRenderer, heading, left, lineY, width, VanillaPalette.LABEL) + GAP;
-    lineY =
-        drawLines(context, textRenderer, available, left, lineY, width, VanillaPalette.MUTED) + GAP;
-    TerminalSprite.FIELD_FOCUSED.draw(context, left + PADDING, lineY, inner, FIELD_HEIGHT);
-    drawLines(
+    final int left = originX + FRAME.contentLeft();
+    int top = originY + FRAME.contentTop();
+    PromptFrame.begin(context);
+    FRAME.drawPanel(context, originX, originY);
+    PromptHeader.draw(
         context,
         textRenderer,
-        List.of(Text.literal(entry.text()).asOrderedText()),
+        variant.toStack(),
+        TerminalScreenText.of("amount.title", variant.toStack().getName()),
         left,
-        lineY + 2,
-        width,
-        VanillaPalette.FIELD_TEXT);
-    drawLines(
-        context, textRenderer, hint, left, lineY + FIELD_HEIGHT + GAP, width, VanillaPalette.MUTED);
-    context.getMatrices().pop();
+        top,
+        PromptFrame.CONTENT_WIDTH);
+    top += PromptHeader.HEIGHT + GAP;
+    PromptField.draw(
+        context,
+        textRenderer,
+        left,
+        top,
+        PromptFrame.CONTENT_WIDTH,
+        entry.text(),
+        TerminalScreenText.of("amount.placeholder"),
+        TerminalScreenText.of("amount.of", ItemCountFormat.exact(entry.ceiling())),
+        false);
+    top += PromptField.HEIGHT + KEYS_GAP;
+    KeyCaps.draw(
+        context,
+        textRenderer,
+        HintLine.of(
+            HintLine.key("enter"),
+            HintLine.words(entry.takesEverything() ? "hint.take_all" : "hint.take"),
+            HintLine.key("esc"),
+            HintLine.words("hint.cancel")),
+        left,
+        top,
+        VanillaPalette.MUTED,
+        false);
+    PromptFrame.end(context);
   }
 
-  private static int drawLines(
-      DrawContext context,
-      TextRenderer textRenderer,
-      List<OrderedText> lines,
-      int left,
-      int top,
-      int width,
-      int colour) {
-    int lineY = top;
-    for (final OrderedText line : new ArrayList<>(lines)) {
-      context.drawText(
-          textRenderer,
-          line,
-          left + (width - textRenderer.getWidth(line)) / 2,
-          lineY,
-          colour,
-          false);
-      lineY += LINE_HEIGHT;
-    }
-    return lineY;
+  public static boolean isInside(int windowX, int windowY) {
+    return FRAME.isInside(windowX, windowY);
   }
 }

@@ -5,16 +5,26 @@ import java.util.Objects;
 public final class TerminalScrollbar {
   private final ListingScroll scroll;
   private final int trackHeight;
+  private final int fixedThumbHeight;
 
   private boolean dragging;
   private int grabOffset;
 
   public TerminalScrollbar(ListingScroll scroll, int trackHeight) {
+    this(scroll, trackHeight, 0);
+  }
+
+  public TerminalScrollbar(ListingScroll scroll, int trackHeight, int fixedThumbHeight) {
     this.scroll = Objects.requireNonNull(scroll, "scroll");
     if (trackHeight <= 0) {
       throw new IllegalArgumentException("a track needs a height: " + trackHeight);
     }
+    if (fixedThumbHeight < 0 || fixedThumbHeight > trackHeight) {
+      throw new IllegalArgumentException(
+          "a thumb of " + fixedThumbHeight + " does not fit a track of " + trackHeight);
+    }
     this.trackHeight = trackHeight;
+    this.fixedThumbHeight = fixedThumbHeight;
   }
 
   public boolean isEnabled() {
@@ -26,6 +36,9 @@ public final class TerminalScrollbar {
   }
 
   public int thumbHeight() {
+    if (fixedThumbHeight > 0) {
+      return fixedThumbHeight;
+    }
     return ScrollbarMetrics.thumbHeight(trackHeight, scroll.visibleRows(), scroll.totalRows());
   }
 

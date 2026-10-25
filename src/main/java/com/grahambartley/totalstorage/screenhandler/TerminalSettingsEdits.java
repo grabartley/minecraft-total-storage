@@ -77,7 +77,7 @@ public final class TerminalSettingsEdits {
       return false;
     }
     if (applied.get().clamped()) {
-      TerminalNotice.tell(player, TerminalMessages.radiusClamped(applied.get().blocks()));
+      TerminalNotice.partial(player, TerminalMessages.radiusClamped(applied.get().blocks()));
     }
     ContainerHighlightService.highlight(player, context.world(), context.terminal());
     return pushed(context);
@@ -185,12 +185,12 @@ public final class TerminalSettingsEdits {
   private boolean applied(
       ServerPlayerEntity player, TerminalOperationContext context, RoleChangeOutcome outcome) {
     if (outcome == RoleChangeOutcome.DENIED) {
-      TerminalNotice.tell(player, TerminalMessages.notYours());
+      TerminalNotice.failed(player, TerminalMessages.notYours());
       panels.refresh(player);
       return false;
     }
     if (outcome == RoleChangeOutcome.NOT_IN_NETWORK) {
-      TerminalNotice.tell(player, TerminalMessages.containerNotInNetwork());
+      TerminalNotice.failed(player, TerminalMessages.containerNotInNetwork());
       panels.refresh(player);
       return false;
     }
@@ -218,7 +218,7 @@ public final class TerminalSettingsEdits {
     if (context == null) {
       return false;
     }
-    TerminalNotice.tell(
+    TerminalNotice.done(
         player,
         TerminalMessages.highlighted(
             ContainerHighlightService.highlight(player, context.world(), context.terminal())));
@@ -235,7 +235,7 @@ public final class TerminalSettingsEdits {
     }
     final TerminalPower power = TerminalNetworks.power();
     power.rescan(context.world(), context.terminal());
-    TerminalNotice.tell(
+    TerminalNotice.done(
         player,
         TerminalMessages.rescanned(power.containerCount(context.world(), context.terminal())));
     ContainerHighlightService.highlight(player, context.world(), context.terminal());
@@ -257,7 +257,7 @@ public final class TerminalSettingsEdits {
     if (TerminalAdmin.mayAdminister(context.world(), context.terminal(), player)) {
       return context;
     }
-    TerminalNotice.tell(player, TerminalMessages.notYours());
+    TerminalNotice.failed(player, TerminalMessages.notYours());
     panels.refresh(player);
     return null;
   }

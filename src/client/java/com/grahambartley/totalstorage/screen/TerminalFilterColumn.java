@@ -3,45 +3,76 @@ package com.grahambartley.totalstorage.screen;
 import com.grahambartley.totalstorage.screenhandler.FilterColumnLayout;
 import com.grahambartley.totalstorage.terminal.NetworkTagEntry;
 import com.grahambartley.totalstorage.terminal.NetworkTagView;
+import com.grahambartley.totalstorage.text.CountedNoun;
 import java.util.List;
+import java.util.function.Consumer;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
 public final class TerminalFilterColumn {
-  private static final int LINE_HEIGHT = 9;
-  private static final int ICON_SIZE = 8;
+  private static final int TEXT_Y = 2;
 
   private final ListingScroll scroll = new ListingScroll(1, FilterColumnLayout.ROWS);
 
   private final TerminalScrollbar scrollbar =
       new TerminalScrollbar(scroll, FilterColumnLayout.CONTENT_HEIGHT);
 
+  private FilterColumnRows rows = new FilterColumnRows(List.of());
+
+  private TerminalTextButton mode;
+  private TerminalIconButton clear;
+
   public ListingScroll scroll() {
     return scroll;
   }
 
-  public void fit(NetworkTagView view) {
-    scroll.fit(view.tags().size());
+  public void attach(
+      Consumer<ClickableWidget> adder, int originX, int originY, FilterSelection selection) {
+    mode =
+        new TerminalTextButton(
+            originX + FilterColumnLayout.X,
+            originY + FilterColumnLayout.Y,
+            FilterColumnLayout.MODE_WIDTH,
+            FilterColumnLayout.HEADER_HEIGHT,
+            FilterColumnText.mode(selection.mode()),
+            selection::cycleMode);
+    mode.setHint(TerminalScreenText.of("filter.mode.hint"));
+    clear =
+        new TerminalIconButton(
+            originX + FilterColumnLayout.CLEAR_X,
+            originY + FilterColumnLayout.Y,
+            FilterColumnLayout.CONTROL_SIZE,
+            TerminalSprite.CROSS,
+            TerminalSprite.CROSS_UNAVAILABLE,
+            TerminalScreenText.of("filter.clear"),
+            selection::clear);
+    adder.accept(mode);
+    adder.accept(clear);
   }
 
-  public NetworkTagEntry tagAt(NetworkTagView view, int windowX, int windowY) {
-    final int index = rowAt(windowX, windowY);
-    final List<NetworkTagEntry> tags = view.tags();
-    return index < 0 || index >= tags.size() ? null : tags.get(index);
+  public void update(boolean shown, FilterSelection selection) {
+    mode.visible = shown;
+    clear.visible = shown;
+    mode.show(FilterColumnText.mode(selection.mode()), false);
+    clear.active = selection.isFiltering();
+  }
+
+  public void fit(NetworkTagView view) {
+    rows = FilterColumnRows.of(view);
+    scroll.fit(rows.size());
+  }
+
+  public NetworkTagEntry tagAt(int windowX, int windowY) {
+    return rows.tagAt(rowAt(windowX, windowY));
   }
 
   public int rowAt(int windowX, int windowY) {
-    if (FilterColumnLayout.isOverScrollbar(windowX, windowY)) {
-      return FilterColumnLayout.NO_ROW;
-    }
     final int row = FilterColumnLayout.rowAt(windowX, windowY);
     return row == FilterColumnLayout.NO_ROW ? row : scroll.firstIndex() + row;
-  }
-
-  public boolean grabScrollbar(int windowY) {
-    return scrollbar.grab(windowY - FilterColumnLayout.CONTENT_Y);
   }
 
   public boolean isDraggingScrollbar() {
@@ -56,112 +87,73 @@ public final class TerminalFilterColumn {
     scrollbar.release();
   }
 
-  public boolean click(
-      NetworkTagView view, FilterSelection selection, int windowX, int windowY, int button) {
+  public boolean click(FilterSelection selection, int windowX, int windowY, int button) {
     if (button != GridClick.LEFT_BUTTON || !FilterColumnLayout.isOverColumn(windowX, windowY)) {
       return false;
     }
-    if (FilterColumnLayout.isOverClear(windowX, windowY)) {
-      selection.clear();
-      return true;
-    }
-    if (FilterColumnLayout.isOverMode(windowX, windowY)) {
-      selection.cycleMode();
-      return true;
-    }
     if (FilterColumnLayout.isOverScrollbar(windowX, windowY)) {
-      grabScrollbar(windowY);
+      scrollbar.grab(windowY - FilterColumnLayout.CONTENT_Y);
       return true;
     }
-    final NetworkTagEntry tag = tagAt(view, windowX, windowY);
+    final NetworkTagEntry tag = tagAt(windowX, windowY);
     if (tag != null) {
       selection.toggle(tag.id());
     }
-    return true;
+    return windowY >= FilterColumnLayout.FRAME_Y;
   }
 
   public void draw(
       DrawContext context,
       TextRenderer textRenderer,
-      NetworkTagView view,
       FilterSelection selection,
-      int originX,
-      int originY,
       int mouseX,
       int mouseY) {
-    drawHeader(context, textRenderer, selection, originX, originY, mouseX, mouseY);
-    drawRows(context, textRenderer, view, selection, originX, originY, mouseX, mouseY);
-    drawScrollbar(context, originX, originY);
-  }
-
-  private void drawHeader(
-      DrawContext context,
-      TextRenderer textRenderer,
-      FilterSelection selection,
-      int originX,
-      int originY,
-      int mouseX,
-      int mouseY) {
-    final int top = originY + FilterColumnLayout.Y;
-    TerminalChrome.control(FilterColumnLayout.isOverMode(mouseX, mouseY))
-        .draw(
-            context,
-            originX + FilterColumnLayout.X,
-            top,
-            FilterColumnLayout.MODE_WIDTH,
-            FilterColumnLayout.HEADER_HEIGHT);
-    final Text mode = FilterColumnText.mode(selection.mode(), selection.active().size());
-    context.drawText(
-        textRenderer,
-        mode,
-        originX
-            + FilterColumnLayout.X
-            + (FilterColumnLayout.MODE_WIDTH - textRenderer.getWidth(mode)) / 2,
-        top + (FilterColumnLayout.HEADER_HEIGHT - LINE_HEIGHT) / 2 + 1,
-        selection.isFiltering() ? VanillaPalette.LABEL : VanillaPalette.MUTED,
-        false);
-    TerminalChrome.controlOrUnavailable(
-            selection.isFiltering(), FilterColumnLayout.isOverClear(mouseX, mouseY))
-        .draw(
-            context,
-            originX + FilterColumnLayout.CLEAR_X,
-            top,
-            FilterColumnLayout.CONTROL_SIZE,
-            FilterColumnLayout.CONTROL_SIZE);
-    final int iconInset = (FilterColumnLayout.CONTROL_SIZE - ICON_SIZE) / 2;
-    TerminalSprite.CLEAR_ALL.draw(
+    TerminalChrome.drawInset(
         context,
-        originX + FilterColumnLayout.CLEAR_X + iconInset,
-        top + iconInset,
-        ICON_SIZE,
-        ICON_SIZE);
-  }
-
-  private void drawRows(
-      DrawContext context,
-      TextRenderer textRenderer,
-      NetworkTagView view,
-      FilterSelection selection,
-      int originX,
-      int originY,
-      int mouseX,
-      int mouseY) {
-    final List<NetworkTagEntry> tags = view.tags();
+        FilterColumnLayout.X,
+        FilterColumnLayout.FRAME_Y,
+        FilterColumnLayout.WIDTH,
+        FilterColumnLayout.FRAME_HEIGHT);
     final int hovered = rowAt(mouseX, mouseY);
     for (int row = 0; row < FilterColumnLayout.ROWS; row++) {
       final int index = scroll.firstIndex() + row;
-      if (index >= tags.size()) {
-        return;
+      final FilterColumnRows.Row shown = rows.at(index);
+      if (shown == null) {
+        break;
+      }
+      final int top = FilterColumnLayout.rowY(row);
+      if (shown.isDivider()) {
+        drawDivider(context, textRenderer, top);
+        continue;
       }
       drawRow(
           context,
           textRenderer,
-          tags.get(index),
-          selection.isActive(tags.get(index).id()),
+          shown.tag(),
+          selection.isActive(shown.tag().id()),
           index == hovered,
-          originX,
-          originY + FilterColumnLayout.rowY(row));
+          top);
     }
+    TerminalChrome.drawScrollbar(
+        context,
+        scrollbar,
+        FilterColumnLayout.SCROLLBAR_X,
+        FilterColumnLayout.CONTENT_Y,
+        FilterColumnLayout.SCROLLBAR_WIDTH,
+        FilterColumnLayout.CONTENT_HEIGHT);
+  }
+
+  private static void drawDivider(DrawContext context, TextRenderer textRenderer, int top) {
+    context.drawText(
+        textRenderer,
+        TrimmedText.toWidth(
+            textRenderer,
+            TerminalScreenText.of("filter.custom"),
+            FilterColumnLayout.ROW_WIDTH - 2 * FilterColumnLayout.TEXT_MARGIN),
+        FilterColumnLayout.ROW_X + FilterColumnLayout.TEXT_MARGIN,
+        top + TEXT_Y + 1,
+        VanillaPalette.opaque(VanillaPalette.MUTED),
+        false);
   }
 
   private static void drawRow(
@@ -170,50 +162,62 @@ public final class TerminalFilterColumn {
       NetworkTagEntry tag,
       boolean active,
       boolean hovered,
-      int originX,
       int top) {
-    final int left = originX + FilterColumnLayout.X;
-    TerminalChrome.drawActiveRow(
-        context,
-        active,
-        hovered,
-        left,
-        top,
-        FilterColumnLayout.ROW_WIDTH,
-        FilterColumnLayout.ROW_HEIGHT);
+    final int left = FilterColumnLayout.ROW_X;
+    if (active) {
+      TerminalSprite.SUNKEN.draw(
+          context, left, top, FilterColumnLayout.ROW_WIDTH, FilterColumnLayout.ROW_HEIGHT);
+      TerminalSprite.CHECK_LIGHT.draw(
+          context,
+          left + FilterColumnLayout.TEXT_MARGIN,
+          top + (FilterColumnLayout.ROW_HEIGHT - FilterColumnLayout.CHECK_SIZE) / 2,
+          FilterColumnLayout.CHECK_SIZE,
+          FilterColumnLayout.CHECK_SIZE);
+    } else if (hovered) {
+      TerminalChrome.drawHover(
+          context, left, top, FilterColumnLayout.ROW_WIDTH, FilterColumnLayout.ROW_HEIGHT);
+    }
     final String count = FilterColumnText.count(tag);
     final int countWidth = textRenderer.getWidth(count);
-    final int textY = top + (FilterColumnLayout.ROW_HEIGHT - LINE_HEIGHT) / 2 + 1;
     final OrderedText name =
         TrimmedText.toWidth(
             textRenderer,
-            FilterColumnText.columnNameOf(tag),
-            FilterColumnLayout.nameWidth(countWidth));
+            FilterColumnText.nameOf(tag),
+            FilterColumnLayout.nameWidth(countWidth, active));
+    final int nameColour =
+        active
+            ? VanillaPalette.BEVEL_HIGHLIGHT
+            : tag.isEmptyHere() ? VanillaPalette.DISABLED : VanillaPalette.LABEL;
+    final int countColour =
+        active
+            ? VanillaPalette.FIELD_TEXT
+            : tag.isEmptyHere() ? VanillaPalette.DISABLED : VanillaPalette.MUTED;
     context.drawText(
         textRenderer,
         name,
-        left + FilterColumnLayout.TEXT_MARGIN,
-        textY,
-        active
-            ? VanillaPalette.LABEL
-            : tag.isEmptyHere() ? VanillaPalette.DISABLED : VanillaPalette.MUTED,
-        false);
+        left + FilterColumnLayout.nameLeft(active),
+        top + TEXT_Y,
+        VanillaPalette.opaque(nameColour),
+        active);
     context.drawText(
         textRenderer,
         count,
         left + FilterColumnLayout.countLeft(countWidth),
-        textY,
-        tag.isEmptyHere() ? VanillaPalette.DISABLED : VanillaPalette.MUTED,
-        false);
+        top + TEXT_Y,
+        VanillaPalette.opaque(countColour),
+        active);
   }
 
-  private void drawScrollbar(DrawContext context, int originX, int originY) {
-    TerminalChrome.drawScrollbar(
-        context,
-        scrollbar,
-        originX + FilterColumnLayout.SCROLLBAR_X,
-        originY + FilterColumnLayout.CONTENT_Y,
-        FilterColumnLayout.SCROLLBAR_WIDTH,
-        FilterColumnLayout.CONTENT_HEIGHT);
+  public List<Text> tooltipAt(int windowX, int windowY) {
+    final NetworkTagEntry tag = tagAt(windowX, windowY);
+    if (tag == null) {
+      return List.of();
+    }
+    return List.of(
+        FilterColumnText.nameOf(tag),
+        TerminalScreenText.of(
+                "filter.tag.matching",
+                CountedNoun.KINDS.ofFormatted(FilterColumnText.count(tag), tag.matchingItems()))
+            .formatted(Formatting.GRAY));
   }
 }

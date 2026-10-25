@@ -19,11 +19,6 @@ public final class TerminalSettingsState {
     return showing;
   }
 
-  public void closed() {
-    showing = false;
-    window = ListingWindow.EMPTY;
-  }
-
   @Override
   public String toString() {
     return "TerminalSettingsState[showing=" + showing + ", window=" + window + "]";

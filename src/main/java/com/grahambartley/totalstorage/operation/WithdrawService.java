@@ -102,7 +102,13 @@ public final class WithdrawService {
       return outcome;
     }
     OperationMessages.forWithdrawal(outcome)
-        .ifPresent(message -> TerminalNotice.tell(player, message));
+        .ifPresent(
+            message ->
+                TerminalNotice.report(
+                    player,
+                    OperationMessages.toneOf(outcome.result()),
+                    OperationMessages.headlineForWithdrawal(outcome).orElse(message),
+                    message));
     TerminalResync.of(player);
     return outcome;
   }

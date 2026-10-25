@@ -1,116 +1,118 @@
 package com.grahambartley.totalstorage.screenhandler;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class TagsSectionLayoutTest {
-  @Test
-  void theNewTagRowSitsAboveTheTagsItCreates() {
-    assertTrue(TagsSectionLayout.NEW_TAG_ROW < TagsSectionLayout.FIRST_TAG_ROW);
+  private static final int NAME_X = TerminalSettingsLayout.LIST_X + 1;
+
+  static Stream<Integer> everyRow() {
+    return IntStream.range(0, TagsSectionLayout.TAG_ROWS).boxed();
   }
 
   @Test
-  void everyRowBelowTheNewTagRowCanHoldATag() {
-    assertEquals(
-        TerminalSettingsLayout.ROWS - TagsSectionLayout.FIRST_TAG_ROW, TagsSectionLayout.TAG_ROWS);
-    assertTrue(TagsSectionLayout.TAG_ROWS >= 3);
+  void theTagListAndItsFooterFitInsideTheFrame() {
+    assertTrue(
+        TerminalSettingsLayout.LIST_Y + TagsSectionLayout.LIST_HEIGHT <= TagsSectionLayout.FOOTER_Y,
+        "the footer overlaps the last tag row");
+    assertTrue(
+        TagsSectionLayout.FOOTER_Y + 9
+            < TerminalSettingsLayout.FRAME_Y + TerminalSettingsLayout.FRAME_HEIGHT,
+        "the footer runs under the frame");
   }
 
-  @Test
-  void theDeleteControlStaysInsideTheRowItBelongsTo() {
+  @ParameterizedTest
+  @MethodSource("everyRow")
+  void theControlsStayInsideTheRowTheyBelongTo(int row) {
+    final int top = TagsSectionLayout.rowY(row);
+
+    assertTrue(TagsSectionLayout.controlY(row) >= top);
+    assertTrue(
+        TagsSectionLayout.controlY(row) + TagsSectionLayout.CONTROL_SIZE
+            <= top + TagsSectionLayout.ROW_HEIGHT);
+    assertTrue(TagsSectionLayout.armedY(row) >= top);
+    assertTrue(
+        TagsSectionLayout.armedY(row) + TagsSectionLayout.ARMED_HEIGHT
+            <= top + TagsSectionLayout.ROW_HEIGHT);
     assertTrue(
         TagsSectionLayout.DELETE_X + TagsSectionLayout.CONTROL_SIZE
-            <= TerminalSettingsLayout.PANEL_X + TerminalSettingsLayout.ROW_WIDTH);
-    assertTrue(
-        TagsSectionLayout.deleteY(TagsSectionLayout.FIRST_TAG_ROW) + TagsSectionLayout.CONTROL_SIZE
-            <= TerminalSettingsLayout.rowY(TagsSectionLayout.FIRST_TAG_ROW)
-                + TerminalSettingsLayout.ROW_HEIGHT);
+            <= TerminalSettingsLayout.LIST_X + TerminalSettingsLayout.LIST_WIDTH);
   }
 
   @Test
-  void theNameHasRoomBesideTheDeleteControl() {
-    assertTrue(TagsSectionLayout.NAME_WIDTH > 0);
-    assertTrue(
-        TerminalSettingsLayout.PANEL_X + TagsSectionLayout.NAME_WIDTH
-            <= TagsSectionLayout.DELETE_X);
+  void theRenameAndDeleteControlsSitSideBySideWithAGap() {
+    assertEquals(
+        TagsSectionLayout.RENAME_X + TagsSectionLayout.CONTROL_SIZE + TagsSectionLayout.CONTROL_GAP,
+        TagsSectionLayout.DELETE_X);
+    assertTrue(TagsSectionLayout.CONTROL_GAP > 0);
   }
 
   @Test
-  void aClickOnTheDeleteControlIsNotAClickOnTheName() {
-    final int row = TagsSectionLayout.FIRST_TAG_ROW;
+  void theArmedConfirmEndsWhereTheDeleteControlEnds() {
+    assertEquals(
+        TagsSectionLayout.DELETE_X + TagsSectionLayout.CONTROL_SIZE,
+        TagsSectionLayout.ARMED_X + TagsSectionLayout.ARMED_WIDTH);
+  }
+
+  @ParameterizedTest
+  @MethodSource("everyRow")
+  void aClickLandsOnTheControlItIsOver(int row) {
+    final int controlY = TagsSectionLayout.controlY(row) + 1;
+
     assertEquals(
         TagRowRegion.DELETE,
-        TagsSectionLayout.regionAt(
-            TagsSectionLayout.DELETE_X + 1, TagsSectionLayout.deleteY(row) + 1));
+        TagsSectionLayout.regionAt(TagsSectionLayout.DELETE_X + 1, controlY, false));
+    assertEquals(
+        TagRowRegion.RENAME,
+        TagsSectionLayout.regionAt(TagsSectionLayout.RENAME_X + 1, controlY, false));
     assertEquals(
         TagRowRegion.NAME,
-        TagsSectionLayout.regionAt(
-            TerminalSettingsLayout.PANEL_X + 1, TerminalSettingsLayout.rowY(row) + 1));
+        TagsSectionLayout.regionAt(NAME_X, TagsSectionLayout.rowY(row) + 1, false));
   }
 
   @Test
-  void theCopyControlSitsOnTheNewTagRowSoNoTagRowIsSpentOnIt() {
-    assertTrue(
-        TagsSectionLayout.isOverCopy(
-            TagsSectionLayout.DELETE_X + 1,
-            TagsSectionLayout.deleteY(TagsSectionLayout.NEW_TAG_ROW) + 1));
+  void anArmedRowOnlyDeletesFromItsConfirmButton() {
+    final int row = 0;
+    final int armedY = TagsSectionLayout.armedY(row) + 1;
+
+    assertEquals(
+        TagRowRegion.DELETE,
+        TagsSectionLayout.regionAt(TagsSectionLayout.ARMED_X + 1, armedY, true));
+    assertEquals(
+        TagRowRegion.NAME, TagsSectionLayout.regionAt(TagsSectionLayout.ARMED_X - 1, armedY, true));
   }
 
   @Test
-  void aClickOnTheRestOfTheNewTagRowIsNotAClickOnTheCopyControl() {
-    assertFalse(
-        TagsSectionLayout.isOverCopy(
-            TerminalSettingsLayout.PANEL_X + 1,
-            TerminalSettingsLayout.rowY(TagsSectionLayout.NEW_TAG_ROW) + 1));
-  }
-
-  @Test
-  void theCopyControlBelongsToTheNewTagRowAlone() {
-    assertFalse(
-        TagsSectionLayout.isOverCopy(
-            TagsSectionLayout.DELETE_X + 1,
-            TagsSectionLayout.deleteY(TagsSectionLayout.FIRST_TAG_ROW) + 1));
-  }
-
-  @Test
-  void theNewTagRowIsNeverATagRow() {
+  void aPointBesideOrBelowTheRowsIsNoRegion() {
     assertEquals(
         TagRowRegion.NONE,
         TagsSectionLayout.regionAt(
-            TerminalSettingsLayout.PANEL_X + 1,
-            TerminalSettingsLayout.rowY(TagsSectionLayout.NEW_TAG_ROW) + 1));
-    assertTrue(
-        TagsSectionLayout.isOverNewTag(
-            TerminalSettingsLayout.PANEL_X + 1,
-            TerminalSettingsLayout.rowY(TagsSectionLayout.NEW_TAG_ROW) + 1));
-  }
-
-  @Test
-  void aPointOutsideTheRowsIsNeitherARegionNorTheNewTagRow() {
+            TerminalSettingsLayout.LIST_X - 1, TerminalSettingsLayout.LIST_Y, false));
     assertEquals(
         TagRowRegion.NONE,
         TagsSectionLayout.regionAt(
-            TerminalSettingsLayout.PANEL_X - 5, TerminalSettingsLayout.CONTENT_Y));
-    assertFalse(
-        TagsSectionLayout.isOverNewTag(
-            TerminalSettingsLayout.PANEL_X - 5, TerminalSettingsLayout.CONTENT_Y));
+            NAME_X, TerminalSettingsLayout.LIST_Y + TagsSectionLayout.LIST_HEIGHT, false));
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {-1, TagsSectionLayout.TAG_ROWS})
+  void anIndexThatIsNotARowIsRefusedRatherThanGuessedAt(int row) {
+    assertThrows(IndexOutOfBoundsException.class, () -> TagsSectionLayout.rowY(row));
   }
 
   @Test
   void theTagUnderAPointCountsFromWhereTheListWasScrolledTo() {
-    final int row = TagsSectionLayout.FIRST_TAG_ROW;
-    assertEquals(
-        7,
-        TagsSectionLayout.tagIndexAt(
-            TerminalSettingsLayout.PANEL_X + 1, TerminalSettingsLayout.rowY(row) + 1, 7));
+    assertEquals(9, TagsSectionLayout.tagIndexAt(NAME_X, TagsSectionLayout.rowY(2) + 1, 7));
     assertEquals(
         TerminalSettingsLayout.NO_ROW,
-        TagsSectionLayout.tagIndexAt(
-            TerminalSettingsLayout.PANEL_X + 1,
-            TerminalSettingsLayout.rowY(TagsSectionLayout.NEW_TAG_ROW) + 1,
-            7));
+        TagsSectionLayout.tagIndexAt(NAME_X, TerminalSettingsLayout.LIST_Y - 1, 7));
   }
 }
