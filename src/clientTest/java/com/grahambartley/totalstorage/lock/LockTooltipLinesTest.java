@@ -69,21 +69,22 @@ class LockTooltipLinesTest {
   void anItemWhoseHintsAreDrawnAsDataNeedsNoExtraText() {
     final List<Text> lines = List.of(NAME);
 
-    assertSame(lines, LockTooltipLines.withText(lines, false));
+    assertSame(lines, LockTooltipLines.withText(lines, false, false));
   }
 
-  @Test
-  void anItemWithItsOwnDataGetsTheLockExplainedInPlainText() {
+  @ParameterizedTest
+  @CsvSource({"false, unlock.plain", "true, unlock.plain.mac"})
+  void anItemWithItsOwnDataGetsTheLockExplainedInPlainText(boolean onMac, String unlock) {
     final List<Text> lines = List.of(NAME);
 
-    final List<Text> extended = LockTooltipLines.withText(lines, true);
+    final List<Text> extended = LockTooltipLines.withText(lines, true, onMac);
 
     assertEquals(List.of(NAME), lines);
     assertEquals(3, extended.size());
     assertSame(NAME, extended.get(0));
     assertEquals(PREFIX + "locked", keyOf(extended.get(1)));
     assertEquals(Formatting.GRAY.getColorValue(), extended.get(1).getStyle().getColor().getRgb());
-    assertEquals(PREFIX + "unlock.plain", keyOf(extended.get(2)));
+    assertEquals(PREFIX + unlock, keyOf(extended.get(2)));
     assertEquals(
         Formatting.DARK_GRAY.getColorValue(), extended.get(2).getStyle().getColor().getRgb());
   }

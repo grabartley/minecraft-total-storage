@@ -35,13 +35,15 @@ public final class LockTooltipLines {
     return data.isPresent() ? data : Optional.of(new HintTooltipData(hints(onMac)));
   }
 
-  public static List<Text> withText(List<Text> lines, boolean itemHasItsOwnData) {
+  public static List<Text> withText(List<Text> lines, boolean itemHasItsOwnData, boolean onMac) {
     if (!itemHasItsOwnData) {
       return lines;
     }
     final List<Text> extended = new ArrayList<>(lines);
     extended.add(Text.translatable(PREFIX + "locked").formatted(Formatting.GRAY));
-    extended.add(Text.translatable(PREFIX + "unlock.plain").formatted(Formatting.DARK_GRAY));
+    extended.add(
+        Text.translatable(PREFIX + (onMac ? "unlock.plain.mac" : "unlock.plain"))
+            .formatted(Formatting.DARK_GRAY));
     return extended;
   }
 }

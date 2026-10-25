@@ -39,6 +39,32 @@ public final class ButtonFace {
       boolean active,
       boolean hovered,
       boolean accent) {
+    draw(
+        context,
+        textRenderer,
+        label,
+        x,
+        y,
+        width,
+        height,
+        active,
+        hovered,
+        accent,
+        active ? VanillaPalette.BUTTON_TEXT : VanillaPalette.BUTTON_TEXT_DISABLED);
+  }
+
+  public static void draw(
+      DrawContext context,
+      TextRenderer textRenderer,
+      Text label,
+      int x,
+      int y,
+      int width,
+      int height,
+      boolean active,
+      boolean hovered,
+      boolean accent,
+      int textColour) {
     VanillaSprite.button(active, hovered).draw(context, x, y, width, height);
     if (accent && active) {
       drawAccent(context, x, y, width, height);
@@ -49,8 +75,7 @@ public final class ButtonFace {
         shown,
         x + (width - textRenderer.getWidth(shown) + 1) / 2,
         y + (height - LINE_HEIGHT) / 2,
-        VanillaPalette.opaque(
-            active ? VanillaPalette.BUTTON_TEXT : VanillaPalette.BUTTON_TEXT_DISABLED),
+        VanillaPalette.opaque(textColour),
         true);
   }
 }

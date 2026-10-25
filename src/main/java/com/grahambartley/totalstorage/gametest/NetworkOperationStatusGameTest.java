@@ -1,13 +1,13 @@
 package com.grahambartley.totalstorage.gametest;
 
-import com.grahambartley.totalstorage.network.NetworkOperationStatusPayload;
 import com.grahambartley.totalstorage.operation.ExpensiveOperation;
 import com.grahambartley.totalstorage.operation.NetworkOperationPhase;
 import com.grahambartley.totalstorage.operation.NetworkOperationStatus;
-import com.grahambartley.totalstorage.screenhandler.TerminalViewerSync;
+import com.grahambartley.totalstorage.operation.NetworkOperationStatus.Delivery;
 import com.grahambartley.totalstorage.terminal.TerminalAddress;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.GameTest;
@@ -23,35 +23,84 @@ public final class NetworkOperationStatusGameTest implements FabricGameTest {
         context.getWorld(), context.getAbsolutePos(NetworkOperationFixture.TERMINAL));
   }
 
+  private static void assertEachViewerGets(
+      TestContext context,
+      List<Delivery> deliveries,
+      Set<ServerPlayerEntity> expected,
+      NetworkOperationPhase phase,
+      int percent) {
+    context.assertEquals(
+        deliveries.stream().map(Delivery::player).collect(Collectors.toSet()),
+        expected,
+        "The status went to the wrong players");
+    for (Delivery delivery : deliveries) {
+      context.assertEquals(
+          delivery.payload().syncId(),
+          NetworkOperationFixture.handlerOf(delivery.player()).syncId,
+          "The status should name the screen this player has open");
+      context.assertEquals(delivery.payload().phase(), phase, "The status carried the wrong phase");
+      context.assertEquals(
+          delivery.payload().percentDone(), percent, "The status carried the wrong progress");
+    }
+  }
+
   @GameTest(
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
       tickLimit = TICK_LIMIT)
-  public void everyPlayerOnTheTerminalIsToldAJobIsRunningOnTheirOwnScreen(TestContext context) {
+  public void aRunningJobIsShownToEveryPlayerAtTheTerminal(TestContext context) {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
     ServerPlayerEntity first = NetworkOperationFixture.openTerminal(context);
     ServerPlayerEntity second = NetworkOperationFixture.alsoOpen(context);
 
-    List<ServerPlayerEntity> told =
-        TerminalViewerSync.playersOn(context.getWorld().getServer(), terminalOf(context));
-
-    context.assertTrue(
-        told.contains(first) && told.contains(second),
-        "Both players on the terminal should be told, told " + told.size());
-    for (ServerPlayerEntity viewer : List.of(first, second)) {
-      Optional<NetworkOperationStatusPayload> payload =
-          NetworkOperationStatus.payloadFor(
-              viewer, ExpensiveOperation.SORT_NETWORK, NetworkOperationPhase.RUNNING, 40);
-      context.assertTrue(payload.isPresent(), "A player on the terminal got no status");
-      context.assertEquals(
-          payload.get().syncId(),
-          NetworkOperationFixture.handlerOf(viewer).syncId,
-          "The status should name the screen this player has open");
-      context.assertEquals(
-          payload.get().phase(), NetworkOperationPhase.RUNNING, "The status lost its phase");
-      context.assertEquals(payload.get().percentDone(), 40, "The status lost its progress");
-    }
+    assertEachViewerGets(
+        context,
+        NetworkOperationStatus.runningDeliveries(
+            context.getWorld().getServer(),
+            terminalOf(context),
+            ExpensiveOperation.SORT_NETWORK,
+            40),
+        Set.of(first, second),
+        NetworkOperationPhase.RUNNING,
+        40);
     NetworkOperationFixture.finish(context, first, second);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aFinishedJobClearsTheButtonForEveryPlayerAtTheTerminal(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity first = NetworkOperationFixture.openTerminal(context);
+    ServerPlayerEntity second = NetworkOperationFixture.alsoOpen(context);
+
+    assertEachViewerGets(
+        context,
+        NetworkOperationStatus.idleDeliveries(
+            context.getWorld().getServer(), terminalOf(context), ExpensiveOperation.CONSOLIDATE),
+        Set.of(first, second),
+        NetworkOperationPhase.IDLE,
+        0);
+    NetworkOperationFixture.finish(context, first, second);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void anArmedButtonIsShownOnlyToThePlayerWhoPressedIt(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity presser = NetworkOperationFixture.openTerminal(context);
+    ServerPlayerEntity other = NetworkOperationFixture.alsoOpen(context);
+
+    assertEachViewerGets(
+        context,
+        NetworkOperationStatus.armedDeliveries(presser, ExpensiveOperation.SORT_NETWORK),
+        Set.of(presser),
+        NetworkOperationPhase.ARMED,
+        0);
+    NetworkOperationFixture.finish(context, presser, other);
   }
 
   @GameTest(
@@ -60,19 +109,24 @@ public final class NetworkOperationStatusGameTest implements FabricGameTest {
       tickLimit = TICK_LIMIT)
   public void aPlayerWhoClosedTheTerminalIsToldNothing(TestContext context) {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
-    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    ServerPlayerEntity left = NetworkOperationFixture.openTerminal(context);
+    ServerPlayerEntity stayed = NetworkOperationFixture.alsoOpen(context);
 
-    player.closeHandledScreen();
+    left.closeHandledScreen();
 
+    assertEachViewerGets(
+        context,
+        NetworkOperationStatus.runningDeliveries(
+            context.getWorld().getServer(),
+            terminalOf(context),
+            ExpensiveOperation.SORT_NETWORK,
+            10),
+        Set.of(stayed),
+        NetworkOperationPhase.RUNNING,
+        10);
     context.assertTrue(
-        NetworkOperationStatus.payloadFor(
-                player, ExpensiveOperation.CONSOLIDATE, NetworkOperationPhase.IDLE, 0)
-            .isEmpty(),
+        NetworkOperationStatus.armedDeliveries(left, ExpensiveOperation.SORT_NETWORK).isEmpty(),
         "A player off the terminal was sent a status");
-    context.assertFalse(
-        TerminalViewerSync.playersOn(context.getWorld().getServer(), terminalOf(context))
-            .contains(player),
-        "A player off the terminal is still counted as watching it");
-    NetworkOperationFixture.finish(context, player);
+    NetworkOperationFixture.finish(context, left, stayed);
   }
 }

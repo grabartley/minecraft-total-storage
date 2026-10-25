@@ -135,18 +135,18 @@ public final class ContainerListView {
         top + 11,
         VanillaPalette.opaque(VanillaPalette.MUTED),
         false);
-    VanillaSprite.button(changeable, hovered && changeable)
-        .draw(context, ROLE_X, roleY(row), ROLE_WIDTH, ROLE_HEIGHT);
-    final OrderedText role =
-        TrimmedText.toWidth(
-            textRenderer, ContainerRowText.roleChip(entry), ButtonFace.labelRoom(ROLE_WIDTH));
-    context.drawText(
+    ButtonFace.draw(
+        context,
         textRenderer,
-        role,
-        ROLE_X + (ROLE_WIDTH - textRenderer.getWidth(role) + 1) / 2,
-        roleY(row) + (ROLE_HEIGHT - 8) / 2,
-        VanillaPalette.opaque(roleTextColour(entry, changeable)),
-        true);
+        ContainerRowText.roleChip(entry),
+        ROLE_X,
+        roleY(row),
+        ROLE_WIDTH,
+        ROLE_HEIGHT,
+        changeable,
+        hovered && changeable,
+        false,
+        roleTextColour(entry, changeable));
   }
 
   public static int roleTextColour(ContainerRoleEntry entry, boolean changeable) {

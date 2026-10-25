@@ -136,7 +136,7 @@ public final class TerminalActionDock {
     sort.active = state.online() && state.mayRunNetworkActions();
     gather.active = sort.active;
     running.visible = items && !row.isSplit();
-    running.active = true;
+    running.active = state.online() && state.mayRunNetworkActions();
     if (!row.isSplit()) {
       showNetworkRow();
     }

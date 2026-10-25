@@ -274,7 +274,6 @@ class TerminalActionDockTest {
             SettingsSection.TERMINAL,
             s -> {
               s.networkRow = NetworkActionRow.of(NetworkOperationPhase.RUNNING, null, 42);
-              s.online = false;
             }));
 
     final TerminalTextButton running = button(RUNNING);
@@ -284,6 +283,22 @@ class TerminalActionDockTest {
     assertEquals("dock.stop", keyOf(running.getMessage()));
     assertArrayEquals(
         new Object[] {42}, ((TranslatableTextContent) running.getMessage().getContent()).getArgs());
+  }
+
+  @Test
+  void aViewerWhoMayNotRunTheJobSeesItsProgressButCannotStopIt() {
+    dock.update(
+        state(
+            TerminalTab.ITEMS,
+            SettingsSection.TERMINAL,
+            s -> {
+              s.networkRow = NetworkActionRow.of(NetworkOperationPhase.RUNNING, null, 42);
+              s.mayRunNetworkActions = false;
+            }));
+
+    final TerminalTextButton running = button(RUNNING);
+    assertTrue(running.visible);
+    assertFalse(running.active);
   }
 
   @Test

@@ -93,7 +93,8 @@ public abstract class HandledScreenMixin {
     if (!LockTooltipLines.applies(focusedSlot, Screen.hasAltDown())) {
       return lines;
     }
-    return LockTooltipLines.withText(lines, focusedSlot.getStack().getTooltipData().isPresent());
+    return LockTooltipLines.withText(
+        lines, focusedSlot.getStack().getTooltipData().isPresent(), MinecraftClient.IS_SYSTEM_MAC);
   }
 
   @ModifyArg(

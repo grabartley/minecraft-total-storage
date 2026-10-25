@@ -7,12 +7,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.grahambartley.totalstorage.config.TerminalAccessMode;
 import com.grahambartley.totalstorage.listing.ListingPage;
 import com.grahambartley.totalstorage.listing.ListingStatus;
+import com.grahambartley.totalstorage.screenhandler.FilterColumnLayout;
 import com.grahambartley.totalstorage.screenhandler.TerminalScreenLayout;
 import com.grahambartley.totalstorage.screenhandler.TerminalSettingsLayout;
 import com.grahambartley.totalstorage.storage.ContainerRole;
 import com.grahambartley.totalstorage.terminal.ContainerRoleEntry;
 import com.grahambartley.totalstorage.terminal.NetworkCapacity;
 import com.grahambartley.totalstorage.terminal.NetworkSettingsView;
+import com.grahambartley.totalstorage.terminal.NetworkTagEntry;
+import com.grahambartley.totalstorage.terminal.NetworkTagView;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -86,5 +89,25 @@ class TerminalScrollbarsTest {
     assertEquals(items.scroll().maxTopRow(), items.scroll().topRow());
     assertTrue(scrollbars.release());
     assertFalse(items.scrollbar().isDragging());
+  }
+
+  @Test
+  void aHeldFilterScrollbarFollowsTheDragAndLetsGoOnRelease() {
+    final List<NetworkTagEntry> tags = new java.util.ArrayList<>();
+    for (int tag = 0; tag < FilterColumnLayout.ROWS + 6; tag++) {
+      tags.add(new NetworkTagEntry("tag" + tag, "Tag " + tag, true, 0, 1));
+    }
+    filters.fit(new NetworkTagView(true, tags, Optional.empty(), java.util.Set.of()));
+    filters.click(
+        new FilterSelection(),
+        FilterColumnLayout.SCROLLBAR_X,
+        FilterColumnLayout.CONTENT_Y,
+        GridClick.LEFT_BUTTON);
+
+    assertTrue(
+        scrollbars.dragTo(FilterColumnLayout.CONTENT_Y + FilterColumnLayout.CONTENT_HEIGHT + 20));
+    assertEquals(filters.scroll().maxTopRow(), filters.scroll().topRow());
+    assertTrue(scrollbars.release());
+    assertFalse(filters.isDraggingScrollbar());
   }
 }

@@ -27,7 +27,7 @@ Cutting power is an off switch rather than a factory reset. A terminal's radius,
 
 Each terminal reaches as far as its own radius, a cube centred on the block, and a fresh terminal starts at 16 blocks. The server sets a maximum no terminal may exceed, and the maximum wins: a radius set above it is clamped as it is written and the clamp is reported, and lowering the maximum pulls in every terminal already running. What a terminal asked for is kept whatever the maximum does, so raising the maximum again hands its reach straight back. See [ADR 0021](docs/adr/0021-a-lowered-maximum-clamps-without-rewriting.md).
 
-**A container you place in range joins on its own.** Put down a chest, barrel or shulker box inside a running terminal's radius and it is in the network a tick later, ready for your next deposit. Turning a chest into a double chest leaves one container for the pair. Nothing needs a rescan; Rescan is only for when you want the terminal to walk its region again. See [ADR 0039](docs/adr/0039-a-placed-container-joins-on-the-next-tick.md).
+**A container you place in range joins on its own.** Put down a chest, barrel or shulker box inside a running terminal's radius and it is in the network a tick later, ready for your next deposit. Turning a chest into a double chest leaves one container for the pair. Nothing needs a rescan; `Scan again` is only for when you want the terminal to walk its region again. See [ADR 0039](docs/adr/0039-a-placed-container-joins-on-the-next-tick.md).
 
 ## Opening a terminal
 
@@ -109,7 +109,7 @@ Deposit all is rate limited, since it reads every container in the network at on
 
 Sorting reorders the contents of a container so opening it by hand still makes sense, and merges its part stacks while it is there. Consolidation goes wider: it gathers each item into as few containers as it fits in, then sorts what it touched.
 
-They are the `Sort` and `Gather` buttons under `Deposit all`, and both are deliberate: the network moves a lot of items when you press one. Above `largeOperationContainers` containers, eight by default, the first press turns the button red and makes it read `Confirm?`, and a second press within ten seconds goes ahead. While it runs, one wide red button reads `Stop` with how far it has got, and pressing it stops the operation. A server that would rather never be asked sets the value to `0`.
+They are the `Sort` and `Gather` buttons under `Deposit all`, and both are deliberate: the network moves a lot of items when you press one. Above `largeOperationContainers` containers, eight by default, the first press swaps the pair for one wide red `Confirm?` button, and a second press within ten seconds goes ahead. While it runs, that same button reads `Stop` with how far it has got, and pressing it stops the operation. A server that would rather never be asked sets the value to `0`.
 
 Where the items go is decided by the same rules as a deposit. A `Filtered` container that accepts the item takes it first; otherwise it gathers into a `General` container that already holds it. Consolidation never introduces an item into a `General` container that did not already have some, because "tidy" does not mean "spread into the empty chest in the corner".
 
@@ -179,7 +179,7 @@ Each kind of setting gets its own section because the window is already as tall 
 
 The gauge on the left of every view shows how much room the network has left, counted in slots across every container it may write to. Slots rather than items, because slots are what runs out: a network holding one of each of a thousand things is full while holding almost nothing. `Excluded` containers are counted in neither total, since a chest the network may not write to is not room. The bar turns red and says "Almost full" once the network is as full as `nearCapacityWarningPercent`, ninety by default, so you see it coming rather than discovering it on a failed deposit.
 
-**The block says it too.** A powered terminal whose network is past that threshold grows a lit bar across the bottom of its screen face, so you learn a base is filling up walking past it rather than after pressing Deposit everything. It is a shape rather than a tint, so it survives distance, low light and colour blindness, and it clears itself as soon as the network drops back below the threshold. An unpowered terminal never shows it, because an unpowered terminal is holding nothing.
+**The block says it too.** A powered terminal whose network is past that threshold grows a lit bar across the bottom of its screen face, so you learn a base is filling up walking past it rather than after pressing Deposit all. It is a shape rather than a tint, so it survives distance, low light and colour blindness, and it clears itself as soon as the network drops back below the threshold. An unpowered terminal never shows it, because an unpowered terminal is holding nothing.
 
 Only the owner and operators can change any of it. Everyone else sees the same panel with its controls greyed out, which is the truth rather than a missing control. Permission is checked again when each change arrives, so a modified client that draws itself the buttons gains buttons that refuse it.
 

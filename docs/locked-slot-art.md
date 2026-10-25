@@ -50,7 +50,7 @@ The shape is a padlock silhouette rather than a letter or an abstract mark, so i
 
 Holding Alt in a screen that shows the player inventory shows which slots can be locked. `LockHintRing` draws a dotted ring, one pixel on and one off, inset 2 pixels inside every lockable slot that is not locked yet, in white at about 55% opacity (`0x8CFFFFFF`). A locked slot keeps its badge instead. The ring is drawn over the item, so it shows on full and empty slots alike, and it is only there while Alt is held, so it never clutters the screen.
 
-While Alt is held, a locked item's tooltip also adds a line with the badge, "Locked: sorting and deposits skip it", and a keycap hint for Alt plus click to unlock it. Without Alt the tooltip is the vanilla one.
+While Alt is held, a locked item's tooltip also adds a line with the badge, "Locked: sorting and deposits skip it", and a keycap hint for Alt plus click to unlock it, Option plus click on a Mac. Without Alt the tooltip is the vanilla one.
 
 ## Tint
 
