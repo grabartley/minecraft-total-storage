@@ -1,6 +1,6 @@
 # ADR 0016: Locks are toggled by a modifier click, not a lock mode
 
-- **Status:** Accepted
+- **Status:** Accepted. The tint as the main sign of a lock, "nothing is added to the screen" and the undiscoverable-gesture drawback are superseded by [ADR 0041](0041-a-lock-shows-as-a-badge-and-alt-shows-what-can-be-locked.md): the badge is the sign, the tint is off by default, and holding Alt shows what can be locked. The gesture itself stands unchanged.
 - **Date:** 2026-08-28
 
 ## Context

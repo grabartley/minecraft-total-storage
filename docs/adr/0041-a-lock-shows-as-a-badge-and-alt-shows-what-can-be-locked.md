@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-10-25
-- **Supersedes:** the tint and "nothing is added to the screen" parts of [ADR 0016](0016-locks-are-toggled-by-a-modifier-click.md)
+- **Supersedes:** the tint, "nothing is added to the screen" and the undiscoverable-gesture drawback in [ADR 0016](0016-locks-are-toggled-by-a-modifier-click.md)
 
 ## Context
 
@@ -16,7 +16,7 @@ ADR 0016 also accepted that Alt + click is undiscoverable, because nothing on th
 
 **The badge is the sign of a lock. The tint is an option, off by default.**
 
-The badge is a small two-tone padlock in the top-left corner of the slot. Two tones keep it readable on any item without relying on colour. The tint stays as a per-player display option for players who want it.
+The badge is a small two-tone padlock in the top-left corner of the slot, smaller than the badge it replaces. Two tones keep it readable on any item without relying on colour. The tint stays as a per-player display option for players who want it.
 
 **Locks are drawn only in screens that show the player inventory**, where the player can change them. Nothing is drawn on the in-game hotbar.
 
@@ -28,6 +28,6 @@ Screens with locked slots look like vanilla screens with a small mark in a corne
 
 The gesture now teaches itself: a player who holds Alt sees which slots respond to it. This pays down the drawback ADR 0016 accepted.
 
-A player loses the at-a-glance view of locks on the in-game hotbar. Locks protect against the mod's own operations, which only run while a screen is open, so the hotbar view showed a state the player could not act on in that moment.
+Accepted drawback: a player loses the at-a-glance view of locks on the in-game hotbar, including before a sort or quick stack run by keybind or command with no screen open. The hotbar view is dropped because it was constant noise during normal play, and any inventory screen shows and changes the locks.
 
-The ring and the tint are drawn over slot pixels the mod does not own, so they fall under the slot tint exemption in the PRD's interface rules.
+The ring and the tint are drawn over slot pixels the mod does not own, so they fall under the slot tint exemption in the PRD's interface rules. The badge is a shipped sprite, so it stays inside the palette like every other sprite.

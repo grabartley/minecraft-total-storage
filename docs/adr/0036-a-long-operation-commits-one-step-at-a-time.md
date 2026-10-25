@@ -1,6 +1,6 @@
 # ADR 0036: A long operation commits one step at a time
 
-- **Status:** Accepted
+- **Status:** Accepted. The completion summary is superseded by [ADR 0040](0040-the-terminal-reports-failures-not-successes.md): a finished operation reports only the containers it skipped.
 - **Date:** 2026-09-12
 
 ## Context
