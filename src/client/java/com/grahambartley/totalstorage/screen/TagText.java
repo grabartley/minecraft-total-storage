@@ -1,18 +1,10 @@
 package com.grahambartley.totalstorage.screen;
 
-import com.grahambartley.totalstorage.terminal.NetworkTagEntry;
 import com.grahambartley.totalstorage.terminal.OwnedTerminal;
-import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 
 public final class TagText {
   private TagText() {}
-
-  public static Text row(NetworkTagEntry tag) {
-    return tag.assignedItems() == 1
-        ? TerminalScreenText.of("tags.row.one", tag.displayName())
-        : TerminalScreenText.of("tags.row", tag.displayName(), tag.assignedItems());
-  }
 
   public static Text source(OwnedTerminal source) {
     return source.customTags() == 1
@@ -24,10 +16,6 @@ public final class TagText {
             source.pos().getY(),
             source.pos().getZ(),
             source.customTags());
-  }
-
-  public static MutableText assignHint(boolean onMac) {
-    return TerminalScreenText.of(onMac ? "tags.assign.hint.mac" : "tags.assign.hint");
   }
 
   public static Text bulkHint(int matching) {

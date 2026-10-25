@@ -82,7 +82,7 @@ class TagSourcePromptTest {
     prompt.open();
     prompt.fit(BOTH);
 
-    assertNull(prompt.sourceAt(BOTH, TagPromptLayout.left() - 5, TagPromptLayout.rowsTop()));
+    assertNull(prompt.sourceAt(BOTH, TagPromptLayout.LIST.left() - 5, TagPromptLayout.LIST.top()));
   }
 
   @Test
@@ -93,10 +93,7 @@ class TagSourcePromptTest {
 
     assertEquals(
         FIRST,
-        prompt.sourceAt(
-            BOTH,
-            TagPromptLayout.left() + TagPromptLayout.PADDING + 1,
-            TagPromptLayout.rowY(0) + 1));
+        prompt.sourceAt(BOTH, TagPromptLayout.LIST.left() + 1, TagPromptLayout.LIST.rowY(0) + 1));
   }
 
   @Test
@@ -107,8 +104,6 @@ class TagSourcePromptTest {
 
     assertNull(
         prompt.sourceAt(
-            List.of(FIRST),
-            TagPromptLayout.left() + TagPromptLayout.PADDING + 1,
-            TagPromptLayout.rowY(1) + 1));
+            List.of(FIRST), TagPromptLayout.LIST.left() + 1, TagPromptLayout.LIST.rowY(1) + 1));
   }
 }

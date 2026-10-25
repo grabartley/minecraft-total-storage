@@ -15,6 +15,8 @@ import net.minecraft.text.OrderedText;
 public final class TerminalItemsPanel {
   private static final int ITEM_SIZE = 16;
   private static final int LINE_HEIGHT = 9;
+  private static final int PLACEHOLDER_MARGIN = 6;
+  private static final int HINT_GAP = 2;
 
   private static final float COUNT_ELEVATION = 200.0F;
 
@@ -26,7 +28,8 @@ public final class TerminalItemsPanel {
       new ListingScroll(TerminalScreenLayout.LISTING_COLUMNS, TerminalScreenLayout.LISTING_ROWS);
 
   private final TerminalScrollbar scrollbar =
-      new TerminalScrollbar(scroll, TerminalScreenLayout.SCROLLBAR_HEIGHT);
+      new TerminalScrollbar(
+          scroll, TerminalScreenLayout.SCROLLBAR_HEIGHT - 2, TerminalChrome.SCROLLER_HEIGHT);
 
   private ListingPage<ItemVariant> page = ListingPage.pending(0L);
 
@@ -50,12 +53,11 @@ public final class TerminalItemsPanel {
     scroll.fit(page.totalMatching());
   }
 
-  public int hoveredCell(int windowX, int windowY, int hiddenRows) {
+  public int hoveredCell(int windowX, int windowY) {
     if (!page.status().hasRows()) {
       return TerminalScreenLayout.NO_CELL;
     }
-    return TerminalScreenLayout.pageCellAt(
-        TerminalScreenLayout.cellAt(windowX, windowY), hiddenRows);
+    return TerminalScreenLayout.cellAt(windowX, windowY);
   }
 
   public ListingRow<ItemVariant> rowAt(int cell) {
@@ -64,10 +66,16 @@ public final class TerminalItemsPanel {
 
   public void drawCells(DrawContext context, int originX, int originY) {
     if (placeholder.isPresent()) {
+      TerminalSprite.SUNKEN.draw(
+          context,
+          originX + TerminalScreenLayout.GRID_X,
+          originY + TerminalScreenLayout.GRID_Y,
+          TerminalScreenLayout.GRID_WIDTH,
+          TerminalScreenLayout.GRID_HEIGHT);
       return;
     }
     for (int cell = 0; cell < TerminalScreenLayout.LISTING_PAGE_SIZE; cell++) {
-      TerminalSprite.SUNKEN.draw(
+      VanillaSprite.SLOT.draw(
           context,
           originX + TerminalScreenLayout.cellX(cell),
           originY + TerminalScreenLayout.cellY(cell),
@@ -77,40 +85,40 @@ public final class TerminalItemsPanel {
   }
 
   public void drawScrollbar(DrawContext context, int originX, int originY) {
-    TerminalChrome.drawScrollbar(
+    TerminalChrome.drawScroller(
         context,
         scrollbar,
         originX + TerminalScreenLayout.SCROLLBAR_X,
         originY + TerminalScreenLayout.SCROLLBAR_Y,
-        TerminalScreenLayout.SCROLLBAR_WIDTH,
         TerminalScreenLayout.SCROLLBAR_HEIGHT);
   }
 
-  public void drawRows(DrawContext context, TextRenderer textRenderer, int hovered) {
-    drawRows(context, textRenderer, hovered, 0);
+  public boolean grabScrollbar(int windowY) {
+    return scrollbar.grab(windowY - TerminalScreenLayout.SCROLLBAR_Y - 1);
   }
 
-  public void drawRows(
-      DrawContext context, TextRenderer textRenderer, int hovered, int hiddenRows) {
+  public void dragScrollbarTo(int windowY) {
+    scrollbar.dragTo(windowY - TerminalScreenLayout.SCROLLBAR_Y - 1);
+  }
+
+  public void drawRows(DrawContext context, TextRenderer textRenderer, int hovered) {
     placeholder.ifPresent(shown -> drawPlaceholder(context, textRenderer, shown));
     if (!page.status().hasRows()) {
       return;
     }
     for (int cell = 0; cell < TerminalScreenLayout.LISTING_PAGE_SIZE; cell++) {
-      final int drawnAt = TerminalScreenLayout.screenCellFor(cell, hiddenRows);
-      final ListingRow<ItemVariant> row =
-          drawnAt == TerminalScreenLayout.NO_CELL ? null : rowAt(cell);
+      final ListingRow<ItemVariant> row = rowAt(cell);
       if (row == null) {
         continue;
       }
-      final int itemX = TerminalScreenLayout.cellX(drawnAt) + TerminalScreenLayout.SLOT_ITEM_OFFSET;
-      final int itemY = TerminalScreenLayout.cellY(drawnAt) + TerminalScreenLayout.SLOT_ITEM_OFFSET;
+      final int itemX = TerminalScreenLayout.cellX(cell) + TerminalScreenLayout.SLOT_ITEM_OFFSET;
+      final int itemY = TerminalScreenLayout.cellY(cell) + TerminalScreenLayout.SLOT_ITEM_OFFSET;
       final ItemStack stack = row.variant().toStack();
       context.drawItem(stack, itemX, itemY);
       drawCount(context, textRenderer, ItemCountFormat.cell(row.count()), itemX, itemY);
       context.drawItemInSlot(textRenderer, stack, itemX, itemY, NO_STACK_COUNT);
     }
-    drawHighlight(context, TerminalScreenLayout.screenCellFor(hovered, hiddenRows));
+    drawHighlight(context, hovered);
   }
 
   private static void drawHighlight(DrawContext context, int hovered) {
@@ -136,7 +144,7 @@ public final class TerminalItemsPanel {
         label,
         Math.round((itemX + ITEM_SIZE) / scale) - width,
         Math.round((itemY + ITEM_SIZE - LINE_HEIGHT * scale) / scale),
-        VanillaPalette.COUNT,
+        VanillaPalette.opaque(VanillaPalette.COUNT),
         true);
     context.getMatrices().pop();
   }
@@ -144,15 +152,18 @@ public final class TerminalItemsPanel {
   private static void drawPlaceholder(
       DrawContext context, TextRenderer textRenderer, ListingPlaceholder shown) {
     final int centreX = TerminalScreenLayout.GRID_X + TerminalScreenLayout.GRID_WIDTH / 2;
-    final List<OrderedText> lines =
-        textRenderer.wrapLines(shown.message(), TerminalScreenLayout.GRID_WIDTH);
+    final int room = TerminalScreenLayout.GRID_WIDTH - 2 * PLACEHOLDER_MARGIN;
+    final List<OrderedText> message = textRenderer.wrapLines(shown.message(), room);
+    final List<OrderedText> hint =
+        shown.hint().map(text -> textRenderer.wrapLines(text, room)).orElse(List.of());
     final int block =
         ListingPlaceholder.SPRITE_SIZE
             + ListingPlaceholder.MESSAGE_GAP
-            + lines.size() * LINE_HEIGHT;
+            + message.size() * LINE_HEIGHT
+            + (hint.isEmpty() ? 0 : HINT_GAP + hint.size() * LINE_HEIGHT);
     final int top =
         Math.max(
-            TerminalScreenLayout.GRID_Y,
+            TerminalScreenLayout.GRID_Y + 2,
             TerminalScreenLayout.GRID_Y + (TerminalScreenLayout.GRID_HEIGHT - block) / 2);
     shown
         .sprite()
@@ -163,15 +174,29 @@ public final class TerminalItemsPanel {
             ListingPlaceholder.SPRITE_SIZE,
             ListingPlaceholder.SPRITE_SIZE);
     int lineY = top + ListingPlaceholder.SPRITE_SIZE + ListingPlaceholder.MESSAGE_GAP;
+    lineY =
+        drawCentred(context, textRenderer, message, centreX, lineY, VanillaPalette.BEVEL_HIGHLIGHT);
+    drawCentred(context, textRenderer, hint, centreX, lineY + HINT_GAP, VanillaPalette.FIELD_TEXT);
+  }
+
+  private static int drawCentred(
+      DrawContext context,
+      TextRenderer textRenderer,
+      List<OrderedText> lines,
+      int centreX,
+      int top,
+      int colour) {
+    int lineY = top;
     for (final OrderedText line : lines) {
       context.drawText(
           textRenderer,
           line,
           centreX - textRenderer.getWidth(line) / 2,
           lineY,
-          VanillaPalette.LABEL,
-          false);
+          VanillaPalette.opaque(colour),
+          true);
       lineY += LINE_HEIGHT;
     }
+    return lineY;
   }
 }

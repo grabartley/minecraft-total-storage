@@ -10,10 +10,10 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class TagPromptListTest {
   private static final int PRESET_TAGS = 13;
-  private static final int ROW_X = TagPromptLayout.textLeft();
-  private static final int BAR_X = TagPromptLayout.scrollbarX();
-  private static final int TRACK_TOP = TagPromptLayout.rowsTop();
-  private static final int TRACK_BOTTOM = TRACK_TOP + TagPromptLayout.TRACK_HEIGHT - 1;
+  private static final int ROW_X = TagPromptLayout.LIST.left();
+  private static final int BAR_X = TagPromptLayout.LIST.scrollbarX();
+  private static final int TRACK_TOP = TagPromptLayout.LIST.top();
+  private static final int TRACK_BOTTOM = TRACK_TOP + TagPromptLayout.LIST.trackHeight() - 1;
 
   private final TagPromptList list = new TagPromptList();
 
@@ -38,7 +38,7 @@ class TagPromptListTest {
     list.fit(PRESET_TAGS);
     list.scrollBy(2);
 
-    assertEquals(2 + row, list.indexAt(ROW_X, TagPromptLayout.rowY(row)));
+    assertEquals(2 + row, list.indexAt(ROW_X, TagPromptLayout.LIST.rowY(row)));
     assertEquals(2 + row, list.indexOfRow(row));
   }
 

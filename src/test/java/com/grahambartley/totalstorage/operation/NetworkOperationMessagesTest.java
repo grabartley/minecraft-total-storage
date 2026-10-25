@@ -81,10 +81,13 @@ class NetworkOperationMessagesTest {
 
   @ParameterizedTest
   @CsvSource({"1, containers.one", "7, containers"})
-  void aConfirmationCountsTheContainersItIsAboutToTouch(int containers, String key) {
-    Text line = NetworkOperationMessages.confirm(ExpensiveOperation.SORT_NETWORK, containers);
+  void aSkippedHeadlineCountsEveryContainerTheRunLeftAlone(int containers, String key) {
+    Text line =
+        NetworkOperationMessages.skipped(
+            new OperationReport(
+                1, 1, 0, 0, 0L, containers - containers / 2, containers / 2, false));
 
-    assertEquals(PREFIX + "sort.network.confirm", contentOf(line).getKey());
+    assertEquals(PREFIX + "skipped.headline", contentOf(line).getKey());
     assertEquals(COUNT_PREFIX + key, keyOfArgument(line, 0));
   }
 

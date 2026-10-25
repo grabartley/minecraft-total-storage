@@ -25,16 +25,6 @@ class TerminalSettingsStateTest {
   }
 
   @Test
-  void closingThePanelStopsItBeingSentAnything() {
-    TerminalSettingsState state = new TerminalSettingsState();
-    state.showing(new ListingWindow(4, 8));
-
-    state.closed();
-
-    assertFalse(state.isOpen());
-  }
-
-  @Test
   void aSectionWantingNoRowsStillCountsAsOpen() {
     TerminalSettingsState state = new TerminalSettingsState();
 

@@ -3,48 +3,61 @@ package com.grahambartley.totalstorage.screenhandler;
 public final class FilterColumnLayout {
   public static final int NO_ROW = -1;
 
-  public static final int X = TerminalScreenLayout.FILTER_X;
+  public static final int X = TerminalScreenLayout.SIDE_X;
 
-  public static final int Y = TerminalScreenLayout.SEARCH_Y;
+  public static final int Y = TerminalScreenLayout.HEADER_Y;
 
-  public static final int WIDTH = TerminalScreenLayout.FILTER_WIDTH;
+  public static final int WIDTH = TerminalScreenLayout.SIDE_WIDTH;
 
-  public static final int HEIGHT = TerminalScreenLayout.filterBottom() - Y;
-
-  public static final int HEADER_HEIGHT = TerminalScreenLayout.SEARCH_HEIGHT;
+  public static final int HEADER_HEIGHT = TerminalScreenLayout.HEADER_HEIGHT;
 
   public static final int HEADER_GAP = 2;
 
-  public static final int CONTROL_SIZE = 12;
+  public static final int CONTROL_SIZE = HEADER_HEIGHT;
 
   public static final int CLEAR_X = X + WIDTH - CONTROL_SIZE;
 
   public static final int MODE_WIDTH = WIDTH - CONTROL_SIZE - HEADER_GAP;
 
-  public static final int CONTENT_Y = Y + HEADER_HEIGHT + HEADER_GAP;
+  public static final int FRAME_Y = TerminalScreenLayout.GRID_Y;
 
-  public static final int CONTENT_HEIGHT = HEIGHT - HEADER_HEIGHT - HEADER_GAP;
+  public static final int FRAME_HEIGHT = TerminalScreenLayout.GRID_HEIGHT;
 
-  public static final int ROW_HEIGHT = 12;
+  public static final int HEIGHT = FRAME_Y + FRAME_HEIGHT - Y;
+
+  public static final int CONTENT_Y = FRAME_Y + 1;
+
+  public static final int CONTENT_HEIGHT = FRAME_HEIGHT - 2;
+
+  public static final int ROW_HEIGHT = 11;
 
   public static final int ROWS = CONTENT_HEIGHT / ROW_HEIGHT;
 
-  public static final int SCROLLBAR_WIDTH = 4;
+  public static final int ROW_X = X + 1;
 
-  public static final int SCROLLBAR_X = X + WIDTH - SCROLLBAR_WIDTH;
+  public static final int SCROLLBAR_WIDTH = 5;
 
-  public static final int SCROLLBAR_GAP = 1;
+  public static final int SCROLLBAR_X = X + WIDTH - 1 - SCROLLBAR_WIDTH;
 
-  public static final int ROW_WIDTH = WIDTH - SCROLLBAR_WIDTH - SCROLLBAR_GAP;
+  public static final int ROW_WIDTH = SCROLLBAR_X - 1 - ROW_X;
 
-  public static final int TEXT_MARGIN = 4;
+  public static final int TEXT_MARGIN = 3;
 
-  public static final int COUNT_GAP = 3;
+  public static final int CHECK_SIZE = 6;
+
+  public static final int CHECK_GAP = 2;
+
+  public static final int COUNT_GAP = 4;
 
   private FilterColumnLayout() {}
 
-  public static int nameWidth(int countWidth) {
-    return Math.max(0, ROW_WIDTH - 2 * TEXT_MARGIN - Math.max(0, countWidth) - COUNT_GAP);
+  public static int nameLeft(boolean checked) {
+    return TEXT_MARGIN + (checked ? CHECK_SIZE + CHECK_GAP : 0);
+  }
+
+  public static int nameWidth(int countWidth, boolean checked) {
+    return Math.max(
+        0, ROW_WIDTH - nameLeft(checked) - TEXT_MARGIN - Math.max(0, countWidth) - COUNT_GAP);
   }
 
   public static int countLeft(int countWidth) {
@@ -57,7 +70,7 @@ public final class FilterColumnLayout {
   }
 
   public static int rowAt(int windowX, int windowY) {
-    if (windowX < X || windowX >= X + ROW_WIDTH) {
+    if (windowX < ROW_X || windowX >= ROW_X + ROW_WIDTH) {
       return NO_ROW;
     }
     final int row = Math.floorDiv(windowY - CONTENT_Y, ROW_HEIGHT);
@@ -66,17 +79,6 @@ public final class FilterColumnLayout {
 
   public static boolean isOverColumn(int windowX, int windowY) {
     return windowX >= X && windowX < X + WIDTH && windowY >= Y && windowY < Y + HEIGHT;
-  }
-
-  public static boolean isOverMode(int windowX, int windowY) {
-    return windowX >= X && windowX < X + MODE_WIDTH && windowY >= Y && windowY < Y + HEADER_HEIGHT;
-  }
-
-  public static boolean isOverClear(int windowX, int windowY) {
-    return windowX >= CLEAR_X
-        && windowX < CLEAR_X + CONTROL_SIZE
-        && windowY >= Y
-        && windowY < Y + CONTROL_SIZE;
   }
 
   public static boolean isOverScrollbar(int windowX, int windowY) {

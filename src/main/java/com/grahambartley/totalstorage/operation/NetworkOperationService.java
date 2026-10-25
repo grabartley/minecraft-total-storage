@@ -39,7 +39,7 @@ public final class NetworkOperationService {
       return OperationStart.REFUSED;
     }
     if (!TerminalAdmin.mayAdminister(open.world(), open.terminal(), player)) {
-      TerminalNotice.tell(player, TerminalMessages.notYours());
+      TerminalNotice.failed(player, TerminalMessages.notYours());
       return OperationStart.NOT_ALLOWED;
     }
     final NetworkOperationContext context = NetworkOperationContext.of(open);
@@ -50,7 +50,7 @@ public final class NetworkOperationService {
     }
     final NetworkJob job = jobFor.apply(context);
     if (job.hasNothingToDo()) {
-      TerminalNotice.tell(player, NetworkOperationMessages.nothingToDo(operation));
+      TerminalNotice.partial(player, NetworkOperationMessages.nothingToDo(operation));
       return OperationStart.NOTHING_TO_DO;
     }
     if (needsConfirming(player, context, address, operation)) {
@@ -60,7 +60,7 @@ public final class NetworkOperationService {
       return OperationStart.RATE_LIMITED;
     }
     jobs.start(address, job, context.server().getTicks());
-    TerminalNotice.tell(player, NetworkOperationMessages.started(operation));
+    NetworkOperationStatus.running(context.server(), address, operation, 0);
     return OperationStart.STARTED;
   }
 
@@ -77,7 +77,7 @@ public final class NetworkOperationService {
     if (confirmations.claim(player.getUuid(), address, operation, context.server().getTicks())) {
       return false;
     }
-    TerminalNotice.ask(player, NetworkOperationMessages.confirm(operation, containers));
+    NetworkOperationStatus.armed(player, operation);
     return true;
   }
 }

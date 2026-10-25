@@ -1,7 +1,6 @@
 package com.grahambartley.totalstorage.network;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import com.grahambartley.totalstorage.terminal.NetworkSettingsView;
 import io.netty.buffer.Unpooled;
@@ -41,26 +40,6 @@ class NetworkSettingsRequestPayloadTest {
 
     assertEquals(0, payload.offset());
     assertEquals(0, payload.length());
-  }
-
-  @Test
-  void aPanelThatHasBeenHiddenSaysSoAndAsksForNothing() {
-    NetworkSettingsRequestPayload closed = NetworkSettingsRequestPayload.closed(6);
-
-    assertFalse(closed.showing());
-    assertEquals(0, closed.offset());
-    assertEquals(0, closed.length());
-  }
-
-  @Test
-  void whetherThePanelIsShowingSurvivesTheWire() {
-    RegistryByteBuf buffer = buffer();
-    NetworkSettingsRequestPayload sent = NetworkSettingsRequestPayload.closed(6);
-
-    NetworkSettingsRequestPayload.CODEC.encode(buffer, sent);
-
-    assertEquals(sent, NetworkSettingsRequestPayload.CODEC.decode(buffer));
-    assertEquals(0, buffer.readableBytes());
   }
 
   @Test

@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 public final class NetworkJobs {
   private static final Logger LOGGER = LoggerFactory.getLogger(NetworkJobs.class);
 
-  public static final int PROGRESS_INTERVAL_TICKS = 20;
+  public static final int PROGRESS_INTERVAL_TICKS = 5;
 
   private final Map<TerminalAddress, Running> running = new LinkedHashMap<>();
 
@@ -40,12 +40,16 @@ public final class NetworkJobs {
       return false;
     }
     stopped.job.cancel();
+    NetworkOperationStatus.idle(server, address, stopped.job.operation());
     final Text message =
         NetworkOperationMessages.cancelled(stopped.job.operation(), stopped.job.report());
-    tell(server, stopped.job, message);
-    if (asking != null && !asking.getUuid().equals(stopped.job.actor())) {
-      TerminalNotice.tell(asking, message);
+    final ServerPlayerEntity actor = actorOf(server, stopped.job);
+    if (asking == null || asking.getUuid().equals(stopped.job.actor())) {
+      TerminalNotice.done(actor, message);
+      return true;
     }
+    TerminalNotice.partial(actor, message);
+    TerminalNotice.done(asking, message);
     return true;
   }
 
@@ -56,13 +60,14 @@ public final class NetworkJobs {
     final int budget = ServerConfigService.current().movesPerTickBudget();
     final Iterator<Map.Entry<TerminalAddress, Running>> jobs = running.entrySet().iterator();
     while (jobs.hasNext()) {
-      final Running next = jobs.next().getValue();
+      final Map.Entry<TerminalAddress, Running> entry = jobs.next();
+      final Running next = entry.getValue();
       if (advanced(next.job, budget).isRunning()) {
-        reportProgress(server, next);
+        reportProgress(server, entry.getKey(), next);
         continue;
       }
       jobs.remove();
-      finish(server, next.job);
+      finish(server, entry.getKey(), next.job);
     }
   }
 
@@ -81,32 +86,24 @@ public final class NetworkJobs {
     }
   }
 
-  private void reportProgress(MinecraftServer server, Running next) {
+  private void reportProgress(MinecraftServer server, TerminalAddress address, Running next) {
     if (server.getTicks() - next.lastReportedTick < PROGRESS_INTERVAL_TICKS) {
       return;
     }
     next.lastReportedTick = server.getTicks();
-    tell(
-        server,
-        next.job,
-        NetworkOperationMessages.progress(next.job.operation(), next.job.report()));
+    NetworkOperationStatus.running(
+        server, address, next.job.operation(), next.job.report().percentDone());
   }
 
-  private static void finish(MinecraftServer server, NetworkJob job) {
-    final OperationReport report = job.report();
-    tell(
-        server,
-        job,
-        report.cancelled()
-            ? NetworkOperationMessages.cancelled(job.operation(), report)
-            : NetworkOperationMessages.finished(job.operation(), report));
+  private static void finish(MinecraftServer server, TerminalAddress address, NetworkJob job) {
+    NetworkOperationStatus.idle(server, address, job.operation());
+    final NetworkJobOutcome outcome = NetworkJobOutcome.of(job.operation(), job.report());
+    TerminalNotice.report(
+        actorOf(server, job), outcome.tone(), outcome.headline(), outcome.message());
   }
 
-  private static void tell(MinecraftServer server, NetworkJob job, Text message) {
-    if (server == null) {
-      return;
-    }
-    TerminalNotice.tell(server.getPlayerManager().getPlayer(job.actor()), message);
+  private static ServerPlayerEntity actorOf(MinecraftServer server, NetworkJob job) {
+    return server == null ? null : server.getPlayerManager().getPlayer(job.actor());
   }
 
   private static final class Running {

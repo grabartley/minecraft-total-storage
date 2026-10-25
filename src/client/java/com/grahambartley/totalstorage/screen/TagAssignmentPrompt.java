@@ -56,17 +56,23 @@ public final class TagAssignmentPrompt {
     if (!isOpen()) {
       return;
     }
+    final boolean none = view.custom().isEmpty();
     TagPromptFrame.draw(
         context,
         textRenderer,
+        subject.toStack(),
         TerminalScreenText.of("tags.assign.title", subject.toStack().getName()),
-        view.custom().isEmpty()
-            ? TerminalScreenText.of("tags.assign.none")
-            : TagText.bulkHint(matching),
         list,
+        none ? HintLine.of(HintLine.key("esc"), HintLine.words("hint.close")) : bulkKeys(matching),
+        null,
+        none ? TerminalScreenText.of("tags.assign.none") : null,
         originX,
         originY,
         () -> drawRows(context, textRenderer, view, originX, originY, mouseX, mouseY));
+  }
+
+  public static HintLine bulkKeys(int matching) {
+    return HintLine.of(HintLine.key("shift"), HintLine.words(TagText.bulkHint(matching)));
   }
 
   private void drawRows(
@@ -91,8 +97,8 @@ public final class TagAssignmentPrompt {
           FilterColumnText.nameOf(tag),
           view.subjectCarries(tag.id()),
           tag.equals(hovered),
-          originX + TagPromptLayout.textLeft(),
-          originY + TagPromptLayout.rowY(row));
+          originX + TagPromptLayout.LIST.left(),
+          originY + TagPromptLayout.LIST.rowY(row));
     }
   }
 }

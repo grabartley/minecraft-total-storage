@@ -6,6 +6,7 @@ import com.grahambartley.totalstorage.terminal.TerminalMessages;
 import java.util.Set;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.text.Text;
 
 public final class TagNamePrompt {
   private TagNameEntry entry;
@@ -84,17 +85,19 @@ public final class TagNamePrompt {
     if (!isOpen()) {
       return;
     }
-    final boolean refused = !refusal.isAccepted();
     TextPromptPanel.draw(
         context,
         textRenderer,
         TerminalScreenText.of(isRenaming() ? "tags.rename.title" : "tags.create.title"),
-        refused
-            ? TerminalMessages.tagNameRejected(refusal)
-            : TerminalScreenText.of("tags.name.hint"),
-        refused ? VanillaPalette.WARNING : VanillaPalette.MUTED,
         entry.text(),
+        TerminalScreenText.of("tags.name.placeholder"),
+        refusal.isAccepted() ? null : TagNameRefusalText.of(refusal),
+        TextPromptPanel.saveKeys(),
         originX,
         originY);
+  }
+
+  public Text fullRefusal() {
+    return refusal.isAccepted() ? null : TerminalMessages.tagNameRejected(refusal);
   }
 }

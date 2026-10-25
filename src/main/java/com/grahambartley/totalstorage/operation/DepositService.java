@@ -171,7 +171,13 @@ public final class DepositService {
       return outcome;
     }
     OperationMessages.forDeposit(outcome)
-        .ifPresent(message -> TerminalNotice.tell(player, message));
+        .ifPresent(
+            message ->
+                TerminalNotice.report(
+                    player,
+                    OperationMessages.toneOf(outcome.result()),
+                    OperationMessages.headlineForDeposit(outcome).orElse(message),
+                    message));
     if (outcome.result().movedAnything()) {
       player
           .getWorld()

@@ -1,6 +1,7 @@
 package com.grahambartley.totalstorage.screen;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -29,7 +30,7 @@ class TerminalItemsPanelTest {
 
     assertEquals(
         TerminalScreenLayout.NO_CELL,
-        panel.hoveredCell(TerminalScreenLayout.cellX(0) + 1, TerminalScreenLayout.cellY(0) + 1, 0));
+        panel.hoveredCell(TerminalScreenLayout.cellX(0) + 1, TerminalScreenLayout.cellY(0) + 1));
   }
 
   @Test
@@ -38,7 +39,7 @@ class TerminalItemsPanelTest {
 
     assertEquals(
         TerminalScreenLayout.NO_CELL,
-        panel.hoveredCell(TerminalScreenLayout.cellX(4) + 1, TerminalScreenLayout.cellY(4) + 1, 0));
+        panel.hoveredCell(TerminalScreenLayout.cellX(4) + 1, TerminalScreenLayout.cellY(4) + 1));
   }
 
   @Test
@@ -47,10 +48,10 @@ class TerminalItemsPanelTest {
 
     assertEquals(
         TerminalScreenLayout.NO_CELL,
-        panel.hoveredCell(TerminalScreenLayout.GRID_X - 1, TerminalScreenLayout.GRID_Y, 0));
+        panel.hoveredCell(TerminalScreenLayout.GRID_X - 1, TerminalScreenLayout.GRID_Y));
     assertEquals(
         TerminalScreenLayout.NO_CELL,
-        panel.hoveredCell(TerminalScreenLayout.GRID_X, TerminalScreenLayout.GRID_Y - 1, 0));
+        panel.hoveredCell(TerminalScreenLayout.GRID_X, TerminalScreenLayout.GRID_Y - 1));
   }
 
   @Test
@@ -62,30 +63,8 @@ class TerminalItemsPanelTest {
     assertEquals(
         lastCell,
         panel.hoveredCell(
-            TerminalScreenLayout.cellX(lastCell) + 1, TerminalScreenLayout.cellY(lastCell) + 1, 0),
+            TerminalScreenLayout.cellX(lastCell) + 1, TerminalScreenLayout.cellY(lastCell) + 1),
         "a cell with no item in it still highlights, the way a vanilla slot does");
-  }
-
-  @Test
-  void aCellUnderTheNoticeBelongsToTheNoticeRatherThanTheGrid() {
-    TerminalItemsPanel panel = showing(live(500));
-
-    assertEquals(
-        TerminalScreenLayout.NO_CELL,
-        panel.hoveredCell(TerminalScreenLayout.cellX(0) + 1, TerminalScreenLayout.cellY(0) + 1, 1));
-  }
-
-  @Test
-  void aNoticePushesTheGridDownSoEveryRowIsStillClickable() {
-    TerminalItemsPanel panel = showing(live(500));
-    final int firstVisible = TerminalScreenLayout.LISTING_COLUMNS;
-
-    assertEquals(
-        0,
-        panel.hoveredCell(
-            TerminalScreenLayout.cellX(firstVisible) + 1,
-            TerminalScreenLayout.cellY(firstVisible) + 1,
-            1));
   }
 
   @Test
@@ -113,5 +92,28 @@ class TerminalItemsPanelTest {
     panel.beginFrame(ListingPage.offline(2L));
 
     assertEquals(0, panel.scroll().firstIndex());
+  }
+
+  @Test
+  void grabbingTheScrollerAtTheBottomOfItsTrackScrollsToTheEnd() {
+    TerminalItemsPanel panel = showing(live(500));
+
+    assertTrue(
+        panel.grabScrollbar(
+            TerminalScreenLayout.SCROLLBAR_Y + TerminalScreenLayout.SCROLLBAR_HEIGHT - 2));
+
+    assertEquals(panel.scroll().maxTopRow(), panel.scroll().topRow());
+  }
+
+  @Test
+  void theScrollerCannotBeGrabbedWhenEverythingFits() {
+    TerminalItemsPanel panel = showing(live(TerminalScreenLayout.LISTING_PAGE_SIZE));
+
+    assertFalse(panel.grabScrollbar(TerminalScreenLayout.SCROLLBAR_Y + 10));
+  }
+
+  @Test
+  void theScrollerIsTheFixedSizeCreativeThumb() {
+    assertEquals(TerminalChrome.SCROLLER_HEIGHT, showing(live(500)).scrollbar().thumbHeight());
   }
 }

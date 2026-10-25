@@ -25,9 +25,6 @@ public final class TerminalSettingsService {
     if (payload == null) {
       return false;
     }
-    if (!payload.showing()) {
-      return closed(player, payload.syncId());
-    }
     final TerminalOperationContext context =
         TerminalOperationGate.open(player, payload.syncId()).orElse(null);
     if (context == null) {
@@ -35,16 +32,6 @@ public final class TerminalSettingsService {
     }
     context.handler().settings().showing(payload.window());
     send(player, context.handler());
-    return true;
-  }
-
-  private static boolean closed(ServerPlayerEntity player, int syncId) {
-    if (player == null
-        || !(player.currentScreenHandler instanceof TerminalScreenHandler handler)
-        || handler.syncId != syncId) {
-      return false;
-    }
-    handler.settings().closed();
     return true;
   }
 

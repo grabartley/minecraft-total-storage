@@ -1,12 +1,28 @@
 package com.grahambartley.totalstorage.screen;
 
+import java.util.Objects;
 import net.minecraft.client.gui.DrawContext;
 
 public final class TagPromptList {
-  private final ListingScroll scroll = new ListingScroll(1, TagPromptLayout.VISIBLE_ROWS);
+  private final PromptListGeometry geometry;
 
-  private final TerminalScrollbar scrollbar =
-      new TerminalScrollbar(scroll, TagPromptLayout.TRACK_HEIGHT);
+  private final ListingScroll scroll;
+
+  private final TerminalScrollbar scrollbar;
+
+  public TagPromptList() {
+    this(TagPromptLayout.LIST);
+  }
+
+  public TagPromptList(PromptListGeometry geometry) {
+    this.geometry = Objects.requireNonNull(geometry, "geometry");
+    scroll = new ListingScroll(1, geometry.visibleRows());
+    scrollbar = new TerminalScrollbar(scroll, geometry.trackHeight());
+  }
+
+  public PromptListGeometry geometry() {
+    return geometry;
+  }
 
   public void reset() {
     scrollbar.release();
@@ -26,13 +42,16 @@ public final class TagPromptList {
   }
 
   public int indexAt(int windowX, int windowY) {
-    final int row = TagPromptLayout.rowAt(windowX, windowY);
-    return row == TagPromptLayout.NO_ROW ? TagPromptLayout.NO_ROW : indexOfRow(row);
+    final int row = geometry.rowAt(windowX, windowY);
+    return row == PromptListGeometry.NO_ROW ? PromptListGeometry.NO_ROW : indexOfRow(row);
+  }
+
+  public boolean isOverScrollbar(int windowX, int windowY) {
+    return geometry.isOverScrollbar(windowX, windowY);
   }
 
   public boolean grabScrollbar(int windowX, int windowY) {
-    return TagPromptLayout.isOverScrollbar(windowX, windowY)
-        && scrollbar.grab(windowY - TagPromptLayout.rowsTop());
+    return geometry.isOverScrollbar(windowX, windowY) && scrollbar.grab(windowY - geometry.top());
   }
 
   public boolean isDraggingScrollbar() {
@@ -40,7 +59,7 @@ public final class TagPromptList {
   }
 
   public void dragScrollbarTo(int windowY) {
-    scrollbar.dragTo(windowY - TagPromptLayout.rowsTop());
+    scrollbar.dragTo(windowY - geometry.top());
   }
 
   public void releaseScrollbar() {
@@ -55,9 +74,9 @@ public final class TagPromptList {
     TerminalChrome.drawScrollbar(
         context,
         scrollbar,
-        originX + TagPromptLayout.scrollbarX(),
-        originY + TagPromptLayout.rowsTop(),
-        TagPromptLayout.SCROLLBAR_WIDTH,
-        TagPromptLayout.TRACK_HEIGHT);
+        originX + geometry.scrollbarX(),
+        originY + geometry.top(),
+        geometry.scrollbarWidth(),
+        geometry.trackHeight());
   }
 }

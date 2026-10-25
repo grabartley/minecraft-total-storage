@@ -72,6 +72,51 @@ public final class OperationMessages {
     };
   }
 
+  public static TerminalNoticeTone toneOf(WithdrawResult result) {
+    return switch (result) {
+      case WITHDRAWN -> TerminalNoticeTone.DONE;
+      case PARTIAL_NO_STOCK, PARTIAL_NO_ROOM -> TerminalNoticeTone.PARTIAL;
+      case NOTHING_AVAILABLE, NO_ROOM, REFUSED -> TerminalNoticeTone.FAILED;
+    };
+  }
+
+  public static Optional<Text> headlineForWithdrawal(WithdrawOutcome outcome) {
+    return switch (outcome.result()) {
+      case PARTIAL_NO_STOCK, PARTIAL_NO_ROOM ->
+          Optional.of(
+              line(
+                  "withdraw.partial.headline",
+                  "Took %s of %s",
+                  outcome.moved(),
+                  outcome.requested()));
+      case NOTHING_AVAILABLE -> Optional.of(line("withdraw.gone.headline", "That item is gone"));
+      case NO_ROOM -> Optional.of(line("withdraw.full.headline", "Your inventory is full"));
+      case WITHDRAWN, REFUSED -> forWithdrawal(outcome);
+    };
+  }
+
+  public static TerminalNoticeTone toneOf(DepositResult result) {
+    return switch (result) {
+      case DEPOSITED, RATE_LIMITED -> TerminalNoticeTone.DONE;
+      case PARTIAL, NOTHING_TO_DEPOSIT -> TerminalNoticeTone.PARTIAL;
+      case NO_SPACE, ONLY_FILTERED_SPACE, NO_FITTING_SPACE, REFUSED -> TerminalNoticeTone.FAILED;
+    };
+  }
+
+  public static Optional<Text> headlineForDeposit(DepositOutcome outcome) {
+    return switch (outcome.result()) {
+      case PARTIAL ->
+          Optional.of(
+              line("deposit.partial.headline", "%s did not fit", leftovers(outcome.leftovers())));
+      case NO_SPACE -> Optional.of(line("deposit.full.headline", "Network full, nothing stored"));
+      case ONLY_FILTERED_SPACE ->
+          Optional.of(line("deposit.filtered_only.headline", "Only filtered space is left"));
+      case NO_FITTING_SPACE ->
+          Optional.of(line("deposit.unfitting.headline", "No free slot will hold these"));
+      case DEPOSITED, NOTHING_TO_DEPOSIT, RATE_LIMITED, REFUSED -> forDeposit(outcome);
+    };
+  }
+
   public static Text rateLimited(ExpensiveOperation operation, long ticksLeft) {
     return line(
         "cooldown." + operation.id(), waitingOn(operation), Math.max(1L, (ticksLeft + 19L) / 20L));

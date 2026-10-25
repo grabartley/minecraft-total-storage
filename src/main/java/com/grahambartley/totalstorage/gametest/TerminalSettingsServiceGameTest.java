@@ -3,9 +3,7 @@ package com.grahambartley.totalstorage.gametest;
 import com.grahambartley.totalstorage.network.NetworkSettingsRequestPayload;
 import com.grahambartley.totalstorage.screenhandler.TerminalScreenHandler;
 import com.grahambartley.totalstorage.screenhandler.TerminalSettingsService;
-import com.grahambartley.totalstorage.terminal.TerminalNetworks;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
-import net.minecraft.block.Blocks;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.GameTest;
 import net.minecraft.test.TestContext;
@@ -77,61 +75,6 @@ public final class TerminalSettingsServiceGameTest implements FabricGameTest {
     panels.request(player, NetworkSettingsRequestPayload.showing(handler.syncId, 0, 4));
 
     context.assertTrue(panels.refresh(player), "An open panel should be pushed to");
-    NetworkOperationFixture.finish(context, player);
-  }
-
-  @GameTest(
-      templateName = NetworkOperationFixture.CONTAINER_PAD,
-      batchId = BATCH,
-      tickLimit = TICK_LIMIT)
-  public void sayingThePanelIsHiddenClosesItAgain(TestContext context) {
-    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
-    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
-    TerminalScreenHandler handler = NetworkOperationFixture.handlerOf(player);
-    panels.request(player, NetworkSettingsRequestPayload.showing(handler.syncId, 0, 4));
-
-    panels.request(player, NetworkSettingsRequestPayload.closed(handler.syncId));
-
-    context.assertFalse(handler.settings().isOpen(), "The panel stayed open");
-    context.assertFalse(panels.refresh(player), "A closed panel was pushed to");
-    NetworkOperationFixture.finish(context, player);
-  }
-
-  @GameTest(
-      templateName = NetworkOperationFixture.CONTAINER_PAD,
-      batchId = BATCH,
-      tickLimit = TICK_LIMIT)
-  public void aPanelClosesEvenWhenTheNetworkHasGone(TestContext context) {
-    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
-    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
-    TerminalScreenHandler handler = NetworkOperationFixture.handlerOf(player);
-    panels.request(player, NetworkSettingsRequestPayload.showing(handler.syncId, 0, 4));
-    context.setBlockState(NetworkOperationFixture.POWER, Blocks.AIR);
-    TerminalNetworks.power()
-        .unloaded(context.getWorld(), context.getAbsolutePos(NetworkOperationFixture.TERMINAL));
-
-    boolean closed = panels.request(player, NetworkSettingsRequestPayload.closed(handler.syncId));
-
-    context.assertTrue(closed, "An unpowered terminal refused to close its panel");
-    context.assertFalse(handler.settings().isOpen(), "The panel stayed open");
-    NetworkOperationFixture.finish(context, player);
-  }
-
-  @GameTest(
-      templateName = NetworkOperationFixture.CONTAINER_PAD,
-      batchId = BATCH,
-      tickLimit = TICK_LIMIT)
-  public void aCloseNamingAnotherScreenIsRefused(TestContext context) {
-    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
-    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
-    TerminalScreenHandler handler = NetworkOperationFixture.handlerOf(player);
-    panels.request(player, NetworkSettingsRequestPayload.showing(handler.syncId, 0, 4));
-
-    boolean closed =
-        panels.request(player, NetworkSettingsRequestPayload.closed(handler.syncId + 1));
-
-    context.assertFalse(closed, "A close naming another screen was honoured");
-    context.assertTrue(handler.settings().isOpen(), "Somebody else's close shut this panel");
     NetworkOperationFixture.finish(context, player);
   }
 

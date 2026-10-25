@@ -3,6 +3,7 @@ package com.grahambartley.totalstorage;
 import com.grahambartley.totalstorage.config.ClientPreferencesStore;
 import com.grahambartley.totalstorage.network.ModNetworkingClient;
 import com.grahambartley.totalstorage.render.ContainerHighlightRenderer;
+import com.grahambartley.totalstorage.screen.HintTooltip;
 import com.grahambartley.totalstorage.screen.ModKeyBindings;
 import com.grahambartley.totalstorage.screen.ModScreenButtons;
 import com.grahambartley.totalstorage.screen.QuickStackRequests;
@@ -22,6 +23,7 @@ public class TotalStorageClient implements ClientModInitializer {
     ContainerHighlightRenderer.register();
     ModKeyBindings.register();
     ModScreenButtons.register();
+    HintTooltip.register();
     HandledScreens.register(ModScreenHandlers.TERMINAL, TerminalScreen::new);
     ClientTickEvents.END_CLIENT_TICK.register(TotalStorageClient::pollQuickStack);
     ClientTickEvents.END_CLIENT_TICK.register(TotalStorageClient::pollSort);

@@ -33,6 +33,7 @@
       "com.grahambartley.totalstorage.gametest.SortCommandGameTest",
       "com.grahambartley.totalstorage.gametest.TerminalTagPanelServiceGameTest",
       "com.grahambartley.totalstorage.gametest.NetworkSortGameTest",
+      "com.grahambartley.totalstorage.gametest.NetworkOperationStatusGameTest",
       "com.grahambartley.totalstorage.gametest.StorageSortGameTest",
       "com.grahambartley.totalstorage.gametest.NetworkJobsGameTest",
       "com.grahambartley.totalstorage.gametest.NetworkOperationServiceGameTest",

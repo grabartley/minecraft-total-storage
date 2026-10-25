@@ -6,9 +6,11 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
 public final class TerminalSearchBox {
-  private static final Text HINT = TerminalScreenText.of("search.hint");
+  private static final Text HINT =
+      TerminalScreenText.of("search.hint").formatted(Formatting.ITALIC);
 
   private final TextRenderer textRenderer;
 
@@ -62,13 +64,19 @@ public final class TerminalSearchBox {
   }
 
   public void drawBox(DrawContext context, int originX, int originY) {
-    (field.isFocused() ? TerminalSprite.FIELD_FOCUSED : TerminalSprite.FIELD)
+    VanillaSprite.field(field.isFocused())
         .draw(
             context,
             originX + TerminalScreenLayout.SEARCH_X,
             originY + TerminalScreenLayout.SEARCH_Y,
             TerminalScreenLayout.SEARCH_WIDTH,
             TerminalScreenLayout.SEARCH_HEIGHT);
+    VanillaSprite.SEARCH.draw(
+        context,
+        originX + TerminalScreenLayout.SEARCH_ICON_X,
+        originY + TerminalScreenLayout.SEARCH_ICON_Y,
+        TerminalScreenLayout.SEARCH_ICON_SIZE,
+        TerminalScreenLayout.SEARCH_ICON_SIZE);
     if (isSearching()) {
       return;
     }
@@ -77,7 +85,7 @@ public final class TerminalSearchBox {
         HINT,
         originX + TerminalScreenLayout.SEARCH_TEXT_X,
         originY + TerminalScreenLayout.SEARCH_TEXT_Y,
-        VanillaPalette.PANEL,
-        true);
+        VanillaPalette.opaque(VanillaPalette.FIELD_HINT),
+        false);
   }
 }

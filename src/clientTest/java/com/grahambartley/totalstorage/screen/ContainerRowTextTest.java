@@ -102,7 +102,7 @@ class ContainerRowTextTest {
     Text where = ContainerRowText.position(entry(3, 168L));
 
     assertEquals(PREFIX + "settings.container.at", keyOf(where));
-    assertEquals("12 64 -8", argumentsOf(where)[0]);
+    assertEquals(PREFIX + "settings.container.place", keyOf((Text) argumentsOf(where)[0]));
   }
 
   @ParameterizedTest
@@ -112,34 +112,43 @@ class ContainerRowTextTest {
   }
 
   @Test
-  void noTwoRolesShareAWordOrAColour() {
+  void noTwoRolesShareAWord() {
     assertNotEquals(
         keyOf(ContainerRowText.role(ContainerRole.GENERAL)),
         keyOf(ContainerRowText.role(ContainerRole.EXCLUDED)));
-    assertNotEquals(
-        ContainerRowText.roleColour(ContainerRole.GENERAL),
-        ContainerRowText.roleColour(ContainerRole.EXCLUDED));
-    assertNotEquals(
-        ContainerRowText.roleColour(ContainerRole.FILTERED),
-        ContainerRowText.roleColour(ContainerRole.EXCLUDED));
   }
 
   @Test
   void aContainerWithNoRoleReadsAsTheDefaultOne() {
     assertEquals(
         keyOf(ContainerRowText.role(ContainerRole.DEFAULT)), keyOf(ContainerRowText.role(null)));
+  }
+
+  @Test
+  void aPlaceIsItsThreeCoordinatesInOrder() {
+    final Text place = ContainerRowText.place(new BlockPos(12, 64, -8));
+
+    assertEquals(PREFIX + "settings.container.place", keyOf(place));
+    assertEquals(List.of(12, 64, -8), List.of(argumentsOf(place)));
+  }
+
+  @Test
+  void aNamedContainerIsTitledByItsName() {
+    assertEquals("Potions", ContainerRowText.title(named("Potions", 1, 1L), null).getString());
+  }
+
+  @Test
+  void anUnnamedContainerWhoseBlockIsUnknownSaysSo() {
     assertEquals(
-        ContainerRowText.roleColour(ContainerRole.DEFAULT), ContainerRowText.roleColour(null));
+        PREFIX + "settings.container.unnamed", keyOf(ContainerRowText.title(entry(1, 1L), null)));
   }
 
   @Test
-  void anUnnamedContainerIsLabelledByWhereItIs() {
-    assertEquals("12 64 -8", ContainerRowText.label(entry(1, 1L)).getString());
-  }
+  void theDetailLineSaysWhereTheContainerIsAndWhatItHolds() {
+    final Text detail = ContainerRowText.detail(entry(3, 9L));
 
-  @Test
-  void aNamedContainerIsLabelledByItsName() {
-    assertEquals("Potions", ContainerRowText.label(named("Potions", 1, 1L)).getString());
+    assertEquals(PREFIX + "settings.container.detail", keyOf(detail));
+    assertEquals(PREFIX + "settings.container.place", keyOf((Text) argumentsOf(detail)[0]));
   }
 
   @Test
@@ -152,18 +161,6 @@ class ContainerRowTextTest {
   @Test
   void theChipOfAnyOtherRoleIsJustItsName() {
     assertEquals(PREFIX + "role.general", keyOf(ContainerRowText.roleChip(entry(1, 1L))));
-  }
-
-  @Test
-  void aFilteredContainerAcceptingNothingIsColouredAsAWarning() {
-    assertEquals(VanillaPalette.WARNING, ContainerRowText.chipColour(filtered(List.of())));
-  }
-
-  @Test
-  void aFilteredContainerThatAcceptsSomethingKeepsItsRoleColour() {
-    assertEquals(
-        ContainerRowText.roleColour(ContainerRole.FILTERED),
-        ContainerRowText.chipColour(filtered(List.of("ores"))));
   }
 
   @Test

@@ -5,8 +5,8 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.screen.slot.Slot;
 
 public final class LockedSlotBadge {
-  public static final int WIDTH = 7;
-  public static final int HEIGHT = 8;
+  public static final int WIDTH = 5;
+  public static final int HEIGHT = 6;
 
   private static final float ABOVE_THE_ITEM = 300.0f;
 
@@ -22,7 +22,11 @@ public final class LockedSlotBadge {
   public static void drawAt(DrawContext context, int left, int top) {
     context.getMatrices().push();
     context.getMatrices().translate(0.0f, 0.0f, ABOVE_THE_ITEM);
-    TerminalSprite.LOCKED_SLOT.draw(context, left, top, WIDTH, HEIGHT);
+    drawFlat(context, left, top);
     context.getMatrices().pop();
+  }
+
+  public static void drawFlat(DrawContext context, int left, int top) {
+    TerminalSprite.LOCKED_SLOT.draw(context, left, top, WIDTH, HEIGHT);
   }
 }

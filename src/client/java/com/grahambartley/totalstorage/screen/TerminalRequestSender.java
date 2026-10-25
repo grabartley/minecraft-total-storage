@@ -9,6 +9,4 @@ public interface TerminalRequestSender {
       int syncId, ListingWindow window, String search, TagCombinationMode mode, Set<String> tags);
 
   void settingsShowing(int syncId, int offset, int length);
-
-  void settingsClosed(int syncId);
 }

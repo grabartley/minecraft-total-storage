@@ -173,17 +173,17 @@ class TerminalPromptsTest {
             NetworkSettingsView.pending(),
             thirteen,
             false,
-            TagPromptLayout.scrollbarX(),
-            TagPromptLayout.rowsTop(),
+            TagPromptLayout.LIST.scrollbarX(),
+            TagPromptLayout.LIST.top(),
             GridClick.LEFT_BUTTON));
     assertTrue(prompts.isDraggingScrollbar());
 
-    prompts.dragScrollbarTo(TagPromptLayout.rowsTop() + TagPromptLayout.TRACK_HEIGHT);
+    prompts.dragScrollbarTo(TagPromptLayout.LIST.top() + TagPromptLayout.LIST.trackHeight());
     assertEquals(
         "tag9",
         prompts
             .filtering()
-            .tagAt(thirteen, TagPromptLayout.textLeft(), TagPromptLayout.rowY(0))
+            .tagAt(thirteen, TagPromptLayout.LIST.left(), TagPromptLayout.LIST.rowY(0))
             .id());
 
     prompts.releaseScrollbar();

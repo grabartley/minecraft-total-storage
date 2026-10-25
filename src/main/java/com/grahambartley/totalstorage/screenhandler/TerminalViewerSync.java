@@ -1,7 +1,6 @@
 package com.grahambartley.totalstorage.screenhandler;
 
 import com.grahambartley.totalstorage.access.TerminalAccessControl;
-import com.grahambartley.totalstorage.network.TerminalSettingsNetworking;
 import com.grahambartley.totalstorage.operation.TerminalResync;
 import com.grahambartley.totalstorage.terminal.TerminalAddress;
 import java.util.ArrayList;
@@ -44,7 +43,6 @@ public final class TerminalViewerSync {
   public static int refresh(MinecraftServer server, TerminalAddress terminal) {
     final List<ServerPlayerEntity> watching = playersOn(server, terminal);
     for (final ServerPlayerEntity viewer : watching) {
-      TerminalSettingsNetworking.panels().refresh(viewer);
       TerminalResync.contents(viewer);
     }
     return watching.size();

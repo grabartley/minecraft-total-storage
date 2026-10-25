@@ -1,32 +1,44 @@
 package com.grahambartley.totalstorage.network;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.grahambartley.totalstorage.operation.TerminalNoticeTone;
 import net.minecraft.text.Text;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 class TerminalNoticePayloadTest {
   private static final int SYNC_ID = 4;
 
   @Test
-  void aNoticeCarriesTheScreenItBelongsTo() {
-    TerminalNoticePayload payload =
-        new TerminalNoticePayload(SYNC_ID, Text.literal("Sorted"), false);
+  void aNoticeWithoutAHeadlineLeadsWithItsMessage() {
+    final Text message = Text.literal("Nothing to sort");
 
-    assertEquals(SYNC_ID, payload.syncId());
-    assertEquals(TerminalNoticePayload.ID, payload.getId());
+    assertEquals(
+        message,
+        new TerminalNoticePayload(SYNC_ID, TerminalNoticeTone.PARTIAL, null, message).headline());
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  void aNoticeRemembersWhetherItIsAsking(boolean needsAnAnswer) {
-    assertEquals(
-        needsAnAnswer,
-        new TerminalNoticePayload(SYNC_ID, Text.literal("Click again"), needsAnAnswer)
-            .needsAnAnswer());
+  @Test
+  void aNoticeMustSaySomethingAndHowItWent() {
+    assertThrows(
+        NullPointerException.class,
+        () -> new TerminalNoticePayload(SYNC_ID, TerminalNoticeTone.FAILED, null, null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new TerminalNoticePayload(SYNC_ID, null, null, Text.literal("Sorted")));
+  }
+
+  @Test
+  void aNoticeCarriesTheScreenAndToneItWasSentFor() {
+    final TerminalNoticePayload payload =
+        new TerminalNoticePayload(
+            SYNC_ID, TerminalNoticeTone.FAILED, Text.literal("No room"), Text.literal("Full"));
+
+    assertEquals(SYNC_ID, payload.syncId());
+    assertEquals(TerminalNoticeTone.FAILED, payload.tone());
+    assertEquals(TerminalNoticePayload.ID, payload.getId());
   }
 
   @Test

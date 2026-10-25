@@ -8,7 +8,7 @@ import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
 
-public record NetworkSettingsRequestPayload(int syncId, boolean showing, int offset, int length)
+public record NetworkSettingsRequestPayload(int syncId, int offset, int length)
     implements CustomPayload {
   public static final CustomPayload.Id<NetworkSettingsRequestPayload> ID =
       new CustomPayload.Id<>(Identifier.of(TotalStorage.MOD_ID, "network_settings_request"));
@@ -22,11 +22,7 @@ public record NetworkSettingsRequestPayload(int syncId, boolean showing, int off
   }
 
   public static NetworkSettingsRequestPayload showing(int syncId, int offset, int length) {
-    return new NetworkSettingsRequestPayload(syncId, true, offset, length);
-  }
-
-  public static NetworkSettingsRequestPayload closed(int syncId) {
-    return new NetworkSettingsRequestPayload(syncId, false, 0, 0);
+    return new NetworkSettingsRequestPayload(syncId, offset, length);
   }
 
   public ListingWindow window() {
@@ -40,13 +36,11 @@ public record NetworkSettingsRequestPayload(int syncId, boolean showing, int off
 
   private static void write(NetworkSettingsRequestPayload payload, RegistryByteBuf buf) {
     buf.writeVarInt(payload.syncId());
-    buf.writeBoolean(payload.showing());
     buf.writeVarInt(payload.offset());
     buf.writeVarInt(payload.length());
   }
 
   private static NetworkSettingsRequestPayload read(RegistryByteBuf buf) {
-    return new NetworkSettingsRequestPayload(
-        buf.readVarInt(), buf.readBoolean(), buf.readVarInt(), buf.readVarInt());
+    return new NetworkSettingsRequestPayload(buf.readVarInt(), buf.readVarInt(), buf.readVarInt());
   }
 }
