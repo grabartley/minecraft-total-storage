@@ -151,9 +151,9 @@ jobs:
         id: release_meta
         run: |
           case "${{ inputs.release_type }}" in
-            stable) echo "modrinth_type=release" >> $GITHUB_OUTPUT ;;
-            beta)   echo "modrinth_type=beta"    >> $GITHUB_OUTPUT ;;
-            alpha)  echo "modrinth_type=alpha"   >> $GITHUB_OUTPUT ;;
+            stable) echo "version_type=release" >> $GITHUB_OUTPUT ;;
+            beta)   echo "version_type=beta"    >> $GITHUB_OUTPUT ;;
+            alpha)  echo "version_type=alpha"   >> $GITHUB_OUTPUT ;;
           esac
 
       - name: Build release JAR
@@ -203,14 +203,14 @@ jobs:
         run: ./gradlew modrinth -Pversion=${{ steps.semver.outputs.new_version }}
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-          MOD_RELEASE_TYPE: ${{ steps.release_meta.outputs.modrinth_type }}
+          MOD_RELEASE_TYPE: ${{ steps.release_meta.outputs.version_type }}
 
       - name: Publish to CurseForge
         if: github.event_name == 'workflow_dispatch'
         run: ./gradlew curseforge -Pversion=${{ steps.semver.outputs.new_version }}
         env:
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
-          MOD_RELEASE_TYPE: ${{ steps.release_meta.outputs.modrinth_type }}
+          MOD_RELEASE_TYPE: ${{ steps.release_meta.outputs.version_type }}
 
       - name: Create and apply release milestone
         if: github.event_name == 'workflow_dispatch'

@@ -277,6 +277,9 @@ tasks.register('curseforge', TaskPublishCurseForge) {
 		if (!projectId?.isLong()) {
 			throw new GradleException('Set curseforge_project_id in gradle.properties to the numeric CurseForge project ID.')
 		}
+		if (!apiToken) {
+			throw new GradleException('Set the CURSEFORGE_TOKEN environment variable to a CurseForge API token.')
+		}
 		def mainFile = upload(projectId.toLong(), remapJar)
 		mainFile.displayName = "Total Storage v${project.version}"
 		mainFile.releaseType = System.getenv('MOD_RELEASE_TYPE') ?: 'alpha'
