@@ -15,7 +15,7 @@
 
 Total Storage turns a room full of chests into one searchable inventory. Place a storage terminal near your chests,
 power it with redstone, and you can reach everything in them from one screen. Search it, take what you need, and empty your
-pockets into it with one click. A sort button on every container and a lock for your hotbar come along too, and those
+pockets into it with one click. A sort button on every container and a lock for your inventory slots come along too, and those
 work with no terminal at all.
 
 > **Alpha:** Total Storage is in alpha and we would love your feedback.
@@ -72,7 +72,8 @@ so the Castle tag plus `stone` typed finds the stone you filed under Castle.
 <img src="https://raw.githubusercontent.com/grabartley/minecraft-total-storage/images/readme/filter.png" alt="The grid narrowed to the Stone tag" width="640">
 </p>
 
-- **Make your own tags.** Press New tag on the Tags tab to make tags such as Base Kit or Castle for your own world.
+- **Make your own tags.** Open the sliders tab on the right of the terminal screen, go to Tags and press New tag to
+make tags such as Base Kit or Castle for your own world.
 Ctrl-click an item (Cmd on a Mac) to file it, or shift-click a tag to file everything the grid is showing at once. Tags can be copied to your other
 terminals.
 
@@ -80,7 +81,7 @@ terminals.
 <img src="https://raw.githubusercontent.com/grabartley/minecraft-total-storage/images/readme/tags.png" alt="Custom tags on the Tags tab" width="640">
 </p>
 
-- **Decide what the network may touch.** Each container has a role. **General** takes anything. **Filtered** only takes
+- **Decide what the network may touch.** Each container has a role, set under Containers on that same sliders tab. **General** takes anything. **Filtered** only takes
 the tags you tick. **Excluded** is searchable and you can take from it, but the network never puts items in it or rearranges it, so
 your hand-arranged potion chest keeps its layout. Give containers names so the list says Potions instead of coordinates, and press Show in world to outline
 them: a white outline for General, a green dashed one for Filtered and a red double one for Excluded.
@@ -110,10 +111,10 @@ everything else alone. `V` does the same.
 <img src="https://raw.githubusercontent.com/grabartley/minecraft-total-storage/images/readme/inventory.png" alt="The player inventory with the quick stack and sort buttons and three locked hotbar slots" width="420">
 </p>
 
-- **Lock your hotbar.** Alt-click a slot and sorting, Deposit all and quick stack will leave it alone. You can still
+- **Lock slots.** Alt-click (Option on a Mac) any slot in your inventory and sorting, Deposit all and quick stack will leave it alone. You can still
 move it yourself. Hold Alt in any inventory screen to see which slots can be locked.
 - **Share safely.** A terminal opens only for the player who placed it until they say otherwise. Switch it to Trusted
-and add friends by name, or set it to Open for everyone. Operators can always get in, and the server logs when they do.
+players and add friends by name, or set it to Anyone. Operators can always get in, and the server logs when they do.
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/grabartley/minecraft-total-storage/images/readme/access.png" alt="The Terminal tab with access, trusted players and radius" width="640">
@@ -137,7 +138,7 @@ Binds`, in the Total Storage section.
 
 ## Settings
 
-Open server settings from Mod Menu, or with `/ts config`. In singleplayer you can change them. On a server, only
+Change server settings on the Mod Menu screen, or in chat with `/ts config`. In singleplayer you can change them. On a server, only
 operators can, and everyone else can read them. Each terminal keeps its own settings on the block: open the sliders tab on the
 right of its screen for radius and access under Terminal, roles and names under Containers, and your tags under Tags.
 
@@ -150,12 +151,12 @@ range is clamped when the file loads and refused by the command. The command id 
 | Setting | Command id | Default | Range | What it does |
 |---|---|---|---|---|
 | Maximum terminal radius | `maxTerminalRadius` | 16 | 1 to 64 | The furthest any terminal may reach. Lowering it shrinks the reach of terminals already placed. Raising it again gives them back the reach they were set to. |
-| Default access mode | `defaultTerminalAccessMode` | Owner | Owner, Trusted, Open | What a newly placed terminal starts as. Terminals already placed keep theirs. |
+| Default access mode | `defaultTerminalAccessMode` | Owner only | Owner only (`owner`), Trusted players (`trusted`), Anyone (`open`) | What a newly placed terminal starts as. Terminals already placed keep theirs. |
 | Quick stack radius | `quickStackRadius` | 8 | 1 to 64 | How far quick stack looks for containers to top up. |
-| Sort ordering | `sortOrdering` | Registry order | Registry order, Display name | How sorted containers are ordered. Registry order does not change with the game language. |
-| Sort button | `sortButtonEnabled` | On | On or off | Whether the sort button and key are offered. `/ts sort` keeps working either way. |
-| Quick stack | `quickStackEnabled` | On | On or off | Whether quick stack is offered on the button, the key and the command. |
-| Deposit all skips the hotbar | `depositAllSkipsHotbar` | Off | On or off | Keeps the whole hotbar out of Deposit all, for players who would rather not lock slots. |
+| Sort ordering | `sortOrdering` | Registry order | Registry order (`registry_id`), Display name (`display_name`) | How sorted containers are ordered. Registry order does not change with the game language. |
+| Sort button | `sortButtonEnabled` | On | On or off (`true` or `false`) | Whether the sort button and key are offered. `/ts sort` keeps working either way. |
+| Quick stack | `quickStackEnabled` | On | On or off (`true` or `false`) | Whether quick stack is offered on the button, the key and the command. |
+| Deposit all skips the hotbar | `depositAllSkipsHotbar` | Off | On or off (`true` or `false`) | Keeps the whole hotbar out of Deposit all, for players who would rather not lock slots. |
 | Near capacity warning | `nearCapacityWarningPercent` | 90% | 0 to 100 | How full the network has to be before the terminal warns you. |
 | Expensive operation cooldown | `expensiveOperationCooldownTicks` | 10 ticks (half a second) | 0 to 200 (10 seconds) | Per player wait between rescans, deposits, quick stacks, sorts and gathers. 0 turns it off. Raise this first on a busy server. |
 | Moves per tick budget | `movesPerTickBudget` | 64 | 1 to 1024 | How much work one network-wide sort or gather does at a time. Lower is smoother and slower. |
