@@ -1,7 +1,9 @@
+<p align="center">
 <a href="https://modrinth.com/mod/total-storage"><img src="https://img.shields.io/modrinth/dt/total-storage?logo=modrinth&label=Modrinth%20downloads&color=00AF5C" alt="Modrinth downloads"></a>
 <a href="https://github.com/grabartley/minecraft-total-storage/stargazers"><img src="https://img.shields.io/github/stars/grabartley/minecraft-total-storage?logo=github&label=Stars&color=4078c0" alt="GitHub stars"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-yellow.svg" alt="License: MIT"></a>
-[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support_Total_Storage-009078?logo=ko-fi&logoColor=white)](https://ko-fi.com/grahambartley)
+<a href="https://ko-fi.com/grahambartley"><img src="https://img.shields.io/badge/Ko--fi-Support_Total_Storage-009078?logo=ko-fi&logoColor=white" alt="Ko-fi"></a>
+</p>
 
 <p align="center">
 <a title="Fabric API" href="https://modrinth.com/mod/fabric-api" target="_blank">
@@ -16,7 +18,7 @@ power it with redstone, and everything inside them is one screen away. Search it
 pockets into it with one click. A sort button on every container and a lock for your hotbar come along too, and those
 work with no terminal at all.
 
-> **First release:** Total Storage is new and we would love your feedback.
+> **Alpha:** Total Storage is in alpha and we would love your feedback.
 > [Open an issue](https://github.com/grabartley/minecraft-total-storage/issues/new) and tell us what you think.
 
 <p align="center">
