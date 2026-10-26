@@ -1,341 +1,245 @@
+<a href="https://modrinth.com/mod/total-storage"><img src="https://img.shields.io/modrinth/dt/total-storage?logo=modrinth&label=Modrinth%20downloads&color=00AF5C" alt="Modrinth downloads"></a>
+<a href="https://github.com/grabartley/minecraft-total-storage/stargazers"><img src="https://img.shields.io/github/stars/grabartley/minecraft-total-storage?logo=github&label=Stars&color=4078c0" alt="GitHub stars"></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-yellow.svg" alt="License: MIT"></a>
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support_Total_Storage-009078?logo=ko-fi&logoColor=white)](https://ko-fi.com/grahambartley)
+
+<p align="center">
+<a title="Fabric API" href="https://modrinth.com/mod/fabric-api" target="_blank">
+	<img src="https://i.imgur.com/Ol1Tcf8.png" width="180" height="60" alt="Fabric API requirement button">
+</a>
+</p>
+
 # Total Storage
 
-A Fabric mod for Minecraft 1.21.1.
+Total Storage turns a room full of chests into one searchable inventory. Place a storage terminal near your chests,
+power it with redstone, and everything inside them is one screen away. Search it, take what you need, and empty your
+pockets into it with one click. A sort button on every container and a lock for your hotbar come along too, and those
+work with no terminal at all.
 
-A better item storage solution for Minecraft.
+> **First release:** Total Storage is new and we would love your feedback.
+> [Open an issue](https://github.com/grabartley/minecraft-total-storage/issues/new) and tell us what you think.
 
-## Dependencies
-
-| Mod | Required | Side | Why |
-|---|---|---|---|
-| [Fabric API](https://modrinth.com/mod/fabric-api) `>=0.116.12+1.21.1` | Yes | Client and server | Networking, item transfer, entity attachments, screen events and gametest all come from it. The floor is the version whose transfer and attachment APIs this mod calls. |
-| [Mod Menu](https://modrinth.com/mod/modmenu) | No | Client | Adds the button that opens this mod's server settings screen. Without it the same settings are reachable from `/ts config`. |
-| [JEI](https://modrinth.com/mod/jei) | No | Client | The terminal's recipe shows up in it, and this mod keeps its overlay clear of the buttons it draws. |
-| [EMI](https://modrinth.com/mod/emi) | No | Client | The same, for players who use EMI instead. |
-
-**The mod has to be on the server and on every player's game.** Every operation that moves an item is decided on the server, and the client side adds the terminal screen, the sort and quick stack buttons, slot locking, and the keybinds. A player who joins without the mod is turned away at login with a message saying they need to install it, rather than being disconnected by an error a second later. See [ADR 0038](docs/adr/0038-the-mod-is-required-on-the-client.md).
-
-There are no other hard dependencies. Mod Menu, JEI and EMI are each loaded through a guarded integration, so a dedicated server that has none of them loads none of their classes.
+<p align="center">
+<img src="docs/images/storage_room.png" alt="A storage room with a powered terminal in front of a wall of chests" width="800">
+</p>
 
 ## The storage terminal
 
-The storage terminal runs on redstone. A terminal reached by a signal is active: it indexes the containers around it once, keeps that listing current as they change, and can be opened. A terminal with no signal is completely inert, holding no listing and doing no work at all, and it says so when you try to open it. The block reports its own state, with a lit screen, vents and dust run when it is running.
+Craft a terminal, put it near your chests, and power it. A lever on its side or top will do, just keep the front
+clear, since that is its screen. Every chest, barrel and
+shulker box within 16 blocks joins the network, and the terminal outlines them so you can see what it reaches. Drop a
+new chest in range and it joins on its own. Cut the power and the terminal goes dark, but it remembers everything you
+set up.
+
+<p align="center">
+<img src="docs/images/terminal_block.png" alt="A powered terminal, screen lit, with its containers outlined" width="700">
+</p>
 
-**Power it from a side, the top or the back, never the front.** The front is the screen: it lights up when the terminal is running and grows a bar across its bottom when the network is nearly full, so it should stay clear, and a lever mounted there also sits where you click to open the terminal, so opening it would switch it off. A plain right-click on the terminal opens it rather than placing what you hold, so sneak while you place a lever on a side or the top. A redstone torch or a block of redstone beside it works too, and so does a lever on a neighbouring block, which powers the terminal through that neighbour.
+Right-click the terminal and the whole network is on one screen, above your own inventory.
 
-Cutting power is an off switch rather than a factory reset. A terminal's radius, roles, tags and access settings live on the block and survive a power cut, a chunk unload, and a world reload.
+<p align="center">
+<img src="docs/images/terminal.png" alt="The terminal screen: tags down the left, a search box, the item grid and your inventory" width="640">
+</p>
 
-Each terminal reaches as far as its own radius, a cube centred on the block, and a fresh terminal starts at 16 blocks. The server sets a maximum no terminal may exceed, and the maximum wins: a radius set above it is clamped as it is written and the clamp is reported, and lowering the maximum pulls in every terminal already running. What a terminal asked for is kept whatever the maximum does, so raising the maximum again hands its reach straight back. See [ADR 0021](docs/adr/0021-a-lowered-maximum-clamps-without-rewriting.md).
+## What you can do
 
-**A container you place in range joins on its own.** Put down a chest, barrel or shulker box inside a running terminal's radius and it is in the network a tick later, ready for your next deposit. Turning a chest into a double chest leaves one container for the pair. Nothing needs a rescan; `Scan again` is only for when you want the terminal to walk its region again. See [ADR 0039](docs/adr/0039-a-placed-container-joins-on-the-next-tick.md).
+- **Find anything.** The search box is ready the moment the screen opens. Type a few letters and the closest matches
+come first, so `dch` finds a Dark Oak Chest. `#tag` searches by tag and `@mod` narrows to one mod, and both mix with
+plain text, so `@create gear` finds the gears Create adds.
 
-## Opening a terminal
+<p align="center">
+<img src="docs/images/search.png" alt="Searching the network for stone" width="640">
+</p>
 
-Right-click a powered terminal you are allowed to open and its screen comes up, showing the terminal's own window above your inventory. Two players can have the same terminal open at once, each with their own screen, and a change either of them commits refreshes both.
+- **Take what you need.** Left-click a cell for a stack, right-click for half, shift-click to send it straight to your
+inventory, and middle-click to type an exact amount. With something on your cursor, left-click to put it all in and
+right-click to put in one.
+- **Empty your pockets.** Press Deposit all, or `R`, and your inventory goes into the network with each item routed to
+the chest it belongs in. Locked slots, armour and your offhand stay put. The bar on the left shows how full the network
+is and warns you before it runs out of room.
 
-The window is a Minecraft window. Its chassis, its bevels, its slot frames and its label grey are vanilla's own, copied out of the game's textures rather than designed to sit beside them, and a grid cell is a vanilla slot: eighteen pixels with the item at the same inset a chest uses, so the grid's nine columns line up with the nine of your inventory underneath. Hovering, counts, durability bars and cooldown sweeps are drawn by the game's own calls, so an item in the grid renders exactly as it does in a chest. One colour is the mod's own, a redstone red, and it marks a row that is switched on or armed: a tag that is filtering, a container the network may not write to, and a tag armed for deletion. See [ADR 0035](docs/adr/0035-the-terminal-wears-vanillas-chrome.md).
+<p align="center">
+<img src="docs/images/deposit.png" alt="Before and after Deposit all: the inventory empties except the locked slots" width="900">
+</p>
 
-The screen is not a container. What the network holds is far more than a container screen can address, so the listing is paged and every operation is resolved by the server against the containers as they stand, rather than against a slot the client picked. See [ADR 0025](docs/adr/0025-the-network-is-not-an-inventory.md) and [ADR 0009](docs/adr/0009-clients-send-intent.md).
+- **Browse by tag.** Every item already sits in a category like Tools, Food or Redstone. Click a tag to narrow the grid
+to it, pick several and choose whether an item needs all of them or any of them. Tags and the search box work together,
+so `castle` plus the Stone tag finds the stone you filed under Castle.
 
-Searching and filtering narrow the whole network rather than the page you are looking at, because the server does the narrowing before it sends anything back. The listing also keeps itself current: a chest filling up behind you changes the numbers on screen without you touching anything. See [ADR 0027](docs/adr/0027-the-listing-is-narrowed-on-the-server.md).
+<p align="center">
+<img src="docs/images/filter.png" alt="The grid narrowed to the Stone tag" width="640">
+</p>
 
-The search box takes the keyboard the moment the terminal opens, so you type rather than click first. Matching is fuzzy against an item's name and its identifier, so `dch` finds a Dark Oak Chest, and the closest answers come first: the whole name, then what starts with what you typed, then what merely contains it. Escape empties the box before it closes the screen, so a query typed by accident costs one key rather than a reopened terminal. See [ADR 0028](docs/adr/0028-results-are-ranked-before-they-are-paged.md).
+- **Make your own tags.** Base Kit, Castle, Nether Trip: whatever your world needs. Ctrl-click an item (Cmd on a Mac)
+to file it, or shift-click a tag to file everything the grid is showing at once. Tags can be copied to your other
+terminals.
 
-Two prefixes make a query precise. `#tag` searches the network's tags and `@modid` narrows to one mod. Both match a tag or mod id, or any word in it, that starts with what you type, so `#stone` finds stone and not redstone and `#armour` finds weapons and armour, and both combine with plain text, so `@create gear` finds the gears Create adds. Several tags or names each narrow the results while several mods widen them, because an item comes from exactly one mod and asking for two of them could only ever return nothing. See [ADR 0013](docs/adr/0013-search-terms-combine-by-kind.md).
+<p align="center">
+<img src="docs/images/tags.png" alt="Custom tags on the Tags tab" width="640">
+</p>
 
-The network is drawn as a grid of cells, each one an item and how much of that exact item the whole network holds. Items that differ only by their data components are separate cells with separate counts, so a damaged pickaxe and a fresh one never add up into one number. Counts are written out in full while they fit and compacted once they stop, always downwards: a cell reading `12.3k` is never promising more than is there, and the tooltip carries the real figure alongside how many containers it is spread across.
+- **Decide what the network may touch.** Each container has a role. **General** takes anything. **Filtered** only takes
+the tags you tick. **Excluded** is searchable but never written to, so your hand-arranged potion chest stays exactly as
+you left it. Give containers names so the list says Potions instead of coordinates, and press Show in world to outline
+them: white for General, green for Filtered, red for Excluded.
 
-Scroll the grid with the wheel or by dragging the scrollbar. Each scroll asks the server for the rows the grid is now showing, so what a terminal costs to page through is set by the size of the grid rather than by the size of the network.
+<p align="center">
+<img src="docs/images/containers.png" alt="The Containers tab with General, Filtered and Excluded roles" width="640">
+</p>
 
-A grid with nothing in it says which nothing it means, because the empty cases are not the same problem. An empty network, a search that matched none of what is there, and a terminal whose network has gone each get their own line. A search that found nothing gets its own picture as well, a magnifier rather than a crate, so having nothing and finding nothing are told apart without reading a word. The last case is how a screen tells you it has gone stale, which is what you see if the terminal loses power or is broken while you are looking at it.
+<p align="center">
+<img src="docs/images/highlight.png" alt="Containers outlined in the world by role" width="750">
+</p>
 
-Power, permission and distance are re-checked every tick the screen is up, not just when it opened. Cutting the terminal's power, breaking it, losing access to it, walking away from it, or dying all close the screen straight away.
+- **Keep the chests tidy.** Sort orders every chest in the network and Gather pulls each item into as few chests as
+possible, so opening a chest by hand still makes sense. Big jobs ask before they start, run in the background without
+lagging the server, and can be stopped part way.
+- **Sort anything, anywhere.** A sort button sits on every chest, barrel and shulker box screen and on your inventory,
+and it works on modded containers too. Press `B` to sort without the mouse, or use `/ts sort`.
 
-## Filtering by tag
+<p align="center">
+<img src="docs/images/sort.png" alt="A chest before and after the sort button" width="900">
+</p>
 
-Down the left of the screen is a column of the network's tags, and clicking one narrows the grid to the items carrying it. Clicking it again clears it. The column is how you browse by meaning when you do not have a word to type, and it works alongside the search box rather than instead of it: a tag and some typed text both apply, so `castle` plus `stone` finds the stone you filed under Castle.
+- **Quick stack.** The other button on your inventory tops up matching stacks in the containers around you and leaves
+everything else alone. `V` does the same.
 
-Every tag shows how many of the network's items it matches **here**, so a tag holding nothing in this network reads as empty rather than looking like a filter that is broken. The column scrolls on its own when a network has more tags than fit.
+<p align="center">
+<img src="docs/images/inventory.png" alt="The player inventory with the quick stack and sort buttons and three locked hotbar slots" width="420">
+</p>
 
-Several tags can be active at once, and the `Match all` / `Match any` button beside the search box decides how they combine. `Match all` narrows, so a stack has to carry every tag you picked. `Match any` broadens, so carrying one of them is enough. Both are genuinely useful, which is why the choice is a button rather than a decision made for you: `stone` and `building` together is a narrowing question, `stone` or `wood` is a broadening one. The button beside it clears every active tag in one press.
+- **Lock your hotbar.** Alt-click a slot and nothing automated will ever move what is in it: not sorting, not Deposit
+all, not quick stack. You can still move it yourself. Hold Alt in any inventory screen to see which slots can be locked.
+- **Share safely.** A terminal opens only for the player who placed it until they say otherwise. Switch it to Trusted
+and add friends by name, or set it to Open for everyone. Operators can always get in, and the server logs when they do.
 
-Two kinds of tag share the column. **Preset tags** are the thirteen categories the mod works out for you from the item itself, so a diamond pickaxe is in Tools without anybody filing it. They cannot be renamed, deleted, or assigned by hand, because they are computed rather than stored. See [ADR 0011](docs/adr/0011-preset-membership-is-computed.md) and [ADR 0023](docs/adr/0023-presets-are-seeded-not-stored.md).
+<p align="center">
+<img src="docs/images/access.png" alt="The Terminal tab with access, trusted players and radius" width="640">
+</p>
 
-**Custom tags** are the ones you make, for the categories vanilla does not know about: a base build, a redstone project, the pile of things you owe the neighbours. They sit below the presets under a "Your tags" divider, so which tags are yours to edit reads without relying on colour.
+## Install
 
-## Making and assigning tags
+1. Install Fabric Loader, then put Total Storage and [Fabric API](https://modrinth.com/mod/fabric-api) in your `mods`
+folder. The mod has to be on the server and on every player's game. A player without it is told so at login.
+2. Craft a terminal from a chest, four iron ingots, three redstone dust and one ender pearl.
 
-Custom tags live on the terminal, in the `Tags` section of the settings tab, and they persist across a power cut and a world reload like every other network setting. The `New tag` button under the network gauge names one. Each tag row has a rename control and a delete control. Delete asks once before it does, with the control turning into a red `Delete?` button, since deleting a tag unfiles everything that was in it.
+<p align="center">
+<img src="docs/images/recipe.png" alt="The terminal recipe: iron, ender pearl, iron over redstone, chest, redstone over iron, redstone, iron" width="420">
+</p>
 
-A name has to be something the query language can address: not empty, at most 32 characters, letters, digits, spaces, dashes and underscores only, not already taken on this network, and not the name of a preset. A refused name keeps the prompt open with what you typed and says which of those it broke, so you fix the name rather than start it again. Renaming moves the tag's id along with its name, so `#castle` finds the tag called Castle the moment you rename it, and the items it held come with it. See [ADR 0033](docs/adr/0033-renaming-a-tag-moves-its-id.md).
+3. Place it near your chests, power it, and right-click it.
 
-A name may carry spaces, and its id turns them into dashes, because the search box splits terms on whitespace and `#base kit` would otherwise be a tag term and a stray word rather than a name. A tag called `Base Kit` is found by `#base-kit`, or by `#base` or `#kit` like any other word it starts with, and the filter column lists it in the form you type rather than the form you named it, so the column and the search box never disagree. The tags panel and the row tooltip keep the name as you wrote it.
+The keys are `R` for Deposit all, `V` for quick stack and `B` for sort. Change them under `Options > Controls > Key
+Binds`, in the Total Storage section.
 
-Ctrl-click any cell in the grid, or Cmd-click on macOS, to file that item. The panel lists your custom tags with the ones the item already carries ticked, and clicking one files or unfiles it immediately. When there are more tags than rows, a scrollbar beside them shows how far down you are, and the wheel or a drag moves through them. Tags apply by item identifier, so filing a pickaxe files every pickaxe, damaged or not.
+## Settings
 
-Filing a large storage area one item at a time is not a plan, so **shift-clicking a tag in that panel files everything the grid is currently showing**. Narrow with the search box or the other tags first, and the panel tells you how many items that is before you do it. That is what makes tagging an existing base something you finish rather than abandon.
+Open server settings from Mod Menu, or with `/ts config`. In singleplayer you can change them. On a server, only
+operators can, and everyone else can read them. Each terminal keeps its own radius, access and roles on the block, set
+from its Settings tab.
 
-**A tag set moves between terminals rather than being rebuilt.** The `Copy from...` button under `New tag` lists every other powered terminal you may administer, nearest first, with how many custom tags each one holds. Clicking one merges its custom tags into this network. Shift-clicking replaces this network's set with it, and asks once before it does, since replacing unfiles everything you had. Only custom tags move, because preset tags are worked out from the item and every network already has them, and the items filed under each tag come with it. An item this world has never heard of is kept rather than dropped, so a temporarily missing mod does not destroy how you filed things.
+<details>
+<summary><b>All server settings</b></summary>
 
-The same set can be written to and read from a file, which is how a server owner seeds a standard set or moves one between worlds: `/ts terminal <pos> tags export <file>` writes it to `total-storage/tag-sets/<file>.json` in the world directory, and `/ts terminal <pos> tags import <file> <merge|replace>` reads it back. `/ts terminal <pos> tags copy <pos> <merge|replace>` is the command form of the copy control. Every one of them needs administer permission on **both** terminals, so a tag set can never be lifted off a network you cannot already edit. A name a network cannot address is skipped and counted rather than failing the whole import.
+Settings are saved per world. A value out of range is clamped when the file loads and refused by the command.
 
-Making, renaming, deleting and assigning all need the same permission as any other network setting: the terminal's owner, or an operator. Someone who can merely open the terminal can filter by your tags but cannot restructure them, and that is enforced on the server rather than by hiding the controls, so a modified client cannot rename a tag on a network it does not own.
-
-## Taking things out
-
-Click a cell and the item comes to you. Left click takes a stack, right click takes half a stack, shift and left click sends a stack straight to your inventory, and middle click asks how much when the amount you want is not one a gesture can express. A stack is the item's own stack size, so sixteen ender pearls or one pickaxe. When a cell holds less than a stack, left click and shift-click take all of it and right click takes half of what is there, so a cell of 48 logs gives 48 and 24. Ctrl-click, or Cmd-click on a Mac, opens the tag panel for that item instead.
-
-Nothing is ever guessed at. What you click is a name and an amount, never a place: the server works out which containers really hold the item at the moment it extracts, inside one transaction. A listing that has gone stale under you therefore costs a shortfall rather than an item that never existed, and a container broken in the same tick you click it hands over nothing. Two players reaching for the last stack together produce exactly one success. See [ADR 0009](docs/adr/0009-clients-send-intent.md).
-
-Taking everything a cell showed says nothing, because nothing fell short. Taking more than the network holds, which happens when the listing was stale or somebody else got there first, takes everything there is and tells you what you did not get, inside the terminal rather than on the action bar behind it. Losing a race for the last stack to another player says so too, rather than leaving you looking at an empty cursor. A full inventory takes what fits and leaves the rest in the network. Nothing is ever dropped on the floor, and a locked slot is never used as somewhere to put a withdrawal.
-
-Everybody else looking at what you moved is told the moment you move it, in the same tick rather than on the next sweep. That means the other player at your terminal, anybody at a second terminal whose radius overlaps the same chest, and anybody standing at that chest with it open by hand. Nobody who cannot see the container hears anything at all. See [ADR 0032](docs/adr/0032-a-commit-resyncs-everyone-who-can-see-it.md).
-
-A request the network cannot meet says which of the two things went wrong: the item has gone, or you have nowhere to put it. Those send you to fix different things, so they are never reported as each other.
-
-## Putting things in
-
-Shift-click a stack in your inventory and the network takes it. Pick a stack up and left click the grid to hand over all of it, or right click to hand over one. The `Deposit all` button under the network gauge empties your whole inventory in one press, and so does the deposit all key, bound to `R` by default and rebindable in the controls screen. The key yields to the search box while it has focus, the way the inventory key does inside the creative search, so typing `redstone` searches for redstone rather than emptying your inventory on the `r`.
-
-**Armour and the offhand are never deposited**, by any of these, and **deposit all leaves a locked slot alone**. A shift-click out of a locked slot still moves, into the terminal exactly as into a chest, because a lock stops the mod moving a slot rather than stopping you: you picked that slot, so it goes. A server can also keep the hotbar out of deposit all with `depositAllSkipsHotbar`, off by default: locking already protects a chosen slot precisely, and this protects nine of them bluntly, for servers whose players would rather not learn about locking before losing a pickaxe. That is the whole reason locking exists, and it is enforced on the server rather than filtered on the client, so a modified client cannot empty a slot you pinned. Shift-click is the one mouse gesture the terminal takes over; picking up, splitting, and dragging all behave exactly as they do in any container. The keyboard belongs to the search box while it has focus, so a number key writes a digit rather than swapping a hotbar slot; clicking anywhere else in the terminal hands the keyboard back, which is what makes the deposit all keybind reachable. See [ADR 0029](docs/adr/0029-the-grid-takes-clicks-like-a-container-does.md).
-
-Where each item lands is the network's decision, made per item against the roles you gave your containers. A `Filtered` container that has declared the item takes it first, and one that already holds it is preferred over one that does not, so like items gather rather than scatter. `General` containers take what is left. `Excluded` containers are never written to, under any configuration.
-
-A full `Filtered` container falls through to a `General` one rather than refusing the item. A network with room for some of what you offered stores that much and names what is still in your hands, by item rather than as a bare total, because "thirty cobblestone" tells you which chest filled up where "thirty items" does not. A network with no room at all leaves your inventory exactly as it was and says so, naming what would not go in and why: every slot is full, or the free space is all in `Filtered` containers that do not take those items, or the free slots cannot hold that item at all, as an empty shulker box cannot hold another. The last two are why the settings panel can show free slots while a deposit is refused. Having nothing to store is a different message from having nowhere to put it.
-
-Deposit all is rate limited, since it reads every container in the network at once, and so is rescanning. The cooldown is `expensiveOperationCooldownTicks`, ten ticks by default and settable to `0` to switch it off. It is counted per player and per operation, so emptying your inventory never spends your next rescan; see [ADR 0031](docs/adr/0031-expensive-operations-are-paced-per-player-and-per-operation.md). Asking again too soon says so rather than doing nothing, and changes nothing at all: a limit that half-worked would cost you items.
-
-## Tidying the chests themselves
-
-Sorting reorders the contents of a container so opening it by hand still makes sense, and merges its part stacks while it is there. Consolidation goes wider: it gathers each item into as few containers as it fits in, then sorts what it touched.
-
-They are the `Sort` and `Gather` buttons under `Deposit all`, and both are deliberate: the network moves a lot of items when you press one. Above `largeOperationContainers` containers, eight by default, the first press swaps the pair for one wide red `Confirm?` button, and a second press within ten seconds goes ahead. While it runs, that same button reads `Stop` with how far it has got, and pressing it stops the operation. A server that would rather never be asked sets the value to `0`.
-
-Where the items go is decided by the same rules as a deposit. A `Filtered` container that accepts the item takes it first; otherwise it gathers into a `General` container that already holds it. Consolidation never introduces an item into a `General` container that did not already have some, because "tidy" does not mean "spread into the empty chest in the corner".
-
-**`Excluded` containers are neither read from nor written to**, and a run that skipped any says how many, so an untouched chest is explained rather than mysterious. A container whose slots restrict what they accept, a furnace among them, is skipped for the same reason: the mod would rather leave a machine alone than rearrange its input into its fuel slot. See [ADR 0018](docs/adr/0018-two-gates-decide-what-may-be-sorted.md).
-
-A network-wide operation is the mod's longest-running piece of work, so each tick spends an allowance of `movesPerTickBudget`, counted in the containers and slots the work actually reads, and continues on the next tick instead of stalling the server. The terminal stays usable while it runs, and everyone at the terminal sees its progress on the `Stop` button.
-
-What the terminal has to tell you is said **inside the terminal**, because the action bar is drawn behind an open screen. A success says nothing beyond its sound and what you can see change. A partial result or a failure replaces the "Inventory" label for a few seconds with a short line, grey for a partial result and dark red for a failure, such as "Skipped 2 containers" or "Your inventory is full". Hover it for the full message. With no terminal open, the same words arrive on the action bar. Each step commits on its own, which is what "cancel" means here: nothing further is started, the step in flight settles or rolls back, and no item is ever lost. See [ADR 0036](docs/adr/0036-a-long-operation-commits-one-step-at-a-time.md).
-
-Only the owner and operators can run either, checked when the request arrives rather than when the button is drawn, and both are rate limited like deposit all.
-
-## Sorting a container you are standing at
-
-A chest does not need a terminal to be worth tidying, so **every container screen carries a sort button of its own**, in the clean band vanilla leaves above the first slot row. It is on the player inventory too, and on any modded screen that extends the vanilla container screen, without that mod knowing about this one. Screens whose slots mean something, a furnace or an anvil among them, never get one: rearranging an input into a fuel slot is not tidying. See [ADR 0018](docs/adr/0018-two-gates-decide-what-may-be-sorted.md).
-
-The button sends nothing but the intent to sort the screen that is open, and the server decides what that means, so a modified client cannot use it to reach a container it does not have open. It reports what happened on the action bar: sorted, already sorted, or nothing to sort. A server that would rather not offer it sets `sortButtonEnabled` to `false`, which greys the button out and refuses what the button sends, checked on the server rather than trusted to the client. `/ts sort` is a separate surface and keeps working.
-
-**`/ts sort` sorts the container you are looking at.** It is the same sort as the button, reachable from chat and from command blocks. Chat will not open while a chest is open, so look at the chest, within reach, and run the command. It is held to the same rules as the button: a furnace or an anvil in view is refused and left alone, and a container you could not open, a locked one or a chest or shulker box with a block on its lid among them, is not sorted either. Neither is an ender chest, whose contents are yours rather than the block's. Looking at anything that opens no screen, or at nothing at all, sorts your inventory instead and says so, and with a container screen already open it sorts that. The chest is opened and closed in the same tick to be sorted, so it clicks and counts as opened, loot and sculk sensors included, exactly as if you had opened it by hand. There is no middle-click gesture: a survival client sends no slot-click packet for the pick-item button at all, so there is nothing for a server to read.
-
-There is also a **sort keybind**, bound to `B` by default and rebindable under Total Storage in the controls screen. It sorts the container screen in front of you, or your inventory, and it keeps working with the button hidden, which is the point of having it.
-
-**Sorting your inventory never touches the hotbar.** It orders the 27 main inventory slots and leaves all nine hotbar slots exactly as they were, by the button, the keybind or the command, because `B` is an easy key to hit by accident and a hotbar layout lives in muscle memory. **Locked slots stay where they are** too: the main inventory is sorted around them rather than through them.
-
-## Locking a slot
-
-**Alt-click a slot in your inventory to lock it.** A locked slot is never emptied by deposit all, never quick stacked, never used to land a withdrawal, and never moved by sorting, and every one of those is enforced on the server rather than filtered on the client. The rule is one sentence: a lock stops the mod moving a slot, never you. Dragging, shift-clicking and hotbar swapping are your gestures and work as they always do, wherever they are aimed.
-
-A locked slot wears a small two-tone padlock badge in the top-left corner of the item, drawn over the item and its decorations. It leaves the stack count and the durability bar alone, both of which vanilla draws along the bottom. Badges are drawn in every screen that shows your inventory, because quick stack and the inventory sort button skip locked slots there too, but never on the in-game hotbar. An amber wash behind locked slots is available too, off by default: set `lockedSlotTintVisible` to `true` to turn it on. **The badge carries the state and the wash only reinforces it**, so a player who cannot separate the colours loses nothing.
-
-**Hold Alt to see what can be locked.** While Alt is held, every slot you could lock gets a dotted ring, and a locked item's tooltip says that sorting and deposits skip it and how to unlock it. On a Mac the key is Option. See [`docs/locked-slot-art.md`](docs/locked-slot-art.md).
-
-## Quick stacking into what is nearby
-
-Quick stack takes what you are carrying and tops up the containers around you. It is on a button in your inventory screen, on a keybind bound to `V` by default, and on `/ts quickstack`. It works on plain chests with no terminal anywhere: this is a convenience, not a network feature.
-
-It is deliberately conservative. **Quick stack only tops up a container that already holds the item**, never introduces a new one, which is what makes it safe to press without looking. It offers the whole inventory, hotbar included, since topping up an existing stack cannot cost you a tool: locking a slot is how you keep something out of it, and a locked slot is never quick stacked. Containers out of `quickStackRadius` are not considered, eight blocks by default, and neither are containers in unloaded chunks. Where a terminal does claim a container nearby, its role is honoured: `Excluded` is skipped and a `Filtered` container still only takes what it accepts. It is rate limited like the other operations that read a lot of containers at once, and it says how much it moved, or that there was nothing nearby that wanted anything. A server that would rather not offer it at all sets `quickStackEnabled` to `false`, which greys the button out and refuses the keybind and the command.
-
-## Client options
-
-Everything above is the server's to decide, because everything above moves items. Where a mod button sits and whether a wash is drawn move nothing, so those are yours, and they live in `config/total-storage/client.json` on your own machine. The file is written with its defaults the first time the mod starts, and read at startup.
-
-| Setting | Default | What it does |
-|---|---|---|
-| `sortButtonVisible` | `true` | Draws the sort button in container screens; turn it off if you would rather use the command |
-| `screenButtonAnchor` | `inside_top_right` | Where this mod's screen buttons sit: in the band above the slots, or `outside_top_right` / `outside_bottom_right` beside the panel |
-| `lockedSlotTintVisible` | `false` | Draws an amber wash behind a locked slot; the badge stays either way |
-
-Only one button fits the band vanilla leaves, so where a screen carries two, the player inventory being the one that does, the second moves outside the panel rather than crowding the title. See [`docs/sort-button-art.md`](docs/sort-button-art.md).
-
-Three keybinds live under Total Storage in the vanilla controls screen, all rebindable, and none of them takes a key vanilla already uses.
-
-| Key | Default | What it does |
-|---|---|---|
-| Sort container | `B` | Sorts the container screen in front of you, or your inventory. Keeps working with the button hidden |
-| Deposit all | `R` | Empties your inventory into the terminal you have open. Yields to the search box while the search box has the keyboard, and clicking anywhere else in the terminal hands it back |
-| Quick stack | `V` | Tops up the containers around you, from the inventory screen or with no screen open at all |
-
-**The server settings have a screen too.** With [Mod Menu](https://modrinth.com/mod/modmenu) installed, the configure button beside Total Storage opens every server-wide setting grouped by what it affects, each one showing its value in the words the terminal itself uses, such as `Owner only`, `ON` or `90%`, with a number's range and every setting's default beneath it. The command and the JSON file keep the raw ids. An operator, or the owner of a singleplayer world whether or not cheats are on, can change them and the change goes to the server, which checks the permission again before applying it. Everybody else sees the same screen read-only, because knowing what the radius cap is on the server you are playing on is reasonable even when changing it is not. Values follow the server, so a setting moved by command updates the screen under you as long as you have not started editing.
-
-## Configuring a network
-
-The terminal has two views, switched with the tabs down its right-hand side: the items it holds, and how it is configured. The settings view is where a storage area stops being whatever happened to be in range and becomes something you arranged.
-
-The settings view has three sections, behind tabs along its top. **Terminal** holds the access mode, the trust list and the radius. The access button steps through the modes on a click and back on a right-click. **Click the Trusted button to edit the trust list.** A prompt lists the players already trusted, each with a Remove button, and has a field underneath: type a player's name and press Enter to add them. The server looks the name up the same way `/ts terminal <pos> trust` does, online or not, and a name it does not know is refused with the same message while what you typed stays in the field. A server in offline mode knows every name, as the command does. Removing a player who has the terminal open closes their screen and tells them why. The radius has `-` and `+` buttons either side of its value. **Containers** lists everything the network reaches, nearest first, each row showing the container's block, its name or type, where it is and how much it holds, with its role on a button. Clicking a row walks its role forwards and right-clicking walks it back, so marking a chest `Excluded` is two clicks from opening the terminal. `Scan again` and `Show in world` sit under the network gauge. **Tags** lists your custom tags, with `New tag` and `Copy from...` under the gauge.
-
-Each kind of setting gets its own section because the window is already as tall as Minecraft will draw one on the smallest screen it supports, and a list of fifty containers needs that height to itself.
-
-The gauge on the left of every view shows how much room the network has left, counted in slots across every container it may write to. Slots rather than items, because slots are what runs out: a network holding one of each of a thousand things is full while holding almost nothing. `Excluded` containers are counted in neither total, since a chest the network may not write to is not room. The bar turns red and says "Almost full" once the network is as full as `nearCapacityWarningPercent`, ninety by default, so you see it coming rather than discovering it on a failed deposit.
-
-**The block says it too.** A powered terminal whose network is past that threshold grows a lit bar across the bottom of its screen face, so you learn a base is filling up walking past it rather than after pressing Deposit all. It is a shape rather than a tint, so it survives distance, low light and colour blindness, and it clears itself as soon as the network drops back below the threshold. An unpowered terminal never shows it, because an unpowered terminal is holding nothing.
-
-Only the owner and operators can change any of it. Everyone else sees the same panel with its controls greyed out, which is the truth rather than a missing control. Permission is checked again when each change arrives, so a modified client that draws itself the buttons gains buttons that refuse it.
-
-## Seeing what a terminal reaches
-
-"Why isn't that chest included" is the question a radius always produces, so the terminal answers it by outlining the containers it is holding, in the world. The outlines appear when a terminal is switched on, when you change the radius, and whenever you ask for them from the settings view or with `/ts terminal <pos> highlight`. Switching it on outlines them for everyone nearby who may open it, which includes whoever flipped the lever; a terminal that was already on when its chunk loaded draws nothing. They fade after a few seconds: this is feedback, not an overlay. A double chest is outlined as the one container it is, across both of its blocks, and the outline follows the block state, so splitting a chest while the outline is up redraws it rather than leaving a stale box.
-
-Each outline is coloured by that container's role and shaped by it too, so all three roles survive a player who cannot separate the red from the green from the white: `General` is a plain line, `Filtered` is a dashed one, and `Excluded` is doubled. An unpowered terminal outlines nothing, because it is holding nothing.
-
-## Container roles
-
-Every container a terminal can see carries a role, which is what decides how far the network is allowed to go with it.
-
-| Role | Receives deposits | Reordered by sorting | Listed in the terminal | Withdrawable |
-|---|---|---|---|---|
-| **General** (default) | Yes | Yes | Yes | Yes |
-| **Filtered** | Matching items only, preferred first | Yes | Yes | Yes |
-| **Excluded** | Never | Never | Yes | Yes |
-
-`Excluded` is the one that makes the rest safe to turn on. A curated potion chest stays exactly as you arranged it while staying searchable from the terminal. A `Filtered` container additionally records the tags and items it accepts, and that record is stored with its role.
-
-**A `Filtered` container is edited from its own row.** Shift-click it and the network's tags come up, preset and custom, with a tick against each one the container accepts, and a scrollbar beside them since a fresh network already has thirteen. Its row chip reads `Filtered 3` for three accepted tags, and `Filtered 0` in warning colour while it accepts nothing, because a filtered container with an empty filter receives nothing at all and that should be visible rather than silent. `/ts terminal <pos> filter <container> add|remove <tag>` is the same edit for a server with no client mod, and `clear` empties it.
-
-**Containers can be named.** The chest by the door is "Potions", not `-10 -60 3`. Shift-right-click a row to name it, and the name replaces the position everywhere that container is listed, with the position still in its tooltip. Names are trimmed, capped at 32 characters and carry no control characters; confirming an empty field takes the name back off. A name lives on the terminal beside the role, so it survives a reload, a power cut and a chunk unload the same way roles do.
-
-Roles live on the terminal, not on the container, so a chest reached by two overlapping terminals may hold a different role in each. See [ADR 0004](docs/adr/0004-container-roles.md).
-
-Set them from the terminal's settings view, or from the command line for a server with no client mod. A role edit is the one request in the mod that names a block position, and the terminal refuses any container its network does not already reach; see [ADR 0030](docs/adr/0030-a-role-names-a-container-and-the-network-validates-it.md) for why that is not the thing [ADR 0009](docs/adr/0009-clients-send-intent.md) forbids.
-
-Break a container and its role goes with it: whatever you put back on that spot starts as a general container rather than inheriting a decision made about a different one. A container that only leaves because its chunk unloaded keeps everything, and gets it back when the chunk returns. A container broken while its terminal has no power is the exception, since an unpowered terminal is not running and hears nothing. See [ADR 0024](docs/adr/0024-a-role-dies-with-the-container-it-was-given-to.md).
-
-## Crafting the terminal
-
-The terminal is a mid-game goal rather than a starting block or an endgame reward. It costs a chest, four iron ingots, three redstone dust, and one ender pearl, and nothing that requires a trip to the End. See [ADR 0022](docs/adr/0022-the-terminal-costs-an-ender-pearl.md).
-
-|   |   |   |
-|---|---|---|
-| Iron ingot | Ender pearl | Iron ingot |
-| Redstone dust | Chest | Redstone dust |
-| Iron ingot | Redstone dust | Iron ingot |
-
-The recipe appears in the recipe book the first time you pick up redstone dust or an iron ingot, greyed until you also hold an ender pearl, so you can see the terminal exists and plan for it long before you can build one. It is also in the Functional Blocks creative tab.
-
-## Who can open a terminal
-
-A terminal reaches every container around it through one screen, so on a shared server it is a key to a whole base. Each terminal therefore has an access mode, and it is owner-locked to begin with. See [ADR 0008](docs/adr/0008-terminals-owner-locked-by-default.md).
-
-| Mode | Who can open it |
-|---|---|
-| `owner` (default) | Only the player who placed it |
-| `trusted` | The owner, plus the players on that terminal's trust list |
-| `open` | Anyone |
-
-- The owner is recorded by UUID when the terminal is placed, so ownership survives a name change and outlives the owner logging out.
-- Only the owner and operators can change the mode or edit the trust list, whatever mode the terminal is in. Being let into an open terminal is not a way to lock it again.
-- Operators can open any terminal, for moderation. That bypass is written to the server log, naming the player and the terminal.
-- Permission is checked server-side on every operation rather than only when the screen opens, and an edit binds the very next check. A player whose access is taken away while they have the screen open has it closed for them.
-- A refused right-click says so instead of doing nothing.
-- `defaultTerminalAccessMode` sets what newly placed terminals start as, so a friendly server can switch to `open` once rather than every player changing every terminal. Changing it never touches a terminal already placed.
-
-## Configuration reference
-
-Server settings live in `total-storage/server-config.json` inside the world directory, so two worlds hold two independent sets. They are read at world load, written back with their defaults the first time, and every one of them is editable from `/ts config` or from the Mod Menu settings screen. A value outside its range is clamped as the file loads and refused outright by the command, so a typo never silently half-applies. A malformed file is preserved beside itself and the defaults are loaded, rather than the broken file being overwritten.
-
-**Defaults for new terminals**
-
-| Setting | Default | Range | What it affects |
+| Setting | Default | Range | What it does |
 |---|---|---|---|
-| `maxTerminalRadius` | `16` | 1 to 64 | The furthest any terminal on this server may reach. Lowering it pulls in every terminal already running; raising it hands the reach back. This is the main lever on how much a single scan costs. |
-| `defaultTerminalAccessMode` | `owner` | `owner`, `trusted`, `open` | What a newly placed terminal starts as. Changing it never touches a terminal already placed. |
-| `quickStackRadius` | `8` | 1 to 64 | How far quick stack looks for containers to top up. |
+| Maximum terminal radius | 16 | 1 to 64 | The furthest any terminal may reach. Lowering it pulls in terminals that are already running; raising it gives their reach back. |
+| Default access mode | Owner | Owner, Trusted, Open | What a newly placed terminal starts as. Terminals already placed keep theirs. |
+| Quick stack radius | 8 | 1 to 64 | How far quick stack looks for containers to top up. |
+| Sort ordering | Registry id | Registry id, Display name | How sorted containers are ordered. Registry id does not change with the game language. |
+| Sort button | On | On or off | Whether the sort button and key are offered. `/ts sort` keeps working either way. |
+| Quick stack | On | On or off | Whether quick stack is offered on the button, the key and the command. |
+| Deposit all skips the hotbar | Off | On or off | Keeps the whole hotbar out of Deposit all, for players who would rather not lock slots. |
+| Near capacity warning | 90% | 0 to 100 | How full the network has to be before the terminal warns you. |
+| Expensive operation cooldown | 10 ticks | 0 to 200 | Per player wait between rescans, deposits, quick stacks, sorts and gathers. 0 turns it off. Raise this first on a busy server. |
+| Moves per tick budget | 64 | 1 to 1024 | How much one network-wide sort or gather may do per tick. Lower is smoother and slower. |
+| Ask above this many containers | 8 | 0 to 1024 | A sort or gather touching more containers than this asks before it starts. 0 never asks. |
 
-**Sorting**
+`/ts config eligibility` forces a block into or out of every network, which is how you admit a modded container the mod
+does not recognise, or keep one out. Furnaces, hoppers, brewing stands and ender chests are left out by default.
 
-| Setting | Default | Range | What it affects |
-|---|---|---|---|
-| `sortOrdering` | `registry_id` | `registry_id`, `display_name` | How sorted containers are ordered. |
-| `sortButtonEnabled` | `true` | true or false | Whether the sort button and the sort keybind are offered. `/ts sort` is a separate surface and keeps working. |
+The locked slot badge is always drawn. A tint behind locked slots is off by default and can be switched on in
+`config/total-storage/client.json` in your game folder.
 
-**Features**
+</details>
 
-| Setting | Default | Range | What it affects |
-|---|---|---|---|
-| `quickStackEnabled` | `true` | true or false | Whether quick stack is offered at all, on the button, the keybind and the command. |
-| `depositAllSkipsHotbar` | `false` | true or false | Keeps the whole hotbar out of deposit all, bluntly, for servers whose players would rather not learn about locking first. |
-| `nearCapacityWarningPercent` | `90` | 0 to 100 | How full a network has to be before the terminal colours its remaining capacity as a warning. |
+<details>
+<summary><b>Commands</b></summary>
 
-**Performance**
+`/totalstorage` and `/ts` are the same. `/ts` on its own lists them. Terminal commands take the terminal's block
+position, and container commands take the container's.
 
-These are the three settings a pack author should look at, because they are what stands between a very large storage area and a tick spike.
+```
+/ts config list
+/ts config get <setting>
+/ts config set <setting> <value>
+/ts config reset <setting>
+/ts config reset all
+/ts config eligibility list
+/ts config eligibility set <block> <true|false>
+/ts config eligibility clear <block>
+/ts config eligibility clear all
+/ts terminal <pos> info
+/ts terminal <pos> radius [blocks]
+/ts terminal <pos> access [owner|trusted|open]
+/ts terminal <pos> trust [players]
+/ts terminal <pos> untrust <players>
+/ts terminal <pos> role <container> [general|filtered|excluded]
+/ts terminal <pos> name <container> [set <name>|clear]
+/ts terminal <pos> filter <container> [add <tag>|remove <tag>|clear]
+/ts terminal <pos> rescan
+/ts terminal <pos> highlight
+/ts terminal <pos> tags export <file>
+/ts terminal <pos> tags import <file> <merge|replace>
+/ts terminal <pos> tags copy <pos> <merge|replace>
+/ts sort
+/ts quickstack
+```
 
-| Setting | Default | Range | What it affects |
-|---|---|---|---|
-| `expensiveOperationCooldownTicks` | `10` | 0 to 200 | Per player and per operation cooldown on rescan, deposit all, quick stack, network sort, consolidation and container sort. `0` switches it off. Raise it on a busy server before you lower anything else. |
-| `movesPerTickBudget` | `64` | 1 to 1024 | How much work one network-wide operation may do in a single tick before continuing on the next. Lower means smoother ticks and slower operations. |
-| `largeOperationContainers` | `8` | 0 to 1024 | How many containers a network sort or consolidation may touch before the first press asks instead of starting. `0` never asks. |
+Anyone can read a setting, sort what they have open or are looking at, and quick stack. Changing a server setting
+needs operator permission. Changing a terminal needs its owner or an operator. Settings and values tab-complete, and
+changes apply at once.
 
-Container eligibility overrides are stored alongside these and edited with `/ts config eligibility`. They force a block into or out of every network on the server, which is how you admit a modded container the rules do not recognise, or keep one out.
+</details>
 
-## Commands
+<details>
+<summary><b>Works well with</b></summary>
 
-Every server-wide setting is configurable from the console, so a server can be set up without a client mod and without editing files. `/totalstorage` and its alias `/ts` are the same tree.
+None of these are needed.
 
-| Command | Who | What it does |
-|---|---|---|
-| `/ts` | anyone | Lists the commands |
-| `/ts config list` | anyone | Every setting, its value, and its default |
-| `/ts config get <setting>` | anyone | One setting's value |
-| `/ts config set <setting> <value>` | operators, and a singleplayer host | Moves a setting, refusing a value outside its range |
-| `/ts config reset <setting>` | operators, and a singleplayer host | Restores one setting's default |
-| `/ts config reset all` | operators, and a singleplayer host | Restores every default |
-| `/ts config eligibility list` | anyone | Blocks forced into or out of every network |
-| `/ts config eligibility set <block> <true\|false>` | operators, and a singleplayer host | Forces a block eligible or ineligible |
-| `/ts config eligibility clear <block>` | operators, and a singleplayer host | Stops forcing that block |
-| `/ts config eligibility clear all` | operators, and a singleplayer host | Stops forcing every block |
-| `/ts terminal <pos> radius` | anyone | One terminal's radius, and what it actually reaches |
-| `/ts terminal <pos> radius <blocks>` | owner or operators | Sets one terminal's radius, clamped to the server maximum |
-| `/ts terminal <pos> access` | anyone | Which access mode one terminal is in |
-| `/ts terminal <pos> access <owner\|trusted\|open>` | owner or operators | Sets who may open that terminal |
-| `/ts terminal <pos> trust` | owner or operators | The players that terminal trusts |
-| `/ts terminal <pos> trust <players>` | owner or operators | Adds players to its trust list, online or not |
-| `/ts terminal <pos> untrust <players>` | owner or operators | Removes players from its trust list |
-| `/ts terminal <pos> info` | anyone | Summarises one terminal: power, radius, access, and its containers by role |
-| `/ts terminal <pos> role <container>` | anyone | What one container's role is |
-| `/ts terminal <pos> role <container> <general\|filtered\|excluded>` | owner or operators | Sets it, refusing a container the terminal does not reach |
-| `/ts terminal <pos> name <container>` | anyone | What one container is called, if anything |
-| `/ts terminal <pos> name <container> set <name>` | owner or operators | Names a container, trimmed and capped at 32 characters |
-| `/ts terminal <pos> name <container> clear` | owner or operators | Takes the name back off |
-| `/ts terminal <pos> filter <container>` | anyone | What one `Filtered` container accepts |
-| `/ts terminal <pos> filter <container> add <tag>` | owner or operators | Adds a tag to what it accepts, refusing a tag the network does not hold |
-| `/ts terminal <pos> filter <container> remove <tag>` | owner or operators | Takes a tag back off |
-| `/ts terminal <pos> filter <container> clear` | owner or operators | Leaves it accepting nothing |
-| `/ts terminal <pos> rescan` | owner or operators | Makes the terminal walk its region again, rate limited like the panel button |
-| `/ts terminal <pos> highlight` | anyone who may open it | Outlines the containers it is holding |
-| `/ts terminal <pos> tags export <file>` | owner or operators | Writes its custom tag set to the world directory |
-| `/ts terminal <pos> tags import <file> <merge\|replace>` | owner or operators | Reads a tag set back into it |
-| `/ts terminal <pos> tags copy <pos> <merge\|replace>` | owner or operators on both | Copies another terminal's custom tag set into it |
-| `/ts sort` | anyone | Sorts the container you have open, else the one you are looking at, else your inventory |
-| `/ts quickstack` | anyone | Tops up matching stacks in the containers around you |
+- **[Mod Menu](https://modrinth.com/mod/modmenu)** adds the server settings screen to your mods list.
+- **[JEI](https://modrinth.com/mod/jei)** and **[EMI](https://modrinth.com/mod/emi)** show the terminal recipe.
 
-Setting names and their values tab-complete. Changes are saved to the world immediately and pushed to connected clients. Operators are permission level 2.
+</details>
 
-## Development
+<details>
+<summary><b>Requirements</b></summary>
 
-Gradle + Fabric Loom toolchain with Spotless formatting, Checkstyle, JaCoCo coverage, Fabric GameTest, and CI/CD via GitHub Actions, sharing the workflow of [minecraft-dogs-unleashed](https://github.com/grabartley/minecraft-dogs-unleashed).
+Minecraft `1.21.1` on Java `21`.
 
-- `./gradlew check` runs formatting, unit tests, side-safety verification, and the no-comments gate
-- `./gradlew runClient` launches the dev client
-- `./gradlew runGametest` runs the in-game test suite
+| Mod           | Version              |
+|---------------|----------------------|
+| Fabric Loader | `>=0.16.5`           |
+| Fabric API    | `>=0.116.12+1.21.1`  |
 
-## Documentation
+</details>
 
-- [`docs/prd.md`](docs/prd.md) states what the mod is: every use case it serves, who may do what, and the rules it holds
-- [`docs/standards.md`](docs/standards.md) covers the engineering standards shared across these mods
-- [`docs/adr/`](docs/adr/) records the architecture decisions behind this mod and the reasoning for each
-- [`docs/terminal-block-art.md`](docs/terminal-block-art.md) is the reference for the terminal block's textures, models and sounds, and the blockstate it needs
-- [`docs/terminal-gui-sprites.md`](docs/terminal-gui-sprites.md) is the sprite reference for the terminal screen, and how to edit the art
-- [`docs/locked-slot-art.md`](docs/locked-slot-art.md) is the lock badge reference, and how a locked slot signals itself without relying on colour
-- [`docs/sort-button-art.md`](docs/sort-button-art.md) is the reference for the buttons this mod draws on screens it does not own, and why they still need their own art
+## Languages
+
+Total Storage is in English. Want to add your language? Copy
+[`en_us.json`](src/main/resources/assets/total-storage/lang/en_us.json), translate the text, and open a pull request.
+Keep the keys and the `%s` placeholders as they are, and leave command names and arguments untranslated.
+
+## Credits
+
+How every part of the mod is meant to work is written down in the [product requirements](docs/prd.md).
+
+Total Storage is made by Vitória Vedana and Graham Bartley and released under the [MIT License](LICENSE).
+
+If you enjoy Total Storage, a star on GitHub or a coffee on Ko-fi helps a lot.
+
+<a href="https://ko-fi.com/grahambartley" rel="noopener nofollow ugc" target="_blank">
+<img src="https://i.imgur.com/FSNi7zk.png" alt="Support me Ko-fi">
+</a>
