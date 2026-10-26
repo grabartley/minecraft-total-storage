@@ -146,7 +146,7 @@ jobs:
             echo "prev_published=${PREV_PUBLISHED}"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Map release type to Modrinth version type
+      - name: Map release type to Modrinth/CurseForge version type
         if: github.event_name == 'workflow_dispatch'
         id: release_meta
         run: |
@@ -203,6 +203,13 @@ jobs:
         run: ./gradlew modrinth -Pversion=${{ steps.semver.outputs.new_version }}
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          MOD_RELEASE_TYPE: ${{ steps.release_meta.outputs.modrinth_type }}
+
+      - name: Publish to CurseForge
+        if: github.event_name == 'workflow_dispatch'
+        run: ./gradlew curseforge -Pversion=${{ steps.semver.outputs.new_version }}
+        env:
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
           MOD_RELEASE_TYPE: ${{ steps.release_meta.outputs.modrinth_type }}
 
       - name: Create and apply release milestone

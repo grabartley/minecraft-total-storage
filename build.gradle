@@ -1,4 +1,5 @@
 import java.nio.charset.StandardCharsets
+import net.darkhax.curseforgegradle.TaskPublishCurseForge
 
 plugins {
 	id 'fabric-loom' version "${loom_version}"
@@ -7,6 +8,7 @@ plugins {
 	id 'jacoco'
 	id 'checkstyle'
 	id 'com.modrinth.minotaur' version '2.9.0'
+	id 'net.darkhax.curseforgegradle' version '1.1.26'
 }
 
 version = gradle.startParameter.projectProperties.getOrDefault("version", project.mod_version)
@@ -261,5 +263,32 @@ modrinth {
 		optional.project 'modmenu'
 		optional.project 'jei'
 		optional.project 'emi'
+	}
+}
+
+tasks.register('curseforge', TaskPublishCurseForge) {
+	group = 'publishing'
+	description = 'Uploads the remapped JAR to CurseForge.'
+	dependsOn remapJar
+	apiToken = System.getenv('CURSEFORGE_TOKEN')
+
+	doFirst {
+		def projectId = project.findProperty('curseforge_project_id')?.toString()
+		if (!projectId?.isLong()) {
+			throw new GradleException('Set curseforge_project_id in gradle.properties to the numeric CurseForge project ID.')
+		}
+		def mainFile = upload(projectId.toLong(), remapJar)
+		mainFile.displayName = "Total Storage v${project.version}"
+		mainFile.releaseType = System.getenv('MOD_RELEASE_TYPE') ?: 'alpha'
+		mainFile.changelogType = 'markdown'
+		mainFile.changelog = rootProject.file('release-notes.md').exists()
+			? rootProject.file('release-notes.md').text
+			: 'No changelog provided.'
+		mainFile.addGameVersion(project.minecraft_version)
+		mainFile.addModLoader('Fabric')
+		mainFile.addJavaVersion('Java 21')
+		mainFile.addEnvironment('Client', 'Server')
+		mainFile.addRequirement('fabric-api')
+		mainFile.addOptional('modmenu', 'jei', 'emi')
 	}
 }
