@@ -14,8 +14,6 @@ public final class FuzzySearchAttachment {
 
   public static final boolean DEFAULT = false;
 
-  public static final AttachmentSyncPredicate SYNC_PREDICATE = AttachmentSyncPredicate.targetOnly();
-
   public static final AttachmentType<Boolean> TYPE =
       AttachmentRegistry.create(
           ID,
@@ -23,7 +21,7 @@ public final class FuzzySearchAttachment {
               builder
                   .persistent(Codec.BOOL)
                   .copyOnDeath()
-                  .syncWith(PacketCodecs.BOOL.cast(), SYNC_PREDICATE));
+                  .syncWith(PacketCodecs.BOOL.cast(), AttachmentSyncPredicate.targetOnly()));
 
   private FuzzySearchAttachment() {}
 

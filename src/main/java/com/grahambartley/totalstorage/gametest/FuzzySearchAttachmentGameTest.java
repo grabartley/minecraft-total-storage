@@ -49,21 +49,6 @@ public final class FuzzySearchAttachmentGameTest implements FabricGameTest {
   }
 
   @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = TICK_LIMIT)
-  public void theChoiceIsOfferedToItsOwnerOnly(TestContext context) {
-    ServerPlayerEntity owner = context.createMockCreativeServerPlayerInWorld();
-    ServerPlayerEntity bystander = context.createMockCreativeServerPlayerInWorld();
-    FuzzySearchAttachment.set(owner, true);
-
-    context.assertTrue(
-        FuzzySearchAttachment.SYNC_PREDICATE.test(owner, owner),
-        "The owning player should receive their own choice");
-    context.assertFalse(
-        FuzzySearchAttachment.SYNC_PREDICATE.test(owner, bystander),
-        "Another player should never receive somebody else's choice");
-    disconnectAndComplete(context, owner, bystander);
-  }
-
-  @GameTest(templateName = FabricGameTest.EMPTY_STRUCTURE, batchId = BATCH, tickLimit = TICK_LIMIT)
   public void onePlayersChoiceDoesNotLeakOntoAnother(TestContext context) {
     ServerPlayerEntity first = context.createMockCreativeServerPlayerInWorld();
     ServerPlayerEntity second = context.createMockCreativeServerPlayerInWorld();

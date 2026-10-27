@@ -1,11 +1,11 @@
 package com.grahambartley.totalstorage.network;
 
-import com.grahambartley.totalstorage.filter.FuzzySearchAttachment;
 import com.grahambartley.totalstorage.lock.LockToggleService;
 import com.grahambartley.totalstorage.operation.DepositService;
 import com.grahambartley.totalstorage.operation.QuickStackFeedback;
 import com.grahambartley.totalstorage.operation.QuickStackService;
 import com.grahambartley.totalstorage.operation.WithdrawService;
+import com.grahambartley.totalstorage.screenhandler.FuzzySearchService;
 import com.grahambartley.totalstorage.screenhandler.TerminalListingService;
 import com.grahambartley.totalstorage.sort.ContainerSortService;
 import com.grahambartley.totalstorage.sort.SortFeedback;
@@ -18,6 +18,8 @@ public final class ModNetworking {
   private static final WithdrawService WITHDRAWALS = new WithdrawService();
   private static final DepositService DEPOSITS = new DepositService();
   private static final QuickStackService QUICK_STACKS = new QuickStackService();
+  private static final FuzzySearchService FUZZY_SEARCH =
+      new FuzzySearchService(LISTINGS, TerminalSettingsNetworking.tagPanels());
 
   public static QuickStackService quickStacks() {
     return QUICK_STACKS;
@@ -52,15 +54,7 @@ public final class ModNetworking {
         (payload, context) ->
             context
                 .server()
-                .execute(
-                    () -> {
-                      if (FuzzySearchAttachment.get(context.player()) == payload.enabled()) {
-                        return;
-                      }
-                      FuzzySearchAttachment.set(context.player(), payload.enabled());
-                      LISTINGS.refresh(context.player());
-                      TerminalSettingsNetworking.tagPanels().refresh(context.player());
-                    }));
+                .execute(() -> FUZZY_SEARCH.choose(context.player(), payload.enabled())));
     ServerPlayNetworking.registerGlobalReceiver(
         SortRequestPayload.ID,
         (payload, context) ->

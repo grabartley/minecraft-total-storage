@@ -80,7 +80,7 @@ Every state differs from its neighbour by shape, not only by colour, so the scre
 | Field accepted → refused | A red border and one warning line under the field |
 | Grid cell resting → hovered | Vanilla's own slot highlight is painted over the item |
 | Checkbox unticked → ticked | A tick appears inside the recess |
-| Fuzzy search on → off | The tilde is struck through and greyed |
+| Fuzzy search on → off | The tilde is struck through |
 | Sort or Gather → armed | The button reads "Confirm?" on an accent face |
 | Sort or Gather → running | One wide accent button reads "Stop" and the percentage done |
 | Status line partial → failed | The same hoverable line, grey for a partial result and dark red for a failure, always led by a warning glyph |

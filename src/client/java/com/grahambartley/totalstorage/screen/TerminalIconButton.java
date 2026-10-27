@@ -43,7 +43,11 @@ public final class TerminalIconButton extends ClickableWidget {
 
   @Override
   protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
-    draw(context, this, active, active ? icon : unavailableIcon);
+    draw(context, this, active, shownIcon());
+  }
+
+  public TerminalSprite shownIcon() {
+    return active ? icon : unavailableIcon;
   }
 
   @Override
