@@ -2,7 +2,6 @@ package com.grahambartley.totalstorage.screen;
 
 import com.grahambartley.totalstorage.listing.ListingRow;
 import com.grahambartley.totalstorage.listing.ListingStatus;
-import com.grahambartley.totalstorage.listing.ListingWindow;
 import com.grahambartley.totalstorage.listing.TerminalListingMirror;
 import com.grahambartley.totalstorage.network.DepositRequestPayload;
 import com.grahambartley.totalstorage.network.ModNetworkingClient;
@@ -124,8 +123,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
             items.prefetch().needed(), search.text(), selection.active(), selection.mode())) {
       requestVisibleRows();
     }
-    if (requests.needsContainers(
-        showsContainers() ? settings.prefetch().needed() : ListingWindow.EMPTY)) {
+    if (requests.needsContainers(settings.containersToKeep(tab.isSettings()))) {
       requestSettings();
     }
     updateWidgets(items.page().status());
@@ -567,12 +565,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     requests.rows(items.prefetch().window(), search.text(), selection.active(), selection.mode());
   }
 
-  private boolean showsContainers() {
-    return tab.isSettings() && settings.section() == SettingsSection.CONTAINERS;
-  }
-
   private void requestSettings() {
-    requests.showSettings(showsContainers() ? settings.prefetch().window() : ListingWindow.EMPTY);
+    requests.showSettings(settings.containersToAskFor(tab.isSettings()));
   }
 
   private int windowX(double mouseX) {

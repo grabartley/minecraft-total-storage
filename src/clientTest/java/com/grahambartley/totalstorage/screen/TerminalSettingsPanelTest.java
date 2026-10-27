@@ -90,7 +90,25 @@ class TerminalSettingsPanelTest {
     panel.fit(viewOf(100), 0);
     panel.scroll().scrollTo(topRow);
 
-    assertEquals(ListingWindow.of(expectedOffset, expectedLength), panel.prefetch().window());
+    assertEquals(ListingWindow.of(expectedOffset, expectedLength), panel.containersToAskFor(true));
+  }
+
+  @ParameterizedTest(name = "settings open {0}, section {1}")
+  @CsvSource({
+    "true, CONTAINERS, 34, 19",
+    "false, CONTAINERS, 0, 0",
+    "true, TERMINAL, 0, 0",
+    "true, TAGS, 0, 0",
+    "false, TAGS, 0, 0"
+  })
+  void onlyAShowingContainersListAsksForContainers(
+      boolean settingsOpen, SettingsSection section, int askedLength, int keptLength) {
+    final TerminalSettingsPanel panel = new TerminalSettingsPanel();
+    panel.show(section);
+    panel.fit(viewOf(100), 0);
+
+    assertEquals(ListingWindow.of(0, askedLength), panel.containersToAskFor(settingsOpen));
+    assertEquals(ListingWindow.of(0, keptLength), panel.containersToKeep(settingsOpen));
   }
 
   @Test

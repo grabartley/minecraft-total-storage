@@ -8,9 +8,9 @@ public final class ListingPrefetch {
   private final int marginRows;
   private final int guardRows;
 
-  public ListingPrefetch(ListingScroll scroll, int maxLength) {
+  public ListingPrefetch(ListingScroll scroll, int payloadCap) {
     this.scroll = Objects.requireNonNull(scroll, "scroll");
-    final int fittingRows = Math.min(maxLength, ListingWindow.MAX_LENGTH) / scroll.columns();
+    final int fittingRows = Math.min(payloadCap, ListingWindow.MAX_LENGTH) / scroll.columns();
     this.marginRows = Math.max(0, (fittingRows - scroll.visibleRows()) / 2);
     this.guardRows = marginRows / 2;
   }
