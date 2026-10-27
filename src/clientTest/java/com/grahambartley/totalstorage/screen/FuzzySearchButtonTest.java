@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class FuzzySearchButtonTest {
@@ -45,6 +46,17 @@ class FuzzySearchButtonTest {
     button.update(shown, false);
 
     assertEquals(shown, button.visible);
+  }
+
+  @ParameterizedTest
+  @CsvSource({"0,true,true,true", "1,true,true,false", "0,false,true,false", "0,true,false,false"})
+  void onlyALeftClickOnTheShownButtonIsTakenByIt(
+      int mouseButton, boolean shown, boolean over, boolean taken) {
+    final FuzzySearchButton button = new FuzzySearchButton(0, 0, false, sent::add);
+    button.update(shown, false);
+    final double x = over ? button.getX() + 1 : button.getX() - 1;
+
+    assertEquals(taken, button.takesClick(x, button.getY() + 1, mouseButton));
   }
 
   @Test

@@ -1,19 +1,26 @@
 package com.grahambartley.totalstorage.filter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import org.junit.jupiter.api.Test;
+import java.util.Set;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class FuzzySearchAttachmentTest {
-  @Test
-  void noPlayerMeansNoFuzzySearch() {
-    assertFalse(FuzzySearchAttachment.get(null));
-  }
+  private static final FilterCandidate PICKAXE =
+      new FilterCandidate("minecraft:diamond_pickaxe", "Diamond Pickaxe", Set.of("tools"));
 
-  @Test
-  void theChoiceIsStoredUnderTheModsOwnId() {
-    assertEquals("total-storage:fuzzy_search", FuzzySearchAttachment.ID.toString());
-    assertEquals(FuzzySearchAttachment.ID, FuzzySearchAttachment.TYPE.identifier());
+  @ParameterizedTest
+  @CsvSource({
+    "diamond_pickaxe,EXACT",
+    "diamond,PREFIX",
+    "pick,SUBSTRING",
+    "dpick,NONE",
+    "dmndpckx,NONE"
+  })
+  void aSearchWithNoPlayerBehindItMatchesLiterally(String raw, MatchStrength expected) {
+    final ItemFilter filter = ItemFilter.ofSearch(raw).withFuzzy(FuzzySearchAttachment.get(null));
+
+    assertEquals(expected, FilterEvaluator.strengthOf(PICKAXE, filter));
   }
 }

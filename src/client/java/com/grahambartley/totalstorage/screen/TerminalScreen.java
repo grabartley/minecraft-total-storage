@@ -366,7 +366,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
       search.widget().mouseClicked(mouseX, mouseY, button);
       return true;
     }
-    if (button == GridClick.LEFT_BUTTON && fuzzy.visible && fuzzy.isMouseOver(mouseX, mouseY)) {
+    if (fuzzy.takesClick(mouseX, mouseY, button)) {
       fuzzy.playDownSound(client.getSoundManager());
       fuzzy.onClick(mouseX, mouseY);
       return true;

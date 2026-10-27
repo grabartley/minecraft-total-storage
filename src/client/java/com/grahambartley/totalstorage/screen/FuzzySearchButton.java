@@ -45,6 +45,10 @@ public final class FuzzySearchButton extends ClickableWidget {
     return on;
   }
 
+  public boolean takesClick(double mouseX, double mouseY, int button) {
+    return button == GridClick.LEFT_BUTTON && visible && isMouseOver(mouseX, mouseY);
+  }
+
   public void update(boolean shown, boolean wanted) {
     visible = shown;
     if (wanted != on) {

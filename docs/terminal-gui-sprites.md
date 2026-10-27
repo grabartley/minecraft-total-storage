@@ -60,7 +60,8 @@ The mod's own sprites cover what vanilla has no sprite for. The set is named for
 - **A grid cell is a vanilla slot.** 18x18, with the 16x16 item drawn at `+1,+1`, which is exactly what a chest does. `TerminalScreenLayout.SLOT_SIZE` is the one constant behind both the 9x5 grid and the player inventory, so the grid's nine columns line up with the nine below them.
 - **Hover is not a sprite.** A hovered cell is drawn by `HandledScreen.drawSlotHighlight`, the same call vanilla makes for a hovered slot.
 - **Item overlays go through `DrawContext.drawItemInSlot`**, so a damaged tool shows vanilla's durability bar and an item on cooldown shows vanilla's sweep. The aggregated count is drawn over that, scaled down when the compacted label is wider than the item.
-- **The left column holds the filters above the action dock.** Match all or any and the clear button sit on the search row, and the fuzzy search toggle closes the search row on the right, so the search box stops short of the scrollbar's edge; the dock under the filters shows the network gauge and the current view's text buttons.
+- **The left column holds the filters above the action dock.** Match all or any and the clear button sit on the search row; the dock under the filters shows the network gauge and the current view's text buttons.
+- **The search row ends in the fuzzy search toggle**, so the search box stops short of the scrollbar's edge.
 - **The settings view is one raised frame behind three section tabs**: Terminal, Containers and Tags. A container row is 21 tall, so it holds a vanilla slot and a 20 tall button with room to spare.
 - **Text never runs past its box.** A label that does not fit is cut with an ellipsis, and the full text shows in a tooltip.
 - **Prompts are 180 wide and centred over a dimmed terminal.** Every prompt ends in keycap hints, and a refused entry turns the field border red and adds one warning line, without moving anything else.

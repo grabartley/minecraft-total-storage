@@ -11,7 +11,7 @@ public final class FilterColumnLayout {
 
   public static final int HEADER_HEIGHT = TerminalScreenLayout.HEADER_HEIGHT;
 
-  public static final int HEADER_GAP = 2;
+  public static final int HEADER_GAP = TerminalScreenLayout.HEADER_GAP;
 
   public static final int CONTROL_SIZE = HEADER_HEIGHT;
 
