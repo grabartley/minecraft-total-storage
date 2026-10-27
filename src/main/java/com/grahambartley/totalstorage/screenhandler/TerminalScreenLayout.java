@@ -53,9 +53,17 @@ public final class TerminalScreenLayout {
   public static final int SCROLLBAR_Y = GRID_Y;
   public static final int SCROLLBAR_HEIGHT = GRID_HEIGHT;
 
+  public static final int LISTING_WIDTH = SCROLLBAR_X + SCROLLBAR_WIDTH - GRID_X;
+
+  public static final int HEADER_GAP = 2;
+
+  public static final int FUZZY_SIZE = HEADER_HEIGHT;
+  public static final int FUZZY_X = GRID_X + LISTING_WIDTH - FUZZY_SIZE;
+  public static final int FUZZY_Y = HEADER_Y;
+
   public static final int SEARCH_X = GRID_X;
   public static final int SEARCH_Y = HEADER_Y;
-  public static final int SEARCH_WIDTH = SCROLLBAR_X + SCROLLBAR_WIDTH - GRID_X;
+  public static final int SEARCH_WIDTH = LISTING_WIDTH - FUZZY_SIZE - HEADER_GAP;
   public static final int SEARCH_HEIGHT = HEADER_HEIGHT;
 
   public static final int SEARCH_ICON_SIZE = 12;
@@ -87,7 +95,7 @@ public final class TerminalScreenLayout {
 
   public static final int STATUS_X = GRID_X;
   public static final int STATUS_Y = LABEL_Y;
-  public static final int STATUS_WIDTH = SEARCH_WIDTH;
+  public static final int STATUS_WIDTH = LISTING_WIDTH;
   public static final int STATUS_HEIGHT = 9;
 
   public static final int BOTTOM_Y = HOTBAR_Y - SLOT_ITEM_OFFSET + SLOT_SIZE;

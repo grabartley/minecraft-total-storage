@@ -1,5 +1,6 @@
 package com.grahambartley.totalstorage.network;
 
+import com.grahambartley.totalstorage.filter.FuzzySearchAttachment;
 import com.grahambartley.totalstorage.lock.LockToggleService;
 import com.grahambartley.totalstorage.operation.DepositService;
 import com.grahambartley.totalstorage.operation.QuickStackFeedback;
@@ -30,6 +31,7 @@ public final class ModNetworking {
 
   public static void register() {
     PayloadTypeRegistry.playC2S().register(LockTogglePayload.ID, LockTogglePayload.CODEC);
+    PayloadTypeRegistry.playC2S().register(FuzzySearchPayload.ID, FuzzySearchPayload.CODEC);
     PayloadTypeRegistry.playC2S().register(ConfigEditPayload.ID, ConfigEditPayload.CODEC);
     PayloadTypeRegistry.playC2S().register(SortRequestPayload.ID, SortRequestPayload.CODEC);
     PayloadTypeRegistry.playC2S().register(ListingRequestPayload.ID, ListingRequestPayload.CODEC);
@@ -45,6 +47,17 @@ public final class ModNetworking {
     ServerPlayNetworking.registerGlobalReceiver(
         LockTogglePayload.ID,
         (payload, context) -> LockToggleService.toggle(context.player(), payload.slot()));
+    ServerPlayNetworking.registerGlobalReceiver(
+        FuzzySearchPayload.ID,
+        (payload, context) ->
+            context
+                .server()
+                .execute(
+                    () -> {
+                      FuzzySearchAttachment.set(context.player(), payload.enabled());
+                      LISTINGS.refresh(context.player());
+                      TerminalSettingsNetworking.tagPanels().refresh(context.player());
+                    }));
     ServerPlayNetworking.registerGlobalReceiver(
         SortRequestPayload.ID,
         (payload, context) ->

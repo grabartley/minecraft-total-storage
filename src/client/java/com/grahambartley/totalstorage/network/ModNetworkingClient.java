@@ -106,6 +106,10 @@ public final class ModNetworkingClient {
     ClientPlayNetworking.send(new LockTogglePayload(slot));
   }
 
+  public static void sendFuzzySearch(boolean enabled) {
+    ClientPlayNetworking.send(new FuzzySearchPayload(enabled));
+  }
+
   public static void sendConfigEdit(TotalStorageConfig config) {
     ClientPlayNetworking.send(new ConfigEditPayload(config));
   }

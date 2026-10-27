@@ -13,20 +13,36 @@ class SearchRankingTest {
       new FilterCandidate("minecraft:chest", "Chest", Set.of("storage"));
 
   private static MatchStrength rankOf(FilterCandidate candidate, String raw) {
-    return SearchRanking.of(candidate, SearchQueryParser.parse(raw));
+    return SearchRanking.of(candidate, SearchQueryParser.parse(raw), true);
   }
 
   @ParameterizedTest
   @CsvSource({
-    "chest,EXACT",
-    "che,PREFIX",
-    "hes,SUBSTRING",
-    "cst,FUZZY",
-    "minecraft:chest,EXACT",
-    "minecraft:ch,PREFIX"
+    "chest,true,EXACT",
+    "che,true,PREFIX",
+    "hes,true,SUBSTRING",
+    "cst,true,FUZZY",
+    "minecraft:chest,true,EXACT",
+    "minecraft:ch,true,PREFIX",
+    "chest,false,EXACT",
+    "che,false,PREFIX",
+    "hes,false,SUBSTRING",
+    "cst,false,NONE",
+    "minecraft:chest,false,EXACT",
+    "minecraft:ch,false,PREFIX",
+    "minecraft:cst,true,NONE"
   })
-  void aQueryIsRankedByHowCloselyItNamesTheItem(String raw, MatchStrength expected) {
-    assertEquals(expected, rankOf(CHEST, raw));
+  void aQueryIsRankedByHowCloselyItNamesTheItem(String raw, boolean fuzzy, MatchStrength expected) {
+    assertEquals(expected, SearchRanking.of(CHEST, SearchQueryParser.parse(raw), fuzzy));
+  }
+
+  @ParameterizedTest
+  @CsvSource({"Steak,stk,true,FUZZY", "Steak,stk,false,NONE", "Steak,ckdbf,true,FUZZY"})
+  void fuzzyMatchingReachesBothTheDisplayNameAndTheIdentifierPathOnlyWhenAskedFor(
+      String displayName, String term, boolean fuzzy, MatchStrength expected) {
+    final FilterCandidate steak =
+        new FilterCandidate("minecraft:cooked_beef", displayName, Set.of("food"));
+    assertEquals(expected, SearchRanking.ofTerm(steak, term, fuzzy));
   }
 
   @Test
@@ -53,7 +69,7 @@ class SearchRankingTest {
   @Test
   void tagsAndModIdentifiersAreNotRankedAtAll() {
     assertEquals(MatchStrength.EXACT, rankOf(CHEST, "#storage @minecraft"));
-    assertEquals(MatchStrength.EXACT, SearchRanking.of(CHEST, SearchQuery.EMPTY));
+    assertEquals(MatchStrength.EXACT, SearchRanking.of(CHEST, SearchQuery.EMPTY, false));
   }
 
   @Test
@@ -63,15 +79,15 @@ class SearchRankingTest {
 
   @Test
   void aTermIsRankedAgainstOneCandidateAtATime() {
-    assertEquals(MatchStrength.PREFIX, SearchRanking.ofTerm(CHEST, "che"));
-    assertEquals(MatchStrength.NONE, SearchRanking.ofTerm(CHEST, "diamond"));
+    assertEquals(MatchStrength.PREFIX, SearchRanking.ofTerm(CHEST, "che", false));
+    assertEquals(MatchStrength.NONE, SearchRanking.ofTerm(CHEST, "diamond", true));
   }
 
   @Test
   void nothingIsRankedWithoutSomethingToRank() {
-    assertThrows(NullPointerException.class, () -> SearchRanking.of(null, SearchQuery.EMPTY));
-    assertThrows(NullPointerException.class, () -> SearchRanking.of(CHEST, null));
-    assertThrows(NullPointerException.class, () -> SearchRanking.ofTerm(null, "chest"));
+    assertThrows(NullPointerException.class, () -> SearchRanking.of(null, SearchQuery.EMPTY, true));
+    assertThrows(NullPointerException.class, () -> SearchRanking.of(CHEST, null, true));
+    assertThrows(NullPointerException.class, () -> SearchRanking.ofTerm(null, "chest", true));
   }
 
   @Test

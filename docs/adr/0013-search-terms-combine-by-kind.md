@@ -1,6 +1,6 @@
 # ADR 0013: Search terms combine by kind
 
-- **Status:** Accepted, refined in part by [ADR 0028](0028-results-are-ranked-before-they-are-paged.md)
+- **Status:** Accepted, refined in part by [ADR 0028](0028-results-are-ranked-before-they-are-paged.md). Fuzzy matching of name terms is made a per-player choice, off by default, by [ADR 0042](0042-fuzzy-search-is-a-per-player-choice-off-by-default.md); the rest stands unchanged.
 - **Date:** 2026-08-22
 
 > ADR 0028 keeps the rules below for what a query accepts and changes only who orders what it

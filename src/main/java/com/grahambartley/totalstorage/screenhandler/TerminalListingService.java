@@ -1,6 +1,7 @@
 package com.grahambartley.totalstorage.screenhandler;
 
 import com.grahambartley.totalstorage.filter.FilterCandidateFactory;
+import com.grahambartley.totalstorage.filter.FuzzySearchAttachment;
 import com.grahambartley.totalstorage.filter.ItemFilter;
 import com.grahambartley.totalstorage.filter.NetworkFilterCandidates;
 import com.grahambartley.totalstorage.filter.SearchQueryParser;
@@ -74,7 +75,7 @@ public final class TerminalListingService {
     return NetworkListing.page(
         network.index(),
         new NetworkFilterCandidates(candidates, new NetworkTagLookup(tagsOf(world, handler))),
-        state.filter(),
+        FuzzySearchAttachment.applyTo(player, state.filter()),
         state.window(),
         revision);
   }

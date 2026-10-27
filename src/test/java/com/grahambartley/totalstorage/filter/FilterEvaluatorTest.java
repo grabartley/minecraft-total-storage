@@ -53,7 +53,7 @@ class FilterEvaluatorTest {
 
   private static Stream<Arguments> searches() {
     return Stream.of(
-        Arguments.of("dch", List.of(DARK_OAK_CHEST)),
+        Arguments.of("dch", List.of()),
         Arguments.of("iron", List.of(IRON_PICKAXE)),
         Arguments.of("minecraft:cobblestone", List.of(COBBLESTONE)),
         Arguments.of("#tools", List.of(IRON_PICKAXE, CREATE_WRENCH)),
@@ -71,6 +71,23 @@ class FilterEvaluatorTest {
   @MethodSource("searches")
   void eachSearchPrefixIsHonouredAloneAndWithFreeText(String raw, List<FilterCandidate> expected) {
     assertEquals(expected, filter(ItemFilter.ofSearch(raw)));
+  }
+
+  private static Stream<Arguments> fuzzySearches() {
+    return Stream.of(
+        Arguments.of("dch", true, List.of(DARK_OAK_CHEST)),
+        Arguments.of("dch", false, List.of()),
+        Arguments.of("@create cgw", true, List.of(COGWHEEL)),
+        Arguments.of("@create cgw", false, List.of()),
+        Arguments.of("#stn", true, List.of()),
+        Arguments.of("chest", false, List.of(DARK_OAK_CHEST)));
+  }
+
+  @ParameterizedTest
+  @MethodSource("fuzzySearches")
+  void nameTermsMatchLettersInOrderOnlyWhenTheFilterIsFuzzy(
+      String raw, boolean fuzzy, List<FilterCandidate> expected) {
+    assertEquals(expected, filter(ItemFilter.ofSearch(raw).withFuzzy(fuzzy)));
   }
 
   private static Stream<Arguments> identifierTerms() {

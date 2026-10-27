@@ -1,5 +1,6 @@
 package com.grahambartley.totalstorage.screen;
 
+import com.grahambartley.totalstorage.filter.FuzzySearchAttachment;
 import com.grahambartley.totalstorage.listing.ListingRow;
 import com.grahambartley.totalstorage.listing.ListingStatus;
 import com.grahambartley.totalstorage.listing.TerminalListingMirror;
@@ -36,6 +37,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
 
   private TerminalTab tab = TerminalTab.ITEMS;
   private TerminalSearchBox search;
+  private FuzzySearchButton fuzzy;
   private TerminalActionDock dock;
   private TerminalSettingsButtons settingsButtons;
 
@@ -66,6 +68,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     super.init();
     search = new TerminalSearchBox(textRenderer, x, y, search == null ? "" : search.text());
     addDrawableChild(search.widget());
+    fuzzy = new FuzzySearchButton(x, y, fuzzySearch(), ModNetworkingClient::sendFuzzySearch);
+    addDrawableChild(fuzzy);
     filters.attach(this::addDrawableChild, x, y, selection);
     dock =
         new TerminalActionDock(
@@ -475,10 +479,15 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     super.onMouseClick(slot, slotId, button, actionType);
   }
 
+  private boolean fuzzySearch() {
+    return FuzzySearchAttachment.get(client == null ? null : client.player);
+  }
+
   private void updateWidgets(ListingStatus status) {
     final boolean promptOpen = prompts.isAnyOpen();
     search.setVisible(!tab.isSettings());
     filters.update(!tab.isSettings() && !promptOpen, selection);
+    fuzzy.update(!tab.isSettings() && !promptOpen, fuzzySearch());
     settingsButtons.update(
         settingsThisFrame,
         !promptOpen && tab.isSettings() && settings.section() == SettingsSection.TERMINAL);

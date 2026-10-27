@@ -1,5 +1,6 @@
 package com.grahambartley.totalstorage.screenhandler;
 
+import com.grahambartley.totalstorage.filter.FuzzySearchAttachment;
 import com.grahambartley.totalstorage.filter.ItemFilter;
 import com.grahambartley.totalstorage.network.TagPanelPayload;
 import com.grahambartley.totalstorage.network.TagPanelRequestPayload;
@@ -72,11 +73,13 @@ public final class TerminalTagPanelService {
   public NetworkTagView viewFor(ServerPlayerEntity player, TerminalScreenHandler handler) {
     Objects.requireNonNull(player, "player");
     Objects.requireNonNull(handler, "handler");
-    return views.viewFor(player, handler.terminal(), handler.tags().subject(), searchOf(handler));
+    return views.viewFor(
+        player, handler.terminal(), handler.tags().subject(), searchOf(player, handler));
   }
 
-  private static ItemFilter searchOf(TerminalScreenHandler handler) {
-    return ItemFilter.ofQuery(handler.listing().filter().query());
+  private static ItemFilter searchOf(ServerPlayerEntity player, TerminalScreenHandler handler) {
+    return FuzzySearchAttachment.applyTo(
+        player, ItemFilter.ofQuery(handler.listing().filter().query()));
   }
 
   private static void send(

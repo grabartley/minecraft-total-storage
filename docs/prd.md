@@ -177,7 +177,7 @@ With a stack already on the cursor the same grid takes clicks the other way, dep
 | ID | Requirement |
 |---|---|
 | FIND-1 | The search box takes keyboard focus the moment the terminal opens; no click required |
-| FIND-2 | Matching is ranked exact, then prefix, then substring, then fuzzy, over the display name and the identifier path; a term carrying a namespace separator is matched literally against the full identifier (ADR 0013, ADR 0028) |
+| FIND-2 | Matching is ranked exact, then prefix, then substring, over the display name and the identifier path; a term carrying a namespace separator is matched literally against the full identifier. Fuzzy matching, letters in order and ranked last, is a per-player choice, off by default, toggled from the end of the search box (ADR 0013, ADR 0028, ADR 0042) |
 | FIND-3 | `#tag` searches tags and `@modid` filters by source mod, both combining with free text. Both match an id, or a word of it between underscores or dashes, that equals or starts with the term, never a substring or a fuzzy match. Name and tag terms narrow each other; mod identifier terms broaden, so `@create @ae2` matches either (ADR 0013) |
 | FIND-4 | Counts are aggregated across the network and formatted for readability at scale |
 | FIND-5 | Items differing only by data components are separate entries with individual counts |
@@ -518,6 +518,7 @@ Concurrent writers exist whatever the player count. A hopper, a comparator, and 
 | ID | Requirement |
 |---|---|
 | STATE-1 | Locked slots are per player and sync only to their owner |
+| STATE-5 | The fuzzy search choice is per player, kept on the server with the player, and syncs only to its owner |
 | STATE-2 | Search text, active filters, and scroll position are per screen, not per terminal |
 | STATE-3 | Rate-limit cooldowns are per player and per operation, so one player never throttles another and one operation never spends another |
 | STATE-4 | Terminal ownership and trust are per terminal, recorded by UUID, and independent of who is online |

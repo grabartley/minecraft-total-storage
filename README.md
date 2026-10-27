@@ -45,9 +45,9 @@ Right-click the terminal and the whole network is on one screen, above your own 
 
 ## What you can do
 
-- **Find anything.** The search box is ready the moment the screen opens. Type part of a name, or a few of its letters in
-order, and the closest matches come first, so `dpick` finds a Diamond Pickaxe. `#tag` searches by tag and `@mod` narrows to one mod, and both mix with
-plain text, so `@create cog` finds the cogwheels Create adds.
+- **Find anything.** The search box is ready the moment the screen opens. Type part of a name and the closest matches come
+first. Turn on fuzzy search with the `~` button beside the box and `dpick` finds a Diamond Pickaxe. `#tag` searches by tag
+and `@mod` narrows to one mod, and both mix with plain text, so `@create cog` finds the cogwheels Create adds.
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/grabartley/minecraft-total-storage/images/readme/search.png" alt="Searching the network for stone" width="640">
