@@ -36,13 +36,13 @@ public final class ListingCriteria {
   }
 
   public boolean needsRequest(
-      ListingWindow wantedWindow,
+      ListingWindow neededWindow,
       String wantedSearch,
       Set<String> wantedTags,
       TagCombinationMode wantedMode) {
     return isNewQuery(wantedSearch)
         || isNewFilter(wantedTags, wantedMode)
-        || !window.equals(orEmpty(wantedWindow));
+        || !window.covers(orEmpty(neededWindow));
   }
 
   public void requested(

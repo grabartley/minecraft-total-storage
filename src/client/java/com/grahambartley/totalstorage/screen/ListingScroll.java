@@ -1,7 +1,5 @@
 package com.grahambartley.totalstorage.screen;
 
-import com.grahambartley.totalstorage.listing.ListingWindow;
-
 public final class ListingScroll {
   private final int columns;
   private final int visibleRows;
@@ -22,6 +20,10 @@ public final class ListingScroll {
     final long matching = Math.max(0, totalMatching);
     totalRows = (int) ((matching + columns - 1) / columns);
     topRow = Math.min(topRow, maxTopRow());
+  }
+
+  public int columns() {
+    return columns;
   }
 
   public int visibleRows() {
@@ -59,9 +61,5 @@ public final class ListingScroll {
 
   public int firstIndex() {
     return topRow * columns;
-  }
-
-  public ListingWindow window() {
-    return ListingWindow.of(firstIndex(), visibleRows * columns);
   }
 }

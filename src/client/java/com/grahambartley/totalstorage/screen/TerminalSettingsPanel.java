@@ -1,5 +1,6 @@
 package com.grahambartley.totalstorage.screen;
 
+import com.grahambartley.totalstorage.listing.ListingWindow;
 import com.grahambartley.totalstorage.screenhandler.TagsSectionLayout;
 import com.grahambartley.totalstorage.screenhandler.TerminalSettingsLayout;
 import com.grahambartley.totalstorage.terminal.NetworkSettingsView;
@@ -15,6 +16,9 @@ public final class TerminalSettingsPanel {
   private static final int DESCRIPTION_OFFSET = 11;
 
   private final ListingScroll scroll = new ListingScroll(1, TerminalSettingsLayout.ROWS);
+
+  private final ListingPrefetch prefetch =
+      new ListingPrefetch(scroll, NetworkSettingsView.MAX_CONTAINERS);
 
   private final TerminalScrollbar containerScrollbar =
       new TerminalScrollbar(scroll, TerminalSettingsLayout.LIST_HEIGHT);
@@ -41,6 +45,18 @@ public final class TerminalSettingsPanel {
 
   public ListingScroll scroll() {
     return scroll;
+  }
+
+  public ListingWindow containersToAskFor(boolean settingsOpen) {
+    return showsContainers(settingsOpen) ? prefetch.window() : ListingWindow.EMPTY;
+  }
+
+  public ListingWindow containersToKeep(boolean settingsOpen) {
+    return showsContainers(settingsOpen) ? prefetch.needed() : ListingWindow.EMPTY;
+  }
+
+  private boolean showsContainers(boolean settingsOpen) {
+    return settingsOpen && section == SettingsSection.CONTAINERS;
   }
 
   private TerminalScrollbar scrollbar() {

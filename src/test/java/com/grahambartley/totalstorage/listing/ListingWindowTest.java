@@ -79,6 +79,30 @@ class ListingWindowTest {
     assertThrows(NullPointerException.class, () -> ListingWindow.of(0, 8).sliceOf(null));
   }
 
+  @DisplayName("a window covers another only when it holds every row of it")
+  @ParameterizedTest(name = "{0}+{1} covers {2}+{3}: {4}")
+  @CsvSource({
+    "0, 81, 0, 63, true",
+    "0, 81, 18, 63, true",
+    "0, 81, 19, 63, false",
+    "9, 72, 0, 45, false",
+    "9, 72, 9, 72, true",
+    "0, 0, 0, 0, true",
+    "0, 0, 0, 1, false",
+    "10, 5, 12, 0, true"
+  })
+  void coversOnlyWhatItHolds(
+      int offset, int length, int neededOffset, int neededLength, boolean expected) {
+    assertEquals(
+        expected,
+        ListingWindow.of(offset, length).covers(ListingWindow.of(neededOffset, neededLength)));
+  }
+
+  @Test
+  void coveringRefusesAWindowItWasNotGiven() {
+    assertThrows(NullPointerException.class, () -> ListingWindow.EMPTY.covers(null));
+  }
+
   @Test
   void theEmptyWindowAsksForNothingFromTheStart() {
     assertEquals(0, ListingWindow.EMPTY.offset());

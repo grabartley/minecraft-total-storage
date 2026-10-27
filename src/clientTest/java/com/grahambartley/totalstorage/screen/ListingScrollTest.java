@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.grahambartley.totalstorage.listing.ListingWindow;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -23,7 +22,9 @@ class ListingScrollTest {
     assertEquals(0, scroll.topRow());
     assertEquals(0, scroll.totalRows());
     assertFalse(scroll.overflows());
-    assertEquals(ListingWindow.of(0, PAGE_SIZE), scroll.window());
+    assertEquals(0, scroll.firstIndex());
+    assertEquals(COLUMNS, scroll.columns());
+    assertEquals(VISIBLE_ROWS, scroll.visibleRows());
   }
 
   @DisplayName("a part-full last row is still a row to scroll to")
@@ -53,14 +54,13 @@ class ListingScrollTest {
   }
 
   @Test
-  void scrollingMovesTheWindowItAsksFor() {
+  void scrollingMovesTheFirstIndexShown() {
     scroll.fit(500);
 
     assertTrue(scroll.scrollBy(3));
 
     assertEquals(3, scroll.topRow());
     assertEquals(3 * COLUMNS, scroll.firstIndex());
-    assertEquals(ListingWindow.of(3 * COLUMNS, PAGE_SIZE), scroll.window());
   }
 
   @DisplayName("a scroll that would leave the listing stops at its edge")
@@ -91,7 +91,7 @@ class ListingScrollTest {
     scroll.fit(45);
 
     assertEquals(0, scroll.topRow());
-    assertEquals(ListingWindow.of(0, PAGE_SIZE), scroll.window());
+    assertEquals(0, scroll.firstIndex());
   }
 
   @Test
