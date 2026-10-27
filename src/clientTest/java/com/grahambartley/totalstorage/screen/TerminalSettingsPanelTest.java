@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.totalstorage.config.TerminalAccessMode;
+import com.grahambartley.totalstorage.listing.ListingWindow;
 import com.grahambartley.totalstorage.screenhandler.TerminalSettingsLayout;
 import com.grahambartley.totalstorage.storage.ContainerRole;
 import com.grahambartley.totalstorage.terminal.ContainerRoleEntry;
@@ -16,6 +17,7 @@ import java.util.stream.IntStream;
 import net.minecraft.util.math.BlockPos;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class TerminalSettingsPanelTest {
@@ -78,6 +80,17 @@ class TerminalSettingsPanelTest {
     panel.scroll().scrollBy(3);
 
     assertEquals(4, panel.containerRowAt(listX(), TerminalSettingsLayout.rowY(1) + 1));
+  }
+
+  @ParameterizedTest(name = "scrolled to row {0}")
+  @CsvSource({"0, 0, 34", "40, 10, 64", "96, 66, 64"})
+  void theContainersAskedForFollowTheScrollWithABufferEitherSide(
+      int topRow, int expectedOffset, int expectedLength) {
+    final TerminalSettingsPanel panel = containers();
+    panel.fit(viewOf(100), 0);
+    panel.scroll().scrollTo(topRow);
+
+    assertEquals(ListingWindow.of(expectedOffset, expectedLength), panel.prefetch().window());
   }
 
   @Test

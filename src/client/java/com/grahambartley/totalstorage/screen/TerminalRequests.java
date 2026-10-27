@@ -45,8 +45,8 @@ public final class TerminalRequests {
   }
 
   public boolean needsRows(
-      ListingWindow window, String search, Set<String> tags, TagCombinationMode mode) {
-    return listing.needsRequest(window, search, tags, mode);
+      ListingWindow needed, String search, Set<String> tags, TagCombinationMode mode) {
+    return listing.needsRequest(needed, search, tags, mode);
   }
 
   public void rows(ListingWindow window, String search, Set<String> tags, TagCombinationMode mode) {
@@ -54,8 +54,8 @@ public final class TerminalRequests {
     sender.rows(syncId, listing.window(), listing.search(), listing.mode(), listing.tags());
   }
 
-  public boolean needsContainers(ListingWindow window) {
-    return !containers.equals(window);
+  public boolean needsContainers(ListingWindow needed) {
+    return needed.isEmpty() ? !containers.isEmpty() : !containers.covers(needed);
   }
 
   public void showSettings(ListingWindow window) {

@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class TerminalRequestsTest {
   private static final int SYNC_ID = 7;
@@ -53,12 +55,22 @@ class TerminalRequestsTest {
     assertEquals(List.of("showing 7 0,6"), sent);
   }
 
-  @Test
-  void theWindowAlreadyAskedForIsNotAskedForAgain() {
-    requests.showSettings(new ListingWindow(0, 6));
+  @ParameterizedTest(name = "asked for {0}+{1}, needs {2}+{3}: new request {4}")
+  @CsvSource({
+    "0, 34, 0, 6, false",
+    "0, 34, 0, 34, false",
+    "0, 34, 20, 14, false",
+    "0, 34, 20, 19, true",
+    "10, 30, 5, 10, true",
+    "0, 34, 0, 0, true",
+    "0, 0, 0, 0, false",
+    "0, 0, 0, 6, true"
+  })
+  void onlyContainersOutsideWhatWasAskedForAreAskedForAgain(
+      int askedOffset, int askedLength, int neededOffset, int neededLength, boolean expected) {
+    requests.showSettings(new ListingWindow(askedOffset, askedLength));
 
-    assertFalse(requests.needsContainers(new ListingWindow(0, 6)));
-    assertTrue(requests.needsContainers(new ListingWindow(6, 6)));
+    assertEquals(expected, requests.needsContainers(new ListingWindow(neededOffset, neededLength)));
   }
 
   @Test

@@ -7,10 +7,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.totalstorage.listing.ListingPage;
 import com.grahambartley.totalstorage.listing.ListingStatus;
+import com.grahambartley.totalstorage.listing.ListingWindow;
 import com.grahambartley.totalstorage.screenhandler.TerminalScreenLayout;
 import java.util.List;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class TerminalItemsPanelTest {
 
@@ -80,6 +83,16 @@ class TerminalItemsPanelTest {
     ListingPage<ItemVariant> offline = ListingPage.offline(3L);
 
     assertEquals(offline, showing(offline).page());
+  }
+
+  @ParameterizedTest(name = "scrolled to row {0}")
+  @CsvSource({"0, 0, 81", "10, 54, 117", "50, 414, 117"})
+  void theRowsAskedForFollowTheScrollWithABufferEitherSide(
+      int topRow, int expectedOffset, int expectedLength) {
+    TerminalItemsPanel panel = showing(live(1000));
+    panel.scroll().scrollTo(topRow);
+
+    assertEquals(ListingWindow.of(expectedOffset, expectedLength), panel.prefetch().window());
   }
 
   @Test

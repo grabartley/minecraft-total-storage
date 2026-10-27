@@ -47,6 +47,28 @@ class ListingCriteriaTest {
     assertTrue(criteria.needsRequest(SECOND_PAGE, "chest", Set.of(), TagCombinationMode.DEFAULT));
   }
 
+  @ParameterizedTest(name = "asked for {0}+{1}, needs {2}+{3}: new request {4}")
+  @CsvSource({
+    "0, 81, 0, 63, false",
+    "0, 81, 9, 72, false",
+    "0, 81, 18, 72, true",
+    "54, 117, 45, 81, true",
+    "54, 117, 72, 81, false"
+  })
+  void onlyRowsOutsideWhatWasAskedForAreANewRequest(
+      int askedOffset, int askedLength, int neededOffset, int neededLength, boolean expected) {
+    criteria.requested(
+        ListingWindow.of(askedOffset, askedLength), "", Set.of(), TagCombinationMode.DEFAULT);
+
+    assertEquals(
+        expected,
+        criteria.needsRequest(
+            ListingWindow.of(neededOffset, neededLength),
+            "",
+            Set.of(),
+            TagCombinationMode.DEFAULT));
+  }
+
   @Test
   void whatWasAskedForIsWhatIsSent() {
     criteria.requested(SECOND_PAGE, "iron", Set.of(), TagCombinationMode.DEFAULT);

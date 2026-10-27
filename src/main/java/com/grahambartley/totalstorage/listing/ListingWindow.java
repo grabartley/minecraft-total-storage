@@ -22,6 +22,11 @@ public record ListingWindow(int offset, int length) {
     return (int) Math.min(Integer.MAX_VALUE, (long) offset + (long) length);
   }
 
+  public boolean covers(ListingWindow needed) {
+    Objects.requireNonNull(needed, "needed");
+    return offset <= needed.offset && end() >= needed.end();
+  }
+
   public boolean isEmpty() {
     return length == 0;
   }

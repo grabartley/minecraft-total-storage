@@ -2,6 +2,7 @@ package com.grahambartley.totalstorage.screen;
 
 import com.grahambartley.totalstorage.listing.ListingPage;
 import com.grahambartley.totalstorage.listing.ListingRow;
+import com.grahambartley.totalstorage.listing.ListingWindow;
 import com.grahambartley.totalstorage.screenhandler.TerminalScreenLayout;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +28,8 @@ public final class TerminalItemsPanel {
   private final ListingScroll scroll =
       new ListingScroll(TerminalScreenLayout.LISTING_COLUMNS, TerminalScreenLayout.LISTING_ROWS);
 
+  private final ListingPrefetch prefetch = new ListingPrefetch(scroll, ListingWindow.MAX_LENGTH);
+
   private final TerminalScrollbar scrollbar =
       new TerminalScrollbar(
           scroll, TerminalScreenLayout.SCROLLBAR_HEIGHT - 2, TerminalChrome.SCROLLER_HEIGHT);
@@ -37,6 +40,10 @@ public final class TerminalItemsPanel {
 
   public ListingScroll scroll() {
     return scroll;
+  }
+
+  public ListingPrefetch prefetch() {
+    return prefetch;
   }
 
   public TerminalScrollbar scrollbar() {

@@ -16,6 +16,9 @@ public final class TerminalSettingsPanel {
 
   private final ListingScroll scroll = new ListingScroll(1, TerminalSettingsLayout.ROWS);
 
+  private final ListingPrefetch prefetch =
+      new ListingPrefetch(scroll, NetworkSettingsView.MAX_CONTAINERS);
+
   private final TerminalScrollbar containerScrollbar =
       new TerminalScrollbar(scroll, TerminalSettingsLayout.LIST_HEIGHT);
 
@@ -41,6 +44,10 @@ public final class TerminalSettingsPanel {
 
   public ListingScroll scroll() {
     return scroll;
+  }
+
+  public ListingPrefetch prefetch() {
+    return prefetch;
   }
 
   private TerminalScrollbar scrollbar() {

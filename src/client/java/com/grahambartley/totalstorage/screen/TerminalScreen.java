@@ -121,10 +121,11 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     }
     if (!tab.isSettings()
         && requests.needsRows(
-            items.scroll().window(), search.text(), selection.active(), selection.mode())) {
+            items.prefetch().needed(), search.text(), selection.active(), selection.mode())) {
       requestVisibleRows();
     }
-    if (requests.needsContainers(containerWindow())) {
+    if (requests.needsContainers(
+        showsContainers() ? settings.prefetch().needed() : ListingWindow.EMPTY)) {
       requestSettings();
     }
     updateWidgets(items.page().status());
@@ -563,17 +564,15 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
   }
 
   private void requestVisibleRows() {
-    requests.rows(items.scroll().window(), search.text(), selection.active(), selection.mode());
+    requests.rows(items.prefetch().window(), search.text(), selection.active(), selection.mode());
   }
 
-  private ListingWindow containerWindow() {
-    return tab.isSettings() && settings.section() == SettingsSection.CONTAINERS
-        ? settings.scroll().window()
-        : ListingWindow.EMPTY;
+  private boolean showsContainers() {
+    return tab.isSettings() && settings.section() == SettingsSection.CONTAINERS;
   }
 
   private void requestSettings() {
-    requests.showSettings(containerWindow());
+    requests.showSettings(showsContainers() ? settings.prefetch().window() : ListingWindow.EMPTY);
   }
 
   private int windowX(double mouseX) {
