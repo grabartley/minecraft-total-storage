@@ -1,5 +1,7 @@
 package com.grahambartley.totalstorage.gametest;
 
+import com.grahambartley.totalstorage.filter.FuzzySearchAttachment;
+import com.grahambartley.totalstorage.filter.ItemFilter;
 import com.grahambartley.totalstorage.network.DepositRequestPayload;
 import com.grahambartley.totalstorage.network.TagPanelRequestPayload;
 import com.grahambartley.totalstorage.network.TerminalSettingsNetworking;
@@ -138,6 +140,28 @@ public final class TerminalTagPanelServiceGameTest implements FabricGameTest {
     context.assertTrue(
         handler(player).tags().lastSent().isEmpty(),
         "A viewer without the panel open should have been sent nothing");
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void thePanelCountsFollowThePlayersFuzzySearchChoice(TestContext context) {
+    NetworkOperationFixture.stockedBarrel(
+        context, NetworkOperationFixture.EAST_BARREL, Items.DIAMOND, 5);
+    ServerPlayerEntity player = panelOpenOnEmptyNetwork(context);
+    handler(player).listing().requested(null, ItemFilter.ofSearch("dmnd"));
+
+    panels.refresh(player);
+    int literal = matching(player);
+    FuzzySearchAttachment.set(player, true);
+    panels.refresh(player);
+
+    context.assertTrue(literal == 0, "With fuzzy search off, dmnd should count nothing");
+    context.assertTrue(
+        matching(player) > 0,
+        "With fuzzy search on, dmnd should count the diamonds, it reads " + matching(player));
     NetworkOperationFixture.finish(context, player);
   }
 

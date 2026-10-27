@@ -410,11 +410,25 @@ class TerminalScreenLayoutTest {
   }
 
   @Test
-  void theSearchBoxSpansTheGridAndItsScrollbar() {
+  void theSearchBoxAndTheFuzzyToggleSpanTheGridAndItsScrollbar() {
     assertEquals(TerminalScreenLayout.GRID_X, TerminalScreenLayout.SEARCH_X);
     assertEquals(
+        TerminalScreenLayout.SEARCH_X
+            + TerminalScreenLayout.SEARCH_WIDTH
+            + TerminalScreenLayout.HEADER_GAP,
+        TerminalScreenLayout.FUZZY_X);
+    assertEquals(
         TerminalScreenLayout.SCROLLBAR_X + TerminalScreenLayout.SCROLLBAR_WIDTH,
-        TerminalScreenLayout.SEARCH_X + TerminalScreenLayout.SEARCH_WIDTH);
+        TerminalScreenLayout.FUZZY_X + TerminalScreenLayout.FUZZY_SIZE);
+  }
+
+  @Test
+  void theFuzzyToggleSitsBesideTheSearchBoxAtItsHeight() {
+    assertEquals(TerminalScreenLayout.SEARCH_Y, TerminalScreenLayout.FUZZY_Y);
+    assertEquals(TerminalScreenLayout.SEARCH_HEIGHT, TerminalScreenLayout.FUZZY_SIZE);
+    assertFalse(
+        TerminalScreenLayout.isOverSearch(
+            TerminalScreenLayout.FUZZY_X, TerminalScreenLayout.FUZZY_Y));
   }
 
   @Test
@@ -461,7 +475,7 @@ class TerminalScreenLayoutTest {
   void theStatusLineReplacesTheInventoryLabelAcrossTheListingWidth() {
     assertEquals(TerminalScreenLayout.INVENTORY_LABEL_X, TerminalScreenLayout.STATUS_X);
     assertEquals(TerminalScreenLayout.INVENTORY_LABEL_Y, TerminalScreenLayout.STATUS_Y);
-    assertEquals(TerminalScreenLayout.SEARCH_WIDTH, TerminalScreenLayout.STATUS_WIDTH);
+    assertEquals(TerminalScreenLayout.LISTING_WIDTH, TerminalScreenLayout.STATUS_WIDTH);
   }
 
   @Test

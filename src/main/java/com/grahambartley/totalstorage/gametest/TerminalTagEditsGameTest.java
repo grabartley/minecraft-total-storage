@@ -1,5 +1,6 @@
 package com.grahambartley.totalstorage.gametest;
 
+import com.grahambartley.totalstorage.filter.FuzzySearchAttachment;
 import com.grahambartley.totalstorage.filter.TagCombinationMode;
 import com.grahambartley.totalstorage.network.ListingRequestPayload;
 import com.grahambartley.totalstorage.network.ModNetworking;
@@ -270,6 +271,37 @@ public final class TerminalTagEditsGameTest implements FabricGameTest {
     context.assertFalse(
         tagsOf(context).tagIdsFor("minecraft:diamond").contains("castle"),
         "An item the filter excluded was tagged anyway");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void assigningEverythingMatchingFollowsTheOwnersFuzzySearchChoice(TestContext context) {
+    NetworkOperationFixture.stockedBarrel(
+        context, NetworkOperationFixture.EAST_BARREL, Items.DIAMOND, 8);
+    NetworkOperationFixture.stockedBarrel(
+        context, NetworkOperationFixture.WEST_BARREL, Items.COBBLESTONE, 8);
+    final ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    edits.edit(owner, TagEditPayload.create(syncId(owner), "castle"));
+    edits.edit(owner, TagEditPayload.create(syncId(owner), "keep"));
+    narrowTo(owner, "dmnd");
+
+    edits.edit(owner, TagEditPayload.assignMatching(syncId(owner), "castle"));
+    OperationGuards.cooldowns().clear();
+    FuzzySearchAttachment.set(owner, true);
+    edits.edit(owner, TagEditPayload.assignMatching(syncId(owner), "keep"));
+
+    context.assertFalse(
+        tagsOf(context).tagIdsFor("minecraft:diamond").contains("castle"),
+        "With fuzzy search off, dmnd should have tagged nothing");
+    context.assertTrue(
+        tagsOf(context).tagIdsFor("minecraft:diamond").contains("keep"),
+        "With fuzzy search on, dmnd should have tagged the diamond");
+    context.assertFalse(
+        tagsOf(context).tagIdsFor("minecraft:cobblestone").contains("keep"),
+        "Fuzzy search should not have tagged the cobblestone");
     NetworkOperationFixture.finish(context, owner);
   }
 

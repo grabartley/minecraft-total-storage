@@ -5,6 +5,7 @@ import com.grahambartley.totalstorage.operation.DepositService;
 import com.grahambartley.totalstorage.operation.QuickStackFeedback;
 import com.grahambartley.totalstorage.operation.QuickStackService;
 import com.grahambartley.totalstorage.operation.WithdrawService;
+import com.grahambartley.totalstorage.screenhandler.FuzzySearchService;
 import com.grahambartley.totalstorage.screenhandler.TerminalListingService;
 import com.grahambartley.totalstorage.sort.ContainerSortService;
 import com.grahambartley.totalstorage.sort.SortFeedback;
@@ -17,6 +18,8 @@ public final class ModNetworking {
   private static final WithdrawService WITHDRAWALS = new WithdrawService();
   private static final DepositService DEPOSITS = new DepositService();
   private static final QuickStackService QUICK_STACKS = new QuickStackService();
+  private static final FuzzySearchService FUZZY_SEARCH =
+      new FuzzySearchService(LISTINGS, TerminalSettingsNetworking.tagPanels());
 
   public static QuickStackService quickStacks() {
     return QUICK_STACKS;
@@ -30,6 +33,7 @@ public final class ModNetworking {
 
   public static void register() {
     PayloadTypeRegistry.playC2S().register(LockTogglePayload.ID, LockTogglePayload.CODEC);
+    PayloadTypeRegistry.playC2S().register(FuzzySearchPayload.ID, FuzzySearchPayload.CODEC);
     PayloadTypeRegistry.playC2S().register(ConfigEditPayload.ID, ConfigEditPayload.CODEC);
     PayloadTypeRegistry.playC2S().register(SortRequestPayload.ID, SortRequestPayload.CODEC);
     PayloadTypeRegistry.playC2S().register(ListingRequestPayload.ID, ListingRequestPayload.CODEC);
@@ -45,6 +49,12 @@ public final class ModNetworking {
     ServerPlayNetworking.registerGlobalReceiver(
         LockTogglePayload.ID,
         (payload, context) -> LockToggleService.toggle(context.player(), payload.slot()));
+    ServerPlayNetworking.registerGlobalReceiver(
+        FuzzySearchPayload.ID,
+        (payload, context) ->
+            context
+                .server()
+                .execute(() -> FUZZY_SEARCH.choose(context.player(), payload.enabled())));
     ServerPlayNetworking.registerGlobalReceiver(
         SortRequestPayload.ID,
         (payload, context) ->

@@ -43,6 +43,8 @@ The mod's own sprites cover what vanilla has no sprite for. The set is named for
 | `icon/check_light` | 6x6 | stretch | The tick inside a ticked checkbox |
 | `icon/cross` | 8x8 | stretch | Clear every active filter |
 | `icon/cross_disabled` | 8x8 | stretch | Clear, when nothing is filtering |
+| `icon/fuzzy` | 8x8 | stretch | Fuzzy search, when it is on |
+| `icon/fuzzy_off` | 8x8 | stretch | Fuzzy search, when it is off |
 | `icon/rename` | 8x8 | stretch | Rename a tag |
 | `icon/delete` | 8x8 | stretch | Delete a tag |
 | `icon/items` | 12x12 | stretch | Items side tab |
@@ -59,6 +61,7 @@ The mod's own sprites cover what vanilla has no sprite for. The set is named for
 - **Hover is not a sprite.** A hovered cell is drawn by `HandledScreen.drawSlotHighlight`, the same call vanilla makes for a hovered slot.
 - **Item overlays go through `DrawContext.drawItemInSlot`**, so a damaged tool shows vanilla's durability bar and an item on cooldown shows vanilla's sweep. The aggregated count is drawn over that, scaled down when the compacted label is wider than the item.
 - **The left column holds the filters above the action dock.** Match all or any and the clear button sit on the search row; the dock under the filters shows the network gauge and the current view's text buttons.
+- **The search row ends in the fuzzy search toggle**, so the search box stops short of the scrollbar's edge.
 - **The settings view is one raised frame behind three section tabs**: Terminal, Containers and Tags. A container row is 21 tall, so it holds a vanilla slot and a 20 tall button with room to spare.
 - **Text never runs past its box.** A label that does not fit is cut with an ellipsis, and the full text shows in a tooltip.
 - **Prompts are 180 wide and centred over a dimmed terminal.** Every prompt ends in keycap hints, and a refused entry turns the field border red and adds one warning line, without moving anything else.
@@ -78,6 +81,7 @@ Every state differs from its neighbour by shape, not only by colour, so the scre
 | Field accepted → refused | A red border and one warning line under the field |
 | Grid cell resting → hovered | Vanilla's own slot highlight is painted over the item |
 | Checkbox unticked → ticked | A tick appears inside the recess |
+| Fuzzy search on → off | The tilde is struck through |
 | Sort or Gather → armed | The button reads "Confirm?" on an accent face |
 | Sort or Gather → running | One wide accent button reads "Stop" and the percentage done |
 | Status line partial → failed | The same hoverable line, grey for a partial result and dark red for a failure, always led by a warning glyph |

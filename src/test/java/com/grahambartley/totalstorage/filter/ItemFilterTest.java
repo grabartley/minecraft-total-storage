@@ -9,8 +9,31 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class ItemFilterTest {
+  @Test
+  void aFilterIsLiteralUnlessFuzzyMatchingIsAskedFor() {
+    assertFalse(ItemFilter.NONE.fuzzy());
+    assertFalse(ItemFilter.ofSearch("dpick").fuzzy());
+    assertFalse(new ItemFilter(Set.of(), null, SearchQuery.EMPTY).fuzzy());
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void withFuzzyChangesOnlyHowNamesMatch(boolean fuzzy) {
+    final ItemFilter filter =
+        new ItemFilter(Set.of("ores"), TagCombinationMode.OR, SearchQueryParser.parse("iron"));
+
+    final ItemFilter changed = filter.withFuzzy(fuzzy);
+
+    assertEquals(fuzzy, changed.fuzzy());
+    assertEquals(filter.activeTags(), changed.activeTags());
+    assertEquals(filter.combinationMode(), changed.combinationMode());
+    assertEquals(filter.query(), changed.query());
+  }
+
   @Test
   void theEmptyFilterHasNoTagsAndNoQuery() {
     assertTrue(ItemFilter.NONE.isEmpty());

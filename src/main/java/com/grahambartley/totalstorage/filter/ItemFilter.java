@@ -3,7 +3,7 @@ package com.grahambartley.totalstorage.filter;
 import java.util.Set;
 
 public record ItemFilter(
-    Set<String> activeTags, TagCombinationMode combinationMode, SearchQuery query) {
+    Set<String> activeTags, TagCombinationMode combinationMode, SearchQuery query, boolean fuzzy) {
   public static final ItemFilter NONE =
       new ItemFilter(Set.of(), TagCombinationMode.DEFAULT, SearchQuery.EMPTY);
 
@@ -11,6 +11,10 @@ public record ItemFilter(
     activeTags = FilterText.tagIds(activeTags);
     combinationMode = combinationMode == null ? TagCombinationMode.DEFAULT : combinationMode;
     query = query == null ? SearchQuery.EMPTY : query;
+  }
+
+  public ItemFilter(Set<String> activeTags, TagCombinationMode combinationMode, SearchQuery query) {
+    this(activeTags, combinationMode, query, false);
   }
 
   public static ItemFilter ofTags(TagCombinationMode combinationMode, Set<String> activeTags) {
@@ -23,6 +27,10 @@ public record ItemFilter(
 
   public static ItemFilter ofSearch(String raw) {
     return new ItemFilter(Set.of(), TagCombinationMode.DEFAULT, SearchQueryParser.parse(raw));
+  }
+
+  public ItemFilter withFuzzy(boolean wanted) {
+    return new ItemFilter(activeTags, combinationMode, query, wanted);
   }
 
   public boolean isEmpty() {

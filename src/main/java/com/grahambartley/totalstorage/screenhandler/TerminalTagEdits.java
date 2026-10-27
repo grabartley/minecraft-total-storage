@@ -1,6 +1,7 @@
 package com.grahambartley.totalstorage.screenhandler;
 
 import com.grahambartley.totalstorage.access.TerminalCaller;
+import com.grahambartley.totalstorage.filter.FuzzySearchAttachment;
 import com.grahambartley.totalstorage.network.TagEditPayload;
 import com.grahambartley.totalstorage.operation.ExpensiveOperation;
 import com.grahambartley.totalstorage.operation.OperationGuards;
@@ -78,7 +79,7 @@ public final class TerminalTagEdits {
         context.terminal(),
         caller,
         tagId,
-        context.handler().listing().filter(),
+        context.handler().listing().filter().withFuzzy(FuzzySearchAttachment.get(context.player())),
         () -> OperationGuards.allows(context.player(), ExpensiveOperation.ASSIGN_MATCHING));
   }
 

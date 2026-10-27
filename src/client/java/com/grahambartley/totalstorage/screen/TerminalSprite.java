@@ -12,6 +12,8 @@ public enum TerminalSprite {
   CHECK_LIGHT("icon/check_light"),
   CROSS("icon/cross"),
   CROSS_UNAVAILABLE("icon/cross_disabled"),
+  FUZZY("icon/fuzzy"),
+  FUZZY_OFF("icon/fuzzy_off"),
   RENAME("icon/rename"),
   DELETE("icon/delete"),
   ITEMS("icon/items"),

@@ -3,6 +3,7 @@ package com.grahambartley.totalstorage;
 import com.grahambartley.totalstorage.access.TerminalAccessControl;
 import com.grahambartley.totalstorage.command.TotalStorageCommand;
 import com.grahambartley.totalstorage.config.ServerConfigService;
+import com.grahambartley.totalstorage.filter.FuzzySearchAttachment;
 import com.grahambartley.totalstorage.lifecycle.ContainerLifecycle;
 import com.grahambartley.totalstorage.lifecycle.NextTick;
 import com.grahambartley.totalstorage.lifecycle.ServerThread;
@@ -38,6 +39,7 @@ public class TotalStorage implements ModInitializer {
     ModBlockEntities.initialize();
     ModScreenHandlers.initialize();
     LockedSlotsAttachment.register();
+    FuzzySearchAttachment.register();
     ModNetworking.register();
     ClientModRequirement.register();
     TotalStorageCommand.register();

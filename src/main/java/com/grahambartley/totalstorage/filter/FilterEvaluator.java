@@ -28,7 +28,7 @@ public final class FilterEvaluator {
     if (!matchesAnyModId(candidate.modId(), query.modIdTerms())) {
       return MatchStrength.NONE;
     }
-    return SearchRanking.of(candidate, query);
+    return SearchRanking.of(candidate, query, filter.fuzzy());
   }
 
   private static boolean matchesAnyTag(Set<String> tags, String term) {

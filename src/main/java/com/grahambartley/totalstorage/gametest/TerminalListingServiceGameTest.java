@@ -3,6 +3,7 @@ package com.grahambartley.totalstorage.gametest;
 import com.grahambartley.totalstorage.ModBlocks;
 import com.grahambartley.totalstorage.access.TerminalAccessControl;
 import com.grahambartley.totalstorage.block.entity.TerminalBlockEntity;
+import com.grahambartley.totalstorage.filter.FuzzySearchAttachment;
 import com.grahambartley.totalstorage.filter.TagCombinationMode;
 import com.grahambartley.totalstorage.listing.ListingPage;
 import com.grahambartley.totalstorage.listing.ListingRow;
@@ -172,6 +173,28 @@ public final class TerminalListingServiceGameTest implements FabricGameTest {
             List.of(Items.CHEST, Items.CHEST_MINECART, Items.CHERRY_CHEST_BOAT, Items.ENDER_CHEST)),
         "The exact match should lead, then the prefix, then the rest in index order, got "
             + listed);
+    finish(context, player);
+  }
+
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = TICK_LIMIT)
+  public void lettersInOrderFindAnItemOnlyForAPlayerWhoTurnedFuzzySearchOn(TestContext context) {
+    ServerPlayerEntity player =
+        openTerminalStockedWith(context, Items.DIAMOND, Items.DIAMOND_PICKAXE, Items.IRON_INGOT);
+    TerminalScreenHandler handler = handlerOf(player);
+
+    request(player, handler, 0, 10, "dpick");
+
+    context.assertFalse(
+        FuzzySearchAttachment.get(player), "A player should start with fuzzy search off");
+    context.assertTrue(
+        listings.pageFor(player, handler).totalMatching() == 0,
+        "With fuzzy search off, dpick should match nothing, matched "
+            + itemsOf(listings.pageFor(player, handler)));
+    FuzzySearchAttachment.set(player, true);
+    context.assertTrue(
+        itemsOf(listings.pageFor(player, handler)).equals(List.of(Items.DIAMOND_PICKAXE)),
+        "With fuzzy search on, dpick should find the pickaxe, got "
+            + itemsOf(listings.pageFor(player, handler)));
     finish(context, player);
   }
 
