@@ -52,6 +52,7 @@
       "com.grahambartley.totalstorage.gametest.SortCandidateFactoryGameTest",
       "com.grahambartley.totalstorage.gametest.DataComponentKeyGameTest",
       "com.grahambartley.totalstorage.gametest.LockedSlotsAttachmentGameTest",
+      "com.grahambartley.totalstorage.gametest.FuzzySearchAttachmentGameTest",
       "com.grahambartley.totalstorage.gametest.LockToggleServiceGameTest",
       "com.grahambartley.totalstorage.gametest.NetworkIndexInvalidationGameTest",
       "com.grahambartley.totalstorage.gametest.NetworkMembershipGameTest",

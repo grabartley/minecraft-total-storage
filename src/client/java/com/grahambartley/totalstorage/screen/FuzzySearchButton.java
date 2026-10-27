@@ -13,67 +13,59 @@ import net.minecraft.util.Formatting;
 public final class FuzzySearchButton extends ClickableWidget {
   private final Consumer<Boolean> sender;
 
-  private boolean enabled;
+  private boolean on;
 
-  public FuzzySearchButton(int originX, int originY, boolean enabled, Consumer<Boolean> sender) {
+  public FuzzySearchButton(int originX, int originY, boolean on, Consumer<Boolean> sender) {
     super(
         originX + TerminalScreenLayout.FUZZY_X,
         originY + TerminalScreenLayout.FUZZY_Y,
         TerminalScreenLayout.FUZZY_SIZE,
         TerminalScreenLayout.FUZZY_SIZE,
-        label(enabled));
+        label(on));
     this.sender = Objects.requireNonNull(sender, "sender");
-    show(enabled);
+    show(on);
   }
 
-  public static Text label(boolean enabled) {
-    return TerminalScreenText.of(enabled ? "search.fuzzy.on" : "search.fuzzy.off");
+  public static Text label(boolean on) {
+    return TerminalScreenText.of(on ? "search.fuzzy.on" : "search.fuzzy.off");
   }
 
-  public static Text tooltip(boolean enabled) {
+  public static Text tooltip(boolean on) {
     return Text.empty()
-        .append(label(enabled))
+        .append(label(on))
         .append("\n")
         .append(TerminalScreenText.of("search.fuzzy.hint").formatted(Formatting.GRAY));
   }
 
-  public static TerminalSprite icon(boolean enabled) {
-    return enabled ? TerminalSprite.FUZZY : TerminalSprite.FUZZY_OFF;
+  public static TerminalSprite icon(boolean on) {
+    return on ? TerminalSprite.FUZZY : TerminalSprite.FUZZY_OFF;
   }
 
-  public boolean isEnabled() {
-    return enabled;
+  public boolean isOn() {
+    return on;
   }
 
   public void update(boolean shown, boolean wanted) {
     visible = shown;
-    if (wanted != enabled) {
+    if (wanted != on) {
       show(wanted);
     }
   }
 
   private void show(boolean wanted) {
-    enabled = wanted;
+    on = wanted;
     setMessage(label(wanted));
     setTooltip(Tooltip.of(tooltip(wanted)));
   }
 
   @Override
   protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
-    VanillaSprite.button(true, isSelected()).draw(context, getX(), getY(), getWidth(), getHeight());
-    final int offset = TerminalIconButton.iconOffset(getWidth());
-    icon(enabled)
-        .draw(
-            context,
-            getX() + offset,
-            getY() + offset - 1,
-            TerminalIconButton.ICON_SIZE,
-            TerminalIconButton.ICON_SIZE);
+    TerminalIconButton.draw(context, this, true, icon(on));
   }
 
   @Override
   public void onClick(double mouseX, double mouseY) {
-    sender.accept(!enabled);
+    sender.accept(!on);
   }
 
   @Override

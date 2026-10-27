@@ -54,6 +54,9 @@ public final class ModNetworking {
                 .server()
                 .execute(
                     () -> {
+                      if (FuzzySearchAttachment.get(context.player()) == payload.enabled()) {
+                        return;
+                      }
                       FuzzySearchAttachment.set(context.player(), payload.enabled());
                       LISTINGS.refresh(context.player());
                       TerminalSettingsNetworking.tagPanels().refresh(context.player());

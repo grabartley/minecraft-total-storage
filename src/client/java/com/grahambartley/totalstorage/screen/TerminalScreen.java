@@ -68,7 +68,7 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
     super.init();
     search = new TerminalSearchBox(textRenderer, x, y, search == null ? "" : search.text());
     addDrawableChild(search.widget());
-    fuzzy = new FuzzySearchButton(x, y, fuzzySearch(), ModNetworkingClient::sendFuzzySearch);
+    fuzzy = new FuzzySearchButton(x, y, fuzzySearch(), this::askForFuzzySearch);
     addDrawableChild(fuzzy);
     filters.attach(this::addDrawableChild, x, y, selection);
     dock =
@@ -477,6 +477,11 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
       return;
     }
     super.onMouseClick(slot, slotId, button, actionType);
+  }
+
+  private void askForFuzzySearch(boolean wanted) {
+    ModNetworkingClient.sendFuzzySearch(wanted);
+    setFocused(search.widget());
   }
 
   private boolean fuzzySearch() {

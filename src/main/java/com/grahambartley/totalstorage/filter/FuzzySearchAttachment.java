@@ -14,6 +14,8 @@ public final class FuzzySearchAttachment {
 
   public static final boolean DEFAULT = false;
 
+  public static final AttachmentSyncPredicate SYNC_PREDICATE = AttachmentSyncPredicate.targetOnly();
+
   public static final AttachmentType<Boolean> TYPE =
       AttachmentRegistry.create(
           ID,
@@ -21,7 +23,7 @@ public final class FuzzySearchAttachment {
               builder
                   .persistent(Codec.BOOL)
                   .copyOnDeath()
-                  .syncWith(PacketCodecs.BOOL.cast(), AttachmentSyncPredicate.targetOnly()));
+                  .syncWith(PacketCodecs.BOOL.cast(), SYNC_PREDICATE));
 
   private FuzzySearchAttachment() {}
 
@@ -33,9 +35,5 @@ public final class FuzzySearchAttachment {
 
   public static void set(PlayerEntity player, boolean enabled) {
     player.setAttached(TYPE, enabled);
-  }
-
-  public static ItemFilter applyTo(PlayerEntity player, ItemFilter filter) {
-    return (filter == null ? ItemFilter.NONE : filter).withFuzzy(get(player));
   }
 }

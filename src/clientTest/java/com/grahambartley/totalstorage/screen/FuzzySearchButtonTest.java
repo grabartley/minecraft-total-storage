@@ -23,7 +23,7 @@ class FuzzySearchButtonTest {
     button.onClick(0, 0);
 
     assertEquals(List.of(!enabled), sent);
-    assertEquals(enabled, button.isEnabled());
+    assertEquals(enabled, button.isOn());
   }
 
   @ParameterizedTest
@@ -33,7 +33,7 @@ class FuzzySearchButtonTest {
 
     button.update(true, enabled);
 
-    assertEquals(enabled, button.isEnabled());
+    assertEquals(enabled, button.isOn());
     assertEquals(FuzzySearchButton.label(enabled).getString(), button.getMessage().getString());
   }
 
@@ -70,6 +70,6 @@ class FuzzySearchButtonTest {
     assertEquals(100 + TerminalScreenLayout.FUZZY_X, button.getX());
     assertEquals(50 + TerminalScreenLayout.FUZZY_Y, button.getY());
     assertEquals(TerminalScreenLayout.FUZZY_SIZE, button.getWidth());
-    assertFalse(button.isEnabled());
+    assertFalse(button.isOn());
   }
 }

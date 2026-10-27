@@ -33,13 +33,17 @@ public final class TerminalIconButton extends ClickableWidget {
     return (size - ICON_SIZE) / 2;
   }
 
+  public static void draw(
+      DrawContext context, ClickableWidget widget, boolean active, TerminalSprite icon) {
+    VanillaSprite.button(active, widget.isSelected())
+        .draw(context, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight());
+    final int offset = iconOffset(widget.getWidth());
+    icon.draw(context, widget.getX() + offset, widget.getY() + offset - 1, ICON_SIZE, ICON_SIZE);
+  }
+
   @Override
   protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
-    VanillaSprite.button(active, isSelected())
-        .draw(context, getX(), getY(), getWidth(), getHeight());
-    final int offset = iconOffset(getWidth());
-    (active ? icon : unavailableIcon)
-        .draw(context, getX() + offset, getY() + offset - 1, ICON_SIZE, ICON_SIZE);
+    draw(context, this, active, active ? icon : unavailableIcon);
   }
 
   @Override

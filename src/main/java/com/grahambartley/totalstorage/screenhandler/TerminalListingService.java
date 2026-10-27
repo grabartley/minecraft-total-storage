@@ -75,7 +75,7 @@ public final class TerminalListingService {
     return NetworkListing.page(
         network.index(),
         new NetworkFilterCandidates(candidates, new NetworkTagLookup(tagsOf(world, handler))),
-        FuzzySearchAttachment.applyTo(player, state.filter()),
+        state.filter().withFuzzy(FuzzySearchAttachment.get(player)),
         state.window(),
         revision);
   }

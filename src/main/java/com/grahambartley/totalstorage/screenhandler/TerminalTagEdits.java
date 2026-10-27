@@ -79,7 +79,7 @@ public final class TerminalTagEdits {
         context.terminal(),
         caller,
         tagId,
-        FuzzySearchAttachment.applyTo(context.player(), context.handler().listing().filter()),
+        context.handler().listing().filter().withFuzzy(FuzzySearchAttachment.get(context.player())),
         () -> OperationGuards.allows(context.player(), ExpensiveOperation.ASSIGN_MATCHING));
   }
 

@@ -78,8 +78,8 @@ public final class TerminalTagPanelService {
   }
 
   private static ItemFilter searchOf(ServerPlayerEntity player, TerminalScreenHandler handler) {
-    return FuzzySearchAttachment.applyTo(
-        player, ItemFilter.ofQuery(handler.listing().filter().query()));
+    return ItemFilter.ofQuery(handler.listing().filter().query())
+        .withFuzzy(FuzzySearchAttachment.get(player));
   }
 
   private static void send(
