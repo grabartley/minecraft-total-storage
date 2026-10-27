@@ -23,7 +23,7 @@ Changes are pushed rather than polled. At the end of each tick, a terminal someb
 
 ## Consequences
 
-What a listing costs is set by the size of the grid, plus a small buffer of rows either side so scrolling finds them already loaded, rather than by the size of the network, in both directions: the client sends criteria rather than receiving rows to apply them to, and the server sends one window rather than a list to be narrowed.
+What a listing costs is set by the size of the grid, plus a buffer of rows either side, limited by the page cap, so scrolling finds them already loaded, rather than by the size of the network, in both directions: the client sends criteria rather than receiving rows to apply them to, and the server sends one window rather than a list to be narrowed.
 
 A player sees a container fill up behind them without touching anything, and a tick's worth of changes to one terminal costs one page however many times it was written to.
 
