@@ -244,6 +244,48 @@ public final class ContainerHighlightServiceGameTest implements FabricGameTest {
     return owner;
   }
 
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void locatingAContainerNamesItWithItsRole(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.WEST_BARREL);
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    roles.assign(
+        context.getWorld(),
+        terminal(context),
+        TerminalCaller.of(player),
+        east(context),
+        ContainerRole.EXCLUDED);
+
+    HighlightedContainer located =
+        ContainerHighlightService.locatedIn(context.getWorld(), terminal(context), east(context))
+            .orElse(null);
+
+    context.assertTrue(
+        new HighlightedContainer(east(context), ContainerRole.EXCLUDED).equals(located),
+        "Located " + located);
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aContainerOutsideTheNetworkCannotBeLocated(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    NetworkOperationFixture.placeBarrel(context, DISTANT);
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+
+    boolean located =
+        ContainerHighlightService.locate(
+            player, context.getWorld(), terminal(context), context.getAbsolutePos(DISTANT));
+
+    context.assertFalse(located, "A container out of range was located");
+    NetworkOperationFixture.finish(context, player);
+  }
+
   private static ContainerHighlightService.PowerOnHighlight powerOnHighlight(TestContext context) {
     return new ContainerHighlightService.PowerOnHighlight(
         TerminalAddress.of(context.getWorld(), terminal(context)));

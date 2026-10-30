@@ -2,45 +2,41 @@ package com.grahambartley.totalstorage.screen;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.jupiter.api.Test;
+import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class SettingsClickTest {
-  private static final boolean OVER_SOMETHING = true;
-  private static final boolean OVER_NOTHING = false;
+  private static final boolean ON_ROW = true;
+  private static final boolean OFF_ROW = false;
+  private static final boolean ON_ROLE = true;
+  private static final boolean ON_BODY = false;
   private static final boolean MAY = true;
   private static final boolean MAY_NOT = false;
 
-  @Test
-  void leftAndRightWalkTheRoleInOppositeDirections() {
-    assertEquals(
-        SettingsAction.CYCLE_FORWARD, SettingsClick.of(GridClick.LEFT_BUTTON, OVER_SOMETHING, MAY));
-    assertEquals(
-        SettingsAction.CYCLE_BACK, SettingsClick.of(GridClick.RIGHT_BUTTON, OVER_SOMETHING, MAY));
+  static Stream<Arguments> clicks() {
+    return Stream.of(
+        Arguments.of(GridClick.LEFT_BUTTON, ON_ROW, ON_ROLE, MAY, SettingsAction.CYCLE_FORWARD),
+        Arguments.of(GridClick.RIGHT_BUTTON, ON_ROW, ON_ROLE, MAY, SettingsAction.CYCLE_BACK),
+        Arguments.of(GridClick.LEFT_BUTTON, ON_ROW, ON_ROLE, MAY_NOT, SettingsAction.REFUSED),
+        Arguments.of(GridClick.RIGHT_BUTTON, ON_ROW, ON_ROLE, MAY_NOT, SettingsAction.REFUSED),
+        Arguments.of(GridClick.LEFT_BUTTON, ON_ROW, ON_BODY, MAY, SettingsAction.LOCATE),
+        Arguments.of(GridClick.LEFT_BUTTON, ON_ROW, ON_BODY, MAY_NOT, SettingsAction.LOCATE),
+        Arguments.of(GridClick.RIGHT_BUTTON, ON_ROW, ON_BODY, MAY, SettingsAction.NONE),
+        Arguments.of(GridClick.RIGHT_BUTTON, ON_ROW, ON_BODY, MAY_NOT, SettingsAction.NONE),
+        Arguments.of(GridClick.LEFT_BUTTON, OFF_ROW, ON_ROLE, MAY, SettingsAction.NONE),
+        Arguments.of(GridClick.RIGHT_BUTTON, OFF_ROW, ON_BODY, MAY, SettingsAction.NONE),
+        Arguments.of(GridClick.MIDDLE_BUTTON, ON_ROW, ON_ROLE, MAY, SettingsAction.NONE),
+        Arguments.of(GridClick.MIDDLE_BUTTON, ON_ROW, ON_ROLE, MAY_NOT, SettingsAction.NONE),
+        Arguments.of(GridClick.MIDDLE_BUTTON, ON_ROW, ON_BODY, MAY, SettingsAction.NONE),
+        Arguments.of(7, ON_ROW, ON_ROLE, MAY, SettingsAction.NONE));
   }
 
-  @ParameterizedTest
-  @ValueSource(ints = {GridClick.MIDDLE_BUTTON, 3, 7})
-  void aButtonWithNoMeaningHereIsHandedBack(int button) {
-    assertEquals(SettingsAction.NONE, SettingsClick.of(button, OVER_SOMETHING, MAY));
-  }
-
-  @ParameterizedTest
-  @ValueSource(ints = {GridClick.LEFT_BUTTON, GridClick.RIGHT_BUTTON})
-  void aClickOnNothingThisPanelOwnsIsHandedBack(int button) {
-    assertEquals(SettingsAction.NONE, SettingsClick.of(button, OVER_NOTHING, MAY));
-  }
-
-  @ParameterizedTest
-  @ValueSource(ints = {GridClick.LEFT_BUTTON, GridClick.RIGHT_BUTTON})
-  void aPlayerWhoMayNotChangeAnythingStillSwallowsTheClick(int button) {
-    assertEquals(SettingsAction.REFUSED, SettingsClick.of(button, OVER_SOMETHING, MAY_NOT));
-  }
-
-  @Test
-  void aButtonWithNoMeaningIsHandedBackEvenForSomebodyWhoMayNotChangeAnything() {
-    assertEquals(
-        SettingsAction.NONE, SettingsClick.of(GridClick.MIDDLE_BUTTON, OVER_SOMETHING, MAY_NOT));
+  @ParameterizedTest(name = "button {0}, row {1}, role {2}, may {3}")
+  @MethodSource("clicks")
+  void aClickMeansWhatItsPlaceOnTheRowSays(
+      int button, boolean overRow, boolean overRole, boolean mayAdminister, SettingsAction action) {
+    assertEquals(action, SettingsClick.of(button, overRow, overRole, mayAdminister));
   }
 }

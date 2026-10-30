@@ -261,8 +261,12 @@ The owner assigns roles to containers, creates tags, and files items under them,
 | ROLE-5 | Role changes take effect immediately with no rescan |
 | ROLE-6 | A `Filtered` container stores the tags or filters it accepts |
 | ROLE-7 | The settings panel lists every connected container with its position, contents preview, and role |
-| ROLE-8 | Selecting a container in the list highlights it in world |
+| ROLE-8 | Clicking a container's row outlines that one container in world, replacing any outline already showing. Clicking its role control changes its role instead |
 | ROLE-9 | Making a container `Excluded` prevents future writes only, and the interface says so |
+| ROLE-10 | Any player who may open the terminal may outline one container, since doing so changes nothing |
+| ROLE-11 | The outline of one container shows through blocks, keeps its role's shape, and lasts 10 seconds, so a player can close the screen and walk to it |
+| ROLE-12 | A container's row is marked for as long as its outline runs |
+| ROLE-13 | Asking to outline a position that is not in the network is refused with a failure line, and the list refreshes |
 | TAG-1 | Preset tags ship derived from vanilla and convention item tags, and are not editable |
 | TAG-2 | Every item resolves to at least one preset tag, with Miscellaneous as the fallback |
 | TAG-3 | An item can carry many tags at once |
@@ -276,9 +280,9 @@ The owner assigns roles to containers, creates tags, and files items under them,
 | TAG-11 | Import validates names, skips what it cannot accept, and reports both counts rather than failing wholesale |
 | TAG-12 | Assignments referencing items absent from the world are retained rather than dropped |
 
-**Not supported:** editing or deleting preset tags; tagging by data component rather than item identifier; copying a tag set from a terminal the player cannot access.
+**Not supported:** editing or deleting preset tags; tagging by data component rather than item identifier; copying a tag set from a terminal the player cannot access; outlining several chosen containers at once; outlining one container by command; showing one player's outline to another.
 
-**Enforcement:** server, on the terminal's permission rules. A player who can merely *use* an `Open` terminal cannot restructure it.
+**Enforcement:** server, on the terminal's permission rules. A player who can merely *use* an `Open` terminal cannot restructure it. The server decides whether a position is in the network and what role it holds, and the outline goes only to the player who asked.
 
 ---
 
@@ -440,7 +444,7 @@ The server config sets the default mode for newly placed terminals, owner-locked
 | Copy or import a tag set | No | No | Yes, on both terminals | Yes |
 | Network sort and consolidate | No | No | Yes | Yes |
 | Rescan | No | No | Yes | Yes |
-| Re-highlight | Only if they may open it | Only if they may open it | Yes | Yes |
+| Re-highlight the network, or outline one container | Only if they may open it | Only if they may open it | Yes | Yes |
 | Read a named network setting by command | Yes, excluding the trust list | Yes, excluding the trust list | Yes | Yes |
 | Enumerate a network's membership | Only if they may open it | Only if they may open it | Yes | Yes |
 | Change a network's settings by command | No | No | Own terminals | Any terminal |
@@ -487,7 +491,7 @@ Stating it this way is deliberate. A requirement written as "in multiplayer, che
 | ID | Requirement |
 |---|---|
 | SRV-1 | Every item movement, permission decision, and settings change is made on the server |
-| SRV-2 | A request naming network contents carries intent only: an item and an amount, never a container position or slot index (ADR 0009). A page offset, a player's own slot index, and a container position naming a role edit are the deliberate exceptions, each validated server-side (ADR 0030) |
+| SRV-2 | A request naming network contents carries intent only: an item and an amount, never a container position or slot index (ADR 0009). A page offset, a player's own slot index, a container position naming a role edit, and a container position naming an outline are the deliberate exceptions, each validated server-side (ADR 0030) |
 | SRV-3 | Any positional information reaching the server is treated as a stale hint and revalidated |
 | SRV-4 | No client-side value influences a server enforcement decision, config mirror included |
 | SRV-5 | A control hidden on the client is never the enforcement of a rule; the server refuses the packet regardless |

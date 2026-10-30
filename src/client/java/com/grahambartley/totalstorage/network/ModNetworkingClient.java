@@ -51,7 +51,10 @@ public final class ModNetworkingClient {
         (payload, context) ->
             context
                 .client()
-                .execute(() -> ContainerHighlights.show(payload.containers(), payload.ticks())));
+                .execute(
+                    () ->
+                        ContainerHighlights.show(
+                            payload.containers(), payload.ticks(), payload.located())));
     ClientPlayNetworking.registerGlobalReceiver(
         TagPanelPayload.ID,
         (payload, context) ->
@@ -149,6 +152,10 @@ public final class ModNetworkingClient {
 
   public static void sendRoleEdit(int syncId, BlockPos container, ContainerRole role) {
     ClientPlayNetworking.send(new ContainerRoleEditPayload(syncId, container, role));
+  }
+
+  public static void sendContainerLocate(int syncId, BlockPos container) {
+    ClientPlayNetworking.send(new ContainerLocatePayload(syncId, container));
   }
 
   public static void sendContainerName(int syncId, BlockPos container, String name) {

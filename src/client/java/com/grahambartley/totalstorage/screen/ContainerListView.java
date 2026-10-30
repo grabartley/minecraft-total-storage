@@ -1,5 +1,6 @@
 package com.grahambartley.totalstorage.screen;
 
+import com.grahambartley.totalstorage.render.ContainerHighlights;
 import com.grahambartley.totalstorage.screenhandler.TerminalScreenLayout;
 import com.grahambartley.totalstorage.screenhandler.TerminalSettingsLayout;
 import com.grahambartley.totalstorage.terminal.ContainerRoleEntry;
@@ -34,6 +35,10 @@ public final class ContainerListView {
 
   private ContainerListView() {}
 
+  public static boolean isOverRole(int windowX) {
+    return windowX >= ROLE_X && windowX < ROLE_X + ROLE_WIDTH;
+  }
+
   public static int roleY(int row) {
     return TerminalSettingsLayout.rowY(row) + (TerminalSettingsLayout.ROW_HEIGHT - ROLE_HEIGHT) / 2;
   }
@@ -63,7 +68,8 @@ public final class ContainerListView {
       TextRenderer textRenderer,
       NetworkSettingsView view,
       int firstIndex,
-      int hoveredIndex) {
+      int hoveredIndex,
+      boolean overRole) {
     if (!view.hasContainers()) {
       drawEmpty(context, textRenderer, view);
       return;
@@ -74,7 +80,16 @@ public final class ContainerListView {
       if (entry == null) {
         return;
       }
-      drawRow(context, textRenderer, entry, row, index == hoveredIndex, view.mayAdminister());
+      final boolean hovered = index == hoveredIndex;
+      if (ContainerHighlights.isLocating(entry.container()) || (hovered && !overRole)) {
+        TerminalChrome.drawHover(
+            context,
+            TerminalSettingsLayout.LIST_X,
+            TerminalSettingsLayout.rowY(row),
+            ROLE_X - TerminalSettingsLayout.LIST_X,
+            TerminalSettingsLayout.ROW_HEIGHT);
+      }
+      drawRow(context, textRenderer, entry, row, hovered && overRole, view.mayAdminister());
     }
   }
 
@@ -174,17 +189,23 @@ public final class ContainerListView {
     return lines;
   }
 
-  public static List<HintLine> hints(ContainerRoleEntry entry, boolean mayAdminister) {
-    if (!mayAdminister) {
-      return List.of();
-    }
+  public static List<HintLine> hints(
+      ContainerRoleEntry entry, boolean mayAdminister, boolean overRole) {
     final List<HintLine> hints = new ArrayList<>();
-    hints.add(
-        HintLine.of(
-            HintLine.key("click"),
-            HintLine.words("hint.next_role"),
-            HintLine.key("right_click"),
-            HintLine.words("hint.previous_role")));
+    if (!overRole) {
+      hints.add(HintLine.of(HintLine.key("click"), HintLine.words("hint.show_in_world")));
+    }
+    if (!mayAdminister) {
+      return hints;
+    }
+    if (overRole) {
+      hints.add(
+          HintLine.of(
+              HintLine.key("click"),
+              HintLine.words("hint.next_role"),
+              HintLine.key("right_click"),
+              HintLine.words("hint.previous_role")));
+    }
     if (entry.isFiltered()) {
       hints.add(
           HintLine.of(

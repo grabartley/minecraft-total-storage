@@ -295,7 +295,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
               textRenderer,
               settingsThisFrame,
               settings.scroll().firstIndex(),
-              settings.containerRowAt(hoveredWindowX, hoveredWindowY));
+              settings.containerRowAt(hoveredWindowX, hoveredWindowY),
+              ContainerListView.isOverRole(hoveredWindowX));
       case TAGS ->
           tagsPanel.draw(
               context,

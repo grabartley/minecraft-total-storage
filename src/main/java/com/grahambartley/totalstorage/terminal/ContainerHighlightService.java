@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -19,6 +20,8 @@ import net.minecraft.util.math.BlockPos;
 
 public final class ContainerHighlightService {
   public static final int TICKS = 100;
+
+  public static final int LOCATE_TICKS = 200;
 
   private static final double NEIGHBOUR_REACH = 1.0;
 
@@ -31,6 +34,32 @@ public final class ContainerHighlightService {
     final ContainerHighlightPayload payload = payloadFor(world, terminal);
     ServerPlayNetworking.send(player, payload);
     return payload.containers().size();
+  }
+
+  public static boolean locate(
+      ServerPlayerEntity player, ServerWorld world, BlockPos terminal, BlockPos container) {
+    final HighlightedContainer located = locatedIn(world, terminal, container).orElse(null);
+    if (located == null) {
+      return false;
+    }
+    ServerPlayNetworking.send(player, ContainerHighlightPayload.located(LOCATE_TICKS, located));
+    return true;
+  }
+
+  public static Optional<HighlightedContainer> locatedIn(
+      ServerWorld world, BlockPos terminal, BlockPos container) {
+    Objects.requireNonNull(world, "world");
+    Objects.requireNonNull(terminal, "terminal");
+    Objects.requireNonNull(container, "container");
+    final NetworkMembership network =
+        TerminalNetworks.power().network(world, terminal).orElse(null);
+    final TerminalSettings settings = TerminalLookup.settingsAt(world, terminal).orElse(null);
+    if (network == null
+        || settings == null
+        || !network.containers().contains(BlockStorageOrigin.of(world, container))) {
+      return Optional.empty();
+    }
+    return Optional.of(new HighlightedContainer(container, settings.roleFor(container)));
   }
 
   public static void poweredOn(ServerWorld world, BlockPos terminal) {

@@ -1,6 +1,7 @@
 package com.grahambartley.totalstorage.network;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -35,6 +36,26 @@ class ContainerHighlightPayloadTest {
             100, List.of(new HighlightedContainer(new BlockPos(4, -60, 12), role)));
 
     assertEquals(sent, roundTrip(sent));
+  }
+
+  @ParameterizedTest
+  @EnumSource(ContainerRole.class)
+  void aLocatedContainerStaysLocatedAcrossTheWire(ContainerRole role) {
+    ContainerHighlightPayload sent =
+        ContainerHighlightPayload.located(
+            200, new HighlightedContainer(new BlockPos(4, -60, 12), role));
+
+    assertTrue(roundTrip(sent).located());
+    assertEquals(sent, roundTrip(sent));
+  }
+
+  @Test
+  void aNetworkHighlightIsNotLocated() {
+    ContainerHighlightPayload sent =
+        new ContainerHighlightPayload(
+            100, List.of(new HighlightedContainer(BlockPos.ORIGIN, ContainerRole.GENERAL)));
+
+    assertFalse(roundTrip(sent).located());
   }
 
   @Test

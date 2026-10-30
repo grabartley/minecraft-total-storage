@@ -6,6 +6,7 @@ import com.grahambartley.totalstorage.access.TerminalCaller;
 import com.grahambartley.totalstorage.access.TerminalTrustService;
 import com.grahambartley.totalstorage.access.TrustEditOutcome;
 import com.grahambartley.totalstorage.network.ContainerFilterEditPayload;
+import com.grahambartley.totalstorage.network.ContainerLocatePayload;
 import com.grahambartley.totalstorage.network.ContainerNameEditPayload;
 import com.grahambartley.totalstorage.network.ContainerRoleEditPayload;
 import com.grahambartley.totalstorage.network.TerminalAccessEditPayload;
@@ -180,6 +181,24 @@ public final class TerminalSettingsEdits {
             payload.container(),
             payload.tagId(),
             payload.accepted()));
+  }
+
+  public boolean locate(ServerPlayerEntity player, ContainerLocatePayload payload) {
+    if (payload == null) {
+      return false;
+    }
+    final TerminalOperationContext context =
+        TerminalOperationGate.open(player, payload.syncId()).orElse(null);
+    if (context == null) {
+      return false;
+    }
+    if (ContainerHighlightService.locate(
+        player, context.world(), context.terminal(), payload.container())) {
+      return true;
+    }
+    TerminalNotice.failed(player, TerminalMessages.containerNotInNetwork());
+    panels.refresh(player);
+    return false;
   }
 
   private boolean applied(

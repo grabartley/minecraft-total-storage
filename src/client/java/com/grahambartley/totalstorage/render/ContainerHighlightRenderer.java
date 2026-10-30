@@ -4,7 +4,6 @@ import com.grahambartley.totalstorage.terminal.HighlightedContainer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.WorldRenderer;
@@ -37,7 +36,8 @@ public final class ContainerHighlightRenderer {
       return;
     }
     final Vec3d camera = context.camera().getPos();
-    final VertexConsumer lines = consumers.getBuffer(RenderLayer.getLines());
+    final VertexConsumer lines =
+        consumers.getBuffer(HighlightLines.layer(ContainerHighlights.showsThroughBlocks()));
     final BlockView world = context.world();
     matrices.push();
     matrices.translate(-camera.x, -camera.y, -camera.z);

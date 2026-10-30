@@ -49,12 +49,18 @@ public final class TerminalSettingsClicks {
     if (entry != null && shiftDown) {
       return openEditorFor(entry, button, mayAdminister);
     }
-    final SettingsAction action = SettingsClick.of(button, entry != null, mayAdminister);
+    final SettingsAction action =
+        SettingsClick.of(
+            button, entry != null, ContainerListView.isOverRole(windowX), mayAdminister);
     if (action == SettingsAction.NONE) {
       return false;
     }
     if (action == SettingsAction.REFUSED) {
       PromptRefusal.sound();
+      return true;
+    }
+    if (action == SettingsAction.LOCATE) {
+      ModNetworkingClient.sendContainerLocate(syncId, entry.container());
       return true;
     }
     ModNetworkingClient.sendRoleEdit(

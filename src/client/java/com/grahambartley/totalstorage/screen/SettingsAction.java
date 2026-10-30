@@ -5,6 +5,8 @@ public enum SettingsAction {
 
   CYCLE_BACK,
 
+  LOCATE,
+
   REFUSED,
 
   NONE

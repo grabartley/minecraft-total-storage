@@ -139,7 +139,7 @@ class ContainerListViewTest {
     when(textRenderer.wrapLines(any(StringVisitable.class), anyInt()))
         .thenReturn(List.of(OrderedText.EMPTY));
 
-    ContainerListView.draw(mock(DrawContext.class), textRenderer, view, 0, -1);
+    ContainerListView.draw(mock(DrawContext.class), textRenderer, view, 0, -1, false);
 
     verify(textRenderer)
         .wrapLines(
@@ -161,15 +161,37 @@ class ContainerListViewTest {
     final int top = TerminalSettingsLayout.LIST_Y + (TerminalSettingsLayout.LIST_HEIGHT - 18) / 2;
     final int muted = VanillaPalette.opaque(VanillaPalette.MUTED);
 
-    ContainerListView.draw(context, textRenderer, viewOf(true, 0), 0, -1);
+    ContainerListView.draw(context, textRenderer, viewOf(true, 0), 0, -1, false);
 
     verify(context).drawText(textRenderer, first, centre - 15, top, muted, false);
     verify(context).drawText(textRenderer, second, centre - 18, top + 9, muted, false);
   }
 
-  @Test
-  void aPlayerWhoMayNotAdministerGetsNoHints() {
-    assertEquals(List.of(), ContainerListView.hints(entry(0, ContainerRole.FILTERED), false));
+  @ParameterizedTest(name = "x {0} is over the role: {1}")
+  @CsvSource({
+    "-1, false",
+    "0, true",
+    "63, true",
+    "64, false",
+  })
+  void onlyTheRoleColumnCountsAsTheRole(int fromRole, boolean overRole) {
+    assertEquals(overRole, ContainerListView.isOverRole(ContainerListView.ROLE_X + fromRole));
+  }
+
+  static Stream<Arguments> hintsForAPlayerWhoMayNotAdminister() {
+    return Stream.of(
+        Arguments.of(false, List.of(List.of(PREFIX + "hint.show_in_world"))),
+        Arguments.of(true, List.of()));
+  }
+
+  @ParameterizedTest(name = "over the role {0}")
+  @MethodSource("hintsForAPlayerWhoMayNotAdminister")
+  void aPlayerWhoMayNotAdministerIsOnlyOfferedTheOutline(
+      boolean overRole, List<List<String>> expected) {
+    final List<HintLine> hints =
+        ContainerListView.hints(entry(0, ContainerRole.FILTERED), false, overRole);
+
+    assertEquals(expected, hints.stream().map(ContainerListViewTest::wordKeysOf).toList());
   }
 
   static Stream<Arguments> hintedRoles() {
@@ -191,9 +213,19 @@ class ContainerListViewTest {
   @MethodSource("hintedRoles")
   void onlyAFilteredContainerOffersToChooseItsTags(
       ContainerRole role, List<List<String>> expected) {
-    final List<HintLine> hints = ContainerListView.hints(entry(0, role), true);
+    final List<HintLine> hints = ContainerListView.hints(entry(0, role), true, true);
 
     assertEquals(expected, hints.stream().map(ContainerListViewTest::wordKeysOf).toList());
+  }
+
+  @Test
+  void theRowBodyOffersTheOutlineInPlaceOfTheRole() {
+    final List<HintLine> hints =
+        ContainerListView.hints(entry(0, ContainerRole.GENERAL), true, false);
+
+    assertEquals(
+        List.of(List.of(PREFIX + "hint.show_in_world"), List.of(PREFIX + "hint.rename")),
+        hints.stream().map(ContainerListViewTest::wordKeysOf).toList());
   }
 
   static Stream<Arguments> roleTextColours() {

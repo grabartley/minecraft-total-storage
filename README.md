@@ -84,7 +84,8 @@ terminals.
 - **Decide what the network may touch.** Each container has a role, set under Containers on that same sliders tab. **General** takes anything. **Filtered** only takes
 the tags you tick. **Excluded** is searchable and you can take from it, but the network never puts items in it or rearranges it, so
 your hand-arranged potion chest keeps its layout. Give containers names so the list says Potions instead of coordinates, and press Show in world to outline
-them: a white outline for General, a green dashed one for Filtered and a red double one for Excluded.
+them: a white outline for General, a green dashed one for Filtered and a red double one for Excluded. Click a row to outline just that
+container, even through a wall.
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/grabartley/minecraft-total-storage/images/readme/containers.png" alt="The Containers tab with General and Excluded roles and named containers" width="640">
