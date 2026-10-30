@@ -9,7 +9,6 @@ import com.grahambartley.totalstorage.storage.ContainerRole;
 import com.grahambartley.totalstorage.storage.StorageOrigin;
 import com.grahambartley.totalstorage.terminal.TerminalSettings;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -40,7 +39,7 @@ public final class ConsolidationDestinations {
     }
     final TerminalSettings settings = context.settings();
     final FilterCandidate candidate = candidates.of(variant);
-    final Map<BlockPos, StorageOrigin> byPosition = byPosition(network);
+    final Map<BlockPos, StorageOrigin> byPosition = network.containersByPosition();
     final List<DepositTarget> targets = new ArrayList<>(byPosition.size());
     for (final Map.Entry<BlockPos, StorageOrigin> container : byPosition.entrySet()) {
       final ContainerRole role = settings.roleFor(container.getKey());
@@ -80,15 +79,5 @@ public final class ConsolidationDestinations {
       holders.add(origin);
     }
     return List.copyOf(holders);
-  }
-
-  private static Map<BlockPos, StorageOrigin> byPosition(NetworkMembership network) {
-    final Map<BlockPos, StorageOrigin> containers = new LinkedHashMap<>();
-    for (final StorageOrigin origin : network.containers()) {
-      if (origin instanceof BlockStorageOrigin block) {
-        containers.put(block.pos(), origin);
-      }
-    }
-    return containers;
   }
 }

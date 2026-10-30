@@ -2,7 +2,6 @@ package com.grahambartley.totalstorage.terminal;
 
 import com.grahambartley.totalstorage.access.TerminalCaller;
 import com.grahambartley.totalstorage.block.entity.TerminalBlockEntity;
-import com.grahambartley.totalstorage.storage.BlockStorageOrigin;
 import com.grahambartley.totalstorage.storage.ContainerAssignment;
 import java.util.Objects;
 import java.util.function.UnaryOperator;
@@ -55,9 +54,6 @@ public final class ContainerAssignmentWriter {
   }
 
   private boolean reaches(ServerWorld world, BlockPos terminal, BlockPos container) {
-    return power
-        .network(world, terminal)
-        .map(network -> network.containers().contains(BlockStorageOrigin.of(world, container)))
-        .orElse(false);
+    return power.network(world, terminal).map(network -> network.reaches(container)).orElse(false);
   }
 }

@@ -14,9 +14,11 @@ import com.grahambartley.totalstorage.terminal.NetworkSettingsView;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import net.minecraft.util.math.BlockPos;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -238,5 +240,39 @@ class TerminalSettingsPanelTest {
     assertEquals(20 - TerminalSettingsLayout.ROWS, panel.scroll().firstIndex());
     panel.releaseScrollbar();
     assertFalse(panel.isDraggingScrollbar());
+  }
+
+  @ParameterizedTest(name = "section {0}, x {1}, y {2}")
+  @MethodSource("rowTargets")
+  void aPointOnTheListSaysWhichPartOfTheRowItHits(
+      SettingsSection section, int windowX, int windowY, ContainerRowTarget target) {
+    final TerminalSettingsPanel panel = new TerminalSettingsPanel();
+    panel.show(section);
+
+    assertEquals(target, panel.containerTargetAt(windowX, windowY));
+  }
+
+  static Stream<Arguments> rowTargets() {
+    final int chipY = ContainerListView.roleY(0);
+    return Stream.of(
+        Arguments.of(
+            SettingsSection.CONTAINERS, ContainerListView.ROLE_X, chipY, ContainerRowTarget.ROLE),
+        Arguments.of(
+            SettingsSection.CONTAINERS,
+            ContainerListView.ROLE_X - 1,
+            chipY,
+            ContainerRowTarget.BODY),
+        Arguments.of(
+            SettingsSection.CONTAINERS,
+            ContainerListView.ROLE_X,
+            chipY - 1,
+            ContainerRowTarget.BODY),
+        Arguments.of(
+            SettingsSection.CONTAINERS,
+            TerminalSettingsLayout.LIST_X - 1,
+            chipY,
+            ContainerRowTarget.NONE),
+        Arguments.of(
+            SettingsSection.TAGS, ContainerListView.ROLE_X, chipY, ContainerRowTarget.NONE));
   }
 }

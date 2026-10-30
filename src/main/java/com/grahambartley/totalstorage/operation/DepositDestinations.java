@@ -5,7 +5,6 @@ import com.grahambartley.totalstorage.filter.FilterCandidateFactory;
 import com.grahambartley.totalstorage.index.NetworkIndex;
 import com.grahambartley.totalstorage.index.NetworkIndexEntry;
 import com.grahambartley.totalstorage.lifecycle.NetworkMembership;
-import com.grahambartley.totalstorage.storage.BlockStorageOrigin;
 import com.grahambartley.totalstorage.storage.StorageOrigin;
 import com.grahambartley.totalstorage.terminal.TerminalLookup;
 import com.grahambartley.totalstorage.terminal.TerminalSettings;
@@ -47,7 +46,7 @@ public final class DepositDestinations {
     }
     final TerminalSettings settings =
         TerminalLookup.settingsAt(world, terminal).orElseGet(TerminalSettings::defaults);
-    final Map<BlockPos, StorageOrigin> containers = containersOf(network);
+    final Map<BlockPos, StorageOrigin> containers = network.containersByPosition();
     final NetworkIndex<ItemVariant> index = network.index();
     final Map<ItemVariant, List<Storage<ItemVariant>>> routed = new LinkedHashMap<>();
     for (final ItemVariant variant : variants) {
@@ -87,15 +86,5 @@ public final class DepositDestinations {
             .stream()
             .map(target -> containers.get(target.container()))
             .toList());
-  }
-
-  private static Map<BlockPos, StorageOrigin> containersOf(NetworkMembership network) {
-    final Map<BlockPos, StorageOrigin> containers = new LinkedHashMap<>();
-    for (final StorageOrigin origin : network.containers()) {
-      if (origin instanceof BlockStorageOrigin block) {
-        containers.put(block.pos(), origin);
-      }
-    }
-    return containers;
   }
 }

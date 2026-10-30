@@ -18,6 +18,7 @@ import com.grahambartley.totalstorage.storage.ContainerRole;
 import com.grahambartley.totalstorage.tag.TagSetImportMode;
 import com.grahambartley.totalstorage.terminal.TerminalAction;
 import java.util.Set;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationNetworking;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -51,7 +52,10 @@ public final class ModNetworkingClient {
         (payload, context) ->
             context
                 .client()
-                .execute(() -> ContainerHighlights.show(payload.containers(), payload.ticks())));
+                .execute(
+                    () ->
+                        ContainerHighlights.show(
+                            payload.containers(), payload.ticks(), payload.located())));
     ClientPlayNetworking.registerGlobalReceiver(
         TagPanelPayload.ID,
         (payload, context) ->
@@ -88,6 +92,8 @@ public final class ModNetworkingClient {
     ClientPlayNetworking.registerGlobalReceiver(
         TerminalTrustReplyPayload.ID,
         (payload, context) -> context.client().execute(() -> TrustReplyMirror.accept(payload)));
+    ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(
+        (client, world) -> ContainerHighlights.clear());
     ClientPlayConnectionEvents.DISCONNECT.register(
         (handler, client) -> {
           ClientConfigMirror.clear();
@@ -149,6 +155,10 @@ public final class ModNetworkingClient {
 
   public static void sendRoleEdit(int syncId, BlockPos container, ContainerRole role) {
     ClientPlayNetworking.send(new ContainerRoleEditPayload(syncId, container, role));
+  }
+
+  public static void sendContainerLocate(int syncId, BlockPos container) {
+    ClientPlayNetworking.send(new ContainerLocatePayload(syncId, container));
   }
 
   public static void sendContainerName(int syncId, BlockPos container, String name) {

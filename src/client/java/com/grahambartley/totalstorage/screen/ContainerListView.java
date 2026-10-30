@@ -7,6 +7,7 @@ import com.grahambartley.totalstorage.terminal.NetworkSettingsView;
 import com.grahambartley.totalstorage.terminal.NetworkTagView;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -14,6 +15,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.math.BlockPos;
 
 public final class ContainerListView {
   public static final int SLOT_GAP = 4;
@@ -32,7 +34,21 @@ public final class ContainerListView {
 
   private static final int LINE_HEIGHT = 9;
 
+  private static final int LOCATED_BAR_WIDTH = 2;
+
   private ContainerListView() {}
+
+  public static boolean isOverRole(int windowX, int windowY) {
+    final int row = TerminalSettingsLayout.rowAt(windowX, windowY);
+    return row != TerminalSettingsLayout.NO_ROW
+        && windowX >= ROLE_X
+        && windowY >= roleY(row)
+        && windowY < roleY(row) + ROLE_HEIGHT;
+  }
+
+  public static boolean fillsRow(boolean located, ContainerRowTarget target) {
+    return located || target == ContainerRowTarget.BODY;
+  }
 
   public static int roleY(int row) {
     return TerminalSettingsLayout.rowY(row) + (TerminalSettingsLayout.ROW_HEIGHT - ROLE_HEIGHT) / 2;
@@ -63,7 +79,9 @@ public final class ContainerListView {
       TextRenderer textRenderer,
       NetworkSettingsView view,
       int firstIndex,
-      int hoveredIndex) {
+      int hoveredIndex,
+      ContainerRowTarget hoveredTarget,
+      Predicate<BlockPos> located) {
     if (!view.hasContainers()) {
       drawEmpty(context, textRenderer, view);
       return;
@@ -74,7 +92,33 @@ public final class ContainerListView {
       if (entry == null) {
         return;
       }
-      drawRow(context, textRenderer, entry, row, index == hoveredIndex, view.mayAdminister());
+      final ContainerRowTarget target =
+          index == hoveredIndex ? hoveredTarget : ContainerRowTarget.NONE;
+      final boolean rowLocated = located.test(entry.container());
+      if (fillsRow(rowLocated, target)) {
+        TerminalChrome.drawHover(
+            context,
+            TerminalSettingsLayout.LIST_X,
+            TerminalSettingsLayout.rowY(row),
+            ROLE_X - TerminalSettingsLayout.LIST_X,
+            TerminalSettingsLayout.ROW_HEIGHT);
+      }
+      if (rowLocated) {
+        TerminalChrome.fill(
+            context,
+            TerminalSettingsLayout.LIST_X,
+            TerminalSettingsLayout.rowY(row),
+            LOCATED_BAR_WIDTH,
+            TerminalSettingsLayout.ROW_HEIGHT,
+            VanillaPalette.ACCENT);
+      }
+      drawRow(
+          context,
+          textRenderer,
+          entry,
+          row,
+          target == ContainerRowTarget.ROLE,
+          view.mayAdminister());
     }
   }
 
@@ -174,17 +218,23 @@ public final class ContainerListView {
     return lines;
   }
 
-  public static List<HintLine> hints(ContainerRoleEntry entry, boolean mayAdminister) {
-    if (!mayAdminister) {
-      return List.of();
-    }
+  public static List<HintLine> hints(
+      ContainerRoleEntry entry, boolean mayAdminister, ContainerRowTarget target) {
     final List<HintLine> hints = new ArrayList<>();
-    hints.add(
-        HintLine.of(
-            HintLine.key("click"),
-            HintLine.words("hint.next_role"),
-            HintLine.key("right_click"),
-            HintLine.words("hint.previous_role")));
+    if (target == ContainerRowTarget.BODY) {
+      hints.add(HintLine.of(HintLine.key("click"), HintLine.words("hint.locate")));
+    }
+    if (!mayAdminister) {
+      return hints;
+    }
+    if (target == ContainerRowTarget.ROLE) {
+      hints.add(
+          HintLine.of(
+              HintLine.key("click"),
+              HintLine.words("hint.next_role"),
+              HintLine.key("right_click"),
+              HintLine.words("hint.previous_role")));
+    }
     if (entry.isFiltered()) {
       hints.add(
           HintLine.of(

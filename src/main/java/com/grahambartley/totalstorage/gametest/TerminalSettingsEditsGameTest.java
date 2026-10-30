@@ -5,6 +5,7 @@ import com.grahambartley.totalstorage.access.TrustEditOutcome;
 import com.grahambartley.totalstorage.access.TrustedPlayerNames;
 import com.grahambartley.totalstorage.block.entity.TerminalBlockEntity;
 import com.grahambartley.totalstorage.config.TerminalAccessMode;
+import com.grahambartley.totalstorage.network.ContainerLocatePayload;
 import com.grahambartley.totalstorage.network.ContainerRoleEditPayload;
 import com.grahambartley.totalstorage.network.TerminalAccessEditPayload;
 import com.grahambartley.totalstorage.network.TerminalActionPayload;
@@ -31,6 +32,7 @@ import net.minecraft.util.math.BlockPos;
 public final class TerminalSettingsEditsGameTest implements FabricGameTest {
   private static final String BATCH = "terminal-settings-edits";
   private static final int TICK_LIMIT = 60;
+  private static final BlockPos OUT_OF_RANGE = new BlockPos(6, 1, 6);
 
   private final TerminalSettingsService panels = new TerminalSettingsService();
   private final TerminalSettingsEdits edits = new TerminalSettingsEdits(panels);
@@ -113,6 +115,70 @@ public final class TerminalSettingsEditsGameTest implements FabricGameTest {
         roles.roleOf(context.getWorld(), terminal(context), east(context)) == ContainerRole.GENERAL,
         "A guest's refused change was written anyway");
     NetworkOperationFixture.finish(context, owner, guest);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aGuestCanOutlineAContainerWithoutChangingIt(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+    ServerPlayerEntity guest = NetworkOperationFixture.alsoOpen(context);
+
+    boolean outlined =
+        edits.locate(guest, new ContainerLocatePayload(syncId(guest), east(context)));
+
+    context.assertTrue(outlined, "A guest could not outline a container");
+    context.assertTrue(
+        roles.roleOf(context.getWorld(), terminal(context), east(context)) == ContainerRole.GENERAL,
+        "Outlining a container changed its role");
+    NetworkOperationFixture.finish(context, owner, guest);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aStalePositionCannotBeOutlined(TestContext context) {
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+
+    boolean outlined =
+        edits.locate(owner, new ContainerLocatePayload(syncId(owner), east(context)));
+
+    context.assertFalse(outlined, "A position holding no container was outlined");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aContainerOutsideTheNetworkCannotBeOutlined(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, OUT_OF_RANGE);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+
+    boolean outlined =
+        edits.locate(
+            owner, new ContainerLocatePayload(syncId(owner), context.getAbsolutePos(OUT_OF_RANGE)));
+
+    context.assertFalse(outlined, "A container out of range was outlined");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aRequestForAScreenThePlayerDoesNotHaveOpenOutlinesNothing(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+
+    boolean outlined =
+        edits.locate(owner, new ContainerLocatePayload(syncId(owner) + 1, east(context)));
+
+    context.assertFalse(outlined, "A stale screen id outlined a container");
+    NetworkOperationFixture.finish(context, owner);
   }
 
   @GameTest(

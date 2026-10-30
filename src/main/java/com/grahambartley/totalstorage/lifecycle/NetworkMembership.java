@@ -2,16 +2,20 @@ package com.grahambartley.totalstorage.lifecycle;
 
 import com.grahambartley.totalstorage.index.NetworkIndex;
 import com.grahambartley.totalstorage.index.NetworkIndexSession;
+import com.grahambartley.totalstorage.storage.BlockStorageOrigin;
 import com.grahambartley.totalstorage.storage.ContainerDiscoveryScan;
 import com.grahambartley.totalstorage.storage.ContainerScanResult;
 import com.grahambartley.totalstorage.storage.ScanRegion;
 import com.grahambartley.totalstorage.storage.StorageOrigin;
 import com.grahambartley.totalstorage.terminal.ContainerRoleEviction;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 
@@ -70,6 +74,20 @@ public final class NetworkMembership implements ContainerLifecycleListener {
 
   public ScanRegion region() {
     return region;
+  }
+
+  public boolean reaches(BlockPos container) {
+    return containers().contains(BlockStorageOrigin.of(world, container));
+  }
+
+  public Map<BlockPos, StorageOrigin> containersByPosition() {
+    final Map<BlockPos, StorageOrigin> byPosition = new LinkedHashMap<>();
+    for (final StorageOrigin origin : containers()) {
+      if (origin instanceof BlockStorageOrigin block) {
+        byPosition.put(block.pos(), origin);
+      }
+    }
+    return byPosition;
   }
 
   public List<StorageOrigin> containers() {

@@ -5,6 +5,12 @@ public enum SettingsAction {
 
   CYCLE_BACK,
 
+  LOCATE,
+
+  RENAME,
+
+  CHOOSE_TAGS,
+
   REFUSED,
 
   NONE

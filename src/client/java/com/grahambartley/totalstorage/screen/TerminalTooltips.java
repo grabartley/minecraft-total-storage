@@ -84,7 +84,8 @@ public final class TerminalTooltips {
         context,
         textRenderer,
         ContainerListView.tooltip(entry, tags),
-        ContainerListView.hints(entry, view.mayAdminister()),
+        ContainerListView.hints(
+            entry, view.mayAdminister(), settings.containerTargetAt(windowX, windowY)),
         mouseX,
         mouseY);
   }

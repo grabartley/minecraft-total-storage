@@ -24,20 +24,34 @@ public final class ContainerHighlightRenderer {
 
   public static void register() {
     ClientTickEvents.END_CLIENT_TICK.register(client -> ContainerHighlights.tick());
-    WorldRenderEvents.AFTER_ENTITIES.register(ContainerHighlightRenderer::render);
+    WorldRenderEvents.AFTER_ENTITIES.register(ContainerHighlightRenderer::renderNetwork);
+    WorldRenderEvents.AFTER_TRANSLUCENT.register(ContainerHighlightRenderer::renderLocated);
   }
 
-  private static void render(WorldRenderContext context) {
-    if (!ContainerHighlights.isShowing()) {
+  private static void renderNetwork(WorldRenderContext context) {
+    if (ContainerHighlights.isShowing() && !ContainerHighlights.showsLocated()) {
+      render(context, RenderLayer.getLines());
+    }
+  }
+
+  private static void renderLocated(WorldRenderContext context) {
+    if (!ContainerHighlights.showsLocated()) {
       return;
     }
+    render(context, HighlightLines.throughBlocks());
+    if (context.consumers() instanceof VertexConsumerProvider.Immediate immediate) {
+      immediate.draw(HighlightLines.throughBlocks());
+    }
+  }
+
+  private static void render(WorldRenderContext context, RenderLayer layer) {
     final VertexConsumerProvider consumers = context.consumers();
     final MatrixStack matrices = context.matrixStack();
     if (consumers == null || matrices == null) {
       return;
     }
     final Vec3d camera = context.camera().getPos();
-    final VertexConsumer lines = consumers.getBuffer(RenderLayer.getLines());
+    final VertexConsumer lines = consumers.getBuffer(layer);
     final BlockView world = context.world();
     matrices.push();
     matrices.translate(-camera.x, -camera.y, -camera.z);

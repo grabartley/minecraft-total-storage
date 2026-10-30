@@ -11,8 +11,8 @@ import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
 
-public record ContainerHighlightPayload(int ticks, List<HighlightedContainer> containers)
-    implements CustomPayload {
+public record ContainerHighlightPayload(
+    int ticks, List<HighlightedContainer> containers, boolean located) implements CustomPayload {
 
   public static final int MAX_CONTAINERS = 256;
 
@@ -32,6 +32,15 @@ public record ContainerHighlightPayload(int ticks, List<HighlightedContainer> co
     }
   }
 
+  public static ContainerHighlightPayload ofNetwork(
+      int ticks, List<HighlightedContainer> containers) {
+    return new ContainerHighlightPayload(ticks, containers, false);
+  }
+
+  public static ContainerHighlightPayload ofOne(int ticks, HighlightedContainer container) {
+    return new ContainerHighlightPayload(ticks, List.of(container), true);
+  }
+
   @Override
   public CustomPayload.Id<ContainerHighlightPayload> getId() {
     return ID;
@@ -44,6 +53,7 @@ public record ContainerHighlightPayload(int ticks, List<HighlightedContainer> co
       buf.writeBlockPos(container.container());
       buf.writeEnumConstant(container.role());
     }
+    buf.writeBoolean(payload.located());
   }
 
   private static ContainerHighlightPayload read(RegistryByteBuf buf) {
@@ -57,6 +67,6 @@ public record ContainerHighlightPayload(int ticks, List<HighlightedContainer> co
       containers.add(
           new HighlightedContainer(buf.readBlockPos(), buf.readEnumConstant(ContainerRole.class)));
     }
-    return new ContainerHighlightPayload(ticks, containers);
+    return new ContainerHighlightPayload(ticks, containers, buf.readBoolean());
   }
 }

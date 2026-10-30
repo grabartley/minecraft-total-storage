@@ -139,7 +139,8 @@ class ContainerListViewTest {
     when(textRenderer.wrapLines(any(StringVisitable.class), anyInt()))
         .thenReturn(List.of(OrderedText.EMPTY));
 
-    ContainerListView.draw(mock(DrawContext.class), textRenderer, view, 0, -1);
+    ContainerListView.draw(
+        mock(DrawContext.class), textRenderer, view, 0, -1, ContainerRowTarget.NONE, pos -> false);
 
     verify(textRenderer)
         .wrapLines(
@@ -161,15 +162,56 @@ class ContainerListViewTest {
     final int top = TerminalSettingsLayout.LIST_Y + (TerminalSettingsLayout.LIST_HEIGHT - 18) / 2;
     final int muted = VanillaPalette.opaque(VanillaPalette.MUTED);
 
-    ContainerListView.draw(context, textRenderer, viewOf(true, 0), 0, -1);
+    ContainerListView.draw(
+        context, textRenderer, viewOf(true, 0), 0, -1, ContainerRowTarget.NONE, pos -> false);
 
     verify(context).drawText(textRenderer, first, centre - 15, top, muted, false);
     verify(context).drawText(textRenderer, second, centre - 18, top + 9, muted, false);
   }
 
-  @Test
-  void aPlayerWhoMayNotAdministerGetsNoHints() {
-    assertEquals(List.of(), ContainerListView.hints(entry(0, ContainerRole.FILTERED), false));
+  @ParameterizedTest(name = "{0} {1} from the chip is over it: {2}")
+  @CsvSource({
+    "-1, 0, false",
+    "0, 0, true",
+    "63, 15, true",
+    "64, 0, false",
+    "0, -1, false",
+    "0, 16, false",
+  })
+  void onlyTheChipItselfCountsAsTheRole(int acrossChip, int downChip, boolean overRole) {
+    assertEquals(
+        overRole,
+        ContainerListView.isOverRole(
+            ContainerListView.ROLE_X + acrossChip, ContainerListView.roleY(1) + downChip));
+  }
+
+  @ParameterizedTest(name = "located {0}, target {1}")
+  @CsvSource({
+    "true, NONE, true",
+    "true, ROLE, true",
+    "false, BODY, true",
+    "false, ROLE, false",
+    "false, NONE, false",
+  })
+  void aRowIsFilledWhileLocatedOrWhileItsBodyIsHovered(
+      boolean located, ContainerRowTarget target, boolean filled) {
+    assertEquals(filled, ContainerListView.fillsRow(located, target));
+  }
+
+  static Stream<Arguments> hintsForAPlayerWhoMayNotAdminister() {
+    return Stream.of(
+        Arguments.of(ContainerRowTarget.BODY, List.of(List.of(PREFIX + "hint.locate"))),
+        Arguments.of(ContainerRowTarget.ROLE, List.of()));
+  }
+
+  @ParameterizedTest(name = "over {0}")
+  @MethodSource("hintsForAPlayerWhoMayNotAdminister")
+  void aPlayerWhoMayNotAdministerIsOnlyOfferedTheOutline(
+      ContainerRowTarget target, List<List<String>> expected) {
+    final List<HintLine> hints =
+        ContainerListView.hints(entry(0, ContainerRole.FILTERED), false, target);
+
+    assertEquals(expected, hints.stream().map(ContainerListViewTest::wordKeysOf).toList());
   }
 
   static Stream<Arguments> hintedRoles() {
@@ -191,9 +233,20 @@ class ContainerListViewTest {
   @MethodSource("hintedRoles")
   void onlyAFilteredContainerOffersToChooseItsTags(
       ContainerRole role, List<List<String>> expected) {
-    final List<HintLine> hints = ContainerListView.hints(entry(0, role), true);
+    final List<HintLine> hints =
+        ContainerListView.hints(entry(0, role), true, ContainerRowTarget.ROLE);
 
     assertEquals(expected, hints.stream().map(ContainerListViewTest::wordKeysOf).toList());
+  }
+
+  @Test
+  void theRowBodyOffersTheOutlineInPlaceOfTheRole() {
+    final List<HintLine> hints =
+        ContainerListView.hints(entry(0, ContainerRole.GENERAL), true, ContainerRowTarget.BODY);
+
+    assertEquals(
+        List.of(List.of(PREFIX + "hint.locate"), List.of(PREFIX + "hint.rename")),
+        hints.stream().map(ContainerListViewTest::wordKeysOf).toList());
   }
 
   static Stream<Arguments> roleTextColours() {

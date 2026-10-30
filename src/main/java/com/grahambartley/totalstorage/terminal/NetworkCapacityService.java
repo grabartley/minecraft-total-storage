@@ -1,9 +1,7 @@
 package com.grahambartley.totalstorage.terminal;
 
 import com.grahambartley.totalstorage.lifecycle.NetworkMembership;
-import com.grahambartley.totalstorage.storage.BlockStorageOrigin;
 import com.grahambartley.totalstorage.storage.ContainerRole;
-import com.grahambartley.totalstorage.storage.StorageOrigin;
 import com.grahambartley.totalstorage.storage.StorageProvider;
 import com.grahambartley.totalstorage.storage.StorageProviderResolver;
 import java.util.EnumMap;
@@ -39,15 +37,12 @@ public final class NetworkCapacityService {
       return Map.of();
     }
     final Map<ContainerRole, NetworkCapacity> byRole = new EnumMap<>(ContainerRole.class);
-    for (final StorageOrigin origin : network.containers()) {
-      if (!(origin instanceof BlockStorageOrigin block)) {
-        continue;
-      }
-      final ContainerRole role = settings.roleFor(block.pos());
+    for (final BlockPos container : network.containersByPosition().keySet()) {
+      final ContainerRole role = settings.roleFor(container);
       if (role == ContainerRole.EXCLUDED) {
         continue;
       }
-      final Optional<StorageProvider> provider = resolver.resolve(world, block.pos(), role);
+      final Optional<StorageProvider> provider = resolver.resolve(world, container, role);
       if (provider.isEmpty()) {
         continue;
       }
