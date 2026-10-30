@@ -54,7 +54,7 @@ public final class ModNetworkingClient {
                 .execute(
                     () ->
                         ContainerHighlights.show(
-                            payload.containers(), payload.ticks(), payload.located())));
+                            payload.containers(), payload.ticks(), payload.throughBlocks())));
     ClientPlayNetworking.registerGlobalReceiver(
         TagPanelPayload.ID,
         (payload, context) ->

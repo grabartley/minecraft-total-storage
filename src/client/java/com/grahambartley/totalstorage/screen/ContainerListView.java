@@ -1,6 +1,5 @@
 package com.grahambartley.totalstorage.screen;
 
-import com.grahambartley.totalstorage.render.ContainerHighlights;
 import com.grahambartley.totalstorage.screenhandler.TerminalScreenLayout;
 import com.grahambartley.totalstorage.screenhandler.TerminalSettingsLayout;
 import com.grahambartley.totalstorage.terminal.ContainerRoleEntry;
@@ -8,6 +7,7 @@ import com.grahambartley.totalstorage.terminal.NetworkSettingsView;
 import com.grahambartley.totalstorage.terminal.NetworkTagView;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -15,6 +15,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.math.BlockPos;
 
 public final class ContainerListView {
   public static final int SLOT_GAP = 4;
@@ -33,10 +34,20 @@ public final class ContainerListView {
 
   private static final int LINE_HEIGHT = 9;
 
+  private static final int LOCATED_BAR_WIDTH = 2;
+
   private ContainerListView() {}
 
-  public static boolean isOverRole(int windowX) {
-    return windowX >= ROLE_X && windowX < ROLE_X + ROLE_WIDTH;
+  public static boolean isOverRole(int windowX, int windowY) {
+    final int row = TerminalSettingsLayout.rowAt(windowX, windowY);
+    return row != TerminalSettingsLayout.NO_ROW
+        && windowX >= ROLE_X
+        && windowY >= roleY(row)
+        && windowY < roleY(row) + ROLE_HEIGHT;
+  }
+
+  public static boolean fillsRow(boolean located, boolean hovered, boolean overRole) {
+    return located || (hovered && !overRole);
   }
 
   public static int roleY(int row) {
@@ -69,7 +80,8 @@ public final class ContainerListView {
       NetworkSettingsView view,
       int firstIndex,
       int hoveredIndex,
-      boolean overRole) {
+      boolean overRole,
+      Predicate<BlockPos> located) {
     if (!view.hasContainers()) {
       drawEmpty(context, textRenderer, view);
       return;
@@ -81,13 +93,23 @@ public final class ContainerListView {
         return;
       }
       final boolean hovered = index == hoveredIndex;
-      if (ContainerHighlights.isLocating(entry.container()) || (hovered && !overRole)) {
+      final boolean rowLocated = located.test(entry.container());
+      if (fillsRow(rowLocated, hovered, overRole)) {
         TerminalChrome.drawHover(
             context,
             TerminalSettingsLayout.LIST_X,
             TerminalSettingsLayout.rowY(row),
             ROLE_X - TerminalSettingsLayout.LIST_X,
             TerminalSettingsLayout.ROW_HEIGHT);
+      }
+      if (rowLocated) {
+        TerminalChrome.fill(
+            context,
+            TerminalSettingsLayout.LIST_X,
+            TerminalSettingsLayout.rowY(row),
+            LOCATED_BAR_WIDTH,
+            TerminalSettingsLayout.ROW_HEIGHT,
+            VanillaPalette.ACCENT);
       }
       drawRow(context, textRenderer, entry, row, hovered && overRole, view.mayAdminister());
     }

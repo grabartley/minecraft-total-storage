@@ -7,6 +7,7 @@ import com.grahambartley.totalstorage.listing.TerminalListingMirror;
 import com.grahambartley.totalstorage.network.DepositRequestPayload;
 import com.grahambartley.totalstorage.network.ModNetworkingClient;
 import com.grahambartley.totalstorage.operation.ExpensiveOperation;
+import com.grahambartley.totalstorage.render.ContainerHighlights;
 import com.grahambartley.totalstorage.screenhandler.FilterColumnLayout;
 import com.grahambartley.totalstorage.screenhandler.TerminalScreenHandler;
 import com.grahambartley.totalstorage.screenhandler.TerminalScreenLayout;
@@ -296,7 +297,8 @@ public class TerminalScreen extends HandledScreen<TerminalScreenHandler> {
               settingsThisFrame,
               settings.scroll().firstIndex(),
               settings.containerRowAt(hoveredWindowX, hoveredWindowY),
-              ContainerListView.isOverRole(hoveredWindowX));
+              ContainerListView.isOverRole(hoveredWindowX, hoveredWindowY),
+              ContainerHighlights::isShownThroughBlocks);
       case TAGS ->
           tagsPanel.draw(
               context,

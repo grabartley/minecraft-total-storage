@@ -84,7 +84,8 @@ public final class TerminalTooltips {
         context,
         textRenderer,
         ContainerListView.tooltip(entry, tags),
-        ContainerListView.hints(entry, view.mayAdminister(), ContainerListView.isOverRole(windowX)),
+        ContainerListView.hints(
+            entry, view.mayAdminister(), ContainerListView.isOverRole(windowX, windowY)),
         mouseX,
         mouseY);
   }

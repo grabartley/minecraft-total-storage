@@ -34,6 +34,7 @@ import java.util.Objects;
 import java.util.Optional;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 
 public final class TerminalSettingsEdits {
   private final TerminalSettingsService panels;
@@ -192,26 +193,18 @@ public final class TerminalSettingsEdits {
     if (context == null) {
       return false;
     }
-    if (ContainerHighlightService.locate(
-        player, context.world(), context.terminal(), payload.container())) {
-      return true;
-    }
-    TerminalNotice.failed(player, TerminalMessages.containerNotInNetwork());
-    panels.refresh(player);
-    return false;
+    return ContainerHighlightService.locate(
+            player, context.world(), context.terminal(), payload.container())
+        || refused(player, TerminalMessages.containerNotInNetwork());
   }
 
   private boolean applied(
       ServerPlayerEntity player, TerminalOperationContext context, RoleChangeOutcome outcome) {
     if (outcome == RoleChangeOutcome.DENIED) {
-      TerminalNotice.failed(player, TerminalMessages.notYours());
-      panels.refresh(player);
-      return false;
+      return refused(player, TerminalMessages.notYours());
     }
     if (outcome == RoleChangeOutcome.NOT_IN_NETWORK) {
-      TerminalNotice.failed(player, TerminalMessages.containerNotInNetwork());
-      panels.refresh(player);
-      return false;
+      return refused(player, TerminalMessages.containerNotInNetwork());
     }
     if (outcome == RoleChangeOutcome.NO_TERMINAL) {
       panels.refresh(player);
@@ -276,8 +269,13 @@ public final class TerminalSettingsEdits {
     if (TerminalAdmin.mayAdminister(context.world(), context.terminal(), player)) {
       return context;
     }
-    TerminalNotice.failed(player, TerminalMessages.notYours());
-    panels.refresh(player);
+    refused(player, TerminalMessages.notYours());
     return null;
+  }
+
+  private boolean refused(ServerPlayerEntity player, Text message) {
+    TerminalNotice.failed(player, message);
+    panels.refresh(player);
+    return false;
   }
 }

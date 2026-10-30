@@ -2,8 +2,10 @@ package com.grahambartley.totalstorage.render;
 
 import com.grahambartley.totalstorage.terminal.HighlightedContainer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.WorldRenderer;
@@ -23,21 +25,36 @@ public final class ContainerHighlightRenderer {
 
   public static void register() {
     ClientTickEvents.END_CLIENT_TICK.register(client -> ContainerHighlights.tick());
-    WorldRenderEvents.AFTER_ENTITIES.register(ContainerHighlightRenderer::render);
+    ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(
+        (client, world) -> ContainerHighlights.clear());
+    WorldRenderEvents.AFTER_ENTITIES.register(ContainerHighlightRenderer::renderBehindBlocks);
+    WorldRenderEvents.BEFORE_DEBUG_RENDER.register(ContainerHighlightRenderer::renderOverBlocks);
   }
 
-  private static void render(WorldRenderContext context) {
-    if (!ContainerHighlights.isShowing()) {
+  private static void renderBehindBlocks(WorldRenderContext context) {
+    if (ContainerHighlights.isShowing() && !ContainerHighlights.showsThroughBlocks()) {
+      render(context, RenderLayer.getLines());
+    }
+  }
+
+  private static void renderOverBlocks(WorldRenderContext context) {
+    if (!ContainerHighlights.showsThroughBlocks()) {
       return;
     }
+    render(context, HighlightLines.throughBlocks());
+    if (context.consumers() instanceof VertexConsumerProvider.Immediate immediate) {
+      immediate.draw(HighlightLines.throughBlocks());
+    }
+  }
+
+  private static void render(WorldRenderContext context, RenderLayer layer) {
     final VertexConsumerProvider consumers = context.consumers();
     final MatrixStack matrices = context.matrixStack();
     if (consumers == null || matrices == null) {
       return;
     }
     final Vec3d camera = context.camera().getPos();
-    final VertexConsumer lines =
-        consumers.getBuffer(HighlightLines.layer(ContainerHighlights.showsThroughBlocks()));
+    final VertexConsumer lines = consumers.getBuffer(layer);
     final BlockView world = context.world();
     matrices.push();
     matrices.translate(-camera.x, -camera.y, -camera.z);

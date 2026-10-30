@@ -50,6 +50,7 @@ Shared engineering standards across all the mods in this family live in [`../sta
 | [0040](0040-the-terminal-reports-failures-not-successes.md) | The terminal reports failures, not successes |
 | [0041](0041-a-lock-shows-as-a-badge-and-alt-shows-what-can-be-locked.md) | A lock shows as a badge, and Alt shows what can be locked |
 | [0042](0042-fuzzy-search-is-a-per-player-choice-off-by-default.md) | Fuzzy search is a per-player choice, off by default |
+| [0043](0043-an-outline-request-names-a-container.md) | An outline request names a container |
 
 ## Writing A New Record
 

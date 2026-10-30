@@ -42,7 +42,7 @@ public final class ContainerHighlightService {
     if (located == null) {
       return false;
     }
-    ServerPlayNetworking.send(player, ContainerHighlightPayload.located(LOCATE_TICKS, located));
+    ServerPlayNetworking.send(player, ContainerHighlightPayload.ofOne(LOCATE_TICKS, located));
     return true;
   }
 
@@ -51,15 +51,9 @@ public final class ContainerHighlightService {
     Objects.requireNonNull(world, "world");
     Objects.requireNonNull(terminal, "terminal");
     Objects.requireNonNull(container, "container");
-    final NetworkMembership network =
-        TerminalNetworks.power().network(world, terminal).orElse(null);
-    final TerminalSettings settings = TerminalLookup.settingsAt(world, terminal).orElse(null);
-    if (network == null
-        || settings == null
-        || !network.containers().contains(BlockStorageOrigin.of(world, container))) {
-      return Optional.empty();
-    }
-    return Optional.of(new HighlightedContainer(container, settings.roleFor(container)));
+    return OutlinedNetwork.at(world, terminal)
+        .filter(outlined -> outlined.network().reaches(container))
+        .map(outlined -> outlined.outline(container));
   }
 
   public static void poweredOn(ServerWorld world, BlockPos terminal) {
@@ -76,20 +70,15 @@ public final class ContainerHighlightService {
       ServerWorld world, BlockPos terminal) {
     Objects.requireNonNull(world, "world");
     Objects.requireNonNull(terminal, "terminal");
-    final NetworkMembership network =
-        TerminalNetworks.power().network(world, terminal).orElse(null);
-    if (network == null) {
-      return List.of();
-    }
-    final TerminalSettings settings = TerminalLookup.settingsAt(world, terminal).orElse(null);
-    if (settings == null) {
+    final OutlinedNetwork outlined = OutlinedNetwork.at(world, terminal).orElse(null);
+    if (outlined == null) {
       return List.of();
     }
     final List<ServerPlayerEntity> nearby =
         world.getPlayers(
             player ->
-                isNear(player, network.region(), terminal)
-                    && TerminalCaller.of(player).mayOpen(settings));
+                isNear(player, outlined.network().region(), terminal)
+                    && TerminalCaller.of(player).mayOpen(outlined.settings()));
     if (nearby.isEmpty()) {
       return List.of();
     }
@@ -110,14 +99,12 @@ public final class ContainerHighlightService {
   public static List<HighlightedContainer> containersOf(ServerWorld world, BlockPos terminal) {
     Objects.requireNonNull(world, "world");
     Objects.requireNonNull(terminal, "terminal");
-    final NetworkMembership network =
-        TerminalNetworks.power().network(world, terminal).orElse(null);
-    final TerminalSettings settings = TerminalLookup.settingsAt(world, terminal).orElse(null);
-    if (network == null || settings == null) {
+    final OutlinedNetwork outlined = OutlinedNetwork.at(world, terminal).orElse(null);
+    if (outlined == null) {
       return List.of();
     }
-    final List<BlockPos> positions = new ArrayList<>(network.containers().size());
-    for (final StorageOrigin origin : network.containers()) {
+    final List<BlockPos> positions = new ArrayList<>(outlined.network().containers().size());
+    for (final StorageOrigin origin : outlined.network().containers()) {
       if (origin instanceof BlockStorageOrigin block) {
         positions.add(block.pos());
       }
@@ -131,8 +118,23 @@ public final class ContainerHighlightService {
     }
     return positions.stream()
         .limit(ContainerHighlightPayload.MAX_CONTAINERS)
-        .map(pos -> new HighlightedContainer(pos, settings.roleFor(pos)))
+        .map(outlined::outline)
         .toList();
+  }
+
+  private record OutlinedNetwork(NetworkMembership network, TerminalSettings settings) {
+    private static Optional<OutlinedNetwork> at(ServerWorld world, BlockPos terminal) {
+      return TerminalNetworks.power()
+          .network(world, terminal)
+          .flatMap(
+              network ->
+                  TerminalLookup.settingsAt(world, terminal)
+                      .map(settings -> new OutlinedNetwork(network, settings)));
+    }
+
+    private HighlightedContainer outline(BlockPos container) {
+      return new HighlightedContainer(container, settings.roleFor(container));
+    }
   }
 
   public record PowerOnHighlight(TerminalAddress terminal) {}

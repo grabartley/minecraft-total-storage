@@ -18,9 +18,7 @@ public final class HighlightLines {
           RenderLayer.MultiPhaseParameters.builder()
               .program(RenderPhase.LINES_PROGRAM)
               .lineWidth(new RenderPhase.LineWidth(OptionalDouble.empty()))
-              .layering(RenderPhase.VIEW_OFFSET_Z_LAYERING)
               .transparency(RenderPhase.TRANSLUCENT_TRANSPARENCY)
-              .target(RenderPhase.ITEM_ENTITY_TARGET)
               .writeMaskState(RenderPhase.COLOR_MASK)
               .depthTest(RenderPhase.ALWAYS_DEPTH_TEST)
               .cull(RenderPhase.DISABLE_CULLING)
@@ -28,7 +26,7 @@ public final class HighlightLines {
 
   private HighlightLines() {}
 
-  public static RenderLayer layer(boolean throughBlocks) {
-    return throughBlocks ? THROUGH_BLOCKS : RenderLayer.getLines();
+  public static RenderLayer throughBlocks() {
+    return THROUGH_BLOCKS;
   }
 }

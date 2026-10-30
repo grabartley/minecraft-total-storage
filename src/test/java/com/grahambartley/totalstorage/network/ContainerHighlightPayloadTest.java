@@ -42,10 +42,10 @@ class ContainerHighlightPayloadTest {
   @EnumSource(ContainerRole.class)
   void aLocatedContainerStaysLocatedAcrossTheWire(ContainerRole role) {
     ContainerHighlightPayload sent =
-        ContainerHighlightPayload.located(
+        ContainerHighlightPayload.ofOne(
             200, new HighlightedContainer(new BlockPos(4, -60, 12), role));
 
-    assertTrue(roundTrip(sent).located());
+    assertTrue(roundTrip(sent).throughBlocks());
     assertEquals(sent, roundTrip(sent));
   }
 
@@ -55,7 +55,7 @@ class ContainerHighlightPayloadTest {
         new ContainerHighlightPayload(
             100, List.of(new HighlightedContainer(BlockPos.ORIGIN, ContainerRole.GENERAL)));
 
-    assertFalse(roundTrip(sent).located());
+    assertFalse(roundTrip(sent).throughBlocks());
   }
 
   @Test

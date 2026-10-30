@@ -139,7 +139,7 @@ class ContainerListViewTest {
     when(textRenderer.wrapLines(any(StringVisitable.class), anyInt()))
         .thenReturn(List.of(OrderedText.EMPTY));
 
-    ContainerListView.draw(mock(DrawContext.class), textRenderer, view, 0, -1, false);
+    ContainerListView.draw(mock(DrawContext.class), textRenderer, view, 0, -1, false, pos -> false);
 
     verify(textRenderer)
         .wrapLines(
@@ -161,21 +161,39 @@ class ContainerListViewTest {
     final int top = TerminalSettingsLayout.LIST_Y + (TerminalSettingsLayout.LIST_HEIGHT - 18) / 2;
     final int muted = VanillaPalette.opaque(VanillaPalette.MUTED);
 
-    ContainerListView.draw(context, textRenderer, viewOf(true, 0), 0, -1, false);
+    ContainerListView.draw(context, textRenderer, viewOf(true, 0), 0, -1, false, pos -> false);
 
     verify(context).drawText(textRenderer, first, centre - 15, top, muted, false);
     verify(context).drawText(textRenderer, second, centre - 18, top + 9, muted, false);
   }
 
-  @ParameterizedTest(name = "x {0} is over the role: {1}")
+  @ParameterizedTest(name = "{0} {1} from the chip is over it: {2}")
   @CsvSource({
-    "-1, false",
-    "0, true",
-    "63, true",
-    "64, false",
+    "-1, 0, false",
+    "0, 0, true",
+    "63, 15, true",
+    "64, 0, false",
+    "0, -1, false",
+    "0, 16, false",
   })
-  void onlyTheRoleColumnCountsAsTheRole(int fromRole, boolean overRole) {
-    assertEquals(overRole, ContainerListView.isOverRole(ContainerListView.ROLE_X + fromRole));
+  void onlyTheChipItselfCountsAsTheRole(int acrossChip, int downChip, boolean overRole) {
+    assertEquals(
+        overRole,
+        ContainerListView.isOverRole(
+            ContainerListView.ROLE_X + acrossChip, ContainerListView.roleY(1) + downChip));
+  }
+
+  @ParameterizedTest(name = "located {0}, hovered {1}, over role {2}")
+  @CsvSource({
+    "true, false, false, true",
+    "true, true, true, true",
+    "false, true, false, true",
+    "false, true, true, false",
+    "false, false, false, false",
+  })
+  void aRowIsFilledWhileLocatedOrWhileItsBodyIsHovered(
+      boolean located, boolean hovered, boolean overRole, boolean filled) {
+    assertEquals(filled, ContainerListView.fillsRow(located, hovered, overRole));
   }
 
   static Stream<Arguments> hintsForAPlayerWhoMayNotAdminister() {

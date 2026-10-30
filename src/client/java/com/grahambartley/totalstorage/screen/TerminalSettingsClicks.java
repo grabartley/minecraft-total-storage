@@ -51,7 +51,7 @@ public final class TerminalSettingsClicks {
     }
     final SettingsAction action =
         SettingsClick.of(
-            button, entry != null, ContainerListView.isOverRole(windowX), mayAdminister);
+            button, entry != null, ContainerListView.isOverRole(windowX, windowY), mayAdminister);
     if (action == SettingsAction.NONE) {
       return false;
     }
