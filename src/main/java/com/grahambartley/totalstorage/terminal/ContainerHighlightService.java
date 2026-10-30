@@ -5,9 +5,7 @@ import com.grahambartley.totalstorage.lifecycle.NetworkMembership;
 import com.grahambartley.totalstorage.lifecycle.NextTick;
 import com.grahambartley.totalstorage.network.ContainerHighlightPayload;
 import com.grahambartley.totalstorage.network.PayloadCapLog;
-import com.grahambartley.totalstorage.storage.BlockStorageOrigin;
 import com.grahambartley.totalstorage.storage.ScanRegion;
-import com.grahambartley.totalstorage.storage.StorageOrigin;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -21,7 +19,7 @@ import net.minecraft.util.math.BlockPos;
 public final class ContainerHighlightService {
   public static final int TICKS = 100;
 
-  public static final int LOCATE_TICKS = 200;
+  private static final int LOCATE_TICKS = 200;
 
   private static final double NEIGHBOUR_REACH = 1.0;
 
@@ -31,29 +29,18 @@ public final class ContainerHighlightService {
     if (player == null || world == null || terminal == null) {
       return 0;
     }
-    final ContainerHighlightPayload payload = payloadFor(world, terminal);
+    final ContainerHighlightPayload payload =
+        ContainerHighlightPayload.ofNetwork(TICKS, containersOf(world, terminal));
     ServerPlayNetworking.send(player, payload);
     return payload.containers().size();
   }
 
-  public static boolean locate(
-      ServerPlayerEntity player, ServerWorld world, BlockPos terminal, BlockPos container) {
-    final HighlightedContainer located = locatedIn(world, terminal, container).orElse(null);
-    if (located == null) {
-      return false;
-    }
-    ServerPlayNetworking.send(player, ContainerHighlightPayload.ofOne(LOCATE_TICKS, located));
-    return true;
+  public static void locate(ServerPlayerEntity player, HighlightedContainer container) {
+    ServerPlayNetworking.send(player, locatedPayload(container));
   }
 
-  public static Optional<HighlightedContainer> locatedIn(
-      ServerWorld world, BlockPos terminal, BlockPos container) {
-    Objects.requireNonNull(world, "world");
-    Objects.requireNonNull(terminal, "terminal");
-    Objects.requireNonNull(container, "container");
-    return OutlinedNetwork.at(world, terminal)
-        .filter(outlined -> outlined.network().reaches(container))
-        .map(outlined -> outlined.outline(container));
+  public static ContainerHighlightPayload locatedPayload(HighlightedContainer container) {
+    return ContainerHighlightPayload.ofOne(LOCATE_TICKS, container);
   }
 
   public static void poweredOn(ServerWorld world, BlockPos terminal) {
@@ -82,13 +69,10 @@ public final class ContainerHighlightService {
     if (nearby.isEmpty()) {
       return List.of();
     }
-    final ContainerHighlightPayload payload = payloadFor(world, terminal);
+    final ContainerHighlightPayload payload =
+        ContainerHighlightPayload.ofNetwork(TICKS, containersOf(outlined, terminal));
     nearby.forEach(player -> ServerPlayNetworking.send(player, payload));
     return List.copyOf(nearby);
-  }
-
-  private static ContainerHighlightPayload payloadFor(ServerWorld world, BlockPos terminal) {
-    return new ContainerHighlightPayload(TICKS, containersOf(world, terminal));
   }
 
   private static boolean isNear(ServerPlayerEntity player, ScanRegion region, BlockPos terminal) {
@@ -99,16 +83,15 @@ public final class ContainerHighlightService {
   public static List<HighlightedContainer> containersOf(ServerWorld world, BlockPos terminal) {
     Objects.requireNonNull(world, "world");
     Objects.requireNonNull(terminal, "terminal");
-    final OutlinedNetwork outlined = OutlinedNetwork.at(world, terminal).orElse(null);
-    if (outlined == null) {
-      return List.of();
-    }
-    final List<BlockPos> positions = new ArrayList<>(outlined.network().containers().size());
-    for (final StorageOrigin origin : outlined.network().containers()) {
-      if (origin instanceof BlockStorageOrigin block) {
-        positions.add(block.pos());
-      }
-    }
+    return OutlinedNetwork.at(world, terminal)
+        .map(outlined -> containersOf(outlined, terminal))
+        .orElse(List.of());
+  }
+
+  private static List<HighlightedContainer> containersOf(
+      OutlinedNetwork outlined, BlockPos terminal) {
+    final List<BlockPos> positions =
+        new ArrayList<>(outlined.network().containersByPosition().keySet());
     positions.sort(
         Comparator.<BlockPos>comparingDouble(terminal::getSquaredDistance)
             .thenComparingLong(BlockPos::asLong));
@@ -118,7 +101,7 @@ public final class ContainerHighlightService {
     }
     return positions.stream()
         .limit(ContainerHighlightPayload.MAX_CONTAINERS)
-        .map(outlined::outline)
+        .map(pos -> new HighlightedContainer(pos, outlined.settings().roleFor(pos)))
         .toList();
   }
 
@@ -130,10 +113,6 @@ public final class ContainerHighlightService {
               network ->
                   TerminalLookup.settingsAt(world, terminal)
                       .map(settings -> new OutlinedNetwork(network, settings)));
-    }
-
-    private HighlightedContainer outline(BlockPos container) {
-      return new HighlightedContainer(container, settings.roleFor(container));
     }
   }
 

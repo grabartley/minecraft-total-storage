@@ -12,8 +12,7 @@ import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
 
 public record ContainerHighlightPayload(
-    int ticks, List<HighlightedContainer> containers, boolean throughBlocks)
-    implements CustomPayload {
+    int ticks, List<HighlightedContainer> containers, boolean located) implements CustomPayload {
 
   public static final int MAX_CONTAINERS = 256;
 
@@ -33,8 +32,9 @@ public record ContainerHighlightPayload(
     }
   }
 
-  public ContainerHighlightPayload(int ticks, List<HighlightedContainer> containers) {
-    this(ticks, containers, false);
+  public static ContainerHighlightPayload ofNetwork(
+      int ticks, List<HighlightedContainer> containers) {
+    return new ContainerHighlightPayload(ticks, containers, false);
   }
 
   public static ContainerHighlightPayload ofOne(int ticks, HighlightedContainer container) {
@@ -53,7 +53,7 @@ public record ContainerHighlightPayload(
       buf.writeBlockPos(container.container());
       buf.writeEnumConstant(container.role());
     }
-    buf.writeBoolean(payload.throughBlocks());
+    buf.writeBoolean(payload.located());
   }
 
   private static ContainerHighlightPayload read(RegistryByteBuf buf) {

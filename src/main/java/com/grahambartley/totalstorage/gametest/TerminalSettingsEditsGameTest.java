@@ -32,6 +32,7 @@ import net.minecraft.util.math.BlockPos;
 public final class TerminalSettingsEditsGameTest implements FabricGameTest {
   private static final String BATCH = "terminal-settings-edits";
   private static final int TICK_LIMIT = 60;
+  private static final BlockPos OUT_OF_RANGE = new BlockPos(6, 1, 6);
 
   private final TerminalSettingsService panels = new TerminalSettingsService();
   private final TerminalSettingsEdits edits = new TerminalSettingsEdits(panels);
@@ -146,6 +147,22 @@ public final class TerminalSettingsEditsGameTest implements FabricGameTest {
         edits.locate(owner, new ContainerLocatePayload(syncId(owner), east(context)));
 
     context.assertFalse(outlined, "A position holding no container was outlined");
+    NetworkOperationFixture.finish(context, owner);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
+  public void aContainerOutsideTheNetworkCannotBeOutlined(TestContext context) {
+    NetworkOperationFixture.placeBarrel(context, OUT_OF_RANGE);
+    ServerPlayerEntity owner = NetworkOperationFixture.openTerminal(context);
+
+    boolean outlined =
+        edits.locate(
+            owner, new ContainerLocatePayload(syncId(owner), context.getAbsolutePos(OUT_OF_RANGE)));
+
+    context.assertFalse(outlined, "A container out of range was outlined");
     NetworkOperationFixture.finish(context, owner);
   }
 

@@ -7,20 +7,20 @@ import net.minecraft.util.math.BlockPos;
 public final class ContainerHighlights {
   private static List<HighlightedContainer> containers = List.of();
   private static int ticksLeft;
-  private static boolean throughBlocks;
+  private static boolean located;
 
   private ContainerHighlights() {}
 
-  public static void show(List<HighlightedContainer> shown, int ticks, boolean overBlocks) {
+  public static void show(List<HighlightedContainer> shown, int ticks, boolean isLocated) {
     containers = shown == null ? List.of() : List.copyOf(shown);
     ticksLeft = containers.isEmpty() ? 0 : Math.max(0, ticks);
-    throughBlocks = overBlocks;
+    located = isLocated;
   }
 
   public static void tick() {
     if (ticksLeft > 0 && --ticksLeft == 0) {
       containers = List.of();
-      throughBlocks = false;
+      located = false;
     }
   }
 
@@ -32,18 +32,18 @@ public final class ContainerHighlights {
     return ticksLeft > 0 && !containers.isEmpty();
   }
 
-  public static boolean showsThroughBlocks() {
-    return throughBlocks && isShowing();
+  public static boolean showsLocated() {
+    return located && isShowing();
   }
 
-  public static boolean isShownThroughBlocks(BlockPos container) {
-    return showsThroughBlocks()
+  public static boolean isLocated(BlockPos container) {
+    return showsLocated()
         && containers.stream().anyMatch(shown -> shown.container().equals(container));
   }
 
   public static void clear() {
     containers = List.of();
     ticksLeft = 0;
-    throughBlocks = false;
+    located = false;
   }
 }

@@ -7,6 +7,10 @@ public enum SettingsAction {
 
   LOCATE,
 
+  RENAME,
+
+  CHOOSE_TAGS,
+
   REFUSED,
 
   NONE

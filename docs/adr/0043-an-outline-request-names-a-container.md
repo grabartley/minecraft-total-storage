@@ -5,9 +5,9 @@
 
 ## Context
 
-[ADR 0009](0009-clients-send-intent.md) says a client sends what the player wants, never where it is. [ADR 0030](0030-a-role-names-a-container-and-the-network-validates-it.md) allows one exception, because a role is a decision about one container and nothing else can name it.
+[ADR 0009](0009-clients-send-intent.md) says a client sends what the player wants, never where it is. [ADR 0030](0030-a-role-names-a-container-and-the-network-validates-it.md) allows an exception for a decision about one container, because nothing else can name it. Role, name, and filter edits all rely on it.
 
-A player can now click a row in the Containers tab to see which block it is. That request is about one container too, and the row's position is the only stable name for it.
+A player can now click a row in the Containers tab to see which block it is. That request is about one container too, so it is a fourth case of the same exception.
 
 ## Decision
 
@@ -19,4 +19,4 @@ Outlining changes nothing, so it needs only the right to open the terminal, not 
 
 A modified client can ask about any position, but the reply only confirms what the list already shows that player.
 
-The outline shows through blocks, because a chest behind a wall is the case this exists for. That means it must be drawn after block entities, so it has its own render layer and its own render stage.
+The outline shows through blocks, because a chest behind a wall is the case this exists for. That means it must be drawn after block entities and translucent blocks, so it has its own render layer and its own render stage.

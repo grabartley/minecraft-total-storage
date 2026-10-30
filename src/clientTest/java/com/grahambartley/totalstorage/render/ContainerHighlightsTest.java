@@ -23,9 +23,9 @@ class ContainerHighlightsTest {
   void onlyALocatedContainerShowsThroughBlocks(boolean located) {
     ContainerHighlights.show(one(), 5, located);
 
-    assertEquals(located, ContainerHighlights.showsThroughBlocks());
-    assertEquals(located, ContainerHighlights.isShownThroughBlocks(BlockPos.ORIGIN));
-    assertFalse(ContainerHighlights.isShownThroughBlocks(BlockPos.ORIGIN.up()));
+    assertEquals(located, ContainerHighlights.showsLocated());
+    assertEquals(located, ContainerHighlights.isLocated(BlockPos.ORIGIN));
+    assertFalse(ContainerHighlights.isLocated(BlockPos.ORIGIN.up()));
   }
 
   @Test
@@ -34,8 +34,8 @@ class ContainerHighlightsTest {
 
     ContainerHighlights.tick();
 
-    assertFalse(ContainerHighlights.showsThroughBlocks());
-    assertFalse(ContainerHighlights.isShownThroughBlocks(BlockPos.ORIGIN));
+    assertFalse(ContainerHighlights.showsLocated());
+    assertFalse(ContainerHighlights.isLocated(BlockPos.ORIGIN));
   }
 
   @Test
@@ -44,7 +44,7 @@ class ContainerHighlightsTest {
 
     ContainerHighlights.show(one(), 5, false);
 
-    assertFalse(ContainerHighlights.showsThroughBlocks());
+    assertFalse(ContainerHighlights.showsLocated());
   }
 
   @AfterEach

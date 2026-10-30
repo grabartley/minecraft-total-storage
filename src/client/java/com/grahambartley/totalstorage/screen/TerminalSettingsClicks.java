@@ -43,52 +43,33 @@ public final class TerminalSettingsClicks {
       int windowX,
       int windowY,
       int button) {
-    final boolean mayAdminister = view.mayAdminister();
     final int index = settings.containerRowAt(windowX, windowY);
     final ContainerRoleEntry entry = index == TerminalSettingsLayout.NO_ROW ? null : view.at(index);
-    if (entry != null && shiftDown) {
-      return openEditorFor(entry, button, mayAdminister);
+    if (entry == null) {
+      return false;
     }
     final SettingsAction action =
         SettingsClick.of(
-            button, entry != null, ContainerListView.isOverRole(windowX, windowY), mayAdminister);
-    if (action == SettingsAction.NONE) {
-      return false;
+            button,
+            settings.containerTargetAt(windowX, windowY),
+            shiftDown,
+            view.mayAdminister(),
+            entry.isFiltered());
+    switch (action) {
+      case NONE -> {
+        return false;
+      }
+      case REFUSED -> PromptRefusal.sound();
+      case LOCATE -> ModNetworkingClient.sendContainerLocate(syncId, entry.container());
+      case RENAME -> prompts.renaming().open(entry.container(), entry.name());
+      case CHOOSE_TAGS -> prompts.filtering().open(entry.container());
+      case CYCLE_FORWARD ->
+          ModNetworkingClient.sendRoleEdit(
+              syncId, entry.container(), ContainerRoleCycle.next(entry.role()));
+      case CYCLE_BACK ->
+          ModNetworkingClient.sendRoleEdit(
+              syncId, entry.container(), ContainerRoleCycle.previous(entry.role()));
     }
-    if (action == SettingsAction.REFUSED) {
-      PromptRefusal.sound();
-      return true;
-    }
-    if (action == SettingsAction.LOCATE) {
-      ModNetworkingClient.sendContainerLocate(syncId, entry.container());
-      return true;
-    }
-    ModNetworkingClient.sendRoleEdit(
-        syncId,
-        entry.container(),
-        action == SettingsAction.CYCLE_BACK
-            ? ContainerRoleCycle.previous(entry.role())
-            : ContainerRoleCycle.next(entry.role()));
-    return true;
-  }
-
-  private boolean openEditorFor(ContainerRoleEntry entry, int button, boolean mayAdminister) {
-    if (button != GridClick.LEFT_BUTTON && button != GridClick.RIGHT_BUTTON) {
-      return false;
-    }
-    if (!mayAdminister) {
-      PromptRefusal.sound();
-      return true;
-    }
-    if (button == GridClick.RIGHT_BUTTON) {
-      prompts.renaming().open(entry.container(), entry.name());
-      return true;
-    }
-    if (!entry.isFiltered()) {
-      PromptRefusal.sound();
-      return true;
-    }
-    prompts.filtering().open(entry.container());
     return true;
   }
 

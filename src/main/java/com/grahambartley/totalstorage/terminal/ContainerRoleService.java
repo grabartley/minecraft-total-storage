@@ -2,9 +2,7 @@ package com.grahambartley.totalstorage.terminal;
 
 import com.grahambartley.totalstorage.access.TerminalCaller;
 import com.grahambartley.totalstorage.lifecycle.NetworkMembership;
-import com.grahambartley.totalstorage.storage.BlockStorageOrigin;
 import com.grahambartley.totalstorage.storage.ContainerRole;
-import com.grahambartley.totalstorage.storage.StorageOrigin;
 import com.grahambartley.totalstorage.storage.StorageProvider;
 import com.grahambartley.totalstorage.storage.StorageProviderResolver;
 import java.util.ArrayList;
@@ -64,10 +62,8 @@ public final class ContainerRoleService {
       return List.of();
     }
     final List<ContainerRoleEntry> rows = new ArrayList<>(network.containers().size());
-    for (final StorageOrigin origin : network.containers()) {
-      if (origin instanceof BlockStorageOrigin block) {
-        rows.add(entryFor(world, terminal, settings, block.pos()));
-      }
+    for (final BlockPos container : network.containersByPosition().keySet()) {
+      rows.add(entryFor(world, terminal, settings, container));
     }
     rows.sort(
         Comparator.comparingDouble(ContainerRoleEntry::distanceSq)

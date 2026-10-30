@@ -119,6 +119,15 @@ public final class TerminalSettingsPanel {
     return row == TerminalSettingsLayout.NO_ROW ? row : scroll.firstIndex() + row;
   }
 
+  public ContainerRowTarget containerTargetAt(int windowX, int windowY) {
+    if (containerRowAt(windowX, windowY) == TerminalSettingsLayout.NO_ROW) {
+      return ContainerRowTarget.NONE;
+    }
+    return ContainerListView.isOverRole(windowX, windowY)
+        ? ContainerRowTarget.ROLE
+        : ContainerRowTarget.BODY;
+  }
+
   public void drawBackground(
       DrawContext context, int originX, int originY, int mouseX, int mouseY) {
     final int hovered = TerminalSettingsLayout.sectionTabAt(mouseX, mouseY);

@@ -139,7 +139,8 @@ class ContainerListViewTest {
     when(textRenderer.wrapLines(any(StringVisitable.class), anyInt()))
         .thenReturn(List.of(OrderedText.EMPTY));
 
-    ContainerListView.draw(mock(DrawContext.class), textRenderer, view, 0, -1, false, pos -> false);
+    ContainerListView.draw(
+        mock(DrawContext.class), textRenderer, view, 0, -1, ContainerRowTarget.NONE, pos -> false);
 
     verify(textRenderer)
         .wrapLines(
@@ -161,7 +162,8 @@ class ContainerListViewTest {
     final int top = TerminalSettingsLayout.LIST_Y + (TerminalSettingsLayout.LIST_HEIGHT - 18) / 2;
     final int muted = VanillaPalette.opaque(VanillaPalette.MUTED);
 
-    ContainerListView.draw(context, textRenderer, viewOf(true, 0), 0, -1, false, pos -> false);
+    ContainerListView.draw(
+        context, textRenderer, viewOf(true, 0), 0, -1, ContainerRowTarget.NONE, pos -> false);
 
     verify(context).drawText(textRenderer, first, centre - 15, top, muted, false);
     verify(context).drawText(textRenderer, second, centre - 18, top + 9, muted, false);
@@ -183,31 +185,31 @@ class ContainerListViewTest {
             ContainerListView.ROLE_X + acrossChip, ContainerListView.roleY(1) + downChip));
   }
 
-  @ParameterizedTest(name = "located {0}, hovered {1}, over role {2}")
+  @ParameterizedTest(name = "located {0}, target {1}")
   @CsvSource({
-    "true, false, false, true",
-    "true, true, true, true",
-    "false, true, false, true",
-    "false, true, true, false",
-    "false, false, false, false",
+    "true, NONE, true",
+    "true, ROLE, true",
+    "false, BODY, true",
+    "false, ROLE, false",
+    "false, NONE, false",
   })
   void aRowIsFilledWhileLocatedOrWhileItsBodyIsHovered(
-      boolean located, boolean hovered, boolean overRole, boolean filled) {
-    assertEquals(filled, ContainerListView.fillsRow(located, hovered, overRole));
+      boolean located, ContainerRowTarget target, boolean filled) {
+    assertEquals(filled, ContainerListView.fillsRow(located, target));
   }
 
   static Stream<Arguments> hintsForAPlayerWhoMayNotAdminister() {
     return Stream.of(
-        Arguments.of(false, List.of(List.of(PREFIX + "hint.show_in_world"))),
-        Arguments.of(true, List.of()));
+        Arguments.of(ContainerRowTarget.BODY, List.of(List.of(PREFIX + "hint.locate"))),
+        Arguments.of(ContainerRowTarget.ROLE, List.of()));
   }
 
-  @ParameterizedTest(name = "over the role {0}")
+  @ParameterizedTest(name = "over {0}")
   @MethodSource("hintsForAPlayerWhoMayNotAdminister")
   void aPlayerWhoMayNotAdministerIsOnlyOfferedTheOutline(
-      boolean overRole, List<List<String>> expected) {
+      ContainerRowTarget target, List<List<String>> expected) {
     final List<HintLine> hints =
-        ContainerListView.hints(entry(0, ContainerRole.FILTERED), false, overRole);
+        ContainerListView.hints(entry(0, ContainerRole.FILTERED), false, target);
 
     assertEquals(expected, hints.stream().map(ContainerListViewTest::wordKeysOf).toList());
   }
@@ -231,7 +233,8 @@ class ContainerListViewTest {
   @MethodSource("hintedRoles")
   void onlyAFilteredContainerOffersToChooseItsTags(
       ContainerRole role, List<List<String>> expected) {
-    final List<HintLine> hints = ContainerListView.hints(entry(0, role), true, true);
+    final List<HintLine> hints =
+        ContainerListView.hints(entry(0, role), true, ContainerRowTarget.ROLE);
 
     assertEquals(expected, hints.stream().map(ContainerListViewTest::wordKeysOf).toList());
   }
@@ -239,10 +242,10 @@ class ContainerListViewTest {
   @Test
   void theRowBodyOffersTheOutlineInPlaceOfTheRole() {
     final List<HintLine> hints =
-        ContainerListView.hints(entry(0, ContainerRole.GENERAL), true, false);
+        ContainerListView.hints(entry(0, ContainerRole.GENERAL), true, ContainerRowTarget.BODY);
 
     assertEquals(
-        List.of(List.of(PREFIX + "hint.show_in_world"), List.of(PREFIX + "hint.rename")),
+        List.of(List.of(PREFIX + "hint.locate"), List.of(PREFIX + "hint.rename")),
         hints.stream().map(ContainerListViewTest::wordKeysOf).toList());
   }
 

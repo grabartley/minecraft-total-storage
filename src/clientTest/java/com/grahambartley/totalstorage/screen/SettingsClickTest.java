@@ -5,38 +5,69 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class SettingsClickTest {
-  private static final boolean ON_ROW = true;
-  private static final boolean OFF_ROW = false;
-  private static final boolean ON_ROLE = true;
-  private static final boolean ON_BODY = false;
+  private static final int LEFT = GridClick.LEFT_BUTTON;
+  private static final int RIGHT = GridClick.RIGHT_BUTTON;
+  private static final ContainerRowTarget BODY = ContainerRowTarget.BODY;
+  private static final ContainerRowTarget ROLE = ContainerRowTarget.ROLE;
+  private static final boolean SHIFT = true;
+  private static final boolean PLAIN = false;
   private static final boolean MAY = true;
   private static final boolean MAY_NOT = false;
+  private static final boolean FILTERED = true;
+  private static final boolean UNFILTERED = false;
 
   static Stream<Arguments> clicks() {
     return Stream.of(
-        Arguments.of(GridClick.LEFT_BUTTON, ON_ROW, ON_ROLE, MAY, SettingsAction.CYCLE_FORWARD),
-        Arguments.of(GridClick.RIGHT_BUTTON, ON_ROW, ON_ROLE, MAY, SettingsAction.CYCLE_BACK),
-        Arguments.of(GridClick.LEFT_BUTTON, ON_ROW, ON_ROLE, MAY_NOT, SettingsAction.REFUSED),
-        Arguments.of(GridClick.RIGHT_BUTTON, ON_ROW, ON_ROLE, MAY_NOT, SettingsAction.REFUSED),
-        Arguments.of(GridClick.LEFT_BUTTON, ON_ROW, ON_BODY, MAY, SettingsAction.LOCATE),
-        Arguments.of(GridClick.LEFT_BUTTON, ON_ROW, ON_BODY, MAY_NOT, SettingsAction.LOCATE),
-        Arguments.of(GridClick.RIGHT_BUTTON, ON_ROW, ON_BODY, MAY, SettingsAction.NONE),
-        Arguments.of(GridClick.RIGHT_BUTTON, ON_ROW, ON_BODY, MAY_NOT, SettingsAction.NONE),
-        Arguments.of(GridClick.LEFT_BUTTON, OFF_ROW, ON_ROLE, MAY, SettingsAction.NONE),
-        Arguments.of(GridClick.RIGHT_BUTTON, OFF_ROW, ON_BODY, MAY, SettingsAction.NONE),
-        Arguments.of(GridClick.MIDDLE_BUTTON, ON_ROW, ON_ROLE, MAY, SettingsAction.NONE),
-        Arguments.of(GridClick.MIDDLE_BUTTON, ON_ROW, ON_ROLE, MAY_NOT, SettingsAction.NONE),
-        Arguments.of(GridClick.MIDDLE_BUTTON, ON_ROW, ON_BODY, MAY, SettingsAction.NONE),
-        Arguments.of(7, ON_ROW, ON_ROLE, MAY, SettingsAction.NONE));
+        Arguments.of(LEFT, ROLE, PLAIN, MAY, UNFILTERED, SettingsAction.CYCLE_FORWARD),
+        Arguments.of(RIGHT, ROLE, PLAIN, MAY, UNFILTERED, SettingsAction.CYCLE_BACK),
+        Arguments.of(LEFT, ROLE, PLAIN, MAY_NOT, UNFILTERED, SettingsAction.REFUSED),
+        Arguments.of(RIGHT, ROLE, PLAIN, MAY_NOT, UNFILTERED, SettingsAction.REFUSED),
+        Arguments.of(LEFT, BODY, PLAIN, MAY, UNFILTERED, SettingsAction.LOCATE),
+        Arguments.of(LEFT, BODY, PLAIN, MAY_NOT, UNFILTERED, SettingsAction.LOCATE),
+        Arguments.of(RIGHT, BODY, PLAIN, MAY, UNFILTERED, SettingsAction.NONE),
+        Arguments.of(RIGHT, BODY, PLAIN, MAY_NOT, UNFILTERED, SettingsAction.NONE),
+        Arguments.of(RIGHT, BODY, SHIFT, MAY, UNFILTERED, SettingsAction.RENAME),
+        Arguments.of(RIGHT, ROLE, SHIFT, MAY, FILTERED, SettingsAction.RENAME),
+        Arguments.of(LEFT, BODY, SHIFT, MAY, FILTERED, SettingsAction.CHOOSE_TAGS),
+        Arguments.of(LEFT, ROLE, SHIFT, MAY, FILTERED, SettingsAction.CHOOSE_TAGS),
+        Arguments.of(LEFT, BODY, SHIFT, MAY, UNFILTERED, SettingsAction.REFUSED),
+        Arguments.of(LEFT, BODY, SHIFT, MAY_NOT, FILTERED, SettingsAction.REFUSED),
+        Arguments.of(RIGHT, ROLE, SHIFT, MAY_NOT, FILTERED, SettingsAction.REFUSED));
   }
 
-  @ParameterizedTest(name = "button {0}, row {1}, role {2}, may {3}")
+  @ParameterizedTest(name = "button {0}, target {1}, shift {2}, may {3}, filtered {4}")
   @MethodSource("clicks")
   void aClickMeansWhatItsPlaceOnTheRowSays(
-      int button, boolean overRow, boolean overRole, boolean mayAdminister, SettingsAction action) {
-    assertEquals(action, SettingsClick.of(button, overRow, overRole, mayAdminister));
+      int button,
+      ContainerRowTarget target,
+      boolean shiftDown,
+      boolean mayAdminister,
+      boolean filtered,
+      SettingsAction action) {
+    assertEquals(action, SettingsClick.of(button, target, shiftDown, mayAdminister, filtered));
+  }
+
+  @ParameterizedTest
+  @EnumSource(ContainerRowTarget.class)
+  void aButtonWithNoMeaningIsHandedBack(ContainerRowTarget target) {
+    assertEquals(
+        SettingsAction.NONE,
+        SettingsClick.of(GridClick.MIDDLE_BUTTON, target, SHIFT, MAY, FILTERED));
+  }
+
+  @ParameterizedTest(name = "button {0}")
+  @MethodSource("buttons")
+  void aClickOnNoRowIsHandedBack(int button) {
+    assertEquals(
+        SettingsAction.NONE,
+        SettingsClick.of(button, ContainerRowTarget.NONE, PLAIN, MAY, FILTERED));
+  }
+
+  static Stream<Integer> buttons() {
+    return Stream.of(LEFT, RIGHT);
   }
 }

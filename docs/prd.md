@@ -264,7 +264,7 @@ The owner assigns roles to containers, creates tags, and files items under them,
 | ROLE-8 | Clicking a container's row outlines that one container in world, replacing any outline already showing. Clicking its role control changes its role instead |
 | ROLE-9 | Making a container `Excluded` prevents future writes only, and the interface says so |
 | ROLE-10 | Any player who may open the terminal may outline one container, since doing so changes nothing |
-| ROLE-11 | The outline of one container shows through blocks, keeps its role's shape, and lasts 10 seconds unless another outline replaces it, so a player can close the screen and walk to it |
+| ROLE-11 | The outline of one container shows through blocks, keeps its role's shape, and lasts 10 seconds unless another outline replaces it or the player changes dimension, so a player can close the screen and walk to it |
 | ROLE-12 | A container's row is marked for as long as its outline runs |
 | ROLE-13 | Asking to outline a position that is not in the network is refused with a failure line, and the list refreshes |
 | TAG-1 | Preset tags ship derived from vanilla and convention item tags, and are not editable |

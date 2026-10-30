@@ -2,7 +2,6 @@ package com.grahambartley.totalstorage.render;
 
 import com.grahambartley.totalstorage.terminal.HighlightedContainer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.render.RenderLayer;
@@ -25,20 +24,18 @@ public final class ContainerHighlightRenderer {
 
   public static void register() {
     ClientTickEvents.END_CLIENT_TICK.register(client -> ContainerHighlights.tick());
-    ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(
-        (client, world) -> ContainerHighlights.clear());
-    WorldRenderEvents.AFTER_ENTITIES.register(ContainerHighlightRenderer::renderBehindBlocks);
-    WorldRenderEvents.BEFORE_DEBUG_RENDER.register(ContainerHighlightRenderer::renderOverBlocks);
+    WorldRenderEvents.AFTER_ENTITIES.register(ContainerHighlightRenderer::renderNetwork);
+    WorldRenderEvents.AFTER_TRANSLUCENT.register(ContainerHighlightRenderer::renderLocated);
   }
 
-  private static void renderBehindBlocks(WorldRenderContext context) {
-    if (ContainerHighlights.isShowing() && !ContainerHighlights.showsThroughBlocks()) {
+  private static void renderNetwork(WorldRenderContext context) {
+    if (ContainerHighlights.isShowing() && !ContainerHighlights.showsLocated()) {
       render(context, RenderLayer.getLines());
     }
   }
 
-  private static void renderOverBlocks(WorldRenderContext context) {
-    if (!ContainerHighlights.showsThroughBlocks()) {
+  private static void renderLocated(WorldRenderContext context) {
+    if (!ContainerHighlights.showsLocated()) {
       return;
     }
     render(context, HighlightLines.throughBlocks());

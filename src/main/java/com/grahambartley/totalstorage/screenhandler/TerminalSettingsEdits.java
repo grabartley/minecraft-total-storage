@@ -23,6 +23,7 @@ import com.grahambartley.totalstorage.terminal.ContainerFilterService;
 import com.grahambartley.totalstorage.terminal.ContainerHighlightService;
 import com.grahambartley.totalstorage.terminal.ContainerNamingService;
 import com.grahambartley.totalstorage.terminal.ContainerRoleService;
+import com.grahambartley.totalstorage.terminal.HighlightedContainer;
 import com.grahambartley.totalstorage.terminal.RoleChangeOutcome;
 import com.grahambartley.totalstorage.terminal.TerminalAddress;
 import com.grahambartley.totalstorage.terminal.TerminalMessages;
@@ -32,9 +33,11 @@ import com.grahambartley.totalstorage.terminal.TerminalRadius;
 import com.grahambartley.totalstorage.terminal.TerminalRadiusService;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.BlockPos;
 
 public final class TerminalSettingsEdits {
   private final TerminalSettingsService panels;
@@ -127,75 +130,78 @@ public final class TerminalSettingsEdits {
     if (payload == null) {
       return false;
     }
-    final TerminalOperationContext context =
-        TerminalOperationGate.open(player, payload.syncId()).orElse(null);
-    if (context == null) {
-      return false;
-    }
-    return applied(
+    return onOpen(
         player,
-        context,
-        roles.assign(
-            context.world(),
-            context.terminal(),
-            TerminalCaller.of(player),
-            payload.container(),
-            payload.role()));
+        payload.syncId(),
+        context ->
+            applied(
+                player,
+                context,
+                roles.assign(
+                    context.world(),
+                    context.terminal(),
+                    TerminalCaller.of(player),
+                    payload.container(),
+                    payload.role())));
   }
 
   public boolean setName(ServerPlayerEntity player, ContainerNameEditPayload payload) {
     if (payload == null) {
       return false;
     }
-    final TerminalOperationContext context =
-        TerminalOperationGate.open(player, payload.syncId()).orElse(null);
-    if (context == null) {
-      return false;
-    }
-    return applied(
+    return onOpen(
         player,
-        context,
-        names.rename(
-            context.world(),
-            context.terminal(),
-            TerminalCaller.of(player),
-            payload.container(),
-            payload.name()));
+        payload.syncId(),
+        context ->
+            applied(
+                player,
+                context,
+                names.rename(
+                    context.world(),
+                    context.terminal(),
+                    TerminalCaller.of(player),
+                    payload.container(),
+                    payload.name())));
   }
 
   public boolean setFilterTag(ServerPlayerEntity player, ContainerFilterEditPayload payload) {
     if (payload == null) {
       return false;
     }
-    final TerminalOperationContext context =
-        TerminalOperationGate.open(player, payload.syncId()).orElse(null);
-    if (context == null) {
-      return false;
-    }
-    return applied(
+    return onOpen(
         player,
-        context,
-        filters.accept(
-            context.world(),
-            context.terminal(),
-            TerminalCaller.of(player),
-            payload.container(),
-            payload.tagId(),
-            payload.accepted()));
+        payload.syncId(),
+        context ->
+            applied(
+                player,
+                context,
+                filters.accept(
+                    context.world(),
+                    context.terminal(),
+                    TerminalCaller.of(player),
+                    payload.container(),
+                    payload.tagId(),
+                    payload.accepted())));
   }
 
   public boolean locate(ServerPlayerEntity player, ContainerLocatePayload payload) {
     if (payload == null) {
       return false;
     }
-    final TerminalOperationContext context =
-        TerminalOperationGate.open(player, payload.syncId()).orElse(null);
-    if (context == null) {
-      return false;
-    }
-    return ContainerHighlightService.locate(
-            player, context.world(), context.terminal(), payload.container())
-        || refused(player, TerminalMessages.containerNotInNetwork());
+    return onOpen(
+        player,
+        payload.syncId(),
+        context -> {
+          final BlockPos container = payload.container();
+          if (!context.network().reaches(container)) {
+            return refused(player, TerminalMessages.containerNotInNetwork());
+          }
+          ContainerHighlightService.locate(
+              player,
+              new HighlightedContainer(
+                  container, roles.roleOf(context.world(), context.terminal(), container)));
+          return true;
+        });
   }
 
   private boolean applied(
@@ -225,16 +231,17 @@ public final class TerminalSettingsEdits {
   }
 
   private boolean highlight(ServerPlayerEntity player, int syncId) {
-    final TerminalOperationContext context =
-        TerminalOperationGate.open(player, syncId).orElse(null);
-    if (context == null) {
-      return false;
-    }
-    TerminalNotice.done(
+    return onOpen(
         player,
-        TerminalMessages.highlighted(
-            ContainerHighlightService.highlight(player, context.world(), context.terminal())));
-    return true;
+        syncId,
+        context -> {
+          TerminalNotice.done(
+              player,
+              TerminalMessages.highlighted(
+                  ContainerHighlightService.highlight(
+                      player, context.world(), context.terminal())));
+          return true;
+        });
   }
 
   private boolean rescan(ServerPlayerEntity player, int syncId) {
@@ -252,6 +259,11 @@ public final class TerminalSettingsEdits {
         TerminalMessages.rescanned(power.containerCount(context.world(), context.terminal())));
     ContainerHighlightService.highlight(player, context.world(), context.terminal());
     return pushed(context);
+  }
+
+  private static boolean onOpen(
+      ServerPlayerEntity player, int syncId, Predicate<TerminalOperationContext> action) {
+    return TerminalOperationGate.open(player, syncId).map(action::test).orElse(false);
   }
 
   private boolean pushed(TerminalOperationContext context) {

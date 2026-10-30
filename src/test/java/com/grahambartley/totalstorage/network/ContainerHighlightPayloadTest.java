@@ -32,7 +32,7 @@ class ContainerHighlightPayloadTest {
   @EnumSource(ContainerRole.class)
   void everyOutlinedContainerKeepsItsPositionAndItsRole(ContainerRole role) {
     ContainerHighlightPayload sent =
-        new ContainerHighlightPayload(
+        ContainerHighlightPayload.ofNetwork(
             100, List.of(new HighlightedContainer(new BlockPos(4, -60, 12), role)));
 
     assertEquals(sent, roundTrip(sent));
@@ -45,17 +45,17 @@ class ContainerHighlightPayloadTest {
         ContainerHighlightPayload.ofOne(
             200, new HighlightedContainer(new BlockPos(4, -60, 12), role));
 
-    assertTrue(roundTrip(sent).throughBlocks());
+    assertTrue(roundTrip(sent).located());
     assertEquals(sent, roundTrip(sent));
   }
 
   @Test
   void aNetworkHighlightIsNotLocated() {
     ContainerHighlightPayload sent =
-        new ContainerHighlightPayload(
+        ContainerHighlightPayload.ofNetwork(
             100, List.of(new HighlightedContainer(BlockPos.ORIGIN, ContainerRole.GENERAL)));
 
-    assertFalse(roundTrip(sent).throughBlocks());
+    assertFalse(roundTrip(sent).located());
   }
 
   @Test
@@ -64,7 +64,7 @@ class ContainerHighlightPayloadTest {
 
     ContainerHighlightPayload.CODEC.encode(
         buffer,
-        new ContainerHighlightPayload(
+        ContainerHighlightPayload.ofNetwork(
             60, List.of(new HighlightedContainer(BlockPos.ORIGIN, ContainerRole.GENERAL))));
     ContainerHighlightPayload.CODEC.decode(buffer);
 
@@ -73,7 +73,7 @@ class ContainerHighlightPayloadTest {
 
   @Test
   void anEmptyHighlightIsCarriedRatherThanRefused() {
-    ContainerHighlightPayload empty = new ContainerHighlightPayload(100, List.of());
+    ContainerHighlightPayload empty = ContainerHighlightPayload.ofNetwork(100, List.of());
 
     assertTrue(empty.containers().isEmpty());
     assertEquals(empty, roundTrip(empty));
@@ -82,7 +82,7 @@ class ContainerHighlightPayloadTest {
   @ParameterizedTest
   @ValueSource(ints = {-1, Integer.MIN_VALUE})
   void aLifetimeBelowNothingBecomesNothing(int ticks) {
-    assertEquals(0, new ContainerHighlightPayload(ticks, List.of()).ticks());
+    assertEquals(0, ContainerHighlightPayload.ofNetwork(ticks, List.of()).ticks());
   }
 
   @Test
@@ -93,6 +93,7 @@ class ContainerHighlightPayloadTest {
                 index -> new HighlightedContainer(new BlockPos(index, 0, 0), ContainerRole.GENERAL))
             .toList();
 
-    assertThrows(IllegalArgumentException.class, () -> new ContainerHighlightPayload(100, tooMany));
+    assertThrows(
+        IllegalArgumentException.class, () -> ContainerHighlightPayload.ofNetwork(100, tooMany));
   }
 }

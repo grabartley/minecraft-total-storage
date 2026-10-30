@@ -46,8 +46,8 @@ public final class ContainerListView {
         && windowY < roleY(row) + ROLE_HEIGHT;
   }
 
-  public static boolean fillsRow(boolean located, boolean hovered, boolean overRole) {
-    return located || (hovered && !overRole);
+  public static boolean fillsRow(boolean located, ContainerRowTarget target) {
+    return located || target == ContainerRowTarget.BODY;
   }
 
   public static int roleY(int row) {
@@ -80,7 +80,7 @@ public final class ContainerListView {
       NetworkSettingsView view,
       int firstIndex,
       int hoveredIndex,
-      boolean overRole,
+      ContainerRowTarget hoveredTarget,
       Predicate<BlockPos> located) {
     if (!view.hasContainers()) {
       drawEmpty(context, textRenderer, view);
@@ -92,9 +92,10 @@ public final class ContainerListView {
       if (entry == null) {
         return;
       }
-      final boolean hovered = index == hoveredIndex;
+      final ContainerRowTarget target =
+          index == hoveredIndex ? hoveredTarget : ContainerRowTarget.NONE;
       final boolean rowLocated = located.test(entry.container());
-      if (fillsRow(rowLocated, hovered, overRole)) {
+      if (fillsRow(rowLocated, target)) {
         TerminalChrome.drawHover(
             context,
             TerminalSettingsLayout.LIST_X,
@@ -111,7 +112,13 @@ public final class ContainerListView {
             TerminalSettingsLayout.ROW_HEIGHT,
             VanillaPalette.ACCENT);
       }
-      drawRow(context, textRenderer, entry, row, hovered && overRole, view.mayAdminister());
+      drawRow(
+          context,
+          textRenderer,
+          entry,
+          row,
+          target == ContainerRowTarget.ROLE,
+          view.mayAdminister());
     }
   }
 
@@ -212,15 +219,15 @@ public final class ContainerListView {
   }
 
   public static List<HintLine> hints(
-      ContainerRoleEntry entry, boolean mayAdminister, boolean overRole) {
+      ContainerRoleEntry entry, boolean mayAdminister, ContainerRowTarget target) {
     final List<HintLine> hints = new ArrayList<>();
-    if (!overRole) {
-      hints.add(HintLine.of(HintLine.key("click"), HintLine.words("hint.show_in_world")));
+    if (target == ContainerRowTarget.BODY) {
+      hints.add(HintLine.of(HintLine.key("click"), HintLine.words("hint.locate")));
     }
     if (!mayAdminister) {
       return hints;
     }
-    if (overRole) {
+    if (target == ContainerRowTarget.ROLE) {
       hints.add(
           HintLine.of(
               HintLine.key("click"),
