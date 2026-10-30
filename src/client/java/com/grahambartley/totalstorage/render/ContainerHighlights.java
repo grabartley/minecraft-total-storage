@@ -20,7 +20,6 @@ public final class ContainerHighlights {
   public static void tick() {
     if (ticksLeft > 0 && --ticksLeft == 0) {
       containers = List.of();
-      located = false;
     }
   }
 
@@ -44,6 +43,5 @@ public final class ContainerHighlights {
   public static void clear() {
     containers = List.of();
     ticksLeft = 0;
-    located = false;
   }
 }
