@@ -25,6 +25,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: write
       checks: write
@@ -59,6 +60,7 @@ jobs:
         run: ./gradlew check --configuration-cache --build-cache
 
       - name: Run gametests
+        timeout-minutes: 10
         run: ./gradlew runGametest --no-daemon --stacktrace
 
       - name: Dedicated server smoke boot
@@ -213,6 +215,7 @@ jobs:
           MOD_RELEASE_TYPE: ${{ steps.release_meta.outputs.version_type }}
 
       - name: Create and apply release milestone
+        timeout-minutes: 5
         if: github.event_name == 'workflow_dispatch'
         continue-on-error: true
         env:
