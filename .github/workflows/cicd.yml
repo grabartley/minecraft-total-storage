@@ -60,6 +60,7 @@ jobs:
         run: ./gradlew check --configuration-cache --build-cache
 
       - name: Run gametests
+        timeout-minutes: 10
         run: ./gradlew runGametest --no-daemon --stacktrace
 
       - name: Dedicated server smoke boot

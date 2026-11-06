@@ -86,6 +86,7 @@ jobs:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       - name: Run gametests
+        timeout-minutes: 10
         run: ./gradlew runGametest --no-daemon --stacktrace
 
       - name: Publish gametest report
