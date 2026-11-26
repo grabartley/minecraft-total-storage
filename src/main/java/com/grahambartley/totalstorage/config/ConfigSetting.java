@@ -4,10 +4,8 @@ import java.util.List;
 import java.util.Optional;
 import net.minecraft.text.Text;
 
-public interface ConfigSetting {
+public interface ConfigSetting extends ConfigOption<TotalStorageConfig> {
   String name();
-
-  String valueIn(TotalStorageConfig config);
 
   String defaultValue();
 
@@ -20,8 +18,6 @@ public interface ConfigSetting {
   default Optional<ConfigRange> range() {
     return Optional.empty();
   }
-
-  Optional<TotalStorageConfig> withValue(TotalStorageConfig config, String rawValue);
 
   default TotalStorageConfig reset(TotalStorageConfig config) {
     return withValue(config, defaultValue()).orElse(config);

@@ -1,8 +1,10 @@
 package com.grahambartley.totalstorage.screen;
 
 import com.grahambartley.totalstorage.config.ClientPreference;
+import com.grahambartley.totalstorage.config.ClientPreferences;
 import com.grahambartley.totalstorage.config.ConfigSection;
 import com.grahambartley.totalstorage.config.ConfigSetting;
+import com.grahambartley.totalstorage.config.TotalStorageConfig;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.widget.ElementListWidget;
@@ -16,7 +18,7 @@ public final class ConfigList extends ElementListWidget<ConfigEntry> {
     super(client, width, height, top, ROW_HEIGHT);
   }
 
-  public void addPreferences(ClientPreferenceEdits edits) {
+  public void addPreferences(ConfigDraft<ClientPreferences> draft) {
     final TextRenderer textRenderer = client.textRenderer;
     addEntry(new ConfigHeading(textRenderer, ClientPreferenceText.section()));
     for (final ClientPreference preference : ClientPreference.values()) {
@@ -25,11 +27,16 @@ public final class ConfigList extends ElementListWidget<ConfigEntry> {
               textRenderer,
               ClientPreferenceText.label(preference),
               ClientPreferenceText.defaultLine(preference),
-              ClientPreferenceControls.of(preference, edits)));
+              ConfigCycler.of(
+                  preference,
+                  draft,
+                  preference.choices(),
+                  value -> ClientPreferenceText.displayValue(preference, value),
+                  ClientPreferenceText.label(preference))));
     }
   }
 
-  public void addServerSettings(ServerConfigEdits edits, boolean editable) {
+  public void addServerSettings(ConfigDraft<TotalStorageConfig> edits, boolean editable) {
     final TextRenderer textRenderer = client.textRenderer;
     for (final ConfigSection section : ConfigSection.values()) {
       addEntry(new ConfigHeading(textRenderer, ServerConfigText.section(section)));

@@ -2,8 +2,10 @@ package com.grahambartley.totalstorage.screen;
 
 import com.grahambartley.totalstorage.access.ServerSettingsAccessRule;
 import com.grahambartley.totalstorage.config.ClientConfigMirror;
+import com.grahambartley.totalstorage.config.ClientPreferences;
 import com.grahambartley.totalstorage.config.ClientPreferencesStore;
 import com.grahambartley.totalstorage.config.ServerConfigService;
+import com.grahambartley.totalstorage.config.TotalStorageConfig;
 import com.grahambartley.totalstorage.network.ModNetworkingClient;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -24,16 +26,16 @@ public final class ConfigScreen extends Screen {
   private static final int FAILURE_COLOUR = 0xFF000000 | VanillaPalette.WARNING;
 
   @Nullable private final Screen parent;
-  private final ServerConfigEdits edits;
-  private final ClientPreferenceEdits preferences;
+  private final ConfigDraft<TotalStorageConfig> edits;
+  private final ConfigDraft<ClientPreferences> preferences;
   private ConfigScreenAccess access;
   private boolean preferencesSaveFailed;
 
   public ConfigScreen(@Nullable Screen parent) {
     super(ConfigScreenText.title());
     this.parent = parent;
-    this.edits = new ServerConfigEdits(ClientConfigMirror.current());
-    this.preferences = new ClientPreferenceEdits(ClientPreferencesStore.current());
+    this.edits = new ConfigDraft<>(ClientConfigMirror.current());
+    this.preferences = new ConfigDraft<>(ClientPreferencesStore.current());
     this.access = currentAccess();
   }
 
@@ -111,8 +113,9 @@ public final class ConfigScreen extends Screen {
   }
 
   private void submitAndClose() {
-    if (preferences.isDirty() && !ClientPreferencesStore.save(preferences.edited())) {
-      preferencesSaveFailed = true;
+    preferencesSaveFailed =
+        preferences.isDirty() && !ClientPreferencesStore.save(preferences.edited());
+    if (preferencesSaveFailed) {
       return;
     }
     if (access.sendsServerEdits(edits.isDirty())) {

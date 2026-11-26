@@ -400,7 +400,7 @@ An operator configures every behaviour from the console, with no client mod and 
 | CFG-12 | Hitting a cap or budget logs once, not once per occurrence |
 | CFG-13 | A player's own display options are kept by their game, never sent to the server, and are editable in their own section of the same settings screen from the title screen, in singleplayer, and on any server, whatever the player's permission level. A change applies when the screen is closed with Done, and a change that cannot be saved keeps the screen open and says so |
 
-**Not supported:** a client-side value influencing a server enforcement decision; a setting reachable from the screen but not the command tree; a rate limit that moves some items before refusing.
+**Not supported:** a client-side value influencing a server enforcement decision; a server setting reachable from the screen but not the command tree; a rate limit that moves some items before refusing.
 
 #### Server-wide settings
 

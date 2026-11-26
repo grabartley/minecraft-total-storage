@@ -22,12 +22,14 @@ public final class ClientPreferenceText {
   }
 
   public static Text displayValue(ClientPreference preference, String rawValue) {
-    if (preference == ClientPreference.SCREEN_BUTTON_ANCHOR) {
-      return ScreenButtonAnchor.fromId(rawValue)
-          .map(ClientPreferenceText::anchor)
-          .orElseGet(() -> Text.literal(String.valueOf(rawValue)));
-    }
-    return ScreenTexts.onOrOff(Boolean.parseBoolean(rawValue));
+    return switch (preference) {
+      case SORT_BUTTON_VISIBLE, LOCKED_SLOT_TINT_VISIBLE ->
+          ScreenTexts.onOrOff(Boolean.parseBoolean(rawValue));
+      case SCREEN_BUTTON_ANCHOR ->
+          ScreenButtonAnchor.fromId(rawValue)
+              .map(ClientPreferenceText::anchor)
+              .orElseGet(() -> Text.literal(String.valueOf(rawValue)));
+    };
   }
 
   public static Text defaultLine(ClientPreference preference) {

@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-public enum ClientPreference {
+public enum ClientPreference implements ConfigOption<ClientPreferences> {
   SORT_BUTTON_VISIBLE("sortButtonVisible") {
     @Override
     public String valueIn(ClientPreferences preferences) {
@@ -77,8 +77,6 @@ public enum ClientPreference {
     return key;
   }
 
-  public abstract String valueIn(ClientPreferences preferences);
-
   public abstract List<String> choices();
 
   abstract ClientPreferences apply(ClientPreferences preferences, String choice);
@@ -87,6 +85,7 @@ public enum ClientPreference {
     return valueIn(ClientPreferences.defaults());
   }
 
+  @Override
   public Optional<ClientPreferences> withValue(ClientPreferences preferences, String rawValue) {
     if (preferences == null || rawValue == null) {
       return Optional.empty();
