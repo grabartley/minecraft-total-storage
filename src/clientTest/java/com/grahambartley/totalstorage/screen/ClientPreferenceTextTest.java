@@ -30,7 +30,7 @@ class ClientPreferenceTextTest {
   @CsvSource({
     "SORT_BUTTON_VISIBLE, sortButtonVisible, Show the sort button",
     "SCREEN_BUTTON_ANCHOR, screenButtonAnchor, Sort and stack buttons",
-    "LOCKED_SLOT_TINT_VISIBLE, lockedSlotTintVisible, Tint locked slots"
+    "LOCKED_SLOT_TINT_VISIBLE, lockedSlotTintVisible, Tint locked slots in the terminal"
   })
   void everyOptionHasAPlainLabel(ClientPreference preference, String key, String english) {
     final Text label = ClientPreferenceText.label(preference);

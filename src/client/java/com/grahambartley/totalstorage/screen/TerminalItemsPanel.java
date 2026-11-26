@@ -10,8 +10,10 @@ import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
+import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.OrderedText;
+import net.minecraft.text.Text;
 
 public final class TerminalItemsPanel {
   private static final int LINE_HEIGHT = 9;
@@ -121,7 +123,7 @@ public final class TerminalItemsPanel {
       final int itemY = TerminalScreenLayout.cellY(cell) + TerminalScreenLayout.SLOT_ITEM_OFFSET;
       final ItemStack stack = row.variant().toStack();
       context.drawItem(stack, itemX, itemY);
-      drawCount(context, textRenderer, ItemCountFormat.cell(row.count()), itemX, itemY);
+      drawCount(context, textRenderer, row.count(), itemX, itemY);
       context.drawItemInSlot(textRenderer, stack, itemX, itemY, NO_STACK_COUNT);
     }
     drawHighlight(context, hovered);
@@ -139,19 +141,34 @@ public final class TerminalItemsPanel {
   }
 
   private static void drawCount(
-      DrawContext context, TextRenderer textRenderer, String label, int itemX, int itemY) {
+      DrawContext context, TextRenderer textRenderer, long count, int itemX, int itemY) {
+    final String label = ItemCountFormat.cell(count);
     final SlotCountPlacement placement =
-        SlotCountPlacement.of(itemX, itemY, textRenderer.getWidth(label), textRenderer.fontHeight);
+        SlotCountPlacement.of(
+            itemX, itemY, count, textRenderer.getWidth(label), textRenderer.fontHeight);
     context.getMatrices().push();
     context.getMatrices().translate(0.0F, 0.0F, COUNT_ELEVATION);
     context.getMatrices().scale(placement.scale(), placement.scale(), 1.0F);
-    context.drawText(
-        textRenderer,
-        label,
-        placement.x(),
-        placement.y(),
-        VanillaPalette.opaque(VanillaPalette.COUNT),
-        true);
+    if (placement.outlined()) {
+      textRenderer.drawWithOutline(
+          Text.literal(label).asOrderedText(),
+          placement.x(),
+          placement.y(),
+          VanillaPalette.opaque(VanillaPalette.COUNT),
+          VanillaPalette.opaque(VanillaPalette.OUTLINE),
+          context.getMatrices().peek().getPositionMatrix(),
+          context.getVertexConsumers(),
+          LightmapTextureManager.MAX_LIGHT_COORDINATE);
+      context.draw();
+    } else {
+      context.drawText(
+          textRenderer,
+          label,
+          placement.x(),
+          placement.y(),
+          VanillaPalette.opaque(VanillaPalette.COUNT),
+          true);
+    }
     context.getMatrices().pop();
   }
 

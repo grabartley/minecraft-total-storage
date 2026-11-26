@@ -427,7 +427,7 @@ Each player sets these for themselves. They change nothing for anyone else.
 |---|---|---|
 | Show the sort button | On | Off hides the sort button on every screen, leaving the keybind and the command working |
 | Sort and stack buttons | Inside top | Inside top, Outside top, or Outside bottom, all on the right edge of the screen's panel. Inside top moves outside when there is more than one button or the screen's slots leave no room |
-| Tint locked slots | Off | |
+| Tint locked slots in the terminal | Off | |
 
 ---
 
