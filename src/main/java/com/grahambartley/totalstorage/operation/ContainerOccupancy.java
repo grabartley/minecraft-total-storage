@@ -28,10 +28,11 @@ public final class ContainerOccupancy<V> {
         : ContainerContents.EMPTY;
   }
 
-  public void stored(StorageOrigin container, V variant) {
+  public boolean stored(StorageOrigin container, V variant) {
     Objects.requireNonNull(container, "container");
-    holdersOf(variant).add(container);
-    filled.add(container);
+    final boolean newHolder = holdersOf(variant).add(container);
+    final boolean newlyFilled = !index.occupied().contains(container) && filled.add(container);
+    return newHolder || newlyFilled;
   }
 
   private Set<StorageOrigin> holdersOf(V variant) {

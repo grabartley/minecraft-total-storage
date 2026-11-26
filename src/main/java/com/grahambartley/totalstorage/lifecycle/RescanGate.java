@@ -1,19 +1,19 @@
 package com.grahambartley.totalstorage.lifecycle;
 
+import java.util.OptionalInt;
+
 public final class RescanGate {
-  private boolean claimed;
-  private int claimedTick;
+  private OptionalInt claimedTick = OptionalInt.empty();
 
   public boolean claim(int tick) {
-    if (claimed && claimedTick == tick) {
+    if (claimedTick.isPresent() && claimedTick.getAsInt() == tick) {
       return false;
     }
-    claimed = true;
-    claimedTick = tick;
+    claimedTick = OptionalInt.of(tick);
     return true;
   }
 
   public void reset() {
-    claimed = false;
+    claimedTick = OptionalInt.empty();
   }
 }

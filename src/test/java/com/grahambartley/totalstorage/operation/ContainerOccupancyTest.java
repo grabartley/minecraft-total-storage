@@ -64,6 +64,30 @@ class ContainerOccupancyTest {
     assertEquals(expected, occupancy.contentsOf(container, variant));
   }
 
+  static Stream<Arguments> stores() {
+    return Stream.of(
+        Arguments.of(COBBLE_CHEST, "cobblestone", false),
+        Arguments.of(MIXED_CHEST, "torch", false),
+        Arguments.of(COBBLE_CHEST, "diamond", true),
+        Arguments.of(EMPTY_CHEST, "diamond", true));
+  }
+
+  @ParameterizedTest(name = "storing {1} in {0} changes it: {2}")
+  @MethodSource("stores")
+  void aStoreSaysWhetherItChangedWhatTheContainerCountsAs(
+      StorageOrigin container, String variant, boolean changed) {
+    assertEquals(changed, occupancy.stored(container, variant));
+  }
+
+  @ParameterizedTest(name = "storing {1} in {0} twice")
+  @MethodSource("stores")
+  void storingTheSameThingAgainChangesNothing(
+      StorageOrigin container, String variant, boolean changed) {
+    occupancy.stored(container, variant);
+
+    assertEquals(false, occupancy.stored(container, variant));
+  }
+
   private static NetworkIndex<String> index() {
     return new NetworkIndexBuilder<String>()
         .add("cobblestone", 64L, COBBLE_CHEST)

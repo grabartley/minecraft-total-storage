@@ -81,7 +81,7 @@ public final class ContainerDiscoveryScan {
     final Set<Object> claimedSlots = Collections.newSetFromMap(new IdentityHashMap<>());
     for (final BlockPos pos : candidates) {
       final StorageProvider provider = resolver.resolve(world, pos).orElse(null);
-      if (provider == null || !eligibility.isEligible(world, pos, true)) {
+      if (provider == null || !eligibility.allowsBlockAt(world, pos)) {
         continue;
       }
       final Object firstSlot = provider.slot(0).orElse(null);

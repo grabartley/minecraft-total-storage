@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.grahambartley.totalstorage.operation.TerminalNoticeTone;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 
 class SortOutcomeTest {
@@ -49,5 +51,21 @@ class SortOutcomeTest {
   @EnumSource(SortOutcome.class)
   void everyOutcomeSurvivesARoundTripThroughItsName(SortOutcome outcome) {
     assertEquals(outcome, SortOutcome.valueOf(outcome.name()));
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "SORTED, DONE",
+    "ALREADY_SORTED, DONE",
+    "NOTHING_TO_SORT, DONE",
+    "RATE_LIMITED, PARTIAL",
+    "NOT_OFFERED, FAILED",
+    "NO_OPEN_SCREEN, FAILED",
+    "SCREEN_NOT_SORTABLE, FAILED",
+    "NOT_OPENABLE, FAILED",
+    "FAILED, FAILED",
+  })
+  void everyOutcomeCarriesTheToneItIsReportedIn(SortOutcome outcome, TerminalNoticeTone tone) {
+    assertEquals(tone, outcome.tone());
   }
 }

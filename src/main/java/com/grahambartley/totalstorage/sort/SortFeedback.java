@@ -16,11 +16,9 @@ public final class SortFeedback {
   }
 
   public static Optional<Text> actionBarMessageFor(SortOutcome outcome) {
-    return switch (outcome) {
-      case SORTED, ALREADY_SORTED, NOTHING_TO_SORT, RATE_LIMITED -> Optional.empty();
-      case FAILED, NOT_OFFERED, NO_OPEN_SCREEN, SCREEN_NOT_SORTABLE, NOT_OPENABLE ->
-          Optional.of(messageFor(outcome));
-    };
+    return outcome.tone().isShownOnTheActionBar()
+        ? Optional.of(messageFor(outcome))
+        : Optional.empty();
   }
 
   public static Text messageFor(SortReply reply) {
