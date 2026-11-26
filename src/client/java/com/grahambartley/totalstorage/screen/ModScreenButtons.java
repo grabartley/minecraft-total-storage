@@ -9,6 +9,7 @@ import java.util.List;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.ingame.AbstractInventoryScreen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.entity.player.PlayerEntity;
@@ -33,10 +34,15 @@ public final class ModScreenButtons {
     if (carried.isEmpty()) {
       return;
     }
-    final ScreenButtonAnchor anchor = anchorFor(screen, carried.size());
-    for (int index = 0; index < carried.size(); index++) {
-      add(screen, carried.get(index), anchor, index, carried.size());
-    }
+    final ScreenButtonLayout layout =
+        new ScreenButtonLayout(anchorFor(screen, carried.size()), carried.size());
+    final List<ScreenIconButton> widgets =
+        carried.stream().map(button -> widgetFor(screen, button)).toList();
+    place(screen, layout, carried, widgets);
+    Screens.getButtons(screen).addAll(widgets);
+    ScreenEvents.beforeRender(screen)
+        .register(
+            (rendered, context, mouseX, mouseY, delta) -> place(screen, layout, carried, widgets));
   }
 
   private static boolean isSortable(ScreenHandler handler) {
@@ -69,33 +75,31 @@ public final class ModScreenButtons {
     return new ScreenButtonSpot(panel.x() + slot.x - 1, panel.y() + slot.y - 1);
   }
 
-  private static void add(
-      HandledScreen<?> screen,
-      ScreenButton button,
-      ScreenButtonAnchor anchor,
-      int index,
-      int count) {
-    final ScreenIconButton widget =
-        new ScreenIconButton(
-            button.sprites(), button.label(), () -> button.press(screen.getScreenHandler().syncId));
-    followPanel(screen, button, widget, anchor, index, count);
-    Screens.getButtons(screen).add(widget);
-    ScreenEvents.beforeRender(screen)
-        .register(
-            (rendered, context, mouseX, mouseY, delta) ->
-                followPanel(screen, button, widget, anchor, index, count));
+  private static ScreenIconButton widgetFor(HandledScreen<?> screen, ScreenButton button) {
+    return new ScreenIconButton(
+        button.sprites(), button.label(), () -> button.press(screen.getScreenHandler().syncId));
   }
 
-  private static void followPanel(
+  private static void place(
       HandledScreen<?> screen,
-      ScreenButton button,
-      ScreenIconButton widget,
-      ScreenButtonAnchor anchor,
-      int index,
-      int count) {
-    final ScreenButtonSpot spot = ScreenButtonRow.at(anchor, ScreenPanel.of(screen), index, count);
-    widget.setPosition(spot.x(), spot.y());
-    widget.visible = button.isOffered();
-    widget.active = button.isAvailable();
+      ScreenButtonLayout layout,
+      List<ScreenButton> carried,
+      List<ScreenIconButton> widgets) {
+    final List<ScreenButtonSpot> spots =
+        layout.spots(
+            ScreenPanel.of(screen), screen.width, screen.height, effectsDrawnBeside(screen));
+    for (int index = 0; index < widgets.size(); index++) {
+      final ScreenIconButton widget = widgets.get(index);
+      widget.setPosition(spots.get(index).x(), spots.get(index).y());
+      widget.visible = carried.get(index).isOffered();
+      widget.active = carried.get(index).isAvailable();
+    }
+  }
+
+  private static int effectsDrawnBeside(HandledScreen<?> screen) {
+    final PlayerEntity player = MinecraftClient.getInstance().player;
+    return screen instanceof AbstractInventoryScreen<?> && player != null
+        ? player.getStatusEffects().size()
+        : 0;
   }
 }

@@ -2,6 +2,7 @@ package com.grahambartley.totalstorage.lock;
 
 import com.grahambartley.totalstorage.config.ClientPreferencesStore;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.screen.slot.Slot;
 
 public final class LockedSlotOverlay {
@@ -9,8 +10,8 @@ public final class LockedSlotOverlay {
 
   private LockedSlotOverlay() {}
 
-  public static void draw(DrawContext context, Slot slot) {
-    if (!LockedSlotState.isLocked(slot)) {
+  public static void draw(DrawContext context, Screen screen, Slot slot) {
+    if (!LockCues.belongOn(screen) || !LockedSlotState.isLocked(slot)) {
       return;
     }
     drawAt(context, slot.x, slot.y);

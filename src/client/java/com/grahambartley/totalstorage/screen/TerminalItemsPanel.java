@@ -14,7 +14,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.text.OrderedText;
 
 public final class TerminalItemsPanel {
-  private static final int ITEM_SIZE = 16;
   private static final int LINE_HEIGHT = 9;
   private static final int PLACEHOLDER_MARGIN = 6;
   private static final int HINT_GAP = 2;
@@ -141,16 +140,16 @@ public final class TerminalItemsPanel {
 
   private static void drawCount(
       DrawContext context, TextRenderer textRenderer, String label, int itemX, int itemY) {
-    final int width = textRenderer.getWidth(label);
-    final float scale = Math.min(1.0F, (float) ITEM_SIZE / width);
+    final SlotCountPlacement placement =
+        SlotCountPlacement.of(itemX, itemY, textRenderer.getWidth(label));
     context.getMatrices().push();
     context.getMatrices().translate(0.0F, 0.0F, COUNT_ELEVATION);
-    context.getMatrices().scale(scale, scale, 1.0F);
+    context.getMatrices().scale(placement.scale(), placement.scale(), 1.0F);
     context.drawText(
         textRenderer,
         label,
-        Math.round((itemX + ITEM_SIZE) / scale) - width,
-        Math.round((itemY + ITEM_SIZE - LINE_HEIGHT * scale) / scale),
+        placement.x(),
+        placement.y(),
         VanillaPalette.opaque(VanillaPalette.COUNT),
         true);
     context.getMatrices().pop();

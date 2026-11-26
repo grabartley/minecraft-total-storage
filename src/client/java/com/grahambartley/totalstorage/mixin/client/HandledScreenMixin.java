@@ -71,13 +71,13 @@ public abstract class HandledScreenMixin {
   @Inject(method = "drawSlot", at = @At("HEAD"))
   private void totalStorage$paintLockedSlots(
       DrawContext context, Slot slot, CallbackInfo callback) {
-    LockedSlotOverlay.draw(context, slot);
+    LockedSlotOverlay.draw(context, (Screen) (Object) this, slot);
   }
 
   @Inject(method = "drawSlot", at = @At("TAIL"))
   private void totalStorage$badgeLockedSlots(
       DrawContext context, Slot slot, CallbackInfo callback) {
-    LockedSlotBadge.draw(context, slot);
+    LockedSlotBadge.draw(context, (Screen) (Object) this, slot);
     LockHintRing.draw(context, slot, Screen.hasAltDown());
   }
 

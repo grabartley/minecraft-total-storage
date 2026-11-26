@@ -6,12 +6,12 @@ A locked slot can carry two cues, and they are not interchangeable:
 
 | Cue | Carries | Drawn | Default |
 |---|---|---|---|
-| The badge | The lock state | Over the item and its decorations | Always on |
-| The tint | Reinforcement only | Behind the item, under everything else | Off |
+| The badge | The lock state | Over the item and its decorations | On, in the terminal only |
+| The tint | Reinforcement only | Behind the item, under everything else | Off, and in the terminal only when on |
 
-**The badge is the indicator and the tint is the reinforcement.** The tint distinguishes a locked slot by colour alone, which is exactly what a player with a colour vision deficiency cannot use, so it can never be the only cue. That ordering is also why the tint is a per-player option and the badge is not: turning the tint off costs a player nothing they cannot get from the badge. The tint is off on a fresh install so a locked inventory looks like a vanilla one with a few small padlocks on it.
+**The badge is the indicator and the tint is the reinforcement.** The tint distinguishes a locked slot by colour alone, which is exactly what a player with a colour vision deficiency cannot use, so it can never be the only cue. That ordering is also why the tint is a per-player option and the badge is not: turning the tint off costs a player nothing they cannot get from the badge. The tint is off on a fresh install so the terminal's player inventory looks like a vanilla one with a few small padlocks on it.
 
-Locks are drawn in every screen that shows the player inventory, because quick stack and the inventory sort button skip locked slots there too. They are never drawn on the in-game hotbar.
+The badge and the tint are drawn only in the terminal ([ADR 0047](adr/0047-locks-are-drawn-only-in-the-terminal.md)). Every other screen, the player inventory and chests included, looks exactly like vanilla until the player holds Alt. They are never drawn on the in-game hotbar.
 
 ## Sprite Reference
 
@@ -48,13 +48,13 @@ The shape is a padlock silhouette rather than a letter or an abstract mark, so i
 
 ## Alt Ring
 
-Holding Alt in a screen that shows the player inventory shows which slots can be locked. `LockHintRing` draws a dotted ring, one pixel on and one off, inset 2 pixels inside every lockable slot that is not locked yet, in white at about 55% opacity (`0x8CFFFFFF`). A locked slot keeps its badge instead. The ring is drawn over the item, so it shows on full and empty slots alike, and it is only there while Alt is held, so it never clutters the screen.
+Holding Alt in any screen that shows the player inventory, the terminal or not, shows which slots can be locked. `LockHintRing` draws a dotted ring, one pixel on and one off, inset 2 pixels inside every lockable slot that is not locked yet, in white at about 55% opacity (`0x8CFFFFFF`). A locked slot gets no ring, and in the terminal it keeps its badge instead. The ring is drawn over the item, so it shows on full and empty slots alike, and it is only there while Alt is held, so it never clutters the screen.
 
 While Alt is held, a locked item's tooltip also adds a line with the badge, "Locked: sorting and deposits skip it", and a keycap hint for Alt plus click to unlock it, Option plus click on a Mac. Without Alt the tooltip is the vanilla one.
 
 ## Tint
 
-`LockedSlotTint.LOCKED` is `0x60FFAA00`: amber at 38% opacity. It is drawn only for a player who turned it on.
+`LockedSlotTint.LOCKED` is `0x60FFAA00`: amber at 38% opacity. It is drawn only in the terminal, and only for a player who turned it on.
 
 Amber is the vanilla language for a soft warning, and the alpha is deliberately low. At full strength the tint floods the empty pixels around the item and the slot stops reading as a slot; at this strength it is a wash that groups locked slots into a visible region while every item on top of it stays its own colour. The badge is legible at any tint strength, so the tint is free to stay quiet.
 
