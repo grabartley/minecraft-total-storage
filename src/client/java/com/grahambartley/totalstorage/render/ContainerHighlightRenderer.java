@@ -16,8 +16,6 @@ import net.minecraft.world.BlockView;
 public final class ContainerHighlightRenderer {
   private static final double SWELL = 0.002;
 
-  private static final double INNER_INSET = 0.2;
-
   private static final int DASHES_PER_EDGE = 3;
 
   private ContainerHighlightRenderer() {}
@@ -69,8 +67,9 @@ public final class ContainerHighlightRenderer {
       case SOLID -> drawBox(matrices, lines, footprint, colour);
       case DASHED -> DashedBox.draw(matrices, lines, footprint, DASHES_PER_EDGE, colour);
       case DOUBLED -> {
-        drawBox(matrices, lines, footprint, colour);
-        drawBox(matrices, lines, footprint.expand(-INNER_INSET), colour);
+        for (final Box box : DoubledBox.of(footprint)) {
+          drawBox(matrices, lines, box, colour);
+        }
       }
     }
   }
