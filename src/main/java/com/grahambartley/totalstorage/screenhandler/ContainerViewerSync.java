@@ -7,10 +7,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import net.minecraft.inventory.DoubleInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.Slot;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -52,34 +50,11 @@ public final class ContainerViewerSync {
     int resynced = 0;
     for (final ServerPlayerEntity viewer : server.getPlayerManager().getPlayerList()) {
       final ScreenHandler handler = viewer.currentScreenHandler;
-      if (handler != null && shows(handler, changed)) {
+      if (handler != null && ViewedInventories.showAny(handler.slots, changed)) {
         handler.syncState();
         resynced++;
       }
     }
     return resynced;
-  }
-
-  private static boolean shows(ScreenHandler handler, Set<Inventory> changed) {
-    final Set<Inventory> shown = new HashSet<>();
-    for (final Slot slot : handler.slots) {
-      if (changed.contains(slot.inventory)) {
-        return true;
-      }
-      shown.add(slot.inventory);
-    }
-    return shown.stream().anyMatch(inventory -> isHalfOf(inventory, changed));
-  }
-
-  private static boolean isHalfOf(Inventory shown, Set<Inventory> changed) {
-    if (!(shown instanceof DoubleInventory doubled)) {
-      return false;
-    }
-    for (final Inventory inventory : changed) {
-      if (doubled.isPart(inventory)) {
-        return true;
-      }
-    }
-    return false;
   }
 }

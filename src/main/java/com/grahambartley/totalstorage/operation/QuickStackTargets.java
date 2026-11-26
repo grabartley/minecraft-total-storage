@@ -60,7 +60,7 @@ public final class QuickStackTargets {
       if (claim.assignment().role() == ContainerRole.EXCLUDED) {
         continue;
       }
-      targets.add(new QuickStackTarget(provider, claim.assignment(), claim.tags()));
+      targets.add(QuickStackTarget.of(provider, claim.assignment(), claim.tags()));
     }
     return List.copyOf(targets);
   }

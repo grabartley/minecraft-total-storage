@@ -5,6 +5,7 @@ import com.grahambartley.totalstorage.config.ServerConfigService;
 import com.grahambartley.totalstorage.lock.LockedSlots;
 import com.grahambartley.totalstorage.network.DepositRequestPayload;
 import com.grahambartley.totalstorage.storage.ContainerRole;
+import com.grahambartley.totalstorage.storage.StorageOrigin;
 import com.grahambartley.totalstorage.terminal.NetworkCapacity;
 import com.grahambartley.totalstorage.terminal.NetworkCapacityService;
 import com.grahambartley.totalstorage.transaction.OperationResult;
@@ -118,21 +119,12 @@ public final class DepositService {
 
   private OperationResult<Stored> store(
       TerminalOperationContext context, List<Offer> offers, TransactionContext transaction) {
-    final Map<ItemVariant, List<Storage<ItemVariant>>> routed =
-        destinations.forVariants(
-            context.world(),
-            context.terminal(),
-            context.network(),
-            offers.stream().map(Offer::variant).distinct().toList());
+    final DepositPlan plan =
+        destinations.plan(context.world(), context.terminal(), context.network());
     long moved = 0L;
     final Map<ItemVariant, Long> behind = new LinkedHashMap<>();
     for (final Offer offer : offers) {
-      final List<Storage<ItemVariant>> targets = routed.getOrDefault(offer.variant(), List.of());
-      final long took =
-          targets.isEmpty()
-              ? 0L
-              : StorageTransfers.distribute(
-                  offer.source(), targets, offer.variant(), offer.amount(), transaction);
+      final long took = place(plan, offer, transaction);
       moved += took;
       if (took < offer.amount()) {
         behind.merge(offer.variant(), offer.amount() - took, Long::sum);
@@ -141,6 +133,27 @@ public final class DepositService {
     return moved > 0L
         ? OperationResult.committed(new Stored(moved, listed(behind)))
         : OperationResult.rolledBack("the network had nowhere to put any of it");
+  }
+
+  private static long place(DepositPlan plan, Offer offer, TransactionContext transaction) {
+    long took = 0L;
+    for (final StorageOrigin destination : plan.destinationsFor(offer.variant())) {
+      if (took >= offer.amount()) {
+        break;
+      }
+      final Storage<ItemVariant> storage = plan.storageOf(destination).orElse(null);
+      if (storage == null) {
+        continue;
+      }
+      final long moved =
+          StorageTransfers.move(
+              offer.source(), storage, offer.variant(), offer.amount() - took, transaction);
+      if (moved > 0L) {
+        took += moved;
+        plan.stored(destination, offer.variant());
+      }
+    }
+    return took;
   }
 
   private static List<Offer> offersFrom(

@@ -7,7 +7,6 @@ import com.grahambartley.totalstorage.storage.BlockStorageOrigin;
 import com.grahambartley.totalstorage.storage.ContainerScanResult;
 import com.grahambartley.totalstorage.storage.StorageOrigin;
 import com.grahambartley.totalstorage.storage.StorageProvider;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -24,8 +23,9 @@ import net.minecraft.world.World;
 public final class NetworkIndexSession<V> implements ContainerMutationListener {
   private final ContainerMutationRegistry registry;
   private final NetworkIndexCache<V> cache;
-  private final List<StorageOrigin> watched = new ArrayList<>();
+  private final Set<StorageOrigin> watched = new LinkedHashSet<>();
 
+  private List<StorageOrigin> snapshot = List.of();
   private boolean active;
 
   public NetworkIndexSession(
@@ -52,6 +52,7 @@ public final class NetworkIndexSession<V> implements ContainerMutationListener {
     Objects.requireNonNull(origins, "origins");
     end();
     watched.addAll(origins);
+    snapshot = null;
     cache.track(watched);
     for (final StorageOrigin origin : watched) {
       registry.watch(origin, this);
@@ -64,16 +65,17 @@ public final class NetworkIndexSession<V> implements ContainerMutationListener {
       registry.unwatch(origin, this);
     }
     watched.clear();
+    snapshot = List.of();
     cache.track(List.of());
     active = false;
   }
 
   public void admit(StorageOrigin origin) {
     Objects.requireNonNull(origin, "origin");
-    if (!active || watched.contains(origin)) {
+    if (!active || !watched.add(origin)) {
       return;
     }
-    watched.add(origin);
+    snapshot = null;
     cache.adopt(origin);
     registry.watch(origin, this);
   }
@@ -82,6 +84,7 @@ public final class NetworkIndexSession<V> implements ContainerMutationListener {
     if (origin == null || !watched.remove(origin)) {
       return;
     }
+    snapshot = null;
     registry.unwatch(origin, this);
     cache.forget(origin);
   }
@@ -111,7 +114,7 @@ public final class NetworkIndexSession<V> implements ContainerMutationListener {
       return;
     }
     final Set<StorageOrigin> incoming = new LinkedHashSet<>(current);
-    for (final StorageOrigin origin : List.copyOf(watched)) {
+    for (final StorageOrigin origin : watchedContainers()) {
       if (!incoming.contains(origin)) {
         drop(origin);
       }
@@ -141,7 +144,10 @@ public final class NetworkIndexSession<V> implements ContainerMutationListener {
   }
 
   public List<StorageOrigin> watchedContainers() {
-    return List.copyOf(watched);
+    if (snapshot == null) {
+      snapshot = List.copyOf(watched);
+    }
+    return snapshot;
   }
 
   public int recomputeCount() {

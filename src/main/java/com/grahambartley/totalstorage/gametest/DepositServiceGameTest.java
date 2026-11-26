@@ -154,6 +154,43 @@ public final class DepositServiceGameTest implements FabricGameTest {
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
       tickLimit = TICK_LIMIT)
+  public void twoNewItemsEachClaimTheirOwnEmptyContainer(TestContext context) {
+    BarrelBlockEntity cobblestone =
+        NetworkOperationFixture.stockedBarrel(
+            context, NetworkOperationFixture.EAST_BARREL, Items.COBBLESTONE, 16);
+    BarrelBlockEntity west =
+        NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.WEST_BARREL);
+    BarrelBlockEntity shared =
+        NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.SHARED_BARREL);
+    ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    player.getInventory().setStack(0, new ItemStack(Items.DIAMOND, STACK));
+    player.getInventory().setStack(1, new ItemStack(Items.EMERALD, STACK));
+
+    deposits.depositAll(player, NetworkOperationFixture.handlerOf(player).syncId);
+
+    context.assertTrue(
+        NetworkOperationFixture.countIn(cobblestone, Items.DIAMOND) == 0L
+            && NetworkOperationFixture.countIn(cobblestone, Items.EMERALD) == 0L,
+        "A new item went into the barrel of cobblestone while empty barrels were free");
+    long diamondsWest = NetworkOperationFixture.countIn(west, Items.DIAMOND);
+    long emeraldsWest = NetworkOperationFixture.countIn(west, Items.EMERALD);
+    long diamondsShared = NetworkOperationFixture.countIn(shared, Items.DIAMOND);
+    long emeraldsShared = NetworkOperationFixture.countIn(shared, Items.EMERALD);
+    context.assertTrue(
+        (diamondsWest == STACK && emeraldsShared == STACK && emeraldsWest == 0L)
+            || (diamondsShared == STACK && emeraldsWest == STACK && emeraldsShared == 0L),
+        "Each new item should have its own empty barrel, west held "
+            + diamondsWest
+            + " diamonds and "
+            + emeraldsWest
+            + " emeralds");
+    NetworkOperationFixture.finish(context, player);
+  }
+
+  @GameTest(
+      templateName = NetworkOperationFixture.CONTAINER_PAD,
+      batchId = BATCH,
+      tickLimit = TICK_LIMIT)
   public void aShiftClickOutOfALockedSlotMovesItTheSameAsIntoAChest(TestContext context) {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
     ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);

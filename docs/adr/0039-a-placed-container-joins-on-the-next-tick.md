@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-09-30
+- **Amended by:** [ADR 0044](0044-background-drift-is-swept-five-times-a-second.md)
 - **Supersedes:** the "a chest placed in range is not picked up until its chunk reloads" drawback of [ADR 0014](0014-containers-leave-on-sight-and-return-on-chunk-load.md)
 
 ## Context

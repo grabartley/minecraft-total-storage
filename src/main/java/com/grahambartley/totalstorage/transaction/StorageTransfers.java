@@ -65,21 +65,6 @@ public final class StorageTransfers {
         (source, remaining, nested) -> move(source, to, resource, remaining, nested));
   }
 
-  public static <V> long distribute(
-      Storage<V> from,
-      List<? extends Storage<V>> destinations,
-      V resource,
-      long maxAmount,
-      TransactionContext transaction) {
-    Objects.requireNonNull(from, "from");
-    Objects.requireNonNull(destinations, "destinations");
-    return across(
-        destinations,
-        maxAmount,
-        transaction,
-        (destination, remaining, nested) -> move(from, destination, resource, remaining, nested));
-  }
-
   public static <V> boolean gatherExactly(
       List<? extends Storage<V>> sources,
       Storage<V> to,

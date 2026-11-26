@@ -9,10 +9,7 @@ import java.util.Set;
 import net.minecraft.util.math.BlockPos;
 
 public final class DepositRouting {
-  private static final int FILTERED_HOLDING = 0;
-  private static final int FILTERED_EMPTY = 1;
-  private static final int GENERAL_HOLDING = 2;
-  private static final int GENERAL_OTHER = 3;
+  private static final int GENERAL_OFFSET = ContainerContents.values().length;
 
   private DepositRouting() {}
 
@@ -37,10 +34,7 @@ public final class DepositRouting {
   }
 
   private static int rung(DepositTarget target) {
-    final boolean filtered = target.role() == ContainerRole.FILTERED;
-    if (filtered) {
-      return target.holdsItem() ? FILTERED_HOLDING : FILTERED_EMPTY;
-    }
-    return target.holdsItem() ? GENERAL_HOLDING : GENERAL_OTHER;
+    final int offset = target.role() == ContainerRole.FILTERED ? 0 : GENERAL_OFFSET;
+    return offset + target.contents().preference();
   }
 }

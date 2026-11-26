@@ -2,15 +2,16 @@ package com.grahambartley.totalstorage.gametest;
 
 import com.grahambartley.totalstorage.lifecycle.NetworkMembership;
 import com.grahambartley.totalstorage.operation.DepositDestinations;
+import com.grahambartley.totalstorage.operation.DepositPlan;
+import com.grahambartley.totalstorage.storage.BlockStorageOrigin;
 import com.grahambartley.totalstorage.storage.ContainerAssignment;
 import com.grahambartley.totalstorage.storage.ContainerFilter;
 import com.grahambartley.totalstorage.storage.ContainerRole;
+import com.grahambartley.totalstorage.storage.StorageOrigin;
 import com.grahambartley.totalstorage.terminal.TerminalNetworks;
 import java.util.List;
-import java.util.Map;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.GameTest;
@@ -34,7 +35,7 @@ public final class DepositDestinationsGameTest implements FabricGameTest {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.WEST_BARREL);
     ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
 
-    List<Storage<ItemVariant>> offered = routeFor(context, Items.DIAMOND);
+    List<StorageOrigin> offered = routeFor(context, Items.DIAMOND);
 
     context.assertTrue(offered.size() == 2, "Offered " + offered.size() + " of two containers");
     NetworkOperationFixture.finish(context, player);
@@ -102,18 +103,20 @@ public final class DepositDestinationsGameTest implements FabricGameTest {
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
       tickLimit = TICK_LIMIT)
-  public void severalVariantsAreAnsweredInOnePassOverTheNetwork(TestContext context) {
-    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+  public void aNewItemIsOfferedAnEmptyContainerBeforeANearerOneOfOtherItems(TestContext context) {
+    NetworkOperationFixture.stockedBarrel(
+        context, NetworkOperationFixture.EAST_BARREL, Items.COBBLESTONE, 16);
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.SHARED_BARREL);
     ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
 
-    Map<ItemVariant, List<Storage<ItemVariant>>> routed =
-        destinations.forVariants(
-            context.getWorld(),
-            terminal(context),
-            network(context),
-            List.of(ItemVariant.of(Items.DIAMOND), ItemVariant.of(Items.OAK_LOG)));
+    List<StorageOrigin> offered = routeFor(context, Items.DIAMOND);
 
-    context.assertTrue(routed.size() == 2, "Answered " + routed.size() + " of two variants");
+    context.assertTrue(
+        offered.equals(
+            List.of(
+                originOf(context, NetworkOperationFixture.SHARED_BARREL),
+                originOf(context, NetworkOperationFixture.EAST_BARREL))),
+        "The empty barrel should come first, offered " + offered);
     NetworkOperationFixture.finish(context, player);
   }
 
@@ -121,23 +124,34 @@ public final class DepositDestinationsGameTest implements FabricGameTest {
       templateName = NetworkOperationFixture.CONTAINER_PAD,
       batchId = BATCH,
       tickLimit = TICK_LIMIT)
-  public void askingAboutNothingWalksTheNetworkAtAll(TestContext context) {
+  public void aContainerFilledEarlierInTheSameDepositIsNoLongerOfferedAsEmpty(TestContext context) {
     NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.EAST_BARREL);
+    NetworkOperationFixture.placeBarrel(context, NetworkOperationFixture.SHARED_BARREL);
     ServerPlayerEntity player = NetworkOperationFixture.openTerminal(context);
+    DepositPlan plan = plan(context);
+    StorageOrigin first = plan.destinationsFor(ItemVariant.of(Items.DIAMOND)).get(0);
+
+    plan.stored(first, ItemVariant.of(Items.DIAMOND));
 
     context.assertTrue(
-        destinations
-            .forVariants(context.getWorld(), terminal(context), network(context), List.of())
-            .isEmpty(),
-        "Asking about no variants answered something");
+        plan.destinationsFor(ItemVariant.of(Items.DIAMOND)).get(0).equals(first),
+        "The barrel now holding diamonds should still come first for diamonds");
+    context.assertTrue(
+        !plan.destinationsFor(ItemVariant.of(Items.EMERALD)).get(0).equals(first),
+        "The barrel now holding diamonds should no longer count as empty for emeralds");
     NetworkOperationFixture.finish(context, player);
   }
 
-  private List<Storage<ItemVariant>> routeFor(TestContext context, net.minecraft.item.Item item) {
-    final ItemVariant variant = ItemVariant.of(item);
-    return destinations
-        .forVariants(context.getWorld(), terminal(context), network(context), List.of(variant))
-        .getOrDefault(variant, List.of());
+  private DepositPlan plan(TestContext context) {
+    return destinations.plan(context.getWorld(), terminal(context), network(context));
+  }
+
+  private static StorageOrigin originOf(TestContext context, BlockPos pos) {
+    return BlockStorageOrigin.of(context.getWorld(), context.getAbsolutePos(pos));
+  }
+
+  private List<StorageOrigin> routeFor(TestContext context, net.minecraft.item.Item item) {
+    return plan(context).destinationsFor(ItemVariant.of(item));
   }
 
   private static BlockPos terminal(TestContext context) {

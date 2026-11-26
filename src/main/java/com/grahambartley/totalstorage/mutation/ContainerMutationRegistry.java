@@ -2,54 +2,42 @@ package com.grahambartley.totalstorage.mutation;
 
 import com.grahambartley.totalstorage.storage.BlockStorageOrigin;
 import com.grahambartley.totalstorage.storage.StorageOrigin;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public final class ContainerMutationRegistry {
-  private final Map<StorageOrigin, Set<ContainerMutationListener>> watchers = new HashMap<>();
-  private final Set<ContainerMutationListener> everywhere = new LinkedHashSet<>();
+  private final Map<StorageOrigin, List<ContainerMutationListener>> watchers = new HashMap<>();
+  private List<ContainerMutationListener> everywhere = List.of();
 
   public void watch(StorageOrigin origin, ContainerMutationListener listener) {
     Objects.requireNonNull(origin, "origin");
     Objects.requireNonNull(listener, "listener");
-    watchers.computeIfAbsent(origin, key -> new LinkedHashSet<>()).add(listener);
+    watchers.compute(origin, (key, registered) -> plus(registered, listener));
   }
 
   public void unwatch(StorageOrigin origin, ContainerMutationListener listener) {
-    final Set<ContainerMutationListener> registered = watchers.get(origin);
-    if (registered == null) {
-      return;
-    }
-    registered.remove(listener);
-    if (registered.isEmpty()) {
-      watchers.remove(origin);
-    }
+    watchers.computeIfPresent(origin, (key, registered) -> minus(registered, listener));
   }
 
   public void watchEverywhere(ContainerMutationListener listener) {
     Objects.requireNonNull(listener, "listener");
-    everywhere.add(listener);
+    everywhere = plus(everywhere, listener);
   }
 
   public void stopWatchingEverywhere(ContainerMutationListener listener) {
-    everywhere.remove(listener);
+    final List<ContainerMutationListener> remaining = minus(everywhere, listener);
+    everywhere = remaining == null ? List.of() : remaining;
   }
 
   public void unwatchAll(ContainerMutationListener listener) {
-    watchers
-        .values()
-        .removeIf(
-            registered -> {
-              registered.remove(listener);
-              return registered.isEmpty();
-            });
+    watchers.replaceAll((origin, registered) -> minus(registered, listener));
+    watchers.values().removeIf(Objects::isNull);
   }
 
   public void publish(RegistryKey<World> worldKey, BlockPos pos) {
@@ -57,17 +45,14 @@ public final class ContainerMutationRegistry {
       return;
     }
     final StorageOrigin origin = new BlockStorageOrigin(worldKey, pos);
-
-    if (!everywhere.isEmpty()) {
-      for (final ContainerMutationListener listener : List.copyOf(everywhere)) {
-        listener.containerChanged(origin);
-      }
+    for (final ContainerMutationListener listener : everywhere) {
+      listener.containerChanged(origin);
     }
-    final Set<ContainerMutationListener> registered = watchers.get(origin);
+    final List<ContainerMutationListener> registered = watchers.get(origin);
     if (registered == null) {
       return;
     }
-    for (final ContainerMutationListener listener : List.copyOf(registered)) {
+    for (final ContainerMutationListener listener : registered) {
       listener.containerChanged(origin);
     }
   }
@@ -90,6 +75,30 @@ public final class ContainerMutationRegistry {
 
   public void clear() {
     watchers.clear();
-    everywhere.clear();
+    everywhere = List.of();
+  }
+
+  private static List<ContainerMutationListener> plus(
+      List<ContainerMutationListener> registered, ContainerMutationListener listener) {
+    if (registered == null) {
+      return List.of(listener);
+    }
+    if (registered.contains(listener)) {
+      return registered;
+    }
+    final List<ContainerMutationListener> next = new ArrayList<>(registered.size() + 1);
+    next.addAll(registered);
+    next.add(listener);
+    return List.copyOf(next);
+  }
+
+  private static List<ContainerMutationListener> minus(
+      List<ContainerMutationListener> registered, ContainerMutationListener listener) {
+    if (!registered.contains(listener)) {
+      return registered;
+    }
+    final List<ContainerMutationListener> next = new ArrayList<>(registered);
+    next.remove(listener);
+    return next.isEmpty() ? null : List.copyOf(next);
   }
 }

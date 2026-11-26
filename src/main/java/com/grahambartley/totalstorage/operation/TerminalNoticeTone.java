@@ -10,4 +10,8 @@ public enum TerminalNoticeTone {
   public boolean isShownInTheTerminal() {
     return this != DONE;
   }
+
+  public boolean isShownOnTheActionBar() {
+    return this == FAILED;
+  }
 }

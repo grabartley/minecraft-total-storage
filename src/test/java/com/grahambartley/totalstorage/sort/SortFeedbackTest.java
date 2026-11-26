@@ -67,4 +67,23 @@ class SortFeedbackTest {
           SortFeedback.messageFor(new SortReply(subject, outcome)).getString());
     }
   }
+
+  @ParameterizedTest
+  @EnumSource(
+      value = SortOutcome.class,
+      names = {"SORTED", "ALREADY_SORTED", "NOTHING_TO_SORT", "RATE_LIMITED"})
+  void aSortThePlayerCanSeeForThemselvesSaysNothingOnTheActionBar(SortOutcome outcome) {
+    assertTrue(SortFeedback.actionBarMessageFor(outcome).isEmpty());
+  }
+
+  @ParameterizedTest
+  @EnumSource(
+      value = SortOutcome.class,
+      names = {"SORTED", "ALREADY_SORTED", "NOTHING_TO_SORT", "RATE_LIMITED"},
+      mode = EnumSource.Mode.EXCLUDE)
+  void aSortThatCouldNotHappenStillSaysWhy(SortOutcome outcome) {
+    assertEquals(
+        SortFeedback.messageFor(outcome).getString(),
+        SortFeedback.actionBarMessageFor(outcome).orElseThrow().getString());
+  }
 }

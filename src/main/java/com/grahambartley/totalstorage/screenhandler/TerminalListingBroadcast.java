@@ -1,6 +1,7 @@
 package com.grahambartley.totalstorage.screenhandler;
 
 import com.grahambartley.totalstorage.lifecycle.NetworkMembership;
+import com.grahambartley.totalstorage.lifecycle.TickInterval;
 import com.grahambartley.totalstorage.operation.TerminalResync;
 import com.grahambartley.totalstorage.terminal.TerminalAddress;
 import com.grahambartley.totalstorage.terminal.TerminalNetworks;
@@ -9,6 +10,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 public final class TerminalListingBroadcast {
+  public static final TickInterval INTERVAL = new TickInterval(4);
+
   private TerminalListingBroadcast() {}
 
   public static void register() {
@@ -16,6 +19,9 @@ public final class TerminalListingBroadcast {
   }
 
   private static void tick(MinecraftServer server) {
+    if (!INTERVAL.isDue(server.getTicks())) {
+      return;
+    }
     for (final TerminalAddress terminal : TerminalNetworks.registry().addresses()) {
       final NetworkMembership network = TerminalNetworks.registry().find(terminal).orElse(null);
       if (network == null || !network.session().isStale()) {

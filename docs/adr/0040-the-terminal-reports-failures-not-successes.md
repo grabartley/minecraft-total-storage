@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-10-25
+- **Extended by:** [ADR 0046](0046-the-action-bar-reports-failures-not-successes.md)
 - **Supersedes:** the completion summary in [ADR 0036](0036-a-long-operation-commits-one-step-at-a-time.md)
 
 ## Context

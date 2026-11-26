@@ -57,7 +57,8 @@ and `@mod` narrows to one mod, and both mix with plain text, so `@create cog` fi
 inventory, and middle-click to type an exact amount. With something on your cursor, left-click to put it all in and
 right-click to put in one.
 - **Empty your pockets.** Press Deposit all, or `R`, and your inventory goes into the network with each item routed to
-the chest it belongs in. Locked slots, armour and your offhand stay put. The bar on the left shows how full the network
+the chest it belongs in. Something the network has never held starts an empty chest instead of mixing in
+with other things. Locked slots, armour and your offhand stay put. The bar on the left shows how full the network
 is and warns you before it runs out of room.
 
 <p align="center">

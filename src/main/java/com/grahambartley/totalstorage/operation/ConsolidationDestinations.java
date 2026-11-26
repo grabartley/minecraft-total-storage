@@ -2,6 +2,7 @@ package com.grahambartley.totalstorage.operation;
 
 import com.grahambartley.totalstorage.filter.FilterCandidate;
 import com.grahambartley.totalstorage.filter.FilterCandidateFactory;
+import com.grahambartley.totalstorage.index.NetworkIndex;
 import com.grahambartley.totalstorage.index.NetworkIndexEntry;
 import com.grahambartley.totalstorage.lifecycle.NetworkMembership;
 import com.grahambartley.totalstorage.storage.BlockStorageOrigin;
@@ -33,23 +34,24 @@ public final class ConsolidationDestinations {
     if (variant == null || variant.isBlank()) {
       return List.of();
     }
-    final NetworkIndexEntry<ItemVariant> held = network.index().entry(variant).orElse(null);
-    if (held == null) {
+    final NetworkIndex<ItemVariant> index = network.index();
+    if (!index.contains(variant)) {
       return List.of();
     }
+    final ContainerOccupancy<ItemVariant> occupancy = new ContainerOccupancy<>(index);
     final TerminalSettings settings = context.settings();
     final FilterCandidate candidate = candidates.of(variant);
     final Map<BlockPos, StorageOrigin> byPosition = network.containersByPosition();
     final List<DepositTarget> targets = new ArrayList<>(byPosition.size());
     for (final Map.Entry<BlockPos, StorageOrigin> container : byPosition.entrySet()) {
       final ContainerRole role = settings.roleFor(container.getKey());
-      final boolean holdsItem = held.isHeldBy(container.getValue());
-      if (role != ContainerRole.FILTERED && !holdsItem) {
+      final ContainerContents contents = occupancy.contentsOf(container.getValue(), variant);
+      if (role != ContainerRole.FILTERED && contents != ContainerContents.HOLDS_ITEM) {
         continue;
       }
       targets.add(
           new DepositTarget(
-              container.getKey(), role, settings.filterFor(container.getKey()), holdsItem));
+              container.getKey(), role, settings.filterFor(container.getKey()), contents));
     }
     return DepositRouting.order(
             targets,

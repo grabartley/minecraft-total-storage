@@ -20,21 +20,25 @@ class DepositRoutingTest {
   private static final String DIAMOND = "minecraft:diamond";
   private static final Set<String> NO_TAGS = Set.of();
 
+  private static final ContainerContents HOLDS = ContainerContents.HOLDS_ITEM;
+  private static final ContainerContents EMPTY = ContainerContents.EMPTY;
+  private static final ContainerContents OTHER = ContainerContents.OTHER_ITEMS;
+
   private static DepositTarget target(
-      int x, ContainerRole role, ContainerFilter filter, boolean holdsItem) {
-    return new DepositTarget(new BlockPos(x, 64, 0), role, filter, holdsItem);
+      int x, ContainerRole role, ContainerFilter filter, ContainerContents contents) {
+    return new DepositTarget(new BlockPos(x, 64, 0), role, filter, contents);
   }
 
-  private static DepositTarget general(int x, boolean holdsItem) {
-    return target(x, ContainerRole.GENERAL, ContainerFilter.NONE, holdsItem);
+  private static DepositTarget general(int x, ContainerContents contents) {
+    return target(x, ContainerRole.GENERAL, ContainerFilter.NONE, contents);
   }
 
-  private static DepositTarget filtered(int x, boolean holdsItem) {
-    return target(x, ContainerRole.FILTERED, ContainerFilter.ofItems(COBBLESTONE), holdsItem);
+  private static DepositTarget filtered(int x, ContainerContents contents) {
+    return target(x, ContainerRole.FILTERED, ContainerFilter.ofItems(COBBLESTONE), contents);
   }
 
   private static DepositTarget excluded(int x) {
-    return target(x, ContainerRole.EXCLUDED, ContainerFilter.NONE, true);
+    return target(x, ContainerRole.EXCLUDED, ContainerFilter.NONE, HOLDS);
   }
 
   private static List<Integer> order(List<DepositTarget> candidates) {
@@ -47,19 +51,35 @@ class DepositRoutingTest {
     return Stream.of(
         Arguments.of(
             "a filtered container already holding it beats every other kind",
-            List.of(general(1, true), filtered(2, false), filtered(3, true)),
+            List.of(general(1, HOLDS), filtered(2, EMPTY), filtered(3, HOLDS)),
             3),
         Arguments.of(
             "an empty filtered container still beats a general one holding it",
-            List.of(general(1, true), general(2, false), filtered(3, false)),
+            List.of(general(1, HOLDS), general(2, EMPTY), filtered(3, EMPTY)),
             3),
         Arguments.of(
+            "a filtered container of other items still beats a general one holding it",
+            List.of(general(1, HOLDS), filtered(3, OTHER)),
+            3),
+        Arguments.of(
+            "an empty filtered container beats a nearer one of other items",
+            List.of(filtered(1, OTHER), filtered(2, EMPTY)),
+            2),
+        Arguments.of(
             "a general container holding it beats an empty general one",
-            List.of(general(1, false), general(2, true)),
+            List.of(general(1, EMPTY), general(2, HOLDS)),
+            2),
+        Arguments.of(
+            "an empty general container beats a nearer one of other items",
+            List.of(general(1, OTHER), general(2, EMPTY)),
+            2),
+        Arguments.of(
+            "a general container of other items is used when nothing emptier is left",
+            List.of(excluded(1), general(2, OTHER)),
             2),
         Arguments.of(
             "a general container is used when nothing better will take it",
-            List.of(excluded(1), general(2, false)),
+            List.of(excluded(1), general(2, EMPTY)),
             2));
   }
 
@@ -72,21 +92,27 @@ class DepositRoutingTest {
   @Test
   void everyRungIsOfferedInOrderRatherThanOnlyTheWinner() {
     List<DepositTarget> candidates =
-        List.of(general(1, false), general(2, true), filtered(3, false), filtered(4, true));
+        List.of(
+            general(1, OTHER),
+            general(2, EMPTY),
+            general(3, HOLDS),
+            filtered(4, OTHER),
+            filtered(5, EMPTY),
+            filtered(6, HOLDS));
 
-    assertEquals(List.of(4, 3, 2, 1), order(candidates));
+    assertEquals(List.of(6, 5, 4, 3, 2, 1), order(candidates));
   }
 
   @Test
   void anExcludedContainerAppearsAtNoRung() {
-    List<DepositTarget> candidates = List.of(excluded(1), excluded(2), general(3, false));
+    List<DepositTarget> candidates = List.of(excluded(1), excluded(2), general(3, EMPTY));
 
     assertEquals(List.of(3), order(candidates));
   }
 
   @Test
   void aFilteredContainerThatDoesNotWantTheItemIsPassedOver() {
-    List<DepositTarget> candidates = List.of(filtered(1, true), general(2, false));
+    List<DepositTarget> candidates = List.of(filtered(1, HOLDS), general(2, EMPTY));
 
     assertEquals(
         List.of(2),
@@ -98,7 +124,7 @@ class DepositRoutingTest {
   @Test
   void aFilteredContainerNamingATagTakesWhateverTheNetworkFilesUnderIt() {
     DepositTarget byTag =
-        target(1, ContainerRole.FILTERED, ContainerFilter.ofTags("ores_and_minerals"), false);
+        target(1, ContainerRole.FILTERED, ContainerFilter.ofTags("ores_and_minerals"), EMPTY);
 
     assertEquals(
         List.of(1),
@@ -111,7 +137,7 @@ class DepositRoutingTest {
   @Test
   void containersOnTheSameRungAreOrderedNearestToTheTerminalFirst() {
     List<DepositTarget> candidates =
-        List.of(general(9, false), general(2, false), general(5, false));
+        List.of(general(9, EMPTY), general(2, EMPTY), general(5, EMPTY));
 
     assertEquals(List.of(2, 5, 9), order(candidates));
   }
@@ -120,10 +146,10 @@ class DepositRoutingTest {
   void containersTheSameDistanceAwayAreOrderedByPositionSoTheAnswerIsStable() {
     DepositTarget east =
         new DepositTarget(
-            new BlockPos(3, 64, 0), ContainerRole.GENERAL, ContainerFilter.NONE, false);
+            new BlockPos(3, 64, 0), ContainerRole.GENERAL, ContainerFilter.NONE, EMPTY);
     DepositTarget west =
         new DepositTarget(
-            new BlockPos(-3, 64, 0), ContainerRole.GENERAL, ContainerFilter.NONE, false);
+            new BlockPos(-3, 64, 0), ContainerRole.GENERAL, ContainerFilter.NONE, EMPTY);
 
     List<DepositTarget> forwards =
         DepositRouting.order(List.of(east, west), TERMINAL, COBBLESTONE, NO_TAGS);
@@ -144,7 +170,7 @@ class DepositRoutingTest {
   void anItemFiledUnderNothingIsStillRoutedToGeneralContainers() {
     assertEquals(
         List.of(1),
-        DepositRouting.order(List.of(general(1, false)), TERMINAL, DIAMOND, null).stream()
+        DepositRouting.order(List.of(general(1, EMPTY)), TERMINAL, DIAMOND, null).stream()
             .map(routed -> routed.container().getX())
             .toList());
   }

@@ -18,7 +18,7 @@ class DepositTargetTest {
 
   @Test
   void aGeneralContainerTakesAnythingItIsOffered() {
-    DepositTarget target = general(false);
+    DepositTarget target = general(ContainerContents.EMPTY);
 
     assertTrue(target.accepts(COBBLESTONE, Set.of()));
     assertTrue(target.accepts("minecraft:diamond", Set.of("ores_and_minerals")));
@@ -28,7 +28,10 @@ class DepositTargetTest {
   void anExcludedContainerTakesNothingHoweverItIsFiltered() {
     DepositTarget target =
         new DepositTarget(
-            SOMEWHERE, ContainerRole.EXCLUDED, ContainerFilter.ofItems(COBBLESTONE), true);
+            SOMEWHERE,
+            ContainerRole.EXCLUDED,
+            ContainerFilter.ofItems(COBBLESTONE),
+            ContainerContents.HOLDS_ITEM);
 
     assertFalse(target.accepts(COBBLESTONE, Set.of()));
   }
@@ -37,7 +40,10 @@ class DepositTargetTest {
   void aFilteredContainerTakesOnlyWhatItNamed() {
     DepositTarget target =
         new DepositTarget(
-            SOMEWHERE, ContainerRole.FILTERED, ContainerFilter.ofItems(COBBLESTONE), false);
+            SOMEWHERE,
+            ContainerRole.FILTERED,
+            ContainerFilter.ofItems(COBBLESTONE),
+            ContainerContents.EMPTY);
 
     assertTrue(target.accepts(COBBLESTONE, Set.of()));
     assertFalse(target.accepts("minecraft:diamond", Set.of()));
@@ -47,7 +53,10 @@ class DepositTargetTest {
   void aFilteredContainerTakesWhatOneOfItsTagsCovers() {
     DepositTarget target =
         new DepositTarget(
-            SOMEWHERE, ContainerRole.FILTERED, ContainerFilter.ofTags("ores_and_minerals"), false);
+            SOMEWHERE,
+            ContainerRole.FILTERED,
+            ContainerFilter.ofTags("ores_and_minerals"),
+            ContainerContents.EMPTY);
 
     assertTrue(target.accepts("minecraft:diamond", Set.of("ores_and_minerals")));
     assertFalse(target.accepts("minecraft:oak_log", Set.of("wood")));
@@ -56,7 +65,8 @@ class DepositTargetTest {
   @Test
   void aFilteredContainerWithAnEmptyFilterTakesNothing() {
     DepositTarget target =
-        new DepositTarget(SOMEWHERE, ContainerRole.FILTERED, ContainerFilter.NONE, false);
+        new DepositTarget(
+            SOMEWHERE, ContainerRole.FILTERED, ContainerFilter.NONE, ContainerContents.EMPTY);
 
     assertFalse(target.accepts(COBBLESTONE, Set.of()));
   }
@@ -64,7 +74,7 @@ class DepositTargetTest {
   @ParameterizedTest
   @EnumSource(ContainerRole.class)
   void aTargetWithNoFilterIsStillAnsweredRatherThanThrowing(ContainerRole role) {
-    DepositTarget target = new DepositTarget(SOMEWHERE, role, null, false);
+    DepositTarget target = new DepositTarget(SOMEWHERE, role, null, ContainerContents.EMPTY);
 
     assertEquals(ContainerFilter.NONE, target.filter());
     assertEquals(role == ContainerRole.GENERAL, target.accepts(COBBLESTONE, null));
@@ -72,10 +82,22 @@ class DepositTargetTest {
 
   @Test
   void aTargetWithNoRoleIsTreatedAsTheDefaultOne() {
-    assertEquals(ContainerRole.DEFAULT, new DepositTarget(SOMEWHERE, null, null, false).role());
+    assertEquals(ContainerRole.DEFAULT, new DepositTarget(SOMEWHERE, null, null, null).role());
   }
 
-  private static DepositTarget general(boolean holdsItem) {
-    return new DepositTarget(SOMEWHERE, ContainerRole.GENERAL, ContainerFilter.NONE, holdsItem);
+  @Test
+  void aTargetWithUnknownContentsIsTreatedAsHoldingOtherItems() {
+    assertEquals(
+        ContainerContents.OTHER_ITEMS, new DepositTarget(SOMEWHERE, null, null, null).contents());
+  }
+
+  @ParameterizedTest
+  @EnumSource(ContainerContents.class)
+  void aTargetKeepsTheContentsItWasGiven(ContainerContents contents) {
+    assertEquals(contents, general(contents).contents());
+  }
+
+  private static DepositTarget general(ContainerContents contents) {
+    return new DepositTarget(SOMEWHERE, ContainerRole.GENERAL, ContainerFilter.NONE, contents);
   }
 }

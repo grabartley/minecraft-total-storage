@@ -2,12 +2,15 @@ package com.grahambartley.totalstorage.index;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.grahambartley.totalstorage.mutation.ContainerMutationRegistry;
 import com.grahambartley.totalstorage.storage.BlockStorageOrigin;
 import com.grahambartley.totalstorage.storage.StorageOrigin;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
@@ -391,5 +394,30 @@ class NetworkIndexSessionTest {
 
   private static BlockPos positionOf(StorageOrigin origin) {
     return ((BlockStorageOrigin) origin).pos();
+  }
+
+  @ParameterizedTest(name = "{0} containers")
+  @ValueSource(ints = {1, 3, 40})
+  void theWatchedListIsReusedUntilMembershipChanges(int count) {
+    session.begin(List.of(TestOrigins.chain(count)));
+    List<StorageOrigin> before = session.watchedContainers();
+
+    assertSame(before, session.watchedContainers());
+
+    session.admit(OUTSIDE);
+
+    assertNotSame(before, session.watchedContainers());
+    assertEquals(count + 1, session.watchedContainers().size());
+  }
+
+  @ParameterizedTest(name = "{0} containers")
+  @ValueSource(ints = {1, 3, 40})
+  void aContainerNamedTwiceIsWatchedOnce(int count) {
+    List<StorageOrigin> twice = new ArrayList<>(List.of(TestOrigins.chain(count)));
+    twice.addAll(List.of(TestOrigins.chain(count)));
+
+    session.begin(twice);
+
+    assertEquals(count, session.watchedContainers().size());
   }
 }

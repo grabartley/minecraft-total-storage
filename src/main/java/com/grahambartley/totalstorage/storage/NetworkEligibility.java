@@ -25,9 +25,15 @@ public final class NetworkEligibility {
   public boolean isEligible(World world, BlockPos pos) {
     Objects.requireNonNull(world, "world");
     Objects.requireNonNull(pos, "pos");
+    return isEligible(world, pos, resolver.resolve(world, pos).isPresent());
+  }
+
+  public boolean isEligible(World world, BlockPos pos, boolean hasItemStorage) {
+    Objects.requireNonNull(world, "world");
+    Objects.requireNonNull(pos, "pos");
     final BlockState state = world.getBlockState(pos);
     return NetworkEligibilityRules.isEligible(
-        resolver.resolve(world, pos).isPresent(),
+        hasItemStorage,
         state.isIn(NetworkBlockTags.NETWORK_INELIGIBLE),
         config.get().containerEligibilityOverrideFor(Registries.BLOCK.getId(state.getBlock())));
   }

@@ -8,6 +8,7 @@ import com.grahambartley.totalstorage.storage.ContainerScanResult;
 import com.grahambartley.totalstorage.storage.ScanRegion;
 import com.grahambartley.totalstorage.storage.StorageOrigin;
 import com.grahambartley.totalstorage.terminal.ContainerRoleEviction;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,10 @@ public final class NetworkMembership implements ContainerLifecycleListener {
   private final ContainerLifecycleRegistry lifecycle;
   private final ContainerRoleEviction roles;
   private final ContainerShapes shapes = new ContainerShapes();
+  private final RescanGate rescans = new RescanGate();
+
+  private List<StorageOrigin> positionedFrom = List.of();
+  private Map<BlockPos, StorageOrigin> byPosition = Map.of();
 
   public NetworkMembership(
       ServerWorld world,
@@ -62,6 +67,7 @@ public final class NetworkMembership implements ContainerLifecycleListener {
     lifecycle.unsubscribe(this);
     session.end();
     shapes.clear();
+    rescans.reset();
   }
 
   public NetworkIndex<ItemVariant> index() {
@@ -77,15 +83,20 @@ public final class NetworkMembership implements ContainerLifecycleListener {
   }
 
   public boolean reaches(BlockPos container) {
-    return containers().contains(BlockStorageOrigin.of(world, container));
+    return session.isWatching(BlockStorageOrigin.of(world, container));
   }
 
   public Map<BlockPos, StorageOrigin> containersByPosition() {
-    final Map<BlockPos, StorageOrigin> byPosition = new LinkedHashMap<>();
-    for (final StorageOrigin origin : containers()) {
-      if (origin instanceof BlockStorageOrigin block) {
-        byPosition.put(block.pos(), origin);
+    final List<StorageOrigin> current = containers();
+    if (current != positionedFrom) {
+      final Map<BlockPos, StorageOrigin> positioned = new LinkedHashMap<>();
+      for (final StorageOrigin origin : current) {
+        if (origin instanceof BlockStorageOrigin block) {
+          positioned.put(block.pos(), origin);
+        }
       }
+      byPosition = Collections.unmodifiableMap(positioned);
+      positionedFrom = current;
     }
     return byPosition;
   }
@@ -119,7 +130,7 @@ public final class NetworkMembership implements ContainerLifecycleListener {
     if (!session.isActive() || !world.getRegistryKey().equals(worldKey)) {
       return;
     }
-    if (!region.touchesChunk(chunkPos)) {
+    if (!region.touchesChunk(chunkPos) || !rescans.claim(world.getServer().getTicks())) {
       return;
     }
     final ContainerScanResult scan = discovery.scan(world, region);
