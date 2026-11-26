@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://github.com/grabartley/minecraft-total-storage/raw/main/docs/banner.png" alt="Total Storage banner: a powered terminal between stacks of outlined chests, barrels and shulker boxes" width="800">
+<img src="https://raw.githubusercontent.com/grabartley/minecraft-total-storage/images/readme/banner.png" alt="Total Storage banner: a powered terminal between stacks of outlined chests, barrels and shulker boxes" width="800">
 </p>
 
 <p align="center">
