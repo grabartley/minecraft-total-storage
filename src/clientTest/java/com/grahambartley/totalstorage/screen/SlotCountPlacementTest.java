@@ -7,8 +7,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 class SlotCountPlacementTest {
   @ParameterizedTest
-  @CsvSource({"8, 8, 5", "8, 8, 11", "44, 17, 16", "0, 0, 1"})
-  void aLabelThatFitsSitsExactlyWhereVanillaDrawsAStackCount(int itemX, int itemY, int width) {
+  @CsvSource({"8, 8, 6", "8, 8, 12", "44, 17, 12", "0, 0, 1"})
+  void aTwoDigitLabelSitsExactlyWhereVanillaDrawsAStackCount(int itemX, int itemY, int width) {
     final SlotCountPlacement placement = SlotCountPlacement.of(itemX, itemY, width, 9);
 
     assertEquals(1.0F, placement.scale());
@@ -17,12 +17,12 @@ class SlotCountPlacementTest {
   }
 
   @ParameterizedTest
-  @CsvSource({"8, 8, 17", "8, 8, 23", "8, 8, 32", "44, 17, 23", "131, 77, 29"})
-  void aWideLabelShrinksToTheItemWidthAndKeepsVanillasBottomRightCorner(
+  @CsvSource({"8, 8, 13", "8, 8, 18", "8, 8, 26", "44, 17, 25", "131, 77, 32"})
+  void aWiderLabelDrawsAtHalfSizeAndKeepsVanillasBottomRightCorner(
       int itemX, int itemY, int width) {
     final SlotCountPlacement placement = SlotCountPlacement.of(itemX, itemY, width, 9);
 
-    assertEquals(16.0F / width, placement.scale(), 1.0e-6F);
+    assertEquals(0.5F, placement.scale());
     assertEquals(itemX + 17, (placement.x() + width) * placement.scale(), 0.5F);
     assertEquals(itemY + 18, (placement.y() + 9) * placement.scale(), 0.5F);
   }
