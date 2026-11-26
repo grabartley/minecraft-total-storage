@@ -114,4 +114,30 @@ class ScreenButtonRowTest {
     assertTrue(spot.y() >= CHEST.y());
     assertTrue(spot.y() + ScreenButtonRow.SIZE <= CHEST.y() + CHEST.height());
   }
+
+  @ParameterizedTest
+  @CsvSource({
+    "0, 1, 300, 282, 210",
+    "0, 2, 300, 266, 210",
+    "1, 2, 300, 282, 210",
+    "0, 2, 224, 266, 210",
+    "1, 2, 223, 282, 24"
+  })
+  void beneathLinesTheButtonsUpUnderThePanelsRightEdgeOrAboveItWhenTheWindowEnds(
+      int index, int count, int screenHeight, int expectedX, int expectedY) {
+    assertEquals(
+        new ScreenButtonSpot(expectedX, expectedY),
+        ScreenButtonRow.beneath(CHEST, index, count, screenHeight));
+  }
+
+  @ParameterizedTest
+  @CsvSource({"1", "2", "3"})
+  void beneathNeverReachesPastThePanelsRightEdge(int count) {
+    for (int index = 0; index < count; index++) {
+      final ScreenButtonSpot spot = ScreenButtonRow.beneath(CHEST, index, count, 400);
+
+      assertTrue(spot.x() >= CHEST.x());
+      assertTrue(spot.x() + ScreenButtonRow.SIZE <= CHEST.x() + CHEST.width());
+    }
+  }
 }

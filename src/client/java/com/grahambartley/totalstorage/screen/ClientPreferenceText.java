@@ -17,7 +17,8 @@ public final class ClientPreferenceText {
     return switch (preference) {
       case SORT_BUTTON_VISIBLE -> ConfigScreenText.line(key, "Show the sort button");
       case SCREEN_BUTTON_ANCHOR -> ConfigScreenText.line(key, "Sort and stack buttons");
-      case LOCKED_SLOT_TINT_VISIBLE -> ConfigScreenText.line(key, "Tint locked slots");
+      case LOCKED_SLOT_TINT_VISIBLE ->
+          ConfigScreenText.line(key, "Tint locked slots in the terminal");
     };
   }
 

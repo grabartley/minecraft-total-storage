@@ -10,11 +10,12 @@ import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
+import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.OrderedText;
+import net.minecraft.text.Text;
 
 public final class TerminalItemsPanel {
-  private static final int ITEM_SIZE = 16;
   private static final int LINE_HEIGHT = 9;
   private static final int PLACEHOLDER_MARGIN = 6;
   private static final int HINT_GAP = 2;
@@ -122,7 +123,7 @@ public final class TerminalItemsPanel {
       final int itemY = TerminalScreenLayout.cellY(cell) + TerminalScreenLayout.SLOT_ITEM_OFFSET;
       final ItemStack stack = row.variant().toStack();
       context.drawItem(stack, itemX, itemY);
-      drawCount(context, textRenderer, ItemCountFormat.cell(row.count()), itemX, itemY);
+      drawCount(context, textRenderer, row.count(), itemX, itemY);
       context.drawItemInSlot(textRenderer, stack, itemX, itemY, NO_STACK_COUNT);
     }
     drawHighlight(context, hovered);
@@ -140,19 +141,34 @@ public final class TerminalItemsPanel {
   }
 
   private static void drawCount(
-      DrawContext context, TextRenderer textRenderer, String label, int itemX, int itemY) {
-    final int width = textRenderer.getWidth(label);
-    final float scale = Math.min(1.0F, (float) ITEM_SIZE / width);
+      DrawContext context, TextRenderer textRenderer, long count, int itemX, int itemY) {
+    final String label = ItemCountFormat.cell(count);
+    final SlotCountPlacement placement =
+        SlotCountPlacement.of(
+            itemX, itemY, count, textRenderer.getWidth(label), textRenderer.fontHeight);
     context.getMatrices().push();
     context.getMatrices().translate(0.0F, 0.0F, COUNT_ELEVATION);
-    context.getMatrices().scale(scale, scale, 1.0F);
-    context.drawText(
-        textRenderer,
-        label,
-        Math.round((itemX + ITEM_SIZE) / scale) - width,
-        Math.round((itemY + ITEM_SIZE - LINE_HEIGHT * scale) / scale),
-        VanillaPalette.opaque(VanillaPalette.COUNT),
-        true);
+    context.getMatrices().scale(placement.scale(), placement.scale(), 1.0F);
+    if (placement.outlined()) {
+      textRenderer.drawWithOutline(
+          Text.literal(label).asOrderedText(),
+          placement.x(),
+          placement.y(),
+          VanillaPalette.opaque(VanillaPalette.COUNT),
+          VanillaPalette.opaque(VanillaPalette.OUTLINE),
+          context.getMatrices().peek().getPositionMatrix(),
+          context.getVertexConsumers(),
+          LightmapTextureManager.MAX_LIGHT_COORDINATE);
+      context.draw();
+    } else {
+      context.drawText(
+          textRenderer,
+          label,
+          placement.x(),
+          placement.y(),
+          VanillaPalette.opaque(VanillaPalette.COUNT),
+          true);
+    }
     context.getMatrices().pop();
   }
 

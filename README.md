@@ -97,10 +97,10 @@ works on modded containers too.
 - **Quick stack.** The button beside sort on your inventory tops up matching stacks in the containers around you and
 leaves everything else alone.
 - **Lock slots.** Alt-click (Option on a Mac) any inventory slot and sorting, Deposit all and quick stack leave it
-alone. Hold Alt in any inventory to see which slots can be locked.
+alone. Locked slots show a small padlock in the terminal. Hold Alt in any inventory to see which slots can be locked.
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/grabartley/minecraft-total-storage/images/readme/inventory.png" alt="The player inventory with the quick stack and sort buttons and three locked hotbar slots" width="420">
+<img src="https://raw.githubusercontent.com/grabartley/minecraft-total-storage/images/readme/inventory.png" alt="The player inventory with the quick stack and sort buttons" width="420">
 </p>
 
 ## Install

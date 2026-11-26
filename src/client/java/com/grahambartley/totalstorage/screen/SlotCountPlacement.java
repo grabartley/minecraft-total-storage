@@ -1,0 +1,21 @@
+package com.grahambartley.totalstorage.screen;
+
+public record SlotCountPlacement(float scale, int x, int y) {
+  public static final long FULL_SIZE_UP_TO = 99L;
+  public static final float SMALL_SCALE = 0.5F;
+  public static final int RIGHT_EDGE = 17;
+  public static final int TOP = 9;
+
+  public static SlotCountPlacement of(
+      int itemX, int itemY, long count, int labelWidth, int lineHeight) {
+    final float scale = count <= FULL_SIZE_UP_TO ? 1.0F : SMALL_SCALE;
+    return new SlotCountPlacement(
+        scale,
+        Math.round((itemX + RIGHT_EDGE) / scale) - labelWidth,
+        Math.round((itemY + TOP + lineHeight) / scale) - lineHeight);
+  }
+
+  public boolean outlined() {
+    return scale < 1.0F;
+  }
+}

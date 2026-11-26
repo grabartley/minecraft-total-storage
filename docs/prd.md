@@ -365,8 +365,8 @@ A player locks the slots holding their tools, weapons, and food. No automated op
 | LOCK-4 | Alt with left click toggles the lock on the slot under the cursor, in any screen showing the player inventory. There is no lock mode (ADR 0016) |
 | LOCK-5 | The gesture never moves an item, and is swallowed whether or not it lands on a lockable slot, so a mis-click does nothing rather than throwing something on the floor (ADR 0016) |
 | LOCK-6 | An out-of-range slot index from a forged packet is rejected |
-| LOCK-7 | A locked slot carries a small two-tone padlock badge in the top-left corner of the slot, readable without colour, that leaves the stack count and durability bar untouched and the item still identifiable. Locks are drawn in screens that show the player inventory, never on the in-game hotbar (ADR 0041) |
-| LOCK-8 | A tint behind locked slots is a per-player client display option, off by default, with the badge as the indicator either way; it is not a server-wide setting |
+| LOCK-7 | A locked slot carries a small two-tone padlock badge in the top-left corner of the slot, readable without colour, that leaves the stack count and durability bar untouched and the item still identifiable. The badge is drawn only in the terminal, never in other screens or on the in-game hotbar (ADR 0041, ADR 0047) |
+| LOCK-8 | A tint behind locked slots is a per-player client display option, off by default and drawn only in the terminal, with the badge as the indicator either way; it is not a server-wide setting |
 | LOCK-9 | Every path the mod drives on the player's behalf honours locks: sorting by any entry point, deposit all, quick-stack, and any future loadout preset swap (ADR 0010). "Automated" means the mod chose which slots to move, not that the player pressed something |
 | LOCK-10 | A gesture in which the player chose the slot is never blocked by a lock: dragging, shift-clicking and hotbar swapping, wherever they are aimed. A shift-click from a locked slot onto the terminal grid moves the stack, exactly as a shift-click into a chest does, because the player picked that slot. The one-sentence rule is that a lock stops the mod moving a slot, never the player |
 | LOCK-11 | Sorting an inventory with locked slots scattered through its main inventory sorts around them, leaving them in place |
@@ -427,7 +427,7 @@ Each player sets these for themselves. They change nothing for anyone else.
 |---|---|---|
 | Show the sort button | On | Off hides the sort button on every screen, leaving the keybind and the command working |
 | Sort and stack buttons | Inside top | Inside top, Outside top, or Outside bottom, all on the right edge of the screen's panel. Inside top moves outside when there is more than one button or the screen's slots leave no room |
-| Tint locked slots | Off | |
+| Tint locked slots in the terminal | Off | |
 
 ---
 

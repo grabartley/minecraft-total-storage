@@ -22,6 +22,14 @@ public final class ScreenButtonRow {
     };
   }
 
+  public static ScreenButtonSpot beneath(
+      ScreenPanel panel, int index, int count, int screenHeight) {
+    final int below = panel.y() + panel.height() + GAP;
+    return new ScreenButtonSpot(
+        panel.x() + panel.width() + GAP - (count - index) * STEP,
+        below + SIZE <= screenHeight ? below : panel.y() - GAP - SIZE);
+  }
+
   private static ScreenButtonSpot inTheBand(ScreenPanel panel) {
     return new ScreenButtonSpot(
         panel.x() + panel.width() - BAND_INSET_X - SIZE, panel.y() + BAND_INSET_Y);

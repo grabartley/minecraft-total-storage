@@ -209,7 +209,7 @@
   "screen.total-storage.config.section.display": "Your display options",
   "screen.total-storage.config.preference.sortButtonVisible": "Show the sort button",
   "screen.total-storage.config.preference.screenButtonAnchor": "Sort and stack buttons",
-  "screen.total-storage.config.preference.lockedSlotTintVisible": "Tint locked slots",
+  "screen.total-storage.config.preference.lockedSlotTintVisible": "Tint locked slots in the terminal",
   "screen.total-storage.config.value.anchor.inside_top_right": "Inside top",
   "screen.total-storage.config.value.anchor.outside_top_right": "Outside top",
   "screen.total-storage.config.value.anchor.outside_bottom_right": "Outside bottom",

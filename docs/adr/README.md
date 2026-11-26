@@ -54,6 +54,7 @@ Shared engineering standards across all the mods in this family live in [`../sta
 | [0044](0044-background-drift-is-swept-five-times-a-second.md) | Background drift is swept five times a second, and a region is rescanned once a tick |
 | [0045](0045-a-new-item-takes-an-empty-container.md) | A new item takes an empty container before one holding other items |
 | [0046](0046-the-action-bar-reports-failures-not-successes.md) | The action bar reports failures, not successes |
+| [0047](0047-locks-are-drawn-only-in-the-terminal.md) | Locks are drawn only in the terminal |
 
 ## Writing A New Record
 

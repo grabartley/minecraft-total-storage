@@ -1,6 +1,6 @@
 # ADR 0041: A lock shows as a badge, and Alt shows what can be locked
 
-- **Status:** Accepted
+- **Status:** Accepted. "Locks are drawn only in screens that show the player inventory" is superseded by [ADR 0047](0047-locks-are-drawn-only-in-the-terminal.md): the badge and the tint are drawn only in the terminal.
 - **Date:** 2026-10-25
 - **Supersedes:** the tint, "nothing is added to the screen" and the undiscoverable-gesture drawback in [ADR 0016](0016-locks-are-toggled-by-a-modifier-click.md)
 

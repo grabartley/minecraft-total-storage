@@ -2,18 +2,18 @@ package com.grahambartley.totalstorage.lock;
 
 import com.grahambartley.totalstorage.config.ClientPreferencesStore;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.screen.slot.Slot;
+import net.minecraft.client.gui.screen.Screen;
 
 public final class LockedSlotOverlay {
   public static final int SLOT_SIZE = 16;
 
   private LockedSlotOverlay() {}
 
-  public static void draw(DrawContext context, Slot slot) {
-    if (!LockedSlotState.isLocked(slot)) {
+  public static void draw(DrawContext context, Screen screen, boolean locked, int left, int top) {
+    if (!LockCues.show(screen, locked)) {
       return;
     }
-    drawAt(context, slot.x, slot.y);
+    drawAt(context, left, top);
   }
 
   public static void drawAt(DrawContext context, int left, int top) {
