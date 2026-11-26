@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
+import com.grahambartley.totalstorage.filter.FilterCandidate;
 import com.grahambartley.totalstorage.index.NetworkIndexBuilder;
 import com.grahambartley.totalstorage.index.NetworkIndexOrdering;
 import com.grahambartley.totalstorage.storage.BlockStorageOrigin;
@@ -54,7 +55,7 @@ class DepositOrderTest {
   @ParameterizedTest(name = "{0}")
   @MethodSource("firstChoices")
   void theFirstChoiceFollowsTheRoutingOrder(String rule, String item, BlockPos expected) {
-    assertEquals(origin(expected), order().forVariant(item, item, Set.of()).get(0));
+    assertEquals(origin(expected), order().forVariant(item).get(0));
   }
 
   static Stream<Arguments> fullOrders() {
@@ -69,21 +70,20 @@ class DepositOrderTest {
   void anExcludedChestIsNeverOfferedAndEveryOtherIsInRungOrder(
       String item, List<BlockPos> expected) {
     assertEquals(
-        expected.stream().map(DepositOrderTest::origin).toList(),
-        order().forVariant(item, item, Set.of()));
+        expected.stream().map(DepositOrderTest::origin).toList(), order().forVariant(item));
   }
 
   @ParameterizedTest(name = "{0} stores")
   @ValueSource(ints = {1, 2, 5})
   void toppingUpAChestThatAlreadyHoldsTheItemKeepsTheWorkedOutOrder(int stores) {
     DepositOrder<String> order = order();
-    List<StorageOrigin> before = order.forVariant(DIAMOND, DIAMOND, Set.of());
+    List<StorageOrigin> before = order.forVariant(DIAMOND);
 
     for (int store = 0; store < stores; store++) {
       order.stored(origin(COBBLE_CHEST), COBBLESTONE);
     }
 
-    assertSame(before, order.forVariant(DIAMOND, DIAMOND, Set.of()));
+    assertSame(before, order.forVariant(DIAMOND));
   }
 
   static Stream<Arguments> storesThatChangeTheOrder() {
@@ -99,11 +99,11 @@ class DepositOrderTest {
   void aChestFilledDuringTheDepositIsNoLongerOfferedAsEmpty(
       String stored, String next, List<BlockPos> expected) {
     DepositOrder<String> order = order();
-    List<StorageOrigin> before = order.forVariant(next, next, Set.of());
+    List<StorageOrigin> before = order.forVariant(next);
 
     order.stored(origin(EMPTY_NEAR), stored);
 
-    List<StorageOrigin> after = order.forVariant(next, next, Set.of());
+    List<StorageOrigin> after = order.forVariant(next);
     assertNotSame(before, after);
     assertEquals(expected.stream().map(DepositOrderTest::origin).toList(), after);
   }
@@ -130,7 +130,8 @@ class DepositOrderTest {
         new ContainerOccupancy<>(
             new NetworkIndexBuilder<String>()
                 .add(COBBLESTONE, 64L, origin(COBBLE_CHEST))
-                .build(NetworkIndexOrdering.byKey(Function.identity()))));
+                .build(NetworkIndexOrdering.byKey(Function.identity()))),
+        item -> new FilterCandidate(item, item, Set.of()));
   }
 
   private static StorageOrigin origin(BlockPos pos) {

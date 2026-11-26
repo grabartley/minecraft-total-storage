@@ -15,8 +15,7 @@ public enum SortOutcome {
 
   public TerminalNoticeTone tone() {
     return switch (this) {
-      case SORTED, ALREADY_SORTED, NOTHING_TO_SORT -> TerminalNoticeTone.DONE;
-      case RATE_LIMITED -> TerminalNoticeTone.PARTIAL;
+      case SORTED, ALREADY_SORTED, NOTHING_TO_SORT, RATE_LIMITED -> TerminalNoticeTone.DONE;
       case NOT_OFFERED, NO_OPEN_SCREEN, SCREEN_NOT_SORTABLE, NOT_OPENABLE, FAILED ->
           TerminalNoticeTone.FAILED;
     };

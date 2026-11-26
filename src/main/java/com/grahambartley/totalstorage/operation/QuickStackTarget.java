@@ -34,14 +34,6 @@ public final class QuickStackTarget {
     return new QuickStackTarget(provider, ContainerAssignment.DEFAULT, NetworkTagSet.defaults());
   }
 
-  public StorageProvider provider() {
-    return provider;
-  }
-
-  public ContainerAssignment assignment() {
-    return assignment;
-  }
-
   public StorageOrigin origin() {
     return provider.origin();
   }

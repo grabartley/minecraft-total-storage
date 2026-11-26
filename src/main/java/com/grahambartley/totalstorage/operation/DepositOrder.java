@@ -1,13 +1,14 @@
 package com.grahambartley.totalstorage.operation;
 
+import com.grahambartley.totalstorage.filter.FilterCandidate;
 import com.grahambartley.totalstorage.storage.StorageOrigin;
 import com.grahambartley.totalstorage.terminal.TerminalSettings;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import net.minecraft.util.math.BlockPos;
 
 public final class DepositOrder<V> {
@@ -15,22 +16,25 @@ public final class DepositOrder<V> {
   private final Map<BlockPos, StorageOrigin> containers;
   private final TerminalSettings settings;
   private final ContainerOccupancy<V> occupancy;
+  private final Function<V, FilterCandidate> candidates;
   private final Map<V, List<StorageOrigin>> orders = new HashMap<>();
 
   public DepositOrder(
       BlockPos terminal,
       Map<BlockPos, StorageOrigin> containers,
       TerminalSettings settings,
-      ContainerOccupancy<V> occupancy) {
+      ContainerOccupancy<V> occupancy,
+      Function<V, FilterCandidate> candidates) {
     this.terminal = Objects.requireNonNull(terminal, "terminal");
     this.containers = Objects.requireNonNull(containers, "containers");
     this.settings = Objects.requireNonNull(settings, "settings");
     this.occupancy = Objects.requireNonNull(occupancy, "occupancy");
+    this.candidates = Objects.requireNonNull(candidates, "candidates");
   }
 
-  public List<StorageOrigin> forVariant(V variant, String itemId, Collection<String> itemTagIds) {
+  public List<StorageOrigin> forVariant(V variant) {
     Objects.requireNonNull(variant, "variant");
-    return orders.computeIfAbsent(variant, key -> order(key, itemId, itemTagIds));
+    return orders.computeIfAbsent(variant, this::order);
   }
 
   public void stored(StorageOrigin container, V variant) {
@@ -39,7 +43,8 @@ public final class DepositOrder<V> {
     }
   }
 
-  private List<StorageOrigin> order(V variant, String itemId, Collection<String> itemTagIds) {
+  private List<StorageOrigin> order(V variant) {
+    final FilterCandidate candidate = candidates.apply(variant);
     final List<DepositTarget> targets = new ArrayList<>(containers.size());
     for (final Map.Entry<BlockPos, StorageOrigin> container : containers.entrySet()) {
       targets.add(
@@ -49,7 +54,9 @@ public final class DepositOrder<V> {
               settings.filterFor(container.getKey()),
               occupancy.contentsOf(container.getValue(), variant)));
     }
-    return DepositRouting.order(targets, terminal, itemId, itemTagIds).stream()
+    return DepositRouting.order(
+            targets, terminal, candidate.identifier(), VariantTags.of(settings.tags(), candidate))
+        .stream()
         .map(target -> containers.get(target.container()))
         .toList();
   }
