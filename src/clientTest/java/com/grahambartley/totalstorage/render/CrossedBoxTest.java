@@ -1,6 +1,7 @@
 package com.grahambartley.totalstorage.render;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -42,32 +44,32 @@ class CrossedBoxTest {
   @ParameterizedTest(name = "{0}")
   @MethodSource("footprints")
   void everyFaceCarriesTwoDiagonalsThatCrossAtItsCentre(String name, Box box) {
-    final Map<String, List<HighlightSegment>> byFace = new HashMap<>();
+    final Map<Face, List<HighlightSegment>> byFace = new HashMap<>();
     for (final HighlightSegment segment : CrossedBox.of(box)) {
-      byFace.computeIfAbsent(faceOf(segment), face -> new ArrayList<>()).add(segment);
+      byFace.computeIfAbsent(Face.of(segment), face -> new ArrayList<>()).add(segment);
     }
 
     assertEquals(
         Set.of(
-            "x" + box.minX,
-            "x" + box.maxX,
-            "y" + box.minY,
-            "y" + box.maxY,
-            "z" + box.minZ,
-            "z" + box.maxZ),
+            new Face(Direction.Axis.X, box.minX),
+            new Face(Direction.Axis.X, box.maxX),
+            new Face(Direction.Axis.Y, box.minY),
+            new Face(Direction.Axis.Y, box.maxY),
+            new Face(Direction.Axis.Z, box.minZ),
+            new Face(Direction.Axis.Z, box.maxZ)),
         byFace.keySet(),
         name);
     for (final List<HighlightSegment> diagonals : byFace.values()) {
       assertEquals(2, diagonals.size(), name);
-      final Vec3d first = midpoint(diagonals.get(0));
-      final Vec3d second = midpoint(diagonals.get(1));
-      assertEquals(first.x, second.x, TOLERANCE, name);
-      assertEquals(first.y, second.y, TOLERANCE, name);
-      assertEquals(first.z, second.z, TOLERANCE, name);
-      assertTrue(
-          !diagonals.get(0).from().equals(diagonals.get(1).from())
-              && !diagonals.get(0).from().equals(diagonals.get(1).to()),
-          name + " draws the same diagonal twice");
+      final HighlightSegment first = diagonals.get(0);
+      final HighlightSegment second = diagonals.get(1);
+      assertNotEquals(first.from(), second.from(), name + " draws the same diagonal twice");
+      assertNotEquals(first.from(), second.to(), name + " draws the same diagonal twice");
+      final Vec3d firstMiddle = midpoint(first);
+      final Vec3d secondMiddle = midpoint(second);
+      assertEquals(firstMiddle.x, secondMiddle.x, TOLERANCE, name);
+      assertEquals(firstMiddle.y, secondMiddle.y, TOLERANCE, name);
+      assertEquals(firstMiddle.z, secondMiddle.z, TOLERANCE, name);
     }
   }
 
@@ -85,15 +87,19 @@ class CrossedBoxTest {
         front);
   }
 
-  private static String faceOf(HighlightSegment segment) {
-    final Vec3d from = segment.from();
-    final Vec3d to = segment.to();
-    final boolean flatX = from.x == to.x;
-    final boolean flatY = from.y == to.y;
-    final boolean flatZ = from.z == to.z;
-    assertEquals(
-        1, (flatX ? 1 : 0) + (flatY ? 1 : 0) + (flatZ ? 1 : 0), "not a face diagonal: " + segment);
-    return flatX ? "x" + from.x : flatY ? "y" + from.y : "z" + from.z;
+  private record Face(Direction.Axis axis, double at) {
+    static Face of(HighlightSegment segment) {
+      final Vec3d from = segment.from();
+      final Vec3d to = segment.to();
+      final List<Face> flat = new ArrayList<>();
+      for (final Direction.Axis axis : Direction.Axis.values()) {
+        if (axis.choose(from.x, from.y, from.z) == axis.choose(to.x, to.y, to.z)) {
+          flat.add(new Face(axis, axis.choose(from.x, from.y, from.z)));
+        }
+      }
+      assertEquals(1, flat.size(), "not a face diagonal: " + segment);
+      return flat.get(0);
+    }
   }
 
   private static Vec3d midpoint(HighlightSegment segment) {
