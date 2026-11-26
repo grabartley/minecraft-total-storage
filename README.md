@@ -125,8 +125,8 @@ Server settings cover everything from how far a terminal may reach to how big a 
 Change them on the settings screen in Mod Menu, or with `/ts config`. In singleplayer you can change them. On a server,
 only operators can. Each terminal keeps its own reach, access, container roles and tags on the sliders tab of its
 screen. If the mod does not recognise a modded container, you, or an operator on a server, can add it with
-`/ts config eligibility`. Your own display options, such as hiding the sort button or tinting locked slots, are in
-`config/total-storage/client.json` in your game folder.
+`/ts config eligibility`. Your own display options, such as hiding the sort button or tinting locked slots, are on
+the same settings screen, and you can change them anywhere, even from the title screen.
 
 <details>
 <summary><b>Commands</b></summary>
@@ -172,7 +172,7 @@ changes apply at once. Tag exports and imports use `total-storage/tag-sets/<file
 
 None of these are needed.
 
-- **[Mod Menu](https://modrinth.com/mod/modmenu)** adds the server settings screen to your mods list.
+- **[Mod Menu](https://modrinth.com/mod/modmenu)** adds the settings screen to your mods list.
 - **[JEI](https://modrinth.com/mod/jei)** and **[EMI](https://modrinth.com/mod/emi)** show the terminal recipe.
 
 </details>

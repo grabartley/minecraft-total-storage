@@ -19,6 +19,18 @@ public final class ClientPreferencesStore {
     current = ClientPreferencesFile.loadOrCreate(path);
   }
 
+  public static boolean save(ClientPreferences preferences) {
+    return save(defaultPath(), preferences);
+  }
+
+  public static boolean save(Path path, ClientPreferences preferences) {
+    if (!ClientPreferencesFile.save(path, preferences)) {
+      return false;
+    }
+    current = preferences;
+    return true;
+  }
+
   public static ClientPreferences current() {
     return current;
   }

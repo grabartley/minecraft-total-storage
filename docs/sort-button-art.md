@@ -66,7 +66,7 @@ The button must never overlap a slot. It is a click target sitting in someone el
 
 ## Anchors
 
-A player who wants these buttons somewhere else moves them with `screenButtonAnchor` in `config/total-storage/client.json`. The anchor moves every button this mod draws on a screen it does not own, so they stay one control family wherever they land:
+A player who wants these buttons somewhere else moves them with the Sort and stack buttons option on the settings screen, stored as `screenButtonAnchor` in the client config. The anchor moves every button this mod draws on a screen it does not own, so they stay one control family wherever they land:
 
 | Anchor | First button | Every button after it |
 |---|---|---|

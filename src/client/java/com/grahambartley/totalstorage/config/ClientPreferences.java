@@ -23,4 +23,16 @@ public record ClientPreferences(
   public static ClientPreferences defaults() {
     return DEFAULTS;
   }
+
+  public ClientPreferences withSortButtonVisible(boolean visible) {
+    return new ClientPreferences(visible, screenButtonAnchor, lockedSlotTintVisible);
+  }
+
+  public ClientPreferences withScreenButtonAnchor(ScreenButtonAnchor anchor) {
+    return new ClientPreferences(sortButtonVisible, anchor, lockedSlotTintVisible);
+  }
+
+  public ClientPreferences withLockedSlotTintVisible(boolean visible) {
+    return new ClientPreferences(sortButtonVisible, screenButtonAnchor, visible);
+  }
 }

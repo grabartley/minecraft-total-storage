@@ -2,7 +2,10 @@ package com.grahambartley.totalstorage.screen;
 
 import com.grahambartley.totalstorage.access.ServerSettingsAccessRule;
 import com.grahambartley.totalstorage.config.ClientConfigMirror;
+import com.grahambartley.totalstorage.config.ClientPreferences;
+import com.grahambartley.totalstorage.config.ClientPreferencesStore;
 import com.grahambartley.totalstorage.config.ServerConfigService;
+import com.grahambartley.totalstorage.config.TotalStorageConfig;
 import com.grahambartley.totalstorage.network.ModNetworkingClient;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -11,7 +14,7 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.screen.ScreenTexts;
 import org.jetbrains.annotations.Nullable;
 
-public final class ServerConfigScreen extends Screen {
+public final class ConfigScreen extends Screen {
   private static final int HEADER_HEIGHT = 44;
   private static final int FOOTER_HEIGHT = 36;
   private static final int BUTTON_WIDTH = 100;
@@ -19,23 +22,30 @@ public final class ServerConfigScreen extends Screen {
   private static final int BUTTON_GAP = 4;
   private static final int TITLE_TOP = 12;
   private static final int NOTICE_TOP = 26;
-  private static final int NOTICE_COLOUR = 0xFFA0A0A0;
+  private static final int NOTICE_COLOUR = 0xFF000000 | VanillaPalette.BUTTON_TEXT_DISABLED;
+  private static final int FAILURE_COLOUR = 0xFF000000 | VanillaPalette.WARNING;
 
   @Nullable private final Screen parent;
-  private final ServerConfigEdits edits;
-  private final boolean editable;
-  @Nullable private ServerConfigList list;
+  private final ConfigDraft<TotalStorageConfig> edits;
+  private final ConfigDraft<ClientPreferences> preferences;
+  private ConfigScreenAccess access;
+  private boolean preferencesSaveFailed;
 
-  public ServerConfigScreen(@Nullable Screen parent) {
-    super(ServerConfigText.title());
+  public ConfigScreen(@Nullable Screen parent) {
+    super(ConfigScreenText.title());
     this.parent = parent;
-    this.edits = new ServerConfigEdits(ClientConfigMirror.current());
-    this.editable = canEdit();
+    this.edits = new ConfigDraft<>(ClientConfigMirror.current());
+    this.preferences = new ConfigDraft<>(ClientPreferencesStore.current());
+    this.access = currentAccess();
   }
 
   @Nullable
   public Screen parent() {
     return parent;
+  }
+
+  private static ConfigScreenAccess currentAccess() {
+    return new ConfigScreenAccess(ClientConfigMirror.hasReceived(), canEdit());
   }
 
   private static boolean canEdit() {
@@ -52,24 +62,14 @@ public final class ServerConfigScreen extends Screen {
 
   @Override
   protected void init() {
-    final int footerTop = height - FOOTER_HEIGHT + (FOOTER_HEIGHT - BUTTON_HEIGHT) / 2;
-    list = null;
-    if (!ClientConfigMirror.hasReceived()) {
-      addDrawableChild(
-          ButtonWidget.builder(ScreenTexts.BACK, button -> close())
-              .dimensions(width / 2 - BUTTON_WIDTH / 2, footerTop, BUTTON_WIDTH, BUTTON_HEIGHT)
-              .build());
-      return;
-    }
-    list =
+    final ConfigList list =
         addDrawableChild(
-            new ServerConfigList(
-                client,
-                width,
-                height - HEADER_HEIGHT - FOOTER_HEIGHT,
-                HEADER_HEIGHT,
-                edits,
-                editable));
+            new ConfigList(client, width, height - HEADER_HEIGHT - FOOTER_HEIGHT, HEADER_HEIGHT));
+    list.addPreferences(preferences);
+    if (access.showsServerSettings()) {
+      list.addServerSettings(edits, access.serverControlsActive());
+    }
+    final int footerTop = height - FOOTER_HEIGHT + (FOOTER_HEIGHT - BUTTON_HEIGHT) / 2;
     final int left = width / 2 - BUTTON_WIDTH - BUTTON_GAP / 2;
     addDrawableChild(
         ButtonWidget.builder(ScreenTexts.DONE, button -> submitAndClose())
@@ -83,7 +83,10 @@ public final class ServerConfigScreen extends Screen {
 
   @Override
   public void tick() {
-    if (edits.adopt(ClientConfigMirror.current())) {
+    final ConfigScreenAccess latest = currentAccess();
+    final boolean adopted = edits.adopt(ClientConfigMirror.current());
+    if (adopted || !latest.equals(access)) {
+      access = latest;
       clearAndInit();
     }
   }
@@ -92,19 +95,14 @@ public final class ServerConfigScreen extends Screen {
   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
     super.render(context, mouseX, mouseY, delta);
     context.drawCenteredTextWithShadow(textRenderer, title, width / 2, TITLE_TOP, 0xFFFFFFFF);
-    if (list == null) {
-      context.drawCenteredTextWithShadow(
-          textRenderer,
-          ServerConfigText.notConnectedNotice(),
-          width / 2,
-          height / 2,
-          NOTICE_COLOUR);
-      return;
-    }
-    if (!editable) {
-      context.drawCenteredTextWithShadow(
-          textRenderer, ServerConfigText.readOnlyNotice(), width / 2, NOTICE_TOP, NOTICE_COLOUR);
-    }
+    final ConfigScreenAccess.Notice notice = access.notice(preferencesSaveFailed);
+    final int colour =
+        notice == ConfigScreenAccess.Notice.SAVE_FAILED ? FAILURE_COLOUR : NOTICE_COLOUR;
+    ConfigScreenText.notice(notice)
+        .ifPresent(
+            text ->
+                context.drawCenteredTextWithShadow(
+                    textRenderer, text, width / 2, NOTICE_TOP, colour));
   }
 
   @Override
@@ -115,7 +113,12 @@ public final class ServerConfigScreen extends Screen {
   }
 
   private void submitAndClose() {
-    if (editable && edits.isDirty()) {
+    preferencesSaveFailed =
+        preferences.isDirty() && !ClientPreferencesStore.save(preferences.edited());
+    if (preferencesSaveFailed) {
+      return;
+    }
+    if (access.sendsServerEdits(edits.isDirty())) {
       ModNetworkingClient.sendConfigEdit(edits.edited());
     }
     close();

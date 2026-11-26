@@ -1,28 +1,27 @@
 package com.grahambartley.totalstorage.screen;
 
-import com.grahambartley.totalstorage.config.ConfigSetting;
-import com.grahambartley.totalstorage.config.TotalStorageConfig;
+import com.grahambartley.totalstorage.config.ConfigOption;
 import java.util.Objects;
 
-public final class ServerConfigEdits {
-  private TotalStorageConfig baseline;
-  private TotalStorageConfig edited;
+public final class ConfigDraft<S> {
+  private S baseline;
+  private S edited;
 
-  public ServerConfigEdits(TotalStorageConfig baseline) {
+  public ConfigDraft(S baseline) {
     this.baseline = Objects.requireNonNull(baseline, "baseline");
     this.edited = baseline;
   }
 
-  public TotalStorageConfig edited() {
+  public S edited() {
     return edited;
   }
 
-  public String valueOf(ConfigSetting setting) {
-    return setting.valueIn(edited);
+  public String valueOf(ConfigOption<S> option) {
+    return option.valueIn(edited);
   }
 
-  public boolean set(ConfigSetting setting, String rawValue) {
-    return setting
+  public boolean set(ConfigOption<S> option, String rawValue) {
+    return option
         .withValue(edited, rawValue)
         .map(
             updated -> {
@@ -36,7 +35,7 @@ public final class ServerConfigEdits {
     return !edited.equals(baseline);
   }
 
-  public boolean adopt(TotalStorageConfig latest) {
+  public boolean adopt(S latest) {
     if (latest == null || isDirty() || latest.equals(baseline)) {
       return false;
     }
