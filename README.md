@@ -11,7 +11,7 @@
 
 <p align="center">
 <a title="Fabric API" href="https://modrinth.com/mod/fabric-api" target="_blank">
-	<img src="https://i.imgur.com/Ol1Tcf8.png" width="180" height="60" alt="Fabric API requirement button">
+<img src="https://i.imgur.com/Ol1Tcf8.png" width="180" height="60" alt="Fabric API requirement button">
 </a>
 </p>
 
@@ -36,9 +36,9 @@ and reach everything in them from one screen.
 - **Build the network.** Put a terminal near your chests and power it. A lever on any side works, but keep the front
 clear: that is its screen. Every chest, barrel and shulker box within 16 blocks in every direction joins, and a new
 chest placed in range joins on its own. You can change the reach per terminal.
-- **See what it reaches.** The terminal outlines every container in its network. Cut the power and it goes dark, but it
+- **See what it reaches.** When it powers on, the terminal outlines every container in its network. Cut the power and it goes dark, but it
 remembers everything you set up.
-- **Open it.** Right-click the screen and the whole network is in front of you, above your own inventory.
+- **Open it.** Right-click it and the whole network is in front of you, above your own inventory.
 - **Share safely.** A terminal opens only for the player who placed it until they say otherwise. Let in trusted players
 by name, or anyone at all. Operators can always get in, and the server logs when they do.
 
@@ -57,8 +57,8 @@ first. Turn on fuzzy search with the `~` button and `dpick` finds a Diamond Pick
 `@mod` narrows to one mod, so `@create cog` finds the cogwheels Create adds.
 - **Browse by tag.** Every item already sits in a category like Tools, Food or Redstone. Click a tag to narrow the grid,
 pick several, and choose whether an item needs all of them or any of them.
-- **Make your own tags.** Make tags such as Base Kit or Castle for your own world. Ctrl-click an item (Cmd on a Mac) to
-file it, or shift-click a tag to file everything the grid is showing. Tags can be copied to your other terminals.
+- **Make your own tags.** Press New tag on the Tags tab to make tags such as Base Kit or Castle for your own world. Ctrl-click an item (Cmd on a Mac) to
+file it, or shift-click a tag to file everything the grid is showing. Tags can be copied from your other terminals.
 - **Take what you need.** Left-click for a stack, right-click for half, shift-click to send it to your inventory, and
 middle-click to type an exact amount.
 
@@ -74,7 +74,7 @@ middle-click to type an exact amount.
 
 - **Empty your pockets.** Press Deposit all and your inventory goes into the network, each item to the chest it belongs
 in. Something the network has never held starts an empty chest instead of mixing in. Locked slots, armour and your
-offhand stay put, and a bar shows how full the network is before it runs out of room.
+offhand stay put. A bar shows how full the network is and warns you before it runs out of room.
 - **Decide what the network may touch.** A General container takes anything. A Filtered one only takes the tags you
 tick. An Excluded one can be searched and taken from, but the network never puts items in it or rearranges it, so your
 hand-arranged potion chest keeps its layout. Name your containers and outline them in the world by role.
@@ -94,7 +94,8 @@ server, and can be stopped part way.
 
 - **Sort anything.** A sort button sits on every chest, barrel and shulker box screen and on your inventory, and it
 works on modded containers too.
-- **Quick stack.** Top up matching stacks in the containers around you and leave everything else alone.
+- **Quick stack.** The button beside sort on your inventory tops up matching stacks in the containers around you and
+leaves everything else alone.
 - **Lock slots.** Alt-click (Option on a Mac) any inventory slot and sorting, Deposit all and quick stack leave it
 alone. Hold Alt in any inventory to see which slots can be locked.
 
@@ -120,10 +121,12 @@ on every player's game, and a player without it is told to install it. Its keys 
 
 ## Settings
 
-Server settings, from how far a terminal may reach to how big a job has to be before it asks first, are on the settings
-screen in Mod Menu, or use `/ts config`. In singleplayer you can change them. On a server, only operators can. Each
-terminal keeps its own reach, access, container roles and tags on the sliders tab of its screen. If the mod does not
-recognise a modded container, an operator can add it with `/ts config eligibility`.
+Server settings cover everything from how far a terminal may reach to how big a job has to be before it asks first.
+Change them on the settings screen in Mod Menu, or with `/ts config`. In singleplayer you can change them. On a server,
+only operators can. Each terminal keeps its own reach, access, container roles and tags on the sliders tab of its
+screen. If the mod does not recognise a modded container, you, or an operator on a server, can add it with
+`/ts config eligibility`. Your own display options, such as hiding the sort button or tinting locked slots, are in
+`config/total-storage/client.json` in your game folder.
 
 <details>
 <summary><b>Commands</b></summary>
@@ -159,7 +162,7 @@ position, and container commands take the container's.
 ```
 
 Anyone can read a setting, sort what they have open or are looking at, and quick stack. Changing a server setting
-needs operator permission. Changing a terminal needs its owner or an operator. Settings and values tab-complete, and
+needs operator permission on a server. Changing a terminal needs its owner or an operator. Settings and values tab-complete, and
 changes apply at once. Tag exports and imports use `total-storage/tag-sets/<file>.json` inside the world folder.
 
 </details>
