@@ -5,5 +5,5 @@ public enum HighlightShape {
 
   DASHED,
 
-  DOUBLED
+  CROSSED
 }

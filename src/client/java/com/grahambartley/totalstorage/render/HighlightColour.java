@@ -21,7 +21,7 @@ public final class HighlightColour {
     return switch (role == null ? ContainerRole.DEFAULT : role) {
       case GENERAL -> HighlightShape.SOLID;
       case FILTERED -> HighlightShape.DASHED;
-      case EXCLUDED -> HighlightShape.DOUBLED;
+      case EXCLUDED -> HighlightShape.CROSSED;
     };
   }
 

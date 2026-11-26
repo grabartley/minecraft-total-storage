@@ -1,6 +1,7 @@
 package com.grahambartley.totalstorage.render;
 
 import com.grahambartley.totalstorage.terminal.HighlightedContainer;
+import java.util.List;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
@@ -65,11 +66,29 @@ public final class ContainerHighlightRenderer {
     final Box footprint = ContainerOutline.of(world, container.container()).expand(SWELL);
     switch (HighlightColour.shapeOf(container.role())) {
       case SOLID -> drawBox(matrices, lines, footprint, colour);
-      case DASHED -> DashedBox.draw(matrices, lines, footprint, DASHES_PER_EDGE, colour);
-      case DOUBLED -> {
-        for (final Box box : DoubledBox.of(footprint)) {
-          drawBox(matrices, lines, box, colour);
-        }
+      case DASHED ->
+          drawSegments(matrices, lines, DashedBox.of(footprint, DASHES_PER_EDGE), colour);
+      case CROSSED -> {
+        drawBox(matrices, lines, footprint, colour);
+        drawSegments(matrices, lines, CrossedBox.of(footprint), colour);
+      }
+    }
+  }
+
+  private static void drawSegments(
+      MatrixStack matrices, VertexConsumer lines, List<HighlightSegment> segments, int colour) {
+    final MatrixStack.Entry entry = matrices.peek();
+    final float red = HighlightColour.red(colour);
+    final float green = HighlightColour.green(colour);
+    final float blue = HighlightColour.blue(colour);
+    final float alpha = HighlightColour.alpha(colour);
+    for (final HighlightSegment segment : segments) {
+      final Vec3d normal = segment.normal();
+      for (final Vec3d end : List.of(segment.from(), segment.to())) {
+        lines
+            .vertex(entry, (float) end.x, (float) end.y, (float) end.z)
+            .color(red, green, blue, alpha)
+            .normal(entry, (float) normal.x, (float) normal.y, (float) normal.z);
       }
     }
   }
