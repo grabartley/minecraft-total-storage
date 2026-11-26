@@ -5,14 +5,14 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.text.Text;
 
-public abstract class ServerConfigEntry extends ElementListWidget.Entry<ServerConfigEntry> {
+public abstract class ConfigEntry extends ElementListWidget.Entry<ConfigEntry> {
   static final int LABEL_TOP = 3;
   static final int LINE_HEIGHT = 9;
   protected static final int LABEL_COLOUR = 0xFFFFFFFF;
 
   private final TextRenderer textRenderer;
 
-  protected ServerConfigEntry(TextRenderer textRenderer) {
+  protected ConfigEntry(TextRenderer textRenderer) {
     this.textRenderer = textRenderer;
   }
 

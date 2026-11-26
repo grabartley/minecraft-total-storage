@@ -1,6 +1,5 @@
 package com.grahambartley.totalstorage.screen;
 
-import com.grahambartley.totalstorage.config.ConfigSection;
 import java.util.List;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -8,12 +7,12 @@ import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
 import net.minecraft.text.Text;
 
-public final class ServerConfigHeading extends ServerConfigEntry {
+public final class ConfigHeading extends ConfigEntry {
   private final Text heading;
 
-  public ServerConfigHeading(TextRenderer textRenderer, ConfigSection section) {
+  public ConfigHeading(TextRenderer textRenderer, Text heading) {
     super(textRenderer);
-    this.heading = ServerConfigText.section(section);
+    this.heading = heading;
   }
 
   @Override

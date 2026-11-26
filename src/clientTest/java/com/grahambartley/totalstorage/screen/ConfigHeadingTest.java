@@ -6,20 +6,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-class ServerConfigHeadingTest {
-  private static final int ENTRY_HEIGHT = ServerConfigList.ROW_HEIGHT - 4;
+class ConfigHeadingTest {
+  private static final int ENTRY_HEIGHT = ConfigList.ROW_HEIGHT - 4;
 
   @ParameterizedTest
   @ValueSource(ints = {0, 44, 200})
   void aHeadingSitsCloserToTheRowsBelowItThanToTheGroupAbove(int headingTop) {
-    int textTop = ServerConfigHeading.textTop(headingTop, ENTRY_HEIGHT);
-    int textBottom = textTop + ServerConfigEntry.LINE_HEIGHT;
+    int textTop = ConfigHeading.textTop(headingTop, ENTRY_HEIGHT);
+    int textBottom = textTop + ConfigEntry.LINE_HEIGHT;
     int previousRowTextBottom =
-        headingTop
-            - ServerConfigList.ROW_HEIGHT
-            + ServerConfigRow.BOUNDS_TOP
-            + ServerConfigEntry.LINE_HEIGHT;
-    int nextRowTextTop = headingTop + ServerConfigList.ROW_HEIGHT + ServerConfigEntry.LABEL_TOP;
+        headingTop - ConfigList.ROW_HEIGHT + ConfigRow.BOUNDS_TOP + ConfigEntry.LINE_HEIGHT;
+    int nextRowTextTop = headingTop + ConfigList.ROW_HEIGHT + ConfigEntry.LABEL_TOP;
 
     int gapAbove = textTop - previousRowTextBottom;
     int gapBelow = nextRowTextTop - textBottom;
@@ -30,9 +27,9 @@ class ServerConfigHeadingTest {
 
   @Test
   void aHeadingStaysInsideItsOwnEntry() {
-    int textTop = ServerConfigHeading.textTop(0, ENTRY_HEIGHT);
+    int textTop = ConfigHeading.textTop(0, ENTRY_HEIGHT);
 
     assertTrue(textTop >= 0);
-    assertTrue(textTop + ServerConfigEntry.LINE_HEIGHT <= ENTRY_HEIGHT);
+    assertTrue(textTop + ConfigEntry.LINE_HEIGHT <= ENTRY_HEIGHT);
   }
 }

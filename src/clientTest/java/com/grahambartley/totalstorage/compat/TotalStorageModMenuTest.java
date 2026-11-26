@@ -4,33 +4,33 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
-import com.grahambartley.totalstorage.screen.ServerConfigScreen;
-import com.grahambartley.totalstorage.screen.ServerConfigText;
+import com.grahambartley.totalstorage.screen.ConfigScreen;
+import com.grahambartley.totalstorage.screen.ConfigScreenText;
 import net.minecraft.client.gui.screen.Screen;
 import org.junit.jupiter.api.Test;
 
 class TotalStorageModMenuTest {
   @Test
-  void modMenuIsHandedTheServerSettingsScreen() {
+  void modMenuIsHandedTheSettingsScreen() {
     final Screen built = new TotalStorageModMenu().getModConfigScreenFactory().create(null);
 
     assertNotNull(built);
-    assertEquals(ServerConfigScreen.class, built.getClass());
+    assertEquals(ConfigScreen.class, built.getClass());
   }
 
   @Test
-  void theScreenWearsTheServerSettingsTitle() {
+  void theScreenWearsTheSettingsTitle() {
     final Screen built = new TotalStorageModMenu().getModConfigScreenFactory().create(null);
 
-    assertEquals(ServerConfigText.title().getString(), built.getTitle().getString());
+    assertEquals(ConfigScreenText.title().getString(), built.getTitle().getString());
   }
 
   @Test
   void theFactoryThreadsTheScreenThatOpenedItThroughAsTheParent() {
-    final Screen opener = new ServerConfigScreen(null);
+    final Screen opener = new ConfigScreen(null);
 
     final Screen built = new TotalStorageModMenu().getModConfigScreenFactory().create(opener);
 
-    assertSame(opener, ((ServerConfigScreen) built).parent());
+    assertSame(opener, ((ConfigScreen) built).parent());
   }
 }

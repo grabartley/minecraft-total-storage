@@ -5,9 +5,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class ClientPreferencesSerializer {
-  static final String KEY_SORT_BUTTON_VISIBLE = "sortButtonVisible";
-  static final String KEY_SCREEN_BUTTON_ANCHOR = "screenButtonAnchor";
-  static final String KEY_LOCKED_SLOT_TINT_VISIBLE = "lockedSlotTintVisible";
+  static final String KEY_SORT_BUTTON_VISIBLE = ClientPreference.SORT_BUTTON_VISIBLE.key();
+  static final String KEY_SCREEN_BUTTON_ANCHOR = ClientPreference.SCREEN_BUTTON_ANCHOR.key();
+  static final String KEY_LOCKED_SLOT_TINT_VISIBLE =
+      ClientPreference.LOCKED_SLOT_TINT_VISIBLE.key();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ClientPreferencesSerializer.class);
 

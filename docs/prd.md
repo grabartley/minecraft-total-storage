@@ -398,6 +398,7 @@ An operator configures every behaviour from the console, with no client mod and 
 | CFG-10 | Expensive operations are rate limited per player and per operation, with feedback naming the operation (ADR 0031) |
 | CFG-11 | Every server-to-client list payload is capped, and either paged or truncated, rather than built unbounded |
 | CFG-12 | Hitting a cap or budget logs once, not once per occurrence |
+| CFG-13 | A player's own display options are kept by their game, never sent to the server, and are editable in their own section of the same settings screen from the title screen, in singleplayer, and on any server, whatever the player's permission level. A change applies when the screen is closed with Done, and a change that cannot be saved keeps the screen open and says so |
 
 **Not supported:** a client-side value influencing a server enforcement decision; a setting reachable from the screen but not the command tree; a rate limit that moves some items before refusing.
 
@@ -417,6 +418,16 @@ An operator configures every behaviour from the console, with no client mod and 
 | Per-tick move budget | 64 | 1 to 1024, the containers and slots one tick of sorting or consolidation may read |
 | Containers before an operation asks twice | 8 | 0 to 1024, where `0` never asks |
 | Container eligibility overrides | Empty | |
+
+#### Display options
+
+Each player sets these for themselves. They change nothing for anyone else.
+
+| Option | Default | Choices |
+|---|---|---|
+| Show the sort button | On | Off hides the sort button on every screen, leaving the keybind and the command working |
+| Sort and stack buttons | Inside top | Inside top, Outside top, or Outside bottom, all on the right edge of the screen's panel. Inside top moves outside when there is more than one button or the screen's slots leave no room |
+| Tint locked slots | Off | |
 
 ---
 
