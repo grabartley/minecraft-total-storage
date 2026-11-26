@@ -32,7 +32,7 @@ class HighlightColourTest {
   void everyRoleIsToldApartByShapeAndNotOnlyByColour() {
     assertEquals(HighlightShape.SOLID, HighlightColour.shapeOf(ContainerRole.GENERAL));
     assertEquals(HighlightShape.DASHED, HighlightColour.shapeOf(ContainerRole.FILTERED));
-    assertEquals(HighlightShape.DOUBLED, HighlightColour.shapeOf(ContainerRole.EXCLUDED));
+    assertEquals(HighlightShape.CROSSED, HighlightColour.shapeOf(ContainerRole.EXCLUDED));
   }
 
   @Test

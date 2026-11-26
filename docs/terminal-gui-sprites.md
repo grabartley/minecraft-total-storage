@@ -86,7 +86,7 @@ Every state differs from its neighbour by shape, not only by colour, so the scre
 | Sort or Gather → running | One wide accent button reads "Stop" and the percentage done |
 | Status line partial → failed | The same hoverable line, grey for a partial result and dark red for a failure, always led by a warning glyph |
 | Empty network vs no results | A dashed crate outline against a magnifier: different silhouettes, not a recoloured one |
-| In-world outline, general vs excluded | The excluded container is outlined twice, one box inset inside the other, so it reads as a doubled line rather than a differently coloured one |
+| In-world outline, general vs excluded | The excluded container's box is crossed corner to corner on each face turned toward the player, so it reads as a crossed-out box rather than a differently coloured one |
 
 ## Palette
 
