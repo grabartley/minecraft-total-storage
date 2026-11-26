@@ -1,4 +1,8 @@
 <p align="center">
+<img src="https://github.com/grabartley/minecraft-total-storage/raw/main/docs/banner.png" alt="Total Storage banner: a powered terminal between stacks of outlined chests, barrels and shulker boxes" width="800">
+</p>
+
+<p align="center">
 <a href="https://modrinth.com/mod/total-storage"><img src="https://img.shields.io/modrinth/dt/total-storage?logo=modrinth&label=Modrinth%20downloads&color=00AF5C" alt="Modrinth downloads"></a>
 <a href="https://github.com/grabartley/minecraft-total-storage/stargazers"><img src="https://img.shields.io/github/stars/grabartley/minecraft-total-storage?logo=github&label=Stars&color=4078c0" alt="GitHub stars"></a>
 <a href="https://github.com/grabartley/minecraft-total-storage/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License: MIT"></a>
