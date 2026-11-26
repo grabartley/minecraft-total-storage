@@ -141,7 +141,7 @@ public final class TerminalItemsPanel {
   private static void drawCount(
       DrawContext context, TextRenderer textRenderer, String label, int itemX, int itemY) {
     final SlotCountPlacement placement =
-        SlotCountPlacement.of(itemX, itemY, textRenderer.getWidth(label));
+        SlotCountPlacement.of(itemX, itemY, textRenderer.getWidth(label), textRenderer.fontHeight);
     context.getMatrices().push();
     context.getMatrices().translate(0.0F, 0.0F, COUNT_ELEVATION);
     context.getMatrices().scale(placement.scale(), placement.scale(), 1.0F);

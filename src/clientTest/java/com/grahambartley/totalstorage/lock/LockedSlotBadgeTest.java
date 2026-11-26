@@ -6,18 +6,16 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.grahambartley.totalstorage.screen.TerminalSprite;
-import java.util.stream.Stream;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.screen.slot.Slot;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InOrder;
 
@@ -66,16 +64,24 @@ class LockedSlotBadgeTest {
     verify(matrices).translate(anyFloat(), anyFloat(), anyFloat());
   }
 
-  static Stream<Arguments> screensOffTheTerminal() {
-    return LockCuesTest.screens().filter(screen -> !(Boolean) screen.get()[2]);
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("com.grahambartley.totalstorage.lock.LockCuesTest#screens")
+  void aLockedSlotWearsTheBadgeOnlyOnTheTerminal(String name, Screen screen, boolean terminal) {
+    final DrawContext context = mock(DrawContext.class);
+    when(context.getMatrices()).thenReturn(mock(MatrixStack.class));
+
+    LockedSlotBadge.draw(context, screen, true, LEFT, TOP);
+
+    verify(context, times(terminal ? 1 : 0))
+        .drawGuiTexture(TerminalSprite.LOCKED_SLOT.id(), LEFT, TOP, 5, 6);
   }
 
   @ParameterizedTest(name = "{0}")
-  @MethodSource("screensOffTheTerminal")
-  void aSlotOffTheTerminalDrawsNoBadge(String name, Screen screen, boolean shown) {
+  @MethodSource("com.grahambartley.totalstorage.lock.LockCuesTest#screens")
+  void anUnlockedSlotNeverWearsTheBadge(String name, Screen screen, boolean terminal) {
     final DrawContext context = mock(DrawContext.class);
 
-    LockedSlotBadge.draw(context, screen, mock(Slot.class));
+    LockedSlotBadge.draw(context, screen, false, LEFT, TOP);
 
     verify(context, never()).drawGuiTexture(any(), anyInt(), anyInt(), anyInt(), anyInt());
   }

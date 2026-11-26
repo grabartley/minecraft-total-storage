@@ -68,7 +68,7 @@ class ScreenButtonLayoutTest {
 
   @ParameterizedTest
   @MethodSource("everyAnchorCountAndScreen")
-  void theEffectListNeverCoversAButton(
+  void noButtonEverSitsUnderTheColumnTheLayoutSteersAround(
       ScreenButtonAnchor anchor, int count, int screenWidth, int screenHeight, int effects) {
     final ScreenPanel panel =
         new ScreenPanel((screenWidth - 176) / 2, (screenHeight - 166) / 2, 176, 166);

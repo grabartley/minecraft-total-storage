@@ -27,7 +27,13 @@ class LockCuesTest {
 
   @ParameterizedTest(name = "{0}")
   @MethodSource("screens")
-  void theBadgeAndTintOnlyBelongOnTheTerminal(String name, Screen screen, boolean shown) {
-    assertEquals(shown, LockCues.belongOn(screen));
+  void aLockedSlotShowsItsCuesOnlyOnTheTerminal(String name, Screen screen, boolean terminal) {
+    assertEquals(terminal, LockCues.show(screen, true));
+  }
+
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("screens")
+  void anUnlockedSlotShowsNoCuesAnywhere(String name, Screen screen, boolean terminal) {
+    assertEquals(false, LockCues.show(screen, false));
   }
 }

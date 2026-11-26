@@ -6,6 +6,7 @@ import com.grahambartley.totalstorage.lock.LockHintRing;
 import com.grahambartley.totalstorage.lock.LockTooltipLines;
 import com.grahambartley.totalstorage.lock.LockedSlotBadge;
 import com.grahambartley.totalstorage.lock.LockedSlotOverlay;
+import com.grahambartley.totalstorage.lock.LockedSlotState;
 import com.grahambartley.totalstorage.screen.ModKeyBindings;
 import com.grahambartley.totalstorage.screen.QuickStackRequests;
 import com.grahambartley.totalstorage.screen.ScreenKeyboardFocus;
@@ -71,13 +72,15 @@ public abstract class HandledScreenMixin {
   @Inject(method = "drawSlot", at = @At("HEAD"))
   private void totalStorage$paintLockedSlots(
       DrawContext context, Slot slot, CallbackInfo callback) {
-    LockedSlotOverlay.draw(context, (Screen) (Object) this, slot);
+    LockedSlotOverlay.draw(
+        context, (Screen) (Object) this, LockedSlotState.isLocked(slot), slot.x, slot.y);
   }
 
   @Inject(method = "drawSlot", at = @At("TAIL"))
   private void totalStorage$badgeLockedSlots(
       DrawContext context, Slot slot, CallbackInfo callback) {
-    LockedSlotBadge.draw(context, (Screen) (Object) this, slot);
+    LockedSlotBadge.draw(
+        context, (Screen) (Object) this, LockedSlotState.isLocked(slot), slot.x, slot.y);
     LockHintRing.draw(context, slot, Screen.hasAltDown());
   }
 
