@@ -18,10 +18,7 @@ public enum ClientPreference implements ConfigOption<ClientPreferences> {
 
     @Override
     ClientPreferences apply(ClientPreferences preferences, String choice) {
-      return new ClientPreferences(
-          Boolean.parseBoolean(choice),
-          preferences.screenButtonAnchor(),
-          preferences.lockedSlotTintVisible());
+      return preferences.withSortButtonVisible(Boolean.parseBoolean(choice));
     }
   },
 
@@ -38,10 +35,7 @@ public enum ClientPreference implements ConfigOption<ClientPreferences> {
 
     @Override
     ClientPreferences apply(ClientPreferences preferences, String choice) {
-      return new ClientPreferences(
-          preferences.sortButtonVisible(),
-          ScreenButtonAnchor.fromId(choice).orElseThrow(),
-          preferences.lockedSlotTintVisible());
+      return preferences.withScreenButtonAnchor(ScreenButtonAnchor.fromId(choice).orElseThrow());
     }
   },
 
@@ -58,10 +52,7 @@ public enum ClientPreference implements ConfigOption<ClientPreferences> {
 
     @Override
     ClientPreferences apply(ClientPreferences preferences, String choice) {
-      return new ClientPreferences(
-          preferences.sortButtonVisible(),
-          preferences.screenButtonAnchor(),
-          Boolean.parseBoolean(choice));
+      return preferences.withLockedSlotTintVisible(Boolean.parseBoolean(choice));
     }
   };
 
