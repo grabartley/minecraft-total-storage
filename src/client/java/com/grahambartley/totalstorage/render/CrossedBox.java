@@ -1,36 +1,53 @@
 package com.grahambartley.totalstorage.render;
 
+import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
 public final class CrossedBox {
   private CrossedBox() {}
 
-  public static List<HighlightSegment> of(Box box) {
-    final double x0 = box.minX;
-    final double y0 = box.minY;
-    final double z0 = box.minZ;
-    final double x1 = box.maxX;
-    final double y1 = box.maxY;
-    final double z1 = box.maxZ;
-    return List.of(
-        segment(x0, y0, z0, x0, y1, z1),
-        segment(x0, y0, z1, x0, y1, z0),
-        segment(x1, y0, z0, x1, y1, z1),
-        segment(x1, y0, z1, x1, y1, z0),
-        segment(x0, y0, z0, x1, y0, z1),
-        segment(x0, y0, z1, x1, y0, z0),
-        segment(x0, y1, z0, x1, y1, z1),
-        segment(x0, y1, z1, x1, y1, z0),
-        segment(x0, y0, z0, x1, y1, z0),
-        segment(x0, y1, z0, x1, y0, z0),
-        segment(x0, y0, z1, x1, y1, z1),
-        segment(x0, y1, z1, x1, y0, z1));
+  public static List<HighlightSegment> of(Box box, Vec3d viewer) {
+    final List<HighlightSegment> segments = new ArrayList<>();
+    for (final Direction face : Direction.values()) {
+      if (faces(box, face, viewer)) {
+        final int[] corners = diagonalsOf(face);
+        segments.add(segment(box, corners[0], corners[1]));
+        segments.add(segment(box, corners[2], corners[3]));
+      }
+    }
+    return List.copyOf(segments);
   }
 
-  private static HighlightSegment segment(
-      double fromX, double fromY, double fromZ, double toX, double toY, double toZ) {
-    return new HighlightSegment(new Vec3d(fromX, fromY, fromZ), new Vec3d(toX, toY, toZ));
+  private static boolean faces(Box box, Direction face, Vec3d viewer) {
+    final Direction.Axis axis = face.getAxis();
+    final double eye = viewer.getComponentAlongAxis(axis);
+    return face.getDirection() == Direction.AxisDirection.POSITIVE
+        ? eye > box.getMax(axis)
+        : eye < box.getMin(axis);
+  }
+
+  private static int[] diagonalsOf(Direction face) {
+    return switch (face) {
+      case WEST -> new int[] {0, 3, 1, 2};
+      case EAST -> new int[] {4, 7, 5, 6};
+      case DOWN -> new int[] {0, 5, 1, 4};
+      case UP -> new int[] {2, 7, 3, 6};
+      case NORTH -> new int[] {0, 6, 2, 4};
+      case SOUTH -> new int[] {1, 7, 3, 5};
+    };
+  }
+
+  private static HighlightSegment segment(Box box, int from, int to) {
+    return new HighlightSegment(corner(box, from), corner(box, to));
+  }
+
+  private static Vec3d corner(Box box, int index) {
+    return new Vec3d(
+        (index & 4) == 0 ? box.minX : box.maxX,
+        (index & 2) == 0 ? box.minY : box.maxY,
+        (index & 1) == 0 ? box.minZ : box.maxZ);
   }
 }

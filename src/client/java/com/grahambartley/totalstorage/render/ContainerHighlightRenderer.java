@@ -55,13 +55,17 @@ public final class ContainerHighlightRenderer {
     matrices.push();
     matrices.translate(-camera.x, -camera.y, -camera.z);
     for (final HighlightedContainer container : ContainerHighlights.showing()) {
-      drawOutline(matrices, lines, world, container);
+      drawOutline(matrices, lines, world, camera, container);
     }
     matrices.pop();
   }
 
   private static void drawOutline(
-      MatrixStack matrices, VertexConsumer lines, BlockView world, HighlightedContainer container) {
+      MatrixStack matrices,
+      VertexConsumer lines,
+      BlockView world,
+      Vec3d camera,
+      HighlightedContainer container) {
     final int colour = HighlightColour.of(container.role());
     final Box footprint = ContainerOutline.of(world, container.container()).expand(SWELL);
     switch (HighlightColour.shapeOf(container.role())) {
@@ -70,7 +74,7 @@ public final class ContainerHighlightRenderer {
           drawSegments(matrices, lines, DashedBox.of(footprint, DASHES_PER_EDGE), colour);
       case CROSSED -> {
         drawBox(matrices, lines, footprint, colour);
-        drawSegments(matrices, lines, CrossedBox.of(footprint), colour);
+        drawSegments(matrices, lines, CrossedBox.of(footprint, camera), colour);
       }
     }
   }

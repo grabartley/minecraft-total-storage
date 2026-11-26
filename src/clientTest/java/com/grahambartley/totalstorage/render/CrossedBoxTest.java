@@ -5,7 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,19 +21,61 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class CrossedBoxTest {
   private static final double TOLERANCE = 1.0e-9;
+  private static final Box BLOCK = new Box(0, 0, 0, 1, 1, 1);
 
-  static Stream<Arguments> footprints() {
+  static Stream<Arguments> views() {
     return Stream.of(
-        Arguments.of("single block", new Box(0, 0, 0, 1, 1, 1)),
-        Arguments.of("double chest along x", new Box(4, 64, -3, 6, 65, -2)),
-        Arguments.of("double chest along z", new Box(-10, -60, 7, -9, -59, 9)),
-        Arguments.of("swelled block", new Box(1.998, 69.998, 4.998, 3.002, 71.002, 6.002)));
+        Arguments.of(
+            "block seen straight on from the south",
+            BLOCK,
+            new Vec3d(0.5, 0.5, 6),
+            EnumSet.of(Direction.SOUTH)),
+        Arguments.of(
+            "block seen from above, south and east",
+            BLOCK,
+            new Vec3d(3, 2, 4),
+            EnumSet.of(Direction.EAST, Direction.UP, Direction.SOUTH)),
+        Arguments.of(
+            "block seen from below, north and west",
+            BLOCK,
+            new Vec3d(-2, -1, -3),
+            EnumSet.of(Direction.WEST, Direction.DOWN, Direction.NORTH)),
+        Arguments.of(
+            "double chest along x seen from above and north",
+            new Box(4, 64, -3, 6, 65, -2),
+            new Vec3d(5, 67, -8),
+            EnumSet.of(Direction.UP, Direction.NORTH)),
+        Arguments.of(
+            "swelled block seen from its east side",
+            new Box(1.998, 69.998, 4.998, 3.002, 71.002, 6.002),
+            new Vec3d(9, 70.5, 5.5),
+            EnumSet.of(Direction.EAST)),
+        Arguments.of(
+            "viewer inside the box",
+            BLOCK,
+            new Vec3d(0.5, 0.5, 0.5),
+            EnumSet.noneOf(Direction.class)),
+        Arguments.of(
+            "viewer level with a face is not in front of it",
+            BLOCK,
+            new Vec3d(1, 0.5, 0.5),
+            EnumSet.noneOf(Direction.class)));
   }
 
   @ParameterizedTest(name = "{0}")
-  @MethodSource("footprints")
-  void everyEndSitsOnACornerOfTheBoxSoTheCrossIsTheSameSizeAsTheBox(String name, Box box) {
-    for (final HighlightSegment segment : CrossedBox.of(box)) {
+  @MethodSource("views")
+  void onlyTheFacesThatPointAtTheViewerAreCrossed(
+      String name, Box box, Vec3d viewer, Set<Direction> facing) {
+    final Map<Direction, List<HighlightSegment>> byFace = byFace(box, viewer);
+
+    assertEquals(facing, byFace.keySet(), name);
+  }
+
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("views")
+  void everyEndSitsOnACornerOfTheBoxSoTheCrossIsTheSameSizeAsTheBox(
+      String name, Box box, Vec3d viewer, Set<Direction> facing) {
+    for (final HighlightSegment segment : CrossedBox.of(box, viewer)) {
       for (final Vec3d end : List.of(segment.from(), segment.to())) {
         assertTrue(isOneOf(end.x, box.minX, box.maxX), name + " end off a corner on x: " + end);
         assertTrue(isOneOf(end.y, box.minY, box.maxY), name + " end off a corner on y: " + end);
@@ -42,24 +85,10 @@ class CrossedBoxTest {
   }
 
   @ParameterizedTest(name = "{0}")
-  @MethodSource("footprints")
-  void everyFaceCarriesTwoDiagonalsThatCrossAtItsCentre(String name, Box box) {
-    final Map<Face, List<HighlightSegment>> byFace = new HashMap<>();
-    for (final HighlightSegment segment : CrossedBox.of(box)) {
-      byFace.computeIfAbsent(Face.of(segment), face -> new ArrayList<>()).add(segment);
-    }
-
-    assertEquals(
-        Set.of(
-            new Face(Direction.Axis.X, box.minX),
-            new Face(Direction.Axis.X, box.maxX),
-            new Face(Direction.Axis.Y, box.minY),
-            new Face(Direction.Axis.Y, box.maxY),
-            new Face(Direction.Axis.Z, box.minZ),
-            new Face(Direction.Axis.Z, box.maxZ)),
-        byFace.keySet(),
-        name);
-    for (final List<HighlightSegment> diagonals : byFace.values()) {
+  @MethodSource("views")
+  void everyCrossedFaceCarriesTwoDiagonalsThatMeetAtItsCentre(
+      String name, Box box, Vec3d viewer, Set<Direction> facing) {
+    for (final List<HighlightSegment> diagonals : byFace(box, viewer).values()) {
       assertEquals(2, diagonals.size(), name);
       final HighlightSegment first = diagonals.get(0);
       final HighlightSegment second = diagonals.get(1);
@@ -74,32 +103,37 @@ class CrossedBoxTest {
   }
 
   @Test
-  void theFrontFaceOfABlockIsCrossedCornerToCorner() {
-    final List<HighlightSegment> front =
-        CrossedBox.of(new Box(0, 0, 0, 1, 1, 1)).stream()
-            .filter(segment -> segment.from().z == 1 && segment.to().z == 1)
-            .toList();
-
+  void theSouthFaceOfABlockIsCrossedCornerToCorner() {
     assertEquals(
         List.of(
             new HighlightSegment(new Vec3d(0, 0, 1), new Vec3d(1, 1, 1)),
             new HighlightSegment(new Vec3d(0, 1, 1), new Vec3d(1, 0, 1))),
-        front);
+        CrossedBox.of(BLOCK, new Vec3d(0.5, 0.5, 6)));
   }
 
-  private record Face(Direction.Axis axis, double at) {
-    static Face of(HighlightSegment segment) {
-      final Vec3d from = segment.from();
-      final Vec3d to = segment.to();
-      final List<Face> flat = new ArrayList<>();
-      for (final Direction.Axis axis : Direction.Axis.values()) {
-        if (axis.choose(from.x, from.y, from.z) == axis.choose(to.x, to.y, to.z)) {
-          flat.add(new Face(axis, axis.choose(from.x, from.y, from.z)));
-        }
-      }
-      assertEquals(1, flat.size(), "not a face diagonal: " + segment);
-      return flat.get(0);
+  private static Map<Direction, List<HighlightSegment>> byFace(Box box, Vec3d viewer) {
+    final Map<Direction, List<HighlightSegment>> byFace = new EnumMap<>(Direction.class);
+    for (final HighlightSegment segment : CrossedBox.of(box, viewer)) {
+      byFace.computeIfAbsent(faceOf(box, segment), face -> new ArrayList<>()).add(segment);
     }
+    return byFace;
+  }
+
+  private static Direction faceOf(Box box, HighlightSegment segment) {
+    final List<Direction> flat = new ArrayList<>();
+    for (final Direction.Axis axis : Direction.Axis.values()) {
+      final double from = segment.from().getComponentAlongAxis(axis);
+      if (from == segment.to().getComponentAlongAxis(axis)) {
+        flat.add(
+            Direction.from(
+                axis,
+                from == box.getMax(axis)
+                    ? Direction.AxisDirection.POSITIVE
+                    : Direction.AxisDirection.NEGATIVE));
+      }
+    }
+    assertEquals(1, flat.size(), "not a face diagonal: " + segment);
+    return flat.get(0);
   }
 
   private static Vec3d midpoint(HighlightSegment segment) {
