@@ -9,9 +9,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.grahambartley.totalstorage.storage.StorageOrigin;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class NetworkIndexTest {
   private static final StorageOrigin FIRST = TestOrigins.at(0);
@@ -113,5 +116,31 @@ class NetworkIndexTest {
         new NetworkIndexBuilder<String>().build(NetworkIndexOrdering.byKey(Function.identity()));
 
     assertSame(NetworkIndex.empty(), built);
+  }
+
+  static Stream<Arguments> occupancy() {
+    return Stream.of(
+        Arguments.of(FIRST, true),
+        Arguments.of(SECOND, true),
+        Arguments.of(TestOrigins.at(9), false));
+  }
+
+  @ParameterizedTest(name = "{0} occupied: {1}")
+  @MethodSource("occupancy")
+  void aContainerIsOccupiedWhenItHoldsAnyVariant(StorageOrigin container, boolean expected) {
+    assertEquals(expected, index().occupied().contains(container));
+  }
+
+  @Test
+  void anEmptyIndexOccupiesNothing() {
+    assertTrue(NetworkIndex.<String>empty().occupied().isEmpty());
+  }
+
+  @Test
+  void theOccupiedSetIsWorkedOutOnceAndCannotBeChanged() {
+    NetworkIndex<String> index = index();
+
+    assertSame(index.occupied(), index.occupied());
+    assertThrows(UnsupportedOperationException.class, () -> index.occupied().add(FIRST));
   }
 }

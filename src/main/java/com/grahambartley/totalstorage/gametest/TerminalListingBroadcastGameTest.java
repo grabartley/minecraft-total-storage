@@ -7,6 +7,7 @@ import com.grahambartley.totalstorage.filter.TagCombinationMode;
 import com.grahambartley.totalstorage.lifecycle.NetworkMembership;
 import com.grahambartley.totalstorage.network.ListingRequestPayload;
 import com.grahambartley.totalstorage.network.ModNetworking;
+import com.grahambartley.totalstorage.screenhandler.TerminalListingBroadcast;
 import com.grahambartley.totalstorage.screenhandler.TerminalScreenHandler;
 import com.grahambartley.totalstorage.terminal.TerminalNetworks;
 import java.util.Set;
@@ -24,7 +25,7 @@ public final class TerminalListingBroadcastGameTest implements FabricGameTest {
   private static final String CONTAINER_PAD = "total-storage:container_pad";
   private static final String BATCH = "terminal-listing-broadcast";
   private static final int TICK_LIMIT = 60;
-  private static final int SETTLE_TICKS = 4;
+  private static final int SETTLE_TICKS = TerminalListingBroadcast.INTERVAL.ticks() * 2;
 
   private static final BlockPos TERMINAL = new BlockPos(3, 1, 3);
   private static final BlockPos POWER = new BlockPos(3, 1, 2);

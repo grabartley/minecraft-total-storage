@@ -51,6 +51,9 @@ Shared engineering standards across all the mods in this family live in [`../sta
 | [0041](0041-a-lock-shows-as-a-badge-and-alt-shows-what-can-be-locked.md) | A lock shows as a badge, and Alt shows what can be locked |
 | [0042](0042-fuzzy-search-is-a-per-player-choice-off-by-default.md) | Fuzzy search is a per-player choice, off by default |
 | [0043](0043-an-outline-request-names-a-container.md) | An outline request names a container |
+| [0044](0044-background-drift-is-swept-five-times-a-second.md) | Background drift is swept five times a second, and a region is rescanned once a tick |
+| [0045](0045-a-new-item-takes-an-empty-container.md) | A new item takes an empty container before one holding other items |
+| [0046](0046-the-action-bar-reports-failures-not-successes.md) | The action bar reports failures, not successes |
 
 ## Writing A New Record
 

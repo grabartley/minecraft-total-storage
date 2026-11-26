@@ -11,4 +11,10 @@ class TerminalNoticeToneTest {
   void onlyAResultThatFellShortIsShownInTheTerminal(TerminalNoticeTone tone, boolean shown) {
     assertEquals(shown, tone.isShownInTheTerminal());
   }
+
+  @ParameterizedTest
+  @CsvSource({"DONE, false", "PARTIAL, false", "FAILED, true"})
+  void onlyAFailureReachesTheActionBar(TerminalNoticeTone tone, boolean shown) {
+    assertEquals(shown, tone.isShownOnTheActionBar());
+  }
 }

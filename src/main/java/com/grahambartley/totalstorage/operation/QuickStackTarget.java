@@ -7,16 +7,27 @@ import com.grahambartley.totalstorage.storage.StorageOrigin;
 import com.grahambartley.totalstorage.storage.StorageProvider;
 import com.grahambartley.totalstorage.tag.NetworkTagSet;
 import java.util.Objects;
+import java.util.Set;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 
-public record QuickStackTarget(
-    StorageProvider provider, ContainerAssignment assignment, NetworkTagSet tags) {
-  public QuickStackTarget {
-    Objects.requireNonNull(provider, "provider");
-    assignment = assignment == null ? ContainerAssignment.DEFAULT : assignment;
-    tags = tags == null ? NetworkTagSet.defaults() : tags;
+public final class QuickStackTarget {
+  private final StorageProvider provider;
+  private final ContainerAssignment assignment;
+  private final NetworkTagSet tags;
+  private final Set<ItemVariant> held;
+
+  private QuickStackTarget(
+      StorageProvider provider, ContainerAssignment assignment, NetworkTagSet tags) {
+    this.provider = Objects.requireNonNull(provider, "provider");
+    this.assignment = assignment == null ? ContainerAssignment.DEFAULT : assignment;
+    this.tags = tags == null ? NetworkTagSet.defaults() : tags;
+    this.held = HeldResources.of(provider.storage());
+  }
+
+  public static QuickStackTarget of(
+      StorageProvider provider, ContainerAssignment assignment, NetworkTagSet tags) {
+    return new QuickStackTarget(provider, assignment, tags);
   }
 
   public static QuickStackTarget unclaimed(StorageProvider provider) {
@@ -40,14 +51,6 @@ public record QuickStackTarget(
   }
 
   public boolean holds(ItemVariant variant) {
-    if (variant == null || variant.isBlank()) {
-      return false;
-    }
-    for (final StorageView<ItemVariant> view : storage()) {
-      if (!view.isResourceBlank() && view.getAmount() > 0L && variant.equals(view.getResource())) {
-        return true;
-      }
-    }
-    return false;
+    return variant != null && !variant.isBlank() && held.contains(variant);
   }
 }

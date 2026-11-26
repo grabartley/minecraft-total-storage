@@ -2,6 +2,7 @@ package com.grahambartley.totalstorage.terminal;
 
 import com.grahambartley.totalstorage.config.ServerConfigService;
 import com.grahambartley.totalstorage.lifecycle.NetworkMembership;
+import com.grahambartley.totalstorage.lifecycle.TickInterval;
 import java.util.List;
 import java.util.Objects;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -9,7 +10,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 
 public final class TerminalCapacityBroadcast {
-  public static final int INTERVAL_TICKS = 20;
+  public static final TickInterval INTERVAL = new TickInterval(20);
 
   private final NetworkCapacityService capacities;
   private final NetworkCapacityWatch watch;
@@ -27,10 +28,6 @@ public final class TerminalCapacityBroadcast {
 
   public void register() {
     ServerTickEvents.END_SERVER_TICK.register(this::tick);
-  }
-
-  public static boolean isDue(int ticks) {
-    return Math.floorMod(ticks, INTERVAL_TICKS) == 0;
   }
 
   public void sweep(MinecraftServer server) {
@@ -63,7 +60,7 @@ public final class TerminalCapacityBroadcast {
   }
 
   private void tick(MinecraftServer server) {
-    if (server == null || !isDue(server.getTicks())) {
+    if (server == null || !INTERVAL.isDue(server.getTicks())) {
       return;
     }
     sweep(server);

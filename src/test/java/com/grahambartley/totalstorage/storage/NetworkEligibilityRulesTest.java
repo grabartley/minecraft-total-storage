@@ -52,4 +52,20 @@ class NetworkEligibilityRulesTest {
   void anOperatorCanExcludeABlockTheDefaultsAdmit() {
     assertFalse(NetworkEligibilityRules.isEligible(true, false, Optional.of(false)));
   }
+
+  @ParameterizedTest
+  @CsvSource({
+    "false, ,      true",
+    "true,  ,      false",
+    "false, true,  true",
+    "false, false, false",
+    "true,  true,  true",
+    "true,  false, false",
+  })
+  void aBlockIsAllowedByItsOverrideOrElseByItsDefault(
+      boolean deniedByDefault, Boolean override, boolean expected) {
+    assertEquals(
+        expected,
+        NetworkEligibilityRules.allowsBlock(deniedByDefault, Optional.ofNullable(override)));
+  }
 }

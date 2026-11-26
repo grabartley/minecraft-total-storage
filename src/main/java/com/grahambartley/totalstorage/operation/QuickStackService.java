@@ -98,7 +98,7 @@ public final class QuickStackService {
       if (carried <= 0L) {
         break;
       }
-      if (!target.accepts(candidate) || !target.holds(variant)) {
+      if (!target.holds(variant) || !target.accepts(candidate)) {
         continue;
       }
       final long took =

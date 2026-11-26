@@ -1,5 +1,7 @@
 package com.grahambartley.totalstorage.sort;
 
+import com.grahambartley.totalstorage.operation.TerminalNoticeTone;
+
 public enum SortOutcome {
   NOT_OFFERED,
   NO_OPEN_SCREEN,
@@ -10,6 +12,14 @@ public enum SortOutcome {
   ALREADY_SORTED,
   FAILED,
   SORTED;
+
+  public TerminalNoticeTone tone() {
+    return switch (this) {
+      case SORTED, ALREADY_SORTED, NOTHING_TO_SORT, RATE_LIMITED -> TerminalNoticeTone.DONE;
+      case NOT_OFFERED, NO_OPEN_SCREEN, SCREEN_NOT_SORTABLE, NOT_OPENABLE, FAILED ->
+          TerminalNoticeTone.FAILED;
+    };
+  }
 
   public boolean wasSorted() {
     return this == SORTED;

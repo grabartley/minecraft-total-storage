@@ -7,9 +7,10 @@ public final class NetworkEligibilityRules {
 
   public static boolean isEligible(
       boolean hasItemStorage, boolean deniedByDefault, Optional<Boolean> operatorOverride) {
-    if (!hasItemStorage) {
-      return false;
-    }
+    return hasItemStorage && allowsBlock(deniedByDefault, operatorOverride);
+  }
+
+  public static boolean allowsBlock(boolean deniedByDefault, Optional<Boolean> operatorOverride) {
     return operatorOverride.orElse(!deniedByDefault);
   }
 }

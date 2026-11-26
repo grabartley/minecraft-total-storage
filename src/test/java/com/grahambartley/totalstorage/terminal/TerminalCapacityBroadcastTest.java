@@ -8,26 +8,14 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class TerminalCapacityBroadcastTest {
   @ParameterizedTest
-  @ValueSource(ints = {0, 20, 40, 1200})
-  void theSweepComesRoundOnceEveryInterval(int ticks) {
-    assertTrue(TerminalCapacityBroadcast.isDue(ticks));
+  @ValueSource(ints = {0, 20, 40, 1200, -20})
+  void theSweepComesRoundOnceASecond(int ticks) {
+    assertTrue(TerminalCapacityBroadcast.INTERVAL.isDue(ticks));
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {1, 19, 21, 39, 1199})
+  @ValueSource(ints = {1, 19, 21, 39, 1199, -1})
   void everyTickBetweenSweepsIsLeftAlone(int ticks) {
-    assertFalse(TerminalCapacityBroadcast.isDue(ticks));
-  }
-
-  @ParameterizedTest
-  @ValueSource(ints = {-20, -40})
-  void aTickCounterThatHasWrappedPastZeroStillLandsOnTheInterval(int ticks) {
-    assertTrue(TerminalCapacityBroadcast.isDue(ticks));
-  }
-
-  @ParameterizedTest
-  @ValueSource(ints = {-1, -19})
-  void aTickCounterThatHasWrappedPastZeroStillSkipsTheRest(int ticks) {
-    assertFalse(TerminalCapacityBroadcast.isDue(ticks));
+    assertFalse(TerminalCapacityBroadcast.INTERVAL.isDue(ticks));
   }
 }

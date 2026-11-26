@@ -41,7 +41,9 @@ public final class TerminalNotice {
     }
     if (!(player.currentScreenHandler instanceof TerminalScreenHandler handler)
         || !ServerPlayNetworking.canSend(player, TerminalNoticePayload.ID)) {
-      player.sendMessage(message, true);
+      if (tone.isShownOnTheActionBar()) {
+        player.sendMessage(message, true);
+      }
       return;
     }
     if (tone.isShownInTheTerminal()) {

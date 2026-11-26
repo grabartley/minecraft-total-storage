@@ -8,12 +8,13 @@ import java.util.Objects;
 import net.minecraft.util.math.BlockPos;
 
 public record DepositTarget(
-    BlockPos container, ContainerRole role, ContainerFilter filter, boolean holdsItem) {
+    BlockPos container, ContainerRole role, ContainerFilter filter, ContainerContents contents) {
   public DepositTarget {
     Objects.requireNonNull(container, "container");
     container = container.toImmutable();
     role = role == null ? ContainerRole.DEFAULT : role;
     filter = filter == null ? ContainerFilter.NONE : filter;
+    contents = contents == null ? ContainerContents.OTHER_ITEMS : contents;
   }
 
   public boolean accepts(String itemId, Collection<String> itemTagIds) {

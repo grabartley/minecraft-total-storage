@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-09-07
+- **Amended by:** [ADR 0044](0044-background-drift-is-swept-five-times-a-second.md)
 
 ## Context
 

@@ -206,10 +206,14 @@ The player presses deposit all. Every eligible slot empties into the network, ea
 Routing order, per item variant:
 
 1. A `Filtered` container that accepts it **and already holds it**
-2. Any `Filtered` container that accepts it
-3. A `General` container that **already holds it**, topping up partial stacks
-4. Any `General` container with free space
-5. Nothing, and the item stays with the player
+2. An **empty** `Filtered` container that accepts it
+3. Any other `Filtered` container that accepts it
+4. A `General` container that **already holds it**, topping up partial stacks
+5. An **empty** `General` container
+6. Any other `General` container with free space
+7. Nothing, and the item stays with the player
+
+A container that takes an item during the deposit counts as holding it, and as no longer empty, for the rest of that deposit, so two new items do not share one empty chest while another is free (ADR 0045).
 
 `Excluded` containers are never considered at any step.
 
@@ -514,7 +518,7 @@ Concurrent writers exist whatever the player count. A hopper, a comparator, and 
 | CONC-6 | No resync reaches a player who cannot see the affected container |
 | CONC-7 | The viewer registry returns to empty when viewers leave by any means, disconnect and death included |
 | CONC-8 | Two players may have the same terminal open simultaneously, each with independent search, filters, and scroll |
-| CONC-9 | A slow background writer such as a hopper is answered by a tick sweep, not per mutation |
+| CONC-9 | A slow background writer such as a hopper is answered by a sweep every fourth tick, not per mutation (ADR 0044) |
 | CONC-10 | A container mutated by anything other than this mod is reflected without a rescan |
 
 ### 7.3 Per-player state
@@ -561,7 +565,7 @@ The property that decides whether the mod is safe in a modpack. How the suite is
 |---|---|
 | PERF-1 | An unpowered terminal registers no listeners and does no per-tick work |
 | PERF-2 | The index is never polled; it reacts to container mutations and recomputes lazily on read |
-| PERF-3 | A full discovery scan runs on power-on, radius change, explicit rescan, a change to container eligibility, a chunk load touching the network's region (ADR 0014), and a block entity that may hold items appearing in a chunk the region touches (ADR 0039), and on nothing else. The last two are deferred to the next tick and run once per chunk per tick |
+| PERF-3 | A full discovery scan runs on power-on, radius change, explicit rescan, a change to container eligibility, a chunk load touching the network's region (ADR 0014), and a block entity that may hold items appearing in a chunk the region touches (ADR 0039), and on nothing else. The last two are deferred to the next tick and run at most once per network per tick, however many chunks arrived (ADR 0044) |
 | PERF-4 | Discovery iterates loaded chunk block-entity maps rather than testing every position in the volume |
 | PERF-5 | A world callback never queries the chunk manager; scans defer to the next tick (ADR 0026) |
 | PERF-6 | The listing is narrowed server-side and paged, never sent whole (ADR 0027) |

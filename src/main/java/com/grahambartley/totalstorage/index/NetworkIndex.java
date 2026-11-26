@@ -1,16 +1,22 @@
 package com.grahambartley.totalstorage.index;
 
+import com.grahambartley.totalstorage.storage.StorageOrigin;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 public final class NetworkIndex<V> {
   private static final NetworkIndex<?> EMPTY = new NetworkIndex<>(List.of());
 
   private final List<NetworkIndexEntry<V>> entries;
   private final Map<V, NetworkIndexEntry<V>> byVariant;
+
+  private Set<StorageOrigin> occupied;
 
   private NetworkIndex(List<NetworkIndexEntry<V>> orderedEntries) {
     this.entries = List.copyOf(orderedEntries);
@@ -61,5 +67,16 @@ public final class NetworkIndex<V> {
 
   public boolean isEmpty() {
     return entries.isEmpty();
+  }
+
+  public Set<StorageOrigin> occupied() {
+    if (occupied == null) {
+      final Set<StorageOrigin> holding = new HashSet<>();
+      for (final NetworkIndexEntry<V> entry : entries) {
+        holding.addAll(entry.origins());
+      }
+      occupied = Collections.unmodifiableSet(holding);
+    }
+    return occupied;
   }
 }

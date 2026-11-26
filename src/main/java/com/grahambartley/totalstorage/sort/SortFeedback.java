@@ -1,6 +1,7 @@
 package com.grahambartley.totalstorage.sort;
 
 import com.grahambartley.totalstorage.command.CommandMessages;
+import java.util.Optional;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 
@@ -11,7 +12,13 @@ public final class SortFeedback {
     if (player == null || outcome == null) {
       return;
     }
-    player.sendMessage(messageFor(outcome), true);
+    actionBarMessageFor(outcome).ifPresent(message -> player.sendMessage(message, true));
+  }
+
+  public static Optional<Text> actionBarMessageFor(SortOutcome outcome) {
+    return outcome.tone().isShownOnTheActionBar()
+        ? Optional.of(messageFor(outcome))
+        : Optional.empty();
   }
 
   public static Text messageFor(SortReply reply) {

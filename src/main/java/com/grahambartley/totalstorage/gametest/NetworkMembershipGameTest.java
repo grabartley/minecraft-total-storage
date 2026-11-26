@@ -181,6 +181,32 @@ public final class NetworkMembershipGameTest implements FabricGameTest {
   }
 
   @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = 40)
+  public void aSecondChunkArrivalInOneTickReusesTheFirstScan(TestContext context) {
+    stockBarrel(context, WATCHED, new ItemStack(Items.DIAMOND, 8));
+    ContainerLifecycleRegistry lifecycle = new ContainerLifecycleRegistry();
+    NetworkMembership membership = poweredNetwork(context, lifecycle);
+    lifecycle.chunkUnloaded(worldKey(context), chunkOf(context, WATCHED));
+    lifecycle.chunkLoaded(worldKey(context), chunkOf(context, WATCHED));
+    lifecycle.chunkUnloaded(worldKey(context), chunkOf(context, WATCHED));
+
+    lifecycle.chunkLoaded(worldKey(context), chunkOf(context, WATCHED));
+
+    context.assertTrue(
+        !membership.session().isWatching(originOf(context, WATCHED)),
+        "A second arrival in the same tick should not scan the region again");
+    context.waitAndRun(
+        1,
+        () -> {
+          lifecycle.chunkLoaded(worldKey(context), chunkOf(context, WATCHED));
+          context.assertTrue(
+              membership.session().isWatching(originOf(context, WATCHED)),
+              "An arrival on a later tick should scan again");
+          membership.powerOff();
+          context.complete();
+        });
+  }
+
+  @GameTest(templateName = CONTAINER_PAD, batchId = BATCH, tickLimit = 40)
   public void aChunkLoadingOutsideTheRadiusLeavesTheNetworkAlone(TestContext context) {
     stockBarrel(context, WATCHED, new ItemStack(Items.DIAMOND, 8));
     ContainerLifecycleRegistry lifecycle = new ContainerLifecycleRegistry();

@@ -15,6 +15,8 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class ContainerMutationRegistryTest {
   private static final RegistryKey<World> OVERWORLD =
@@ -264,5 +266,42 @@ class ContainerMutationRegistryTest {
       changed.add(origin);
       onChange.run();
     }
+  }
+
+  @ParameterizedTest(name = "{0} listeners")
+  @ValueSource(ints = {1, 2, 5})
+  void everyListenerOnAContainerHearsEachMutationExactlyOnce(int count) {
+    List<RecordingListener> listeners = new ArrayList<>();
+    for (int index = 0; index < count; index++) {
+      RecordingListener listener = new RecordingListener();
+      listeners.add(listener);
+      registry.watch(originAt(OVERWORLD, CHEST), listener);
+      registry.watch(originAt(OVERWORLD, CHEST), listener);
+    }
+
+    registry.publish(OVERWORLD, CHEST);
+    registry.publish(OVERWORLD, CHEST);
+
+    for (RecordingListener listener : listeners) {
+      assertEquals(2, listener.changed.size());
+    }
+  }
+
+  @ParameterizedTest(name = "{0} listeners")
+  @ValueSource(ints = {1, 2, 5})
+  void aListenerAddedWhileOthersAreBeingToldWaitsForTheNextMutation(int count) {
+    RecordingListener late = new RecordingListener();
+    for (int index = 0; index < count; index++) {
+      registry.watch(
+          originAt(OVERWORLD, CHEST), origin -> registry.watch(originAt(OVERWORLD, CHEST), late));
+    }
+
+    registry.publish(OVERWORLD, CHEST);
+
+    assertTrue(late.changed.isEmpty());
+
+    registry.publish(OVERWORLD, CHEST);
+
+    assertEquals(1, late.changed.size());
   }
 }
